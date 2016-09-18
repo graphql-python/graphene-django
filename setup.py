@@ -42,7 +42,7 @@ setup(
     tests_require=[
         'django-filter>=0.10.0',
         'pytest',
-        'pytest-django',
+        'pytest-django==2.9.1',
         'mock',
         # Required for Django postgres fields testing
         'psycopg2',

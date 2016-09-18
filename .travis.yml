@@ -22,7 +22,7 @@ before_install:
 install:
 - |
   if [ "$TEST_TYPE" = build ]; then
-    pip install pytest==3.0.2 pytest-cov pytest-benchmark coveralls six pytest-django mock django-filter
+    pip install pytest==3.0.2 pytest-cov pytest-benchmark coveralls six pytest-django==2.9.1 mock django-filter
     pip install django==$DJANGO_VERSION
     pip install -e .
     python setup.py develop
