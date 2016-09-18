@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from graphene import ObjectType, Schema, Field
+from graphene import Field, ObjectType, Schema
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import (GlobalIDFormField,

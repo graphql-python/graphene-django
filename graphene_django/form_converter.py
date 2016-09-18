@@ -1,7 +1,8 @@
 from django import forms
 from django.forms.fields import BaseTemporalField
 
-from graphene import ID, Boolean, Float, Int, String, List
+from graphene import ID, Boolean, Float, Int, List, String
+
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from .utils import import_single_dispatch
 

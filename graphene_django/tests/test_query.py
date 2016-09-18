@@ -8,9 +8,8 @@ import graphene
 from graphene.relay import Node
 
 from ..compat import MissingType, RangeField
-from ..types import DjangoObjectType
 from ..fields import DjangoConnectionField
-from ..registry import reset_global_registry, get_global_registry
+from ..types import DjangoObjectType
 from .models import Article, Reporter
 
 pytestmark = pytest.mark.django_db

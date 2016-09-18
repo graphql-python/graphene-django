@@ -4,17 +4,20 @@ from django.utils.translation import ugettext_lazy as _
 from py.test import raises
 
 import graphene
-from graphene.relay import Node, ConnectionField
+from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import DateTime
 from graphene.types.json import JSONString
-# from graphene.core.types.custom_scalars import DateTime, JSONString
 
 from ..compat import (ArrayField, HStoreField, JSONField, MissingType,
                       RangeField)
 from ..converter import convert_django_field, convert_django_field_with_choices
 from ..registry import Registry
-from .models import Article, Reporter, Film, FilmDetails, Pet
 from ..types import DjangoObjectType
+from .models import Article, Film, FilmDetails, Reporter
+
+
+# from graphene.core.types.custom_scalars import DateTime, JSONString
+
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
@@ -166,6 +169,7 @@ def test_should_manytomany_convert_connectionorlist():
 
 def test_should_manytomany_convert_connectionorlist_list():
     class A(DjangoObjectType):
+
         class Meta:
             model = Reporter
 
@@ -179,6 +183,7 @@ def test_should_manytomany_convert_connectionorlist_list():
 
 def test_should_manytomany_convert_connectionorlist_connection():
     class A(DjangoObjectType):
+
         class Meta:
             model = Reporter
             interfaces = (Node, )
@@ -196,6 +201,7 @@ def test_should_manytoone_convert_connectionorlist():
         getattr(Reporter.articles, 'related')
 
     class A(DjangoObjectType):
+
         class Meta:
             model = Article
 
@@ -213,6 +219,7 @@ def test_should_onetoone_reverse_convert_model():
         getattr(Film.details, 'related')
 
     class A(DjangoObjectType):
+
         class Meta:
             model = FilmDetails
 

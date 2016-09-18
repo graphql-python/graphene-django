@@ -1,12 +1,12 @@
-from graphql.type import GraphQLObjectType
 from mock import patch
 
-from graphene import ObjectType, Field, Int, ID, Schema, Interface
-from graphene.relay import Node, ConnectionField
-from ..types import DjangoObjectType
+from graphene import Interface, ObjectType, Schema
+from graphene.relay import Node
 
-from .models import Article as ArticleModel, Reporter as ReporterModel
-from ..registry import reset_global_registry, Registry
+from ..registry import reset_global_registry
+from ..types import DjangoObjectType
+from .models import Article as ArticleModel
+from .models import Reporter as ReporterModel
 
 reset_global_registry()
 

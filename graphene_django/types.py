@@ -2,14 +2,16 @@ from collections import OrderedDict
 
 import six
 
-from graphene import ObjectType, Field
+from graphene import Field, ObjectType
 from graphene.types.objecttype import ObjectTypeMeta
-from .converter import convert_django_field_with_choices
 from graphene.types.options import Options
-from .utils import get_model_fields, is_valid_django_model, DJANGO_FILTER_INSTALLED
-from .registry import Registry, get_global_registry
+from graphene.types.utils import merge, yank_fields_from_attrs
 from graphene.utils.is_base_type import is_base_type
-from graphene.types.utils import yank_fields_from_attrs, merge
+
+from .converter import convert_django_field_with_choices
+from .registry import Registry, get_global_registry
+from .utils import (DJANGO_FILTER_INSTALLED, get_model_fields,
+                    is_valid_django_model)
 
 
 def construct_fields(options):
@@ -95,6 +97,7 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
 
 
 class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
+
     @classmethod
     def is_type_of(cls, root, context, info):
         if isinstance(root, cls):

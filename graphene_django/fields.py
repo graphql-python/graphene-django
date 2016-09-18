@@ -1,9 +1,11 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
+
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
-from .utils import maybe_queryset, DJANGO_FILTER_INSTALLED
+
+from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
 
 
 class DjangoConnectionField(ConnectionField):

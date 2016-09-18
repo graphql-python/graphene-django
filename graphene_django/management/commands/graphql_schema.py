@@ -67,6 +67,6 @@ class Command(CommandArguments):
         self.save_file(out, schema_dict)
 
         style = getattr(self, 'style', None)
-        SUCCESS = getattr(style, 'SUCCESS', lambda x: x)
+        success = getattr(style, 'SUCCESS', lambda x: x)
 
-        self.stdout.write(SUCCESS('Successfully dumped GraphQL schema to %s' % out))
+        self.stdout.write(success('Successfully dumped GraphQL schema to %s' % out))

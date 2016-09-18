@@ -1,4 +1,5 @@
-from graphene import ObjectType, List
+from graphene import List, ObjectType
+
 from .sql.types import DjangoDebugSQL
 
 

@@ -1,8 +1,7 @@
 from py.test import raises
 
-from ..types import DjangoObjectType
 from ..registry import Registry
-
+from ..types import DjangoObjectType
 from .models import Reporter
 
 
@@ -24,10 +23,20 @@ def test_should_raise_if_model_is_invalid():
 
 def test_should_map_fields_correctly():
     class ReporterType2(DjangoObjectType):
+
         class Meta:
             model = Reporter
             registry = Registry()
-    assert list(ReporterType2._meta.fields.keys()) == ['id', 'first_name', 'last_name', 'email', 'pets', 'a_choice', 'articles', 'films']
+    assert list(
+        ReporterType2._meta.fields.keys()) == [
+        'id',
+        'first_name',
+        'last_name',
+        'email',
+        'pets',
+        'a_choice',
+        'articles',
+        'films']
 
 
 def test_should_map_only_few_fields():

@@ -1,12 +1,17 @@
 import inspect
+
 from django.db import models
 from django.db.models.manager import Manager
 
+from .compat import RelatedObject
+
+
 # from graphene.utils import LazyList
+
+
 class LazyList(object):
     pass
 
-from .compat import RelatedObject
 
 try:
     import django_filters  # noqa

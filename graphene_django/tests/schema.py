@@ -1,7 +1,7 @@
 import graphene
 from graphene import Schema, relay
-from ..types import DjangoObjectType
 
+from ..types import DjangoObjectType
 from .models import Article, Reporter
 
 

@@ -2,9 +2,9 @@ from django import forms
 from py.test import raises
 
 import graphene
-from ..form_converter import convert_form_field
 from graphene import ID, List, NonNull
 
+from ..form_converter import convert_form_field
 from .models import Reporter
 
 

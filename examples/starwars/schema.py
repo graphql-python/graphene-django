@@ -1,14 +1,12 @@
 import graphene
-from graphene import relay, resolve_only_args, Schema
+from graphene import Schema, relay, resolve_only_args
 from graphene_django import DjangoObjectType
 
 from .data import (create_ship, get_empire, get_faction, get_rebels, get_ship,
                    get_ships)
-from .models import (
-    Character as CharacterModel,
-    Faction as FactionModel,
-    Ship as ShipModel
-)
+from .models import Character as CharacterModel
+from .models import Faction as FactionModel
+from .models import Ship as ShipModel
 
 
 class Ship(DjangoObjectType):

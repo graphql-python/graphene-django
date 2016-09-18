@@ -1,5 +1,5 @@
 from cookbook.ingredients.models import Category, Ingredient
-from graphene import ObjectType, Field, AbstractType, Node
+from graphene import AbstractType, Field, Node
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 
