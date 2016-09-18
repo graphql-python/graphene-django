@@ -41,7 +41,7 @@ setup(
     ],
     tests_require=[
         'django-filter>=0.10.0',
-        'pytest>=3.0',
+        'pytest',
         'pytest-django',
         'mock',
         # Required for Django postgres fields testing
