@@ -147,6 +147,9 @@ def convert_relatedfield_to_djangomodel(field, registry=None):
         if not _type:
             return
 
+        if isinstance(field.field, models.OneToOneField):
+            return Field(_type)
+
         if is_node(_type):
             return get_connection_field(_type)
         return Field(List(_type))
