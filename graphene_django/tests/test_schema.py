@@ -27,16 +27,20 @@ def test_should_map_fields_correctly():
         class Meta:
             model = Reporter
             registry = Registry()
-    assert list(
-        ReporterType2._meta.fields.keys()) == [
+    fields = list(ReporterType2._meta.fields.keys())
+    assert fields[:-2] == [
         'id',
         'first_name',
         'last_name',
         'email',
         'pets',
         'a_choice',
+    ]
+
+    assert sorted(fields[-2:]) == [
         'articles',
-        'films']
+        'films',
+    ]
 
 
 def test_should_map_only_few_fields():
