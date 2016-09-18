@@ -42,6 +42,9 @@ after_success:
   if [ "$TEST_TYPE" = build ]; then
       coveralls
   fi
+env:
+  matrix:
+  - TEST_TYPE=build
 matrix:
   fast_finish: true
   include:
