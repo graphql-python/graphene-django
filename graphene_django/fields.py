@@ -56,4 +56,4 @@ def get_connection_field(*args, **kwargs):
     if DJANGO_FILTER_INSTALLED:
         from .filter.fields import DjangoFilterConnectionField
         return DjangoFilterConnectionField(*args, **kwargs)
-    return ConnectionField(*args, **kwargs)
+    return DjangoConnectionField(*args, **kwargs)
