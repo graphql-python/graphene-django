@@ -2,10 +2,10 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-django',
-    version='1.0.dev20160910000001',
+    version='1.0.dev20160917000001',
 
     description='Graphene Django integration',
-    # long_description=open('README.rst').read(),
+    long_description=open('README.rst').read(),
 
     url='https://github.com/graphql-python/graphene-django',
 
