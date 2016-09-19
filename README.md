@@ -44,7 +44,7 @@ class Query(graphene.ObjectType):
     def resolve_users(self):
         return UserModel.objects.all()
 
-schema = graphene.Schema(query=QueryRoot)
+schema = graphene.Schema(query=Query)
 ```
 
 Then you can simply query the schema:
