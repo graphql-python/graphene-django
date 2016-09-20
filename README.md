@@ -16,6 +16,33 @@ For instaling graphene, just run this command in your shell
 pip install "graphene-django>=1.0.dev"
 ```
 
+### Settings
+
+```python
+INSTALLED_APPS = (
+    # ...
+    'graphene_django',
+)
+
+GRAPHENE = {
+    'SCHEMA': 'app.schema.schema' # Where your Graphene schema lives
+}
+```
+
+### Urls
+
+We need to set up a `GraphQL` endpoint in our Django app, so we can serve the queries.
+
+```python
+from django.conf.urls import url
+from graphene_django.views import GraphQLView
+
+urlpatterns = [
+    # ...
+    url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+]
+```
+
 ## Examples
 
 Here is a simple Django model:

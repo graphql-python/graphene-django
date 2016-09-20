@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_graphiql',
+    'graphene_django',
 
     'cookbook.ingredients.apps.IngredientsConfig',
     'cookbook.recipes.apps.RecipesConfig',
@@ -53,6 +53,10 @@ MIDDLEWARE_CLASSES = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
+GRAPHENE = {
+    'SCHEMA': 'cookbook.schema.schema'
+}
 
 ROOT_URLCONF = 'cookbook.urls'
 

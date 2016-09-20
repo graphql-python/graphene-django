@@ -1,57 +1,421 @@
+import pytest
 import json
 
+try:
+    from urllib import urlencode
+except ImportError:
+    from urllib.parse import urlencode
 
-def format_response(response):
+
+def url_string(**url_params):
+    string = '/graphql'
+
+    if url_params:
+        string += '?' + urlencode(url_params)
+
+    return string
+
+
+def response_json(response):
     return json.loads(response.content.decode())
 
 
-def test_client_get_good_query(settings, client):
-    settings.ROOT_URLCONF = 'graphene_django.tests.urls'
-    response = client.get('/graphql', {'query': '{ human { headline } }'})
-    json_response = format_response(response)
-    expected_json = {
+j = lambda **kwargs: json.dumps(kwargs)
+
+
+def test_graphiql_is_enabled(client):
+    response = client.get(url_string(), HTTP_ACCEPT='text/html')
+    assert response.status_code == 200
+
+
+def test_allows_get_with_query_param(client):
+    response = client.get(url_string(query='{test}'))
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
+
+
+def test_allows_get_with_variable_values(client):
+    response = client.get(url_string(
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables=json.dumps({'who': "Dolly"})
+    ))
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_allows_get_with_operation_name(client):
+    response = client.get(url_string(
+        query='''
+        query helloYou { test(who: "You"), ...shared }
+        query helloWorld { test(who: "World"), ...shared }
+        query helloDolly { test(who: "Dolly"), ...shared }
+        fragment shared on QueryRoot {
+          shared: test(who: "Everyone")
+        }
+        ''',
+        operationName='helloWorld'
+    ))
+
+    assert response.status_code == 200
+    assert response_json(response) == {
         'data': {
-            'human': {
-                'headline': None
-            }
+            'test': 'Hello World',
+            'shared': 'Hello Everyone'
         }
     }
-    assert json_response == expected_json
 
 
-def test_client_get_good_query_with_raise(settings, client):
-    settings.ROOT_URLCONF = 'graphene_django.tests.urls'
-    response = client.get('/graphql', {'query': '{ human { raises } }'})
-    json_response = format_response(response)
-    assert json_response['errors'][0]['message'] == 'This field should raise exception'
-    assert json_response['data']['human']['raises'] is None
+def test_reports_validation_errors(client):
+    response = client.get(url_string(
+        query='{ test, unknownOne, unknownTwo }'
+    ))
 
-
-def test_client_post_good_query_json(settings, client):
-    settings.ROOT_URLCONF = 'graphene_django.tests.urls'
-    response = client.post(
-        '/graphql', json.dumps({'query': '{ human { headline } }'}), 'application/json')
-    json_response = format_response(response)
-    expected_json = {
-        'data': {
-            'human': {
-                'headline': None
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [
+            {
+                'message': 'Cannot query field "unknownOne" on type "QueryRoot".',
+                'locations': [{'line': 1, 'column': 9}]
+            },
+            {
+                'message': 'Cannot query field "unknownTwo" on type "QueryRoot".',
+                'locations': [{'line': 1, 'column': 21}]
             }
+        ]
+    }
+
+
+def test_errors_when_missing_operation_name(client):
+    response = client.get(url_string(
+        query='''
+        query TestQuery { test }
+        mutation TestMutation { writeTest { test } }
+        '''
+    ))
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [
+            {
+                'message': 'Must provide operation name if query contains multiple operations.'
+            }
+        ]
+    }
+
+
+def test_errors_when_sending_a_mutation_via_get(client):
+    response = client.get(url_string(
+        query='''
+        mutation TestMutation { writeTest { test } }
+        '''
+    ))
+    assert response.status_code == 405
+    assert response_json(response) == {
+        'errors': [
+            {
+                'message': 'Can only perform a mutation operation from a POST request.'
+            }
+        ]
+    }
+
+
+def test_errors_when_selecting_a_mutation_within_a_get(client):
+    response = client.get(url_string(
+        query='''
+        query TestQuery { test }
+        mutation TestMutation { writeTest { test } }
+        ''',
+        operationName='TestMutation'
+    ))
+
+    assert response.status_code == 405
+    assert response_json(response) == {
+        'errors': [
+            {
+                'message': 'Can only perform a mutation operation from a POST request.'
+            }
+        ]
+    }
+
+
+def test_allows_mutation_to_exist_within_a_get(client):
+    response = client.get(url_string(
+        query='''
+        query TestQuery { test }
+        mutation TestMutation { writeTest { test } }
+        ''',
+        operationName='TestQuery'
+    ))
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
+
+
+def test_allows_post_with_json_encoding(client):
+    response = client.post(url_string(), j(query='{test}'), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
+
+
+def test_allows_sending_a_mutation_via_post(client):
+    response = client.post(url_string(), j(query='mutation TestMutation { writeTest { test } }'), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'writeTest': {'test': 'Hello World'}}
+    }
+
+
+def test_allows_post_with_url_encoding(client):
+    response = client.post(url_string(), urlencode(dict(query='{test}')), 'application/x-www-form-urlencoded')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
+
+
+def test_supports_post_json_query_with_string_variables(client):
+    response = client.post(url_string(), j(
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables=json.dumps({'who': "Dolly"})
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_supports_post_json_query_with_json_variables(client):
+    response = client.post(url_string(), j(
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables={'who': "Dolly"}
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_supports_post_url_encoded_query_with_string_variables(client):
+    response = client.post(url_string(), urlencode(dict(
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables=json.dumps({'who': "Dolly"})
+    )), 'application/x-www-form-urlencoded')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_supports_post_json_quey_with_get_variable_values(client):
+    response = client.post(url_string(
+        variables=json.dumps({'who': "Dolly"})
+    ), j(
+        query='query helloWho($who: String){ test(who: $who) }',
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_post_url_encoded_query_with_get_variable_values(client):
+    response = client.post(url_string(
+        variables=json.dumps({'who': "Dolly"})
+    ), urlencode(dict(
+        query='query helloWho($who: String){ test(who: $who) }',
+    )), 'application/x-www-form-urlencoded')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_supports_post_raw_text_query_with_get_variable_values(client):
+    response = client.post(url_string(
+        variables=json.dumps({'who': "Dolly"})
+    ),
+        'query helloWho($who: String){ test(who: $who) }',
+        'application/graphql'
+    )
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {'test': "Hello Dolly"}
+    }
+
+
+def test_allows_post_with_operation_name(client):
+    response = client.post(url_string(), j(
+        query='''
+        query helloYou { test(who: "You"), ...shared }
+        query helloWorld { test(who: "World"), ...shared }
+        query helloDolly { test(who: "Dolly"), ...shared }
+        fragment shared on QueryRoot {
+          shared: test(who: "Everyone")
+        }
+        ''',
+        operationName='helloWorld'
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {
+            'test': 'Hello World',
+            'shared': 'Hello Everyone'
         }
     }
-    assert json_response == expected_json
 
 
-def test_client_post_good_query_graphql(settings, client):
-    settings.ROOT_URLCONF = 'graphene_django.tests.urls'
-    response = client.post(
-        '/graphql', '{ human { headline } }', 'application/graphql')
-    json_response = format_response(response)
-    expected_json = {
+def test_allows_post_with_get_operation_name(client):
+    response = client.post(url_string(
+        operationName='helloWorld'
+    ), '''
+    query helloYou { test(who: "You"), ...shared }
+    query helloWorld { test(who: "World"), ...shared }
+    query helloDolly { test(who: "Dolly"), ...shared }
+    fragment shared on QueryRoot {
+      shared: test(who: "Everyone")
+    }
+    ''',
+        'application/graphql')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
         'data': {
-            'human': {
-                'headline': None
-            }
+            'test': 'Hello World',
+            'shared': 'Hello Everyone'
         }
     }
-    assert json_response == expected_json
+
+
+@pytest.mark.urls('tests.urls_pretty')
+def test_supports_pretty_printing(client):
+    response = client.get(url_string(query='{test}'))
+
+    assert response.content.decode() == (
+        '{\n'
+        '  "data": {\n'
+        '    "test": "Hello World"\n'
+        '  }\n'
+        '}'
+    )
+
+
+def test_supports_pretty_printing_by_request(client):
+    response = client.get(url_string(query='{test}', pretty='1'))
+
+    assert response.content.decode() == (
+        '{\n'
+        '  "data": {\n'
+        '    "test": "Hello World"\n'
+        '  }\n'
+        '}'
+    )
+
+
+def test_handles_field_errors_caught_by_graphql(client):
+    response = client.get(url_string(query='{thrower}'))
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': None,
+        'errors': [{'locations': [{'column': 2, 'line': 1}], 'message': 'Throws!'}]
+    }
+
+
+def test_handles_syntax_errors_caught_by_graphql(client):
+    response = client.get(url_string(query='syntaxerror'))
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'locations': [{'column': 1, 'line': 1}],
+                    'message': 'Syntax Error GraphQL request (1:1) '
+                               'Unexpected Name "syntaxerror"\n\n1: syntaxerror\n   ^\n'}]
+    }
+
+
+def test_handles_errors_caused_by_a_lack_of_query(client):
+    response = client.get(url_string())
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'Must provide query string.'}]
+    }
+
+
+def test_handles_invalid_json_bodies(client):
+    response = client.post(url_string(), '[]', 'application/json')
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'POST body sent invalid JSON.'}]
+    }
+
+
+def test_handles_incomplete_json_bodies(client):
+    response = client.post(url_string(), '{"query":', 'application/json')
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'POST body sent invalid JSON.'}]
+    }
+
+
+def test_handles_plain_post_text(client):
+    response = client.post(url_string(
+        variables=json.dumps({'who': "Dolly"})
+    ),
+        'query helloWho($who: String){ test(who: $who) }',
+        'text/plain'
+    )
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'Must provide query string.'}]
+    }
+
+
+def test_handles_poorly_formed_variables(client):
+    response = client.get(url_string(
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables='who:You'
+    ))
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'Variables are invalid JSON.'}]
+    }
+
+
+def test_handles_unsupported_http_methods(client):
+    response = client.put(url_string(query='{test}'))
+    assert response.status_code == 405
+    assert response['Allow'] == 'GET, POST'
+    assert response_json(response) == {
+        'errors': [{'message': 'GraphQL only supports GET and POST requests.'}]
+    }
+
+
+def test_passes_request_into_context_request(client):
+    response = client.get(url_string(query='{request}', q='testing'))
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'data': {
+            'request': 'testing'
+        }
+    }

@@ -59,20 +59,6 @@ docs/_build/
 # PyBuilder
 target/
 
-
-/tests/django.sqlite
-
-/graphene/index.json
-/graphene/meta.json
-
-/meta.json
-/index.json
-
-/docs/playground/graphene-js/pypyjs-release-nojit/
-/docs/static/playground/lib
-
-/docs/static/playground
-
 # PyCharm
 .idea
 

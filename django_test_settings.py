@@ -18,3 +18,17 @@ DATABASES = {
         'NAME': 'django_test.sqlite',
     }
 }
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],
+        'APP_DIRS': True,
+    },
+]
+
+GRAPHENE = {
+    'SCHEMA': 'graphene_django.tests.schema_view.schema'
+}
+
+ROOT_URLCONF = 'graphene_django.tests.urls'

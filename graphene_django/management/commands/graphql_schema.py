@@ -6,6 +6,8 @@ from optparse import make_option
 from django import get_version as get_django_version
 from django.core.management.base import BaseCommand, CommandError
 
+from graphene_django.settings import graphene_settings
+
 LT_DJANGO_1_8 = StrictVersion(get_django_version()) < StrictVersion('1.8')
 
 if LT_DJANGO_1_8:
@@ -16,7 +18,7 @@ if LT_DJANGO_1_8:
                 type=str,
                 dest='schema',
                 default='',
-                help='Django app containing schema to dump, e.g. myproject.core.schema',
+                help='Django app containing schema to dump, e.g. myproject.core.schema.schema',
             ),
             make_option(
                 '--out',
@@ -35,14 +37,14 @@ else:
                 '--schema',
                 type=str,
                 dest='schema',
-                default=getattr(settings, 'GRAPHENE_SCHEMA', ''),
-                help='Django app containing schema to dump, e.g. myproject.core.schema')
+                default=graphene_settings.SCHEMA,
+                help='Django app containing schema to dump, e.g. myproject.core.schema.schema')
 
             parser.add_argument(
                 '--out',
                 type=str,
                 dest='out',
-                default=getattr(settings, 'GRAPHENE_SCHEMA_OUTPUT', 'schema.json'),
+                default=graphene_settings.SCHEMA_OUTPUT,
                 help='Output file (default: schema.json)')
 
 
@@ -56,14 +58,18 @@ class Command(CommandArguments):
 
     def handle(self, *args, **options):
         from django.conf import settings
-        schema = options.get('schema') or getattr(settings, 'GRAPHENE_SCHEMA', '')
-        out = options.get('out') or getattr(settings, 'GRAPHENE_SCHEMA_OUTPUT', 'schema.json')
+        options_schema = options.get('schema')
+        if options_schema:
+            schema = importlib.import_module(options_schema)
+        else:
+            schema = graphene_settings.SCHEMA
 
-        if schema == '':
-            raise CommandError('Specify schema on GRAPHENE_SCHEMA setting or by using --schema')
-        i = importlib.import_module(schema)
+        out = options.get('out') or graphene_settings.SCHEMA_OUTPUT
 
-        schema_dict = {'data': i.schema.introspect()}
+        if not schema:
+            raise CommandError('Specify schema on GRAPHENE.SCHEMA setting or by using --schema')
+
+        schema_dict = {'data': schema.introspect()}
         self.save_file(out, schema_dict)
 
         style = getattr(self, 'style', None)
