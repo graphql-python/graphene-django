@@ -1,7 +1,6 @@
-from django.conf.urls import include, url
+from django.conf.urls import url
 from django.contrib import admin
 
-from cookbook.schema import schema
 from graphene_django.views import GraphQLView
 
 urlpatterns = [

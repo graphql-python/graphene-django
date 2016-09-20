@@ -19,7 +19,6 @@ from .models import Article, Film, FilmDetails, Reporter
 # from graphene.core.types.custom_scalars import DateTime, JSONString
 
 
-
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
     field = django_field(help_text='Custom Help Text', *args, **kwargs)
     graphene_type = convert_django_field(field)

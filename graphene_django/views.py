@@ -1,23 +1,25 @@
-import re
 import json
-import six
+import re
 
+import six
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
-from django.views.generic import View
 from django.shortcuts import render
+from django.views.generic import View
 
-from graphql import Source, parse, execute, validate
-from graphql.error import GraphQLError, format_error as format_graphql_error
+from graphql import Source, execute, parse, validate
+from graphql.error import format_error as format_graphql_error
+from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
-from graphql.type.schema import GraphQLSchema
 from graphql.execution.middleware import MiddlewareManager
+from graphql.type.schema import GraphQLSchema
 from graphql.utils.get_operation_ast import get_operation_ast
 
 from .settings import graphene_settings
 
 
 class HttpError(Exception):
+
     def __init__(self, response, message=None, *args, **kwargs):
         self.response = response
         self.message = message = message or response.content.decode()
@@ -192,7 +194,7 @@ class GraphQLView(View):
             if operation_ast and operation_ast.operation != 'query':
                 if show_graphiql:
                     return None
-                
+
                 raise HttpError(HttpResponseNotAllowed(
                     ['POST'], 'Can only perform a {} operation from a POST request.'.format(operation_ast.operation)
                 ))

@@ -1,5 +1,6 @@
-import pytest
 import json
+
+import pytest
 
 try:
     from urllib import urlencode

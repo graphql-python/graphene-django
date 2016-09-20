@@ -43,7 +43,6 @@ IMPORT_STRINGS = (
 )
 
 
-
 def perform_import(val, setting_name):
     """
     If the given setting is a string import notation,
@@ -82,6 +81,7 @@ class GrapheneSettings(object):
     Any setting with string import paths will be automatically resolved
     and return the class, rather than the string literal.
     """
+
     def __init__(self, user_settings=None, defaults=None, import_strings=None):
         if user_settings:
             self._user_settings = user_settings

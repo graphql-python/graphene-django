@@ -1,6 +1,6 @@
 import graphene
 from graphene import Schema, relay, resolve_only_args
-from graphene_django import DjangoObjectType, DjangoConnectionField
+from graphene_django import DjangoConnectionField, DjangoObjectType
 
 from .data import (create_ship, get_empire, get_faction, get_rebels, get_ship,
                    get_ships)

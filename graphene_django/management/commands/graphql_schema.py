@@ -32,7 +32,6 @@ else:
     class CommandArguments(BaseCommand):
 
         def add_arguments(self, parser):
-            from django.conf import settings
             parser.add_argument(
                 '--schema',
                 type=str,
@@ -57,7 +56,6 @@ class Command(CommandArguments):
             json.dump(schema_dict, outfile)
 
     def handle(self, *args, **options):
-        from django.conf import settings
         options_schema = options.get('schema')
         if options_schema:
             schema = importlib.import_module(options_schema)
