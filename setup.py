@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-django',
-    version='1.0.dev20160919000001',
+    version='1.0.dev20160919000002',
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),
@@ -46,4 +46,7 @@ setup(
         # Required for Django postgres fields testing
         'psycopg2',
     ],
+    include_package_data=True,
+    zip_safe=False,
+    platforms='any',
 )

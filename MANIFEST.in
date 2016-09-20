@@ -1,0 +1,2 @@
+include README.md
+recursive-include graphene_django/templates *
