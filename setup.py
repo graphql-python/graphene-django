@@ -37,7 +37,6 @@ setup(
         'Django>=1.6.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
-        'graphql-django-view>=1.3',
     ],
     tests_require=[
         'django-filter>=0.10.0',
