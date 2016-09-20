@@ -14,7 +14,6 @@ from graphql import Source, execute, parse, validate
 from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
-from graphql.execution.middleware import MiddlewareManager
 from graphql.type.schema import GraphQLSchema
 from graphql.utils.get_operation_ast import get_operation_ast
 
@@ -73,7 +72,7 @@ class GraphQLView(View):
 
         self.schema = schema
         if middleware is not None:
-            self.middleware = MiddlewareManager(*list(instantiate_middleware(middleware)))
+            self.middleware = list(instantiate_middleware(middleware))
         self.executor = executor
         self.root_value = root_value
         self.pretty = pretty
@@ -220,7 +219,7 @@ class GraphQLView(View):
                 variable_values=variables,
                 operation_name=operation_name,
                 context_value=self.get_context(request),
-                middlewares=self.get_middleware(request),
+                middleware=self.get_middleware(request),
                 executor=self.executor,
             )
         except Exception as e:

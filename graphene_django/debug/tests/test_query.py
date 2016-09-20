@@ -59,8 +59,8 @@ def test_should_query_field():
             }]
         }
     }
-    schema = graphene.Schema(query=Query, middlewares=[DjangoDebugMiddleware()])
-    result = schema.execute(query, context_value=context())
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query, context_value=context(), middleware=[DjangoDebugMiddleware()])
     assert not result.errors
     assert result.data == expected
 
@@ -108,8 +108,8 @@ def test_should_query_list():
             }]
         }
     }
-    schema = graphene.Schema(query=Query, middlewares=[DjangoDebugMiddleware()])
-    result = schema.execute(query, context_value=context())
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query, context_value=context(), middleware=[DjangoDebugMiddleware()])
     assert not result.errors
     assert result.data == expected
 
@@ -158,8 +158,8 @@ def test_should_query_connection():
             }]
         },
     }
-    schema = graphene.Schema(query=Query, middlewares=[DjangoDebugMiddleware()])
-    result = schema.execute(query, context_value=context())
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query, context_value=context(), middleware=[DjangoDebugMiddleware()])
     assert not result.errors
     assert result.data['allReporters'] == expected['allReporters']
     assert 'COUNT' in result.data['__debug']['sql'][0]['rawSql']
@@ -216,8 +216,8 @@ def test_should_query_connectionfilter():
             }]
         },
     }
-    schema = graphene.Schema(query=Query, middlewares=[DjangoDebugMiddleware()])
-    result = schema.execute(query, context_value=context())
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query, context_value=context(), middleware=[DjangoDebugMiddleware()])
     assert not result.errors
     assert result.data['allReporters'] == expected['allReporters']
     assert 'COUNT' in result.data['__debug']['sql'][0]['rawSql']
