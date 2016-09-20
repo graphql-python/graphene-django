@@ -306,7 +306,7 @@ def test_allows_post_with_get_operation_name(client):
     }
 
 
-@pytest.mark.urls('tests.urls_pretty')
+@pytest.mark.urls('graphene_django.tests.urls_pretty')
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query='{test}'))
 
