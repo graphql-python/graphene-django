@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-django',
-    version='1.0.dev20160919000002',
+    version='1.0.dev20160919000003',
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),

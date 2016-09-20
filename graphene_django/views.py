@@ -6,7 +6,9 @@ import six
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
 from django.views.generic import View
+from django.views.decorators.csrf import ensure_csrf_cookie
 
 from graphql import Source, execute, parse, validate
 from graphql.error import format_error as format_graphql_error
@@ -89,6 +91,7 @@ class GraphQLView(View):
     def get_context(self, request):
         return request
 
+    @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
         try:
             if request.method.lower() not in ('get', 'post'):
