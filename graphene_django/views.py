@@ -1,3 +1,4 @@
+import inspect
 import json
 import re
 
@@ -42,6 +43,14 @@ def get_accepted_content_types(request):
                                      key=lambda x: x[1], reverse=True))
 
 
+def instantiate_middleware(middlewares):
+    for middleware in middlewares:
+        if inspect.isclass(middleware):
+            yield middleware()
+            continue
+        yield middleware
+
+
 class GraphQLView(View):
     graphiql_version = '0.7.8'
     graphiql_template = 'graphene/graphiql.html'
@@ -60,7 +69,8 @@ class GraphQLView(View):
             middleware = graphene_settings.MIDDLEWARE
 
         self.schema = schema
-        self.middleware = MiddlewareManager(middleware)
+        if middleware is not None:
+            self.middleware = MiddlewareManager(*list(instantiate_middleware(middleware)))
         self.executor = executor
         self.root_value = root_value
         self.pretty = pretty
