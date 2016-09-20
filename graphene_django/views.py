@@ -55,6 +55,7 @@ class GraphQLView(View):
     graphiql_version = '0.7.8'
     graphiql_template = 'graphene/graphiql.html'
 
+    schema = None
     graphiql = False
     executor = None
     middleware = None
