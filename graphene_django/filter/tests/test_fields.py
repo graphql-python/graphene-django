@@ -15,7 +15,7 @@ if DJANGO_FILTER_INSTALLED:
     import django_filters
     from graphene_django.filter import (GlobalIDFilter, DjangoFilterConnectionField,
                                         GlobalIDMultipleChoiceFilter)
-    from graphene_django.filter.tests.filters import ArticleFilter, PetFilter
+    from graphene_django.filter.tests.filters import ArticleFilter, PetFilter, ReporterFilter
 else:
     pytestmark.append(pytest.mark.skipif(True, reason='django_filters not installed'))
 
@@ -108,18 +108,18 @@ def test_filter_shortcut_filterset_arguments_dict():
 
 
 def test_filter_explicit_filterset_orderable():
-    field = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleFilter)
+    field = DjangoFilterConnectionField(ReporterNode, filterset_class=ReporterFilter)
     assert_orderable(field)
 
 
 def test_filter_shortcut_filterset_orderable_true():
-    field = DjangoFilterConnectionField(ArticleNode, order_by=True)
+    field = DjangoFilterConnectionField(ReporterNode, order_by=True)
     assert_orderable(field)
 
 
-def test_filter_shortcut_filterset_orderable_headline():
-    field = DjangoFilterConnectionField(ArticleNode, order_by=['headline'])
-    assert_orderable(field)
+# def test_filter_shortcut_filterset_orderable_headline():
+#     field = DjangoFilterConnectionField(ReporterNode, order_by=['headline'])
+#     assert_orderable(field)
 
 
 def test_filter_explicit_filterset_not_orderable():

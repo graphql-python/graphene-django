@@ -1,9 +1,12 @@
+import itertools
+
 import six
 from django.conf import settings
 from django.db import models
 from django.utils.text import capfirst
 from django_filters import Filter, MultipleChoiceFilter
 from django_filters.filterset import FilterSet, FilterSetMetaclass
+from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
 from graphql_relay.node.node import from_global_id
 
@@ -45,18 +48,29 @@ GRAPHENE_FILTER_SET_OVERRIDES = {
 }
 
 
+# Only useful for Django-filter 0.14-, not necessary in latest version 0.15+
 class GrapheneFilterSetMetaclass(FilterSetMetaclass):
 
     def __new__(cls, name, bases, attrs):
         new_class = super(GrapheneFilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
         # Customise the filter_overrides for Graphene
+        if hasattr(new_class, '_meta') and hasattr(new_class._meta, 'filter_overrides'):
+            filter_overrides = new_class._meta.filter_overrides
+        else:
+            filter_overrides = new_class.filter_overrides
+
         for k, v in GRAPHENE_FILTER_SET_OVERRIDES.items():
-            new_class.filter_overrides.setdefault(k, v)
+            filter_overrides.setdefault(k, v)
+
         return new_class
 
 
 class GrapheneFilterSetMixin(object):
     order_by_field = ORDER_BY_FIELD
+    FILTER_DEFAULTS = dict(itertools.chain(
+        FILTER_FOR_DBFIELD_DEFAULTS.items(),
+        GRAPHENE_FILTER_SET_OVERRIDES.items()
+    ))
 
     @classmethod
     def filter_for_reverse_field(cls, f, name):
