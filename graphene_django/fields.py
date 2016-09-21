@@ -2,10 +2,24 @@ from functools import partial
 
 from django.db.models.query import QuerySet
 
+from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
+
+
+class DjangoToManyField(Field):
+
+    def __init__(self, _type, *args, **kwargs):
+        return super(DjangoToManyField, self).__init__(List(_type), *args, **kwargs)
+
+    @staticmethod
+    def rel_resolver(resolver, root, args, context, info):
+        return maybe_queryset(resolver(root, args, context, info))
+
+    def get_resolver(self, parent_resolver):
+        return partial(self.rel_resolver, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):
