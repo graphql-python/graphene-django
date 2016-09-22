@@ -10,7 +10,7 @@ from graphene.utils.str_converters import to_const
 
 from .compat import (ArrayField, HStoreField, JSONField, RangeField,
                      RelatedObject, UUIDField)
-from .fields import get_connection_field, DjangoToManyField
+from .fields import get_connection_field, DjangoListField
 from .utils import get_related_model, import_single_dispatch
 
 singledispatch = import_single_dispatch()
@@ -133,7 +133,7 @@ def convert_field_to_list_or_connection(field, registry=None):
         if is_node(_type):
             return get_connection_field(_type)
 
-        return DjangoToManyField(_type)
+        return DjangoListField(_type)
 
     return Dynamic(dynamic_type)
 
@@ -153,7 +153,7 @@ def convert_relatedfield_to_djangomodel(field, registry=None):
 
         if is_node(_type):
             return get_connection_field(_type)
-        return DjangoToManyField(_type)
+        return DjangoListField(_type)
 
     return Dynamic(dynamic_type)
 

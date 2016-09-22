@@ -9,17 +9,21 @@ from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
 
 
-class DjangoToManyField(Field):
+class DjangoListField(Field):
 
     def __init__(self, _type, *args, **kwargs):
-        return super(DjangoToManyField, self).__init__(List(_type), *args, **kwargs)
+        return super(DjangoListField, self).__init__(List(_type), *args, **kwargs)
+
+    @property
+    def model(self):
+        return self.type.of_type._meta.node._meta.model
 
     @staticmethod
-    def rel_resolver(resolver, root, args, context, info):
+    def list_resolver(resolver, root, args, context, info):
         return maybe_queryset(resolver(root, args, context, info))
 
     def get_resolver(self, parent_resolver):
-        return partial(self.rel_resolver, parent_resolver)
+        return partial(self.list_resolver, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):

@@ -33,6 +33,9 @@ def initialize():
     )
     xwing.save()
 
+    human.ship = xwing
+    human.save()
+
     ywing = Ship(
         id='2',
         name='Y-Wing',

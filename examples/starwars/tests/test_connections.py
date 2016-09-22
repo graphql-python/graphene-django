@@ -45,3 +45,30 @@ def test_correct_fetch_first_ship_rebels():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_correct_list_characters():
+    initialize()
+    query = '''
+    query RebelsShipsQuery {
+      node(id: "U2hpcDox") {
+        ... on Ship {
+          name
+          characters {
+            name
+          }
+        }
+      }
+    }
+    '''
+    expected = {
+        'node': {
+            'name': 'X-Wing',
+            'characters': [{
+                'name': 'Human'
+            }],
+        }
+    }
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected

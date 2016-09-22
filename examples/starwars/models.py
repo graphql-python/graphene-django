@@ -5,6 +5,7 @@ from django.db import models
 
 class Character(models.Model):
     name = models.CharField(max_length=50)
+    ship = models.ForeignKey('Ship', blank=True, null=True, related_name='characters')
 
     def __str__(self):
         return self.name
