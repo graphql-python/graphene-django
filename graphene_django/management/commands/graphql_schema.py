@@ -57,8 +57,15 @@ class Command(CommandArguments):
 
     def handle(self, *args, **options):
         options_schema = options.get('schema')
-        if options_schema:
-            schema = importlib.import_module(options_schema)
+
+        if options_schema and type(options_schema) is str:
+            module_str, schema_name = options_schema.rsplit('.', 1)
+            mod = importlib.import_module(module_str)
+            schema = getattr(mod, schema_name)
+
+        elif options_schema:
+            schema = options_schema
+
         else:
             schema = graphene_settings.SCHEMA
 
