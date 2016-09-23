@@ -20,11 +20,17 @@ from .models import Article, Film, FilmDetails, Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
-    field = django_field(help_text='Custom Help Text', *args, **kwargs)
+    field = django_field(help_text='Custom Help Text', null=True, *args, **kwargs)
     graphene_type = convert_django_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
     assert field.description == 'Custom Help Text'
+    nonnull_field = django_field(null=False, *args, **kwargs)
+    if not nonnull_field.null:
+        nonnull_graphene_type = convert_django_field(nonnull_field)
+        nonnull_field = nonnull_graphene_type.Field()
+        assert isinstance(nonnull_field.type, graphene.NonNull)
+        return nonnull_field
     return field
 
 
@@ -226,8 +232,7 @@ def test_should_onetoone_reverse_convert_model():
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
-    assert isinstance(dynamic_field.type, graphene.NonNull)
-    assert dynamic_field.of_type.type == A
+    assert dynamic_field.type == A
 
 
 @pytest.mark.skipif(ArrayField is MissingType,

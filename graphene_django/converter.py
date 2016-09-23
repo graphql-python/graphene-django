@@ -114,7 +114,10 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type, required=not field.null)
+        # We do this for a bug in Django 1.8, where null attr
+        # is not available in the OneToOneRel instance
+        null = getattr(field, 'null', True)
+        return Field(_type, required=not null)
 
     return Dynamic(dynamic_type)
 
@@ -149,7 +152,7 @@ def convert_relatedfield_to_djangomodel(field, registry=None):
             return
 
         if isinstance(field.field, models.OneToOneField):
-            return Field(_type, required=not field.field.null)
+            return Field(_type)
 
         if is_node(_type):
             return get_connection_field(_type)
