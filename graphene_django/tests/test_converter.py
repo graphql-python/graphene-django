@@ -226,24 +226,27 @@ def test_should_onetoone_reverse_convert_model():
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
-    assert dynamic_field.type == A
+    assert isinstance(dynamic_field.type, graphene.NonNull)
+    assert dynamic_field.of_type.type == A
 
 
 @pytest.mark.skipif(ArrayField is MissingType,
                     reason="ArrayField should exist")
 def test_should_postgres_array_convert_list():
     field = assert_conversion(ArrayField, graphene.List, models.CharField(max_length=100))
-    assert isinstance(field.type, graphene.List)
-    assert field.type.of_type == graphene.String
+    assert isinstance(field.type, graphene.NonNull)
+    assert isinstance(field.type.of_type, graphene.List)
+    assert field.type.of_type.of_type == graphene.String
 
 
 @pytest.mark.skipif(ArrayField is MissingType,
                     reason="ArrayField should exist")
 def test_should_postgres_array_multiple_convert_list():
     field = assert_conversion(ArrayField, graphene.List, ArrayField(models.CharField(max_length=100)))
-    assert isinstance(field.type, graphene.List)
+    assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
-    assert field.type.of_type.of_type == graphene.String
+    assert isinstance(field.type.of_type.of_type, graphene.List)
+    assert field.type.of_type.of_type.of_type == graphene.String
 
 
 @pytest.mark.skipif(HStoreField is MissingType,
@@ -263,5 +266,6 @@ def test_should_postgres_json_convert_string():
 def test_should_postgres_range_convert_list():
     from django.contrib.postgres.fields import IntegerRangeField
     field = assert_conversion(IntegerRangeField, graphene.List)
-    assert isinstance(field.type, graphene.List)
-    assert field.type.of_type == graphene.Int
+    assert isinstance(field.type, graphene.NonNull)
+    assert isinstance(field.type.of_type, graphene.List)
+    assert field.type.of_type.of_type == graphene.Int

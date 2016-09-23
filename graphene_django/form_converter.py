@@ -34,13 +34,13 @@ def convert_form_field(field):
 @convert_form_field.register(forms.Field)
 @convert_form_field.register(UUIDField)
 def convert_form_field_to_string(field):
-    return String(description=field.help_text)
+    return String(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.IntegerField)
 @convert_form_field.register(forms.NumberInput)
 def convert_form_field_to_int(field):
-    return Int(description=field.help_text)
+    return Int(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.BooleanField)
@@ -56,16 +56,16 @@ def convert_form_field_to_nullboolean(field):
 @convert_form_field.register(forms.DecimalField)
 @convert_form_field.register(forms.FloatField)
 def convert_form_field_to_float(field):
-    return Float(description=field.help_text)
+    return Float(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.ModelMultipleChoiceField)
 @convert_form_field.register(GlobalIDMultipleChoiceField)
 def convert_form_field_to_list(field):
-    return List(ID)
+    return List(ID, required=field.required)
 
 
 @convert_form_field.register(forms.ModelChoiceField)
 @convert_form_field.register(GlobalIDFormField)
 def convert_form_field_to_id(field):
-    return ID()
+    return ID(required=field.required)

@@ -63,10 +63,10 @@ schema {
 
 type Article implements Node {
   id: ID!
-  headline: String
-  pubDate: DateTime
-  reporter: Reporter
-  lang: ArticleLang
+  headline: String!
+  pubDate: DateTime!
+  reporter: Reporter!
+  lang: ArticleLang!
   importance: ArticleImportance
 }
 
@@ -104,12 +104,12 @@ type PageInfo {
 }
 
 type Reporter {
-  id: ID
-  firstName: String
-  lastName: String
-  email: String
+  id: ID!
+  firstName: String!
+  lastName: String!
+  email: String!
   pets: [Reporter]
-  aChoice: ReporterA_choice
+  aChoice: ReporterA_choice!
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
 

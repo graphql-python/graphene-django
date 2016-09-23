@@ -47,7 +47,7 @@ def convert_django_field_with_choices(field, registry=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        return enum(description=field.help_text)
+        return enum(description=field.help_text, required=not field.null)
     return convert_django_field(field, registry)
 
 
@@ -67,12 +67,12 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(models.FileField)
 @convert_django_field.register(UUIDField)
 def convert_field_to_string(field, registry=None):
-    return String(description=field.help_text)
+    return String(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.AutoField)
 def convert_field_to_id(field, registry=None):
-    return ID(description=field.help_text)
+    return ID(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.PositiveIntegerField)
@@ -81,7 +81,7 @@ def convert_field_to_id(field, registry=None):
 @convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
-    return Int(description=field.help_text)
+    return Int(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.BooleanField)
@@ -91,18 +91,18 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(models.NullBooleanField)
 def convert_field_to_nullboolean(field, registry=None):
-    return Boolean(description=field.help_text)
+    return Boolean(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.DecimalField)
 @convert_django_field.register(models.FloatField)
 def convert_field_to_float(field, registry=None):
-    return Float(description=field.help_text)
+    return Float(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.DateField)
 def convert_date_to_string(field, registry=None):
-    return DateTime(description=field.help_text)
+    return DateTime(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.OneToOneRel)
@@ -114,7 +114,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type)
+        return Field(_type, required=not field.null)
 
     return Dynamic(dynamic_type)
 
@@ -149,7 +149,7 @@ def convert_relatedfield_to_djangomodel(field, registry=None):
             return
 
         if isinstance(field.field, models.OneToOneField):
-            return Field(_type)
+            return Field(_type, required=not field.field.null)
 
         if is_node(_type):
             return get_connection_field(_type)
@@ -168,7 +168,7 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type, description=field.help_text)
+        return Field(_type, description=field.help_text, required=not field.null)
 
     return Dynamic(dynamic_type)
 
@@ -178,13 +178,13 @@ def convert_postgres_array_to_list(field, registry=None):
     base_type = convert_django_field(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
         base_type = type(base_type)
-    return List(base_type, description=field.help_text)
+    return List(base_type, description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(HStoreField)
 @convert_django_field.register(JSONField)
 def convert_posgres_field_to_string(field, registry=None):
-    return JSONString(description=field.help_text)
+    return JSONString(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(RangeField)
@@ -192,4 +192,4 @@ def convert_posgres_range_to_string(field, registry=None):
     inner_type = convert_django_field(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
-    return List(inner_type, description=field.help_text)
+    return List(inner_type, description=field.help_text, required=not field.null)
