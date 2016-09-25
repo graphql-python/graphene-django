@@ -70,7 +70,7 @@ with the context argument.
         def resolve_my_posts(self, args, context, info):
             # context will reference to the Django request
             if not context.user.is_authenticated():
-                return []
+                return Post.objects.none()
             else:
                 return Post.objects.filter(owner=context.user)
 
@@ -105,7 +105,6 @@ method to your ``DjangoObjectType``.
             except cls._meta.model.DoesNotExist:
                 return None
 
-            if post.published or context.user is post.owner:
+            if post.published or context.user == post.owner:
                 return instance
-            else:
-                return None
+            return None

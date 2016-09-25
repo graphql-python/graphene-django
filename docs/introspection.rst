@@ -32,6 +32,9 @@ you're ready to use Relay with Graphene GraphQL implementation.
 Advanced Usage
 --------------
 
+The ``--indent`` option can be used to specify the number of indentation spaces to
+be used in the output. Defaults to `None` which displays all data on a single line.
+
 To simplify the command to ``./manage.py graphql_schema``, you can
 specify the parameters in your settings.py:
 
