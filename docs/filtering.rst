@@ -46,7 +46,7 @@ For example:
 
 You could then perform a query such as:
 
-.. code:: graphql
+.. code::
 
     query {
       # Note that fields names become camelcased
@@ -77,7 +77,7 @@ You can also make more complex lookup types available:
 
 Which you could query as follows:
 
-.. code:: graphql
+.. code::
 
     query {
       # Note that fields names become camelcased
@@ -115,7 +115,7 @@ For example:
 
 You can then control the ordering via the ``orderBy`` argument:
 
-.. code:: graphql
+.. code::
 
     query {
       allAnimals(orderBy: "name") {

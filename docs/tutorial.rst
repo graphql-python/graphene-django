@@ -262,7 +262,7 @@ from the command line.
 Go to `localhost:8000/graphiql <http://localhost:8000/graphiql>`__ and
 type your first query!
 
-.. code:: graphql
+.. code::
 
     query {
       allIngredients {
@@ -278,7 +278,7 @@ type your first query!
 The above will return the names & IDs for all ingredients. But perhaps
 you want a specific ingredient:
 
-.. code:: graphql
+.. code::
 
     query {
       # Graphene creates globally unique IDs for all objects.
@@ -290,7 +290,7 @@ you want a specific ingredient:
 
 You can also get each ingredient for each category:
 
-.. code:: graphql
+.. code::
 
     query {
       allCategories {
@@ -311,7 +311,7 @@ You can also get each ingredient for each category:
 
 Or you can get only 'meat' ingredients containing the letter 'e':
 
-.. code:: graphql
+.. code::
 
     query {
       # You can also use `category: "CATEGORY GLOBAL ID"`

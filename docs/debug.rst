@@ -45,7 +45,7 @@ Querying
 You can query it for outputing all the sql transactions that happened in
 the GraphQL request, like:
 
-.. code:: graphql
+.. code::
 
     {
       # A example that will use the ORM for interact with the DB
