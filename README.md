@@ -12,7 +12,7 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 For instaling graphene, just run this command in your shell
 
 ```bash
-pip install "graphene-django>=1.0.dev"
+pip install "graphene-django>=1.0"
 ```
 
 ### Settings

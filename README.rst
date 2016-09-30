@@ -17,7 +17,7 @@ For instaling graphene, just run this command in your shell
 
 .. code:: bash
 
-    pip install "graphene-django>=1.0.dev"
+    pip install "graphene-django>=1.0"
 
 Settings
 ~~~~~~~~
