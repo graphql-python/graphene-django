@@ -55,7 +55,10 @@ MIDDLEWARE_CLASSES = [
 ]
 
 GRAPHENE = {
-    'SCHEMA': 'cookbook.schema.schema'
+    'SCHEMA': 'cookbook.schema.schema',
+    'MIDDLEWARE': (
+        'graphene_django.debug.DjangoDebugMiddleware',
+    )
 }
 
 ROOT_URLCONF = 'cookbook.urls'
