@@ -56,8 +56,10 @@ def convert_django_field(field, registry=None):
     raise Exception(
         "Don't know how to convert the Django field %s (%s)" %
         (field, field.__class__))
-
-
+    
+from phonenumber_field.formfields import PhoneNumberField
+@convert_django_field.register(models.PhoneNumberField)
+@convert_django_field.register(models.DurationField)
 @convert_django_field.register(models.CharField)
 @convert_django_field.register(models.TextField)
 @convert_django_field.register(models.EmailField)
