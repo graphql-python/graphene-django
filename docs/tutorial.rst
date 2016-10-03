@@ -149,7 +149,7 @@ Create the parent project-level ``cookbook/schema.py``:
     import cookbook.ingredients.schema
 
 
-    class Query(cookbook.ingredients.schema.Query):
+    class Query(cookbook.ingredients.schema.Query, graphene.ObjectType):
         # This class will inherit from multiple Queries
         # as we begin to add more apps to our project
         pass
