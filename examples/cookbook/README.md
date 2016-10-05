@@ -58,7 +58,7 @@ Now you should be ready to start the server:
 ```
 
 Now head on over to
-[http://127.0.0.1:8000/graphiql](http://127.0.0.1:8000/graphiql)
+[http://127.0.0.1:8000/graphql](http://127.0.0.1:8000/graphql)
 and run some queries!
 (See the [Django quickstart guide](http://graphene-python.org/docs/quickstart-django/)
 for some example queries)
