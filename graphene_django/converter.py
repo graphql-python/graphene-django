@@ -57,9 +57,9 @@ def convert_django_field(field, registry=None):
         "Don't know how to convert the Django field %s (%s)" %
         (field, field.__class__))
 try:
-  from phonenumber_field.formfields import PhoneNumberField
-  @convert_django_field.register(models.PhoneNumberField)
-except ImportError as e: 
+    from phonenumber_field.formfields import PhoneNumberField
+    @convert_django_field.register(models.PhoneNumberField)
+except: 
   print("Couldn't find phonenumber field")
 @convert_django_field.register(models.DurationField)
 @convert_django_field.register(models.CharField)
