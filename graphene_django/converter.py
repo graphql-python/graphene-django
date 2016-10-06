@@ -60,7 +60,7 @@ try:
     from phonenumber_field.formfields import PhoneNumberField
     @convert_django_field.register(models.PhoneNumberField)
 except: 
-  print("Couldn't find phonenumber field")
+    print("Couldn't find phonenumber field")
 @convert_django_field.register(models.DurationField)
 @convert_django_field.register(models.CharField)
 @convert_django_field.register(models.TextField)
