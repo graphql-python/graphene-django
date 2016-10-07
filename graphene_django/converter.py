@@ -49,31 +49,34 @@ def convert_django_field_with_choices(field, registry=None):
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
         return enum(description=field.help_text, required=not field.null)
     return convert_django_field(field, registry)
-
+  
 
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
         "Don't know how to convert the Django field %s (%s)" %
         (field, field.__class__))
-    
+
+
 def get_phone_number_field():
-    try: 
+    try:
         from phonenumber_field.formfields import PhoneNumberField
         return PhoneNumberField
-    except: 
+    except:
         try:
             return models.DurationField
         except:
             pass
-    return models.CharField 
-  
+    return models.CharField
+
+
 def get_duration_field():
     try:
-      return models.DurationField
+        return models.DurationField
     except:
-      return models.CharField
+        return models.CharField
 
+      
 @convert_django_field.register(get_phone_number_field())
 @convert_django_field.register(get_duration_field())
 @convert_django_field.register(models.CharField)
