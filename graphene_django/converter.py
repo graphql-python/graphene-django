@@ -58,12 +58,22 @@ def convert_django_field(field, registry=None):
         "Don't know how to convert the Django field %s (%s)" %
         (field, field.__class__))
     
-def get_extra_fields():
-  try: 
-    from phonenumber_field.formfields import PhoneNumberField
-    return PhoneNumberField
-  except: 
-    return models.DurationField
+def get_phone_number_field():
+    try: 
+        from phonenumber_field.formfields import PhoneNumberField
+        return PhoneNumberField
+    except: 
+        try:
+            return models.DurationField
+        except:
+            pass
+    return models.CharField 
+  
+def get_duration_field():
+    try:
+      return models.DurationField
+    except:
+      return models.CharField
 
 @convert_django_field.register(get_extra_fields())
 @convert_django_field.register(models.DurationField)
