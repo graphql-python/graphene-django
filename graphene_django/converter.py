@@ -61,7 +61,8 @@ def convert_django_field(field, registry=None):
 
 try:    
     loader = importlib.find_loader('phonenumber_field.formfields.PhoneNumberField')
-    if loader is not None: @convert_django_field.register(models.PhoneNumberField);
+    if loader is not None: 
+      @convert_django_field.register(models.PhoneNumberField)
 except: 
     print("Couldn't find phonenumber field")
 @convert_django_field.register(models.DurationField)
