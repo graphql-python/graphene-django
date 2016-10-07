@@ -49,7 +49,7 @@ def convert_django_field_with_choices(field, registry=None):
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
         return enum(description=field.help_text, required=not field.null)
     return convert_django_field(field, registry)
-  
+
 
 @singledispatch
 def convert_django_field(field, registry=None):
@@ -76,7 +76,7 @@ def get_duration_field():
     except:
         return models.CharField
 
-      
+
 @convert_django_field.register(get_phone_number_field())
 @convert_django_field.register(get_duration_field())
 @convert_django_field.register(models.CharField)
