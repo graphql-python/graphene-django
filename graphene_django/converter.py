@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.encoding import force_text
-import importlib
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String)
@@ -75,8 +74,8 @@ def get_duration_field():
     except:
       return models.CharField
 
-@convert_django_field.register(get_extra_fields())
-@convert_django_field.register(models.DurationField)
+@convert_django_field.register(get_phone_number_field())
+@convert_django_field.register(get_duration_field())
 @convert_django_field.register(models.CharField)
 @convert_django_field.register(models.TextField)
 @convert_django_field.register(models.EmailField)
