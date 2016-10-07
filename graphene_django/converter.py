@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.encoding import force_text
+import importlib
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String)
@@ -56,9 +57,11 @@ def convert_django_field(field, registry=None):
     raise Exception(
         "Don't know how to convert the Django field %s (%s)" %
         (field, field.__class__))
-try:
-    from phonenumber_field.formfields import PhoneNumberField
-    @convert_django_field.register(models.PhoneNumberField)
+    
+
+try:    
+    loader = importlib.find_loader('phonenumber_field.formfields.PhoneNumberField')
+    if loader is not None: @convert_django_field.register(models.PhoneNumberField);
 except: 
     print("Couldn't find phonenumber field")
 @convert_django_field.register(models.DurationField)
