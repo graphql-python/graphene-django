@@ -98,6 +98,9 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
 
 class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
 
+    def resolve_id(self, args, context, info):
+        return self.pk
+
     @classmethod
     def is_type_of(cls, root, context, info):
         if isinstance(root, cls):
@@ -112,6 +115,6 @@ class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
     @classmethod
     def get_node(cls, id, context, info):
         try:
-            return cls._meta.model.objects.get(id=id)
+            return cls._meta.model.objects.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
