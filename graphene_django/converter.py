@@ -7,6 +7,7 @@ from graphene.relay import is_node
 from graphene.types.datetime import DateTime
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_const
+from graphql import assert_valid_name
 
 from .compat import (ArrayField, HStoreField, JSONField, RangeField,
                      RelatedObject, UUIDField)
@@ -17,7 +18,12 @@ singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):
-    return to_const(force_text(name))
+    name = to_const(force_text(name))
+    try:
+        assert_valid_name(name)
+    except AssertionError:
+        name = "A_%s" % name
+    return name
 
 
 def get_choices(choices):
@@ -26,7 +32,7 @@ def get_choices(choices):
             for choice in get_choices(help_text):
                 yield choice
         else:
-            name = convert_choice_name(help_text)
+            name = convert_choice_name(value)
             description = help_text
             yield name, value, description
 
