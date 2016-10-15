@@ -5,9 +5,11 @@ class MissingType(object):
     pass
 
 try:
+    DurationField = models.DurationField
     UUIDField = models.UUIDField
 except AttributeError:
     # Improved compatibility for Django 1.6
+    DurationField = MissingType
     UUIDField = MissingType
 
 try:

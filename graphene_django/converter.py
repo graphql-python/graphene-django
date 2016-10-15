@@ -10,7 +10,7 @@ from graphene.utils.str_converters import to_const
 from graphql import assert_valid_name
 
 from .compat import (ArrayField, HStoreField, JSONField, RangeField,
-                     RelatedObject, UUIDField)
+                     RelatedObject, UUIDField, DurationField)
 from .fields import get_connection_field, DjangoListField
 from .utils import get_related_model, import_single_dispatch
 
@@ -71,12 +71,12 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(models.URLField)
 @convert_django_field.register(models.GenericIPAddressField)
 @convert_django_field.register(models.FileField)
-@convert_django_field.register(UUIDField)
 def convert_field_to_string(field, registry=None):
     return String(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.AutoField)
+@convert_django_field.register(UUIDField)
 def convert_field_to_id(field, registry=None):
     return ID(description=field.help_text, required=not field.null)
 
@@ -102,6 +102,7 @@ def convert_field_to_nullboolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 @convert_django_field.register(models.FloatField)
+@convert_django_field.register(DurationField)
 def convert_field_to_float(field, registry=None):
     return Float(description=field.help_text, required=not field.null)
 
