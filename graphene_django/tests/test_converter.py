@@ -124,10 +124,10 @@ def test_field_with_choices_convert_enum():
     graphene_type = convert_django_field_with_choices(field)
     assert isinstance(graphene_type, graphene.Enum)
     assert graphene_type._meta.name == 'TranslatedModelLanguage'
-    assert graphene_type._meta.enum.__members__['SPANISH'].value == 'es'
-    assert graphene_type._meta.enum.__members__['SPANISH'].description == 'Spanish'
-    assert graphene_type._meta.enum.__members__['ENGLISH'].value == 'en'
-    assert graphene_type._meta.enum.__members__['ENGLISH'].description == 'English'
+    assert graphene_type._meta.enum.__members__['ES'].value == 'es'
+    assert graphene_type._meta.enum.__members__['ES'].description == 'Spanish'
+    assert graphene_type._meta.enum.__members__['EN'].value == 'en'
+    assert graphene_type._meta.enum.__members__['EN'].description == 'English'
 
 
 def test_field_with_grouped_choices():
