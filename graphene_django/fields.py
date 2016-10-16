@@ -12,7 +12,7 @@ from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
 class DjangoListField(Field):
 
     def __init__(self, _type, *args, **kwargs):
-        return super(DjangoListField, self).__init__(List(_type), *args, **kwargs)
+        super(DjangoListField, self).__init__(List(_type), *args, **kwargs)
 
     @property
     def model(self):
@@ -30,7 +30,7 @@ class DjangoConnectionField(ConnectionField):
 
     def __init__(self, *args, **kwargs):
         self.on = kwargs.pop('on', False)
-        return super(DjangoConnectionField, self).__init__(*args, **kwargs)
+        super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
     def model(self):
