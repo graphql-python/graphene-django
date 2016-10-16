@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import six
 
+from django.utils.functional import SimpleLazyObject
 from graphene import Field, ObjectType
 from graphene.types.objecttype import ObjectTypeMeta
 from graphene.types.options import Options
@@ -103,6 +104,9 @@ class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
 
     @classmethod
     def is_type_of(cls, root, context, info):
+        if isinstance(root, SimpleLazyObject):
+            root._setup()
+            root = root._wrapped
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(type(root)):
