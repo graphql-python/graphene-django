@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from graphene import Field, ObjectType, Schema
+from graphene import Field, ObjectType, Schema, Argument, Float
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import (GlobalIDFormField,
@@ -46,10 +46,7 @@ class PetNode(DjangoObjectType):
 
 
 def get_args(field):
-    if isinstance(field.args, list):
-        return {arg.name: arg for arg in field.args}
-    else:
-        return field.args
+    return field.args
 
 
 def assert_arguments(field, *arguments):
@@ -250,6 +247,22 @@ def test_global_id_field_explicit():
     id_filter = filterset_class.base_filters['id']
     assert isinstance(id_filter, GlobalIDFilter)
     assert id_filter.field_class == GlobalIDFormField
+
+
+def test_filterset_descriptions():
+    class ArticleIdFilter(django_filters.FilterSet):
+
+        class Meta:
+            model = Article
+            fields = ['id']
+
+        max_time = django_filters.NumberFilter(method='filter_max_time', label="The maximum time")
+
+    field = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleIdFilter)
+    max_time = field.args['max_time']
+    assert isinstance(max_time, Argument)
+    assert max_time.type == Float
+    assert max_time.description == 'The maximum time'
 
 
 def test_global_id_field_relation():

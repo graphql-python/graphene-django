@@ -14,12 +14,14 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
     args = {}
     for name, filter_field in six.iteritems(filterset_class.base_filters):
-        field_type = convert_form_field(filter_field.field)
+        field_type = convert_form_field(filter_field.field).Argument()
+        field_type.description = filter_field.label
         args[name] = field_type
 
     # Also add the 'order_by' field
     if filterset_class._meta.order_by:
         args[filterset_class.order_by_field] = String()
+
     return args
 
 
