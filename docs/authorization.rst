@@ -106,5 +106,5 @@ method to your ``DjangoObjectType``.
                 return None
 
             if post.published or context.user == post.owner:
-                return instance
+                return post
             return None
