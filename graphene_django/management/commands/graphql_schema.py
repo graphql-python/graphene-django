@@ -27,6 +27,13 @@ if LT_DJANGO_1_8:
                 default='',
                 help='Output file (default: schema.json)'
             ),
+            make_option(
+                '--indent',
+                type=int,
+                dest='indent',
+                default=None,
+                help='Output file indent (default: None)'
+            ),
         )
 else:
     class CommandArguments(BaseCommand):
@@ -46,14 +53,21 @@ else:
                 default=graphene_settings.SCHEMA_OUTPUT,
                 help='Output file (default: schema.json)')
 
+            parser.add_argument(
+                '--indent',
+                type=int,
+                dest='indent',
+                default=graphene_settings.SCHEMA_INDENT,
+                help='Output file indent (default: None)')
+
 
 class Command(CommandArguments):
     help = 'Dump Graphene schema JSON to file'
     can_import_settings = True
 
-    def save_file(self, out, schema_dict):
+    def save_file(self, out, schema_dict, indent):
         with open(out, 'w') as outfile:
-            json.dump(schema_dict, outfile)
+            json.dump(schema_dict, outfile, indent=indent)
 
     def handle(self, *args, **options):
         options_schema = options.get('schema')
@@ -74,8 +88,9 @@ class Command(CommandArguments):
         if not schema:
             raise CommandError('Specify schema on GRAPHENE.SCHEMA setting or by using --schema')
 
+        indent = options.get('indent')
         schema_dict = {'data': schema.introspect()}
-        self.save_file(out, schema_dict)
+        self.save_file(out, schema_dict, indent)
 
         style = getattr(self, 'style', None)
         success = getattr(style, 'SUCCESS', lambda x: x)

@@ -28,6 +28,7 @@ except ImportError:
 DEFAULTS = {
     'SCHEMA': None,
     'SCHEMA_OUTPUT': 'schema.json',
+    'SCHEMA_INDENT': None,
     'MIDDLEWARE': (),
 }
 
