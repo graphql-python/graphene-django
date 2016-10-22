@@ -38,6 +38,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'graphene_django',
+    
+    # a GUI for graphQL
+    'django_graphiql',
 
     'cookbook.ingredients.apps.IngredientsConfig',
     'cookbook.recipes.apps.RecipesConfig',
