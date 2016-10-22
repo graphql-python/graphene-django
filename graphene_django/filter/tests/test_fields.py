@@ -66,13 +66,13 @@ def assert_arguments(field, *arguments):
 
 def assert_orderable(field):
     args = get_args(field)
-    assert 'order_by' in args, \
+    assert 'order_by_field' in args, \
         'Field cannot be ordered'
 
 
 def assert_not_orderable(field):
     args = get_args(field)
-    assert 'order_by' not in args, \
+    assert 'order_by_field' not in args, \
         'Field can be ordered'
 
 
