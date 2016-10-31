@@ -62,8 +62,10 @@ class GraphQLView(View):
     middleware = None
     root_value = None
     pretty = False
+    batch = False
 
-    def __init__(self, schema=None, executor=None, middleware=None, root_value=None, graphiql=False, pretty=False):
+    def __init__(self, schema=None, executor=None, middleware=None, root_value=None, graphiql=False, pretty=False,
+                 batch=False):
         if not schema:
             schema = graphene_settings.SCHEMA
 
@@ -77,8 +79,10 @@ class GraphQLView(View):
         self.root_value = root_value
         self.pretty = pretty
         self.graphiql = graphiql
+        self.batch = batch
 
         assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
+        assert not all((graphiql, batch)), 'Use either graphiql or batch processing'
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -99,32 +103,12 @@ class GraphQLView(View):
             data = self.parse_body(request)
             show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
 
-            query, variables, operation_name = self.get_graphql_params(request, data)
-
-            execution_result = self.execute_graphql_request(
-                request,
-                data,
-                query,
-                variables,
-                operation_name,
-                show_graphiql
-            )
-
-            if execution_result:
-                response = {}
-
-                if execution_result.errors:
-                    response['errors'] = [self.format_error(e) for e in execution_result.errors]
-
-                if execution_result.invalid:
-                    status_code = 400
-                else:
-                    status_code = 200
-                    response['data'] = execution_result.data
-
-                result = self.json_encode(request, response, pretty=show_graphiql)
+            if self.batch:
+                responses = [self.get_response(request, entry) for entry in data]
+                result = '[{}]'.format(','.join([response[0] for response in responses]))
+                status_code = max(responses, key=lambda response: response[1])[1]
             else:
-                result = None
+                result, status_code = self.get_response(request, data, show_graphiql)
 
             if show_graphiql:
                 return self.render_graphiql(
@@ -150,6 +134,43 @@ class GraphQLView(View):
             })
             return response
 
+    def get_response(self, request, data, show_graphiql=False):
+        query, variables, operation_name, id = self.get_graphql_params(request, data)
+
+        execution_result = self.execute_graphql_request(
+            request,
+            data,
+            query,
+            variables,
+            operation_name,
+            show_graphiql
+        )
+
+        if execution_result:
+            response = {}
+
+            if execution_result.errors:
+                response['errors'] = [self.format_error(e) for e in execution_result.errors]
+
+            if execution_result.invalid:
+                status_code = 400
+            else:
+                status_code = 200
+                response['data'] = execution_result.data
+
+            if self.batch:
+                response = {
+                    'id': id,
+                    'payload': response,
+                    'status': status_code,
+                }
+
+            result = self.json_encode(request, response, pretty=show_graphiql)
+        else:
+            result = None
+
+        return result, status_code
+
     def render_graphiql(self, request, **data):
         return render(request, self.graphiql_template, data)
 
@@ -170,7 +191,10 @@ class GraphQLView(View):
         elif content_type == 'application/json':
             try:
                 request_json = json.loads(request.body.decode('utf-8'))
-                assert isinstance(request_json, dict)
+                if self.batch:
+                    assert isinstance(request_json, list)
+                else:
+                    assert isinstance(request_json, dict)
                 return request_json
             except:
                 raise HttpError(HttpResponseBadRequest('POST body sent invalid JSON.'))
@@ -242,6 +266,7 @@ class GraphQLView(View):
     def get_graphql_params(request, data):
         query = request.GET.get('query') or data.get('query')
         variables = request.GET.get('variables') or data.get('variables')
+        id = request.GET.get('id') or data.get('id')
 
         if variables and isinstance(variables, six.text_type):
             try:
@@ -251,7 +276,7 @@ class GraphQLView(View):
 
         operation_name = request.GET.get('operationName') or data.get('operationName')
 
-        return query, variables, operation_name
+        return query, variables, operation_name, id
 
     @staticmethod
     def format_error(error):
