@@ -111,6 +111,7 @@ class GraphQLView(View):
                 result, status_code = self.get_response(request, data, show_graphiql)
 
             if show_graphiql:
+                query, variables, operation_name, id = self.get_graphql_params(request, data)
                 return self.render_graphiql(
                     request,
                     graphiql_version=self.graphiql_version,
@@ -146,6 +147,7 @@ class GraphQLView(View):
             show_graphiql
         )
 
+        status_code = 200
         if execution_result:
             response = {}
 
@@ -155,7 +157,6 @@ class GraphQLView(View):
             if execution_result.invalid:
                 status_code = 400
             else:
-                status_code = 200
                 response['data'] = execution_result.data
 
             if self.batch:
