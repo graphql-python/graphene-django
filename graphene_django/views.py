@@ -131,7 +131,7 @@ class GraphQLView(View):
                     request,
                     graphiql_version=self.graphiql_version,
                     query=query or '',
-                    variables=variables or '',
+                    variables=json.dumps(variables) or '',
                     operation_name=operation_name or '',
                     result=result or ''
                 )
