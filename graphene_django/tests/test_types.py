@@ -110,11 +110,11 @@ type Reporter {
   lastName: String!
   email: String!
   pets: [Reporter]
-  aChoice: ReporterA_choice!
+  aChoice: ReporterAChoice!
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
 
-enum ReporterA_choice {
+enum ReporterAChoice {
   A_1
   A_2
 }
