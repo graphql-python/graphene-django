@@ -73,7 +73,7 @@ type Article implements Node {
 
 type ArticleConnection {
   pageInfo: PageInfo!
-  edges: [ArticleEdge]
+  edges: [ArticleEdge]!
 }
 
 type ArticleEdge {
