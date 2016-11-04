@@ -1,4 +1,4 @@
-from cookbook.recipes.models import Recipe, RecipeIngredient
+from cookbook.ingredients.models import Recipe, Ingredient
 from graphene import AbstractType, Node
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
@@ -8,8 +8,8 @@ class RecipeNode(DjangoObjectType):
     class Meta:
         model = Recipe
         interfaces = (Node, )
-        filter_fields = ['title','amounts']
-        filter_order_by = ['title']
+        filter_fields = ['name', 'ingredients']
+        filter_order_by = ['name']
 
 class RecipeIngredientNode(DjangoObjectType):
 
@@ -18,15 +18,16 @@ class RecipeIngredientNode(DjangoObjectType):
         # Allow for some more advanced filtering here
         interfaces = (Node, )
         filter_fields = {
-            'ingredient__name': ['exact', 'icontains', 'istartswith'],
+            'name': ['exact', 'icontains', 'istartswith'],
+            'notes': ['exact', 'icontains'],
             'recipe': ['exact'],
-            'recipe__title': ['icontains'],
+            'recipe__name': ['icontains'],
         }
-        filter_order_by = ['ingredient__name', 'recipe__title',]
+        filter_order_by = ['name', 'recipe__name',]
 
 class Query(AbstractType):
     recipe = Node.Field(RecipeNode)
-    all_recipes = DjangoFilterConnectionField(RecipeNode)
+    all_categories = DjangoFilterConnectionField(RecipeNode)
 
-    recipeingredient = Node.Field(RecipeIngredientNode)
+    recipeingredient = Node.Field(IngredientNode)
     all_recipeingredients = DjangoFilterConnectionField(RecipeIngredientNode)

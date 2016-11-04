@@ -9,7 +9,7 @@ class Recipe(models.Model):
     __unicode__ = lambda self: self.title
 
 class RecipeIngredient(models.Model):
-    recipes = models.ForeignKey(Recipe, related_name='amounts')
+    recipe = models.ForeignKey(Recipe, related_name='amounts')
     ingredient = models.ForeignKey(Ingredient, related_name='used_by')
     amount = models.FloatField()
     unit = models.CharField(max_length=20, choices=(
