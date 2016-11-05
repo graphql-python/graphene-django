@@ -1,5 +1,5 @@
 from cookbook.ingredients.models import Category, Ingredient
-from graphene import AbstractType, Field, Node
+from graphene import AbstractType, Node
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 
@@ -31,8 +31,8 @@ class IngredientNode(DjangoObjectType):
 
 
 class Query(AbstractType):
-    category = Field(CategoryNode)
+    category = Node.Field(CategoryNode)
     all_categories = DjangoFilterConnectionField(CategoryNode)
 
-    ingredient = Field(IngredientNode)
+    ingredient = Node.Field(IngredientNode)
     all_ingredients = DjangoFilterConnectionField(IngredientNode)
