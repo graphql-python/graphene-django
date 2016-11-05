@@ -68,6 +68,7 @@ following:
 .. code:: python
 
     from graphene_django import DjangoObjectType
+    import graphene
 
     class User(DjangoObjectType):
         class Meta:

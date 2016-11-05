@@ -58,6 +58,7 @@ To create a GraphQL schema for it you simply have to write the following:
 
 ```python
 from graphene_django import DjangoObjectType
+import graphene
 
 class User(DjangoObjectType):
     class Meta:
