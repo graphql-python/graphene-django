@@ -52,7 +52,7 @@ def test_django_objecttype_map_correct_fields():
 
 def test_django_objecttype_with_node_have_correct_fields():
     fields = Article._meta.fields
-    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'lang', 'importance']
+    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'editor', 'lang', 'importance']
 
 
 def test_schema_representation():
@@ -66,6 +66,7 @@ type Article implements Node {
   headline: String!
   pubDate: DateTime!
   reporter: Reporter!
+  editor: Reporter!
   lang: ArticleLang!
   importance: ArticleImportance
 }
