@@ -8,13 +8,15 @@ except ImportError:
     from urllib.parse import urlencode
 
 
-def url_string(**url_params):
-    string = '/graphql'
-
+def url_string(string='/graphql', **url_params):
     if url_params:
         string += '?' + urlencode(url_params)
 
     return string
+
+
+def batch_url_string(**url_params):
+    return url_string('/graphql/batch', **url_params)
 
 
 def response_json(response):
@@ -22,6 +24,7 @@ def response_json(response):
 
 
 j = lambda **kwargs: json.dumps(kwargs)
+jl = lambda **kwargs: json.dumps([kwargs])
 
 
 def test_graphiql_is_enabled(client):
@@ -169,6 +172,17 @@ def test_allows_post_with_json_encoding(client):
     }
 
 
+def test_batch_allows_post_with_json_encoding(client):
+    response = client.post(batch_url_string(), jl(id=1, query='{test}'), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': { 'data': {'test': "Hello World"} },
+        'status': 200,
+    }]
+
+
 def test_allows_sending_a_mutation_via_post(client):
     response = client.post(url_string(), j(query='mutation TestMutation { writeTest { test } }'), 'application/json')
 
@@ -199,6 +213,22 @@ def test_supports_post_json_query_with_string_variables(client):
     }
 
 
+
+def test_batch_supports_post_json_query_with_string_variables(client):
+    response = client.post(batch_url_string(), jl(
+        id=1,
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables=json.dumps({'who': "Dolly"})
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': { 'data': {'test': "Hello Dolly"} },
+        'status': 200,
+    }]
+
+
 def test_supports_post_json_query_with_json_variables(client):
     response = client.post(url_string(), j(
         query='query helloWho($who: String){ test(who: $who) }',
@@ -209,6 +239,21 @@ def test_supports_post_json_query_with_json_variables(client):
     assert response_json(response) == {
         'data': {'test': "Hello Dolly"}
     }
+
+
+def test_batch_supports_post_json_query_with_json_variables(client):
+    response = client.post(batch_url_string(), jl(
+        id=1,
+        query='query helloWho($who: String){ test(who: $who) }',
+        variables={'who': "Dolly"}
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': { 'data': {'test': "Hello Dolly"} },
+        'status': 200,
+    }]
 
 
 def test_supports_post_url_encoded_query_with_string_variables(client):
@@ -283,6 +328,33 @@ def test_allows_post_with_operation_name(client):
             'shared': 'Hello Everyone'
         }
     }
+
+
+def test_batch_allows_post_with_operation_name(client):
+    response = client.post(batch_url_string(), jl(
+        id=1,
+        query='''
+        query helloYou { test(who: "You"), ...shared }
+        query helloWorld { test(who: "World"), ...shared }
+        query helloDolly { test(who: "Dolly"), ...shared }
+        fragment shared on QueryRoot {
+          shared: test(who: "Everyone")
+        }
+        ''',
+        operationName='helloWorld'
+    ), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == [{
+        'id': 1,
+        'payload': {
+            'data': {
+                'test': 'Hello World',
+                'shared': 'Hello Everyone'
+            }
+        },
+        'status': 200,
+    }]
 
 
 def test_allows_post_with_get_operation_name(client):

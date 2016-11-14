@@ -188,6 +188,8 @@ And then add the ``SCHEMA`` to the ``GRAPHENE`` config in ``cookbook/settings.py
         'SCHEMA': 'cookbook.schema.schema'
     }
 
+Alternatively, we can specify the schema to be used in the urls definition,
+as explained below.
 
 Creating GraphQL and GraphiQL views
 -----------------------------------
@@ -206,11 +208,27 @@ aforementioned GraphiQL we specify that on the params with ``graphiql=True``.
 
     from graphene_django.views import GraphQLView
 
+    urlpatterns = [
+        url(r'^admin/', admin.site.urls),
+        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+    ]
+
+
+If we didn't specify the target schema in the Django settings file
+as explained above, we can do so here using:
+
+.. code:: python
+
+    from django.conf.urls import url, include
+    from django.contrib import admin
+
+    from graphene_django.views import GraphQLView
+
     from cookbook.schema import schema
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+        url(r'^graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 Apply model changes to database

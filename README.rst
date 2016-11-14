@@ -68,6 +68,7 @@ following:
 .. code:: python
 
     from graphene_django import DjangoObjectType
+    import graphene
 
     class User(DjangoObjectType):
         class Meta:
@@ -115,6 +116,25 @@ After developing, the full test suite can be evaluated by running:
 .. code:: sh
 
     python setup.py test # Use --pytest-args="-v -s" for verbose mode
+
+Documentation
+~~~~~~~~~~~~~
+
+The documentation can be generated using the excellent
+`Sphinx <http://www.sphinx-doc.org/>`__ and a custom theme.
+
+To install the documentation dependencies, run the following:
+
+.. code:: sh
+
+    cd docs
+    pip install -r requirements.txt
+
+Then to produce a HTML version of the documentation:
+
+.. code:: sh
+
+    make html
 
 .. |Graphene Logo| image:: http://graphene-python.org/favicon.png
 .. |Build Status| image:: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master
