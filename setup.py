@@ -38,6 +38,9 @@ setup(
         'iso8601',
         'singledispatch>=3.4.0.3',
     ],
+    setup_requires=[
+        'pytest-runner',
+    ],
     tests_require=[
         'django-filter>=0.10.0',
         'pytest',
