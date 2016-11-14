@@ -35,7 +35,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                     fields=self.fields,
                     order_by=self.order_by)
         if self._extra_filter_meta:
-            meta.update(self.extra_filter_meta)
+            meta.update(self._extra_filter_meta)
         return meta
 
     @property
