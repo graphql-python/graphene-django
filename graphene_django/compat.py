@@ -4,6 +4,7 @@ from django.db import models
 class MissingType(object):
     pass
 
+
 try:
     DurationField = models.DurationField
     UUIDField = models.UUIDField
