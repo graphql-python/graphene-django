@@ -1,3 +1,5 @@
+import inspect
+
 from collections import OrderedDict
 from functools import partial
 
@@ -21,7 +23,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @property
     def node_type(self):
-        if callable(self._type):
+        if inspect.isfunction(self._type) or inspect.ismethod(self._type):
             return self._type()
         return self._type
 
