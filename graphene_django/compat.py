@@ -4,6 +4,7 @@ from django.db import models
 class MissingType(object):
     pass
 
+
 try:
     DurationField = models.DurationField
     UUIDField = models.UUIDField
@@ -21,6 +22,13 @@ except:
 
 try:
     # Postgres fields are only available in Django 1.8+
-    from django.contrib.postgres.fields import ArrayField, HStoreField, JSONField, RangeField
+    from django.contrib.postgres.fields import ArrayField, HStoreField, RangeField
 except ImportError:
     ArrayField, HStoreField, JSONField, RangeField = (MissingType, ) * 4
+
+
+try:
+    # Postgres fields are only available in Django 1.9+
+    from django.contrib.postgres.fields import JSONField
+except ImportError:
+    JSONField = MissingType

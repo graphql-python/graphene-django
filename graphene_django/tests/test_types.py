@@ -52,7 +52,7 @@ def test_django_objecttype_map_correct_fields():
 
 def test_django_objecttype_with_node_have_correct_fields():
     fields = Article._meta.fields
-    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'lang', 'importance']
+    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'editor', 'lang', 'importance']
 
 
 def test_schema_representation():
@@ -66,13 +66,14 @@ type Article implements Node {
   headline: String!
   pubDate: DateTime!
   reporter: Reporter!
+  editor: Reporter!
   lang: ArticleLang!
   importance: ArticleImportance
 }
 
 type ArticleConnection {
   pageInfo: PageInfo!
-  edges: [ArticleEdge]
+  edges: [ArticleEdge]!
 }
 
 type ArticleEdge {
@@ -109,11 +110,11 @@ type Reporter {
   lastName: String!
   email: String!
   pets: [Reporter]
-  aChoice: ReporterA_choice!
+  aChoice: ReporterAChoice!
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
 
-enum ReporterA_choice {
+enum ReporterAChoice {
   A_1
   A_2
 }

@@ -2,7 +2,7 @@ from setuptools import find_packages, setup
 
 setup(
     name='graphene-django',
-    version='1.0',
+    version='1.1.0',
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),
@@ -37,6 +37,9 @@ setup(
         'Django>=1.6.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
+    ],
+    setup_requires=[
+        'pytest-runner',
     ],
     tests_require=[
         'django-filter>=0.10.0',
