@@ -14,7 +14,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self.fields = fields or type._meta.filter_fields
         meta = dict(model=type._meta.model,
                     fields=self.fields,
-                    order_by=self.order_by)
+                    order_by_field=self.order_by)
         if extra_filter_meta:
             meta.update(extra_filter_meta)
         self.filterset_class = get_filterset_class(filterset_class, **meta)
