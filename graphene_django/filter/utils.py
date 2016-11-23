@@ -1,7 +1,5 @@
 import six
 
-from graphene import String
-
 from .filterset import custom_filterset_factory, setup_filterset
 
 

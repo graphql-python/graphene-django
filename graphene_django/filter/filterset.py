@@ -1,11 +1,9 @@
 import itertools
 
-import six
-from django.conf import settings
 from django.db import models
 from django.utils.text import capfirst
 from django_filters import Filter, MultipleChoiceFilter
-from django_filters.filterset import BaseFilterSet, FilterSet, FilterSetMetaclass
+from django_filters.filterset import BaseFilterSet, FilterSet
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
 from graphql_relay.node.node import from_global_id
