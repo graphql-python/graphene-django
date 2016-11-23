@@ -11,6 +11,7 @@ from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
+
 if DJANGO_FILTER_INSTALLED:
     import django_filters
     from graphene_django.filter import (GlobalIDFilter, DjangoFilterConnectionField,
@@ -22,28 +23,29 @@ else:
 pytestmark.append(pytest.mark.django_db)
 
 
-class ArticleNode(DjangoObjectType):
+if DJANGO_FILTER_INSTALLED:
+    class ArticleNode(DjangoObjectType):
 
-    class Meta:
-        model = Article
-        interfaces = (Node, )
-        filter_fields = ('headline', )
-
-
-class ReporterNode(DjangoObjectType):
-
-    class Meta:
-        model = Reporter
-        interfaces = (Node, )
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+            filter_fields = ('headline', )
 
 
-class PetNode(DjangoObjectType):
+    class ReporterNode(DjangoObjectType):
 
-    class Meta:
-        model = Pet
-        interfaces = (Node, )
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
 
-# schema = Schema()
+
+    class PetNode(DjangoObjectType):
+
+        class Meta:
+            model = Pet
+            interfaces = (Node, )
+
+    # schema = Schema()
 
 
 def get_args(field):
