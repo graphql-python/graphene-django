@@ -16,7 +16,7 @@ from ..types import DjangoObjectType
 from .models import Article, Film, FilmDetails, Reporter
 
 
-# from graphene.core.types.custom_scalars import DateTime, JSONString
+# from graphene.core.types.custom_scalars import DateTime, Time, JSONString
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
