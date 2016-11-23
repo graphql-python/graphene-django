@@ -5,7 +5,7 @@ from django.conf import settings
 from django.db import models
 from django.utils.text import capfirst
 from django_filters import Filter, MultipleChoiceFilter
-from django_filters.filterset import FilterSet, FilterSetMetaclass
+from django_filters.filterset import BaseFilterSet, FilterSet, FilterSetMetaclass
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
 from graphql_relay.node.node import from_global_id
@@ -29,9 +29,6 @@ class GlobalIDMultipleChoiceFilter(MultipleChoiceFilter):
         return super(GlobalIDMultipleChoiceFilter, self).filter(qs, gids)
 
 
-ORDER_BY_FIELD = getattr(settings, 'GRAPHENE_ORDER_BY_FIELD', 'order_by')
-
-
 GRAPHENE_FILTER_SET_OVERRIDES = {
     models.AutoField: {
         'filter_class': GlobalIDFilter,
@@ -48,25 +45,7 @@ GRAPHENE_FILTER_SET_OVERRIDES = {
 }
 
 
-# Only useful for Django-filter 0.14-, not necessary in latest version 0.15+
-class GrapheneFilterSetMetaclass(FilterSetMetaclass):
-
-    def __new__(cls, name, bases, attrs):
-        new_class = super(GrapheneFilterSetMetaclass, cls).__new__(cls, name, bases, attrs)
-        # Customise the filter_overrides for Graphene
-        if hasattr(new_class, '_meta') and hasattr(new_class._meta, 'filter_overrides'):
-            filter_overrides = new_class._meta.filter_overrides
-        else:
-            filter_overrides = new_class.filter_overrides
-
-        for k, v in GRAPHENE_FILTER_SET_OVERRIDES.items():
-            filter_overrides.setdefault(k, v)
-
-        return new_class
-
-
-class GrapheneFilterSetMixin(object):
-    order_by_field = ORDER_BY_FIELD
+class GrapheneFilterSetMixin(BaseFilterSet):
     FILTER_DEFAULTS = dict(itertools.chain(
         FILTER_FOR_DBFIELD_DEFAULTS.items(),
         GRAPHENE_FILTER_SET_OVERRIDES.items()
@@ -93,26 +72,17 @@ class GrapheneFilterSetMixin(object):
             return GlobalIDFilter(**default)
 
 
-class GrapheneFilterSet(six.with_metaclass(GrapheneFilterSetMetaclass, GrapheneFilterSetMixin, FilterSet)):
-    """ Base class for FilterSets used by Graphene
-
-    You shouldn't usually need to use this class. The
-    DjangoFilterConnectionField will wrap FilterSets with this class as
-    necessary
-    """
-
-
 def setup_filterset(filterset_class):
     """ Wrap a provided filterset in Graphene-specific functionality
     """
     return type(
         'Graphene{}'.format(filterset_class.__name__),
-        (six.with_metaclass(GrapheneFilterSetMetaclass, GrapheneFilterSetMixin, filterset_class),),
+        (filterset_class, GrapheneFilterSetMixin),
         {},
     )
 
 
-def custom_filterset_factory(model, filterset_base_class=GrapheneFilterSet,
+def custom_filterset_factory(model, filterset_base_class=FilterSet,
                              **meta):
     """ Create a filterset for the given model using the provided meta data
     """
@@ -122,7 +92,7 @@ def custom_filterset_factory(model, filterset_base_class=GrapheneFilterSet,
     meta_class = type(str('Meta'), (object,), meta)
     filterset = type(
         str('%sFilterSet' % model._meta.object_name),
-        (filterset_base_class,),
+        (filterset_base_class, GrapheneFilterSetMixin),
         {
             'Meta': meta_class
         }

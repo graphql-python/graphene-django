@@ -18,10 +18,6 @@ def get_filtering_args_from_filterset(filterset_class, type):
         field_type.description = filter_field.label
         args[name] = field_type
 
-    # Also add the 'order_by' field
-    if getattr(filterset_class._meta, 'order_by', None):
-        args[filterset_class.order_by_field] = String()
-
     return args
 
 
