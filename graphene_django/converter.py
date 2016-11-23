@@ -4,7 +4,7 @@ from django.utils.encoding import force_text
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String)
 from graphene.relay import is_node
-from graphene.types.datetime import DateTime
+from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
@@ -110,6 +110,11 @@ def convert_field_to_float(field, registry=None):
 @convert_django_field.register(models.DateField)
 def convert_date_to_string(field, registry=None):
     return DateTime(description=field.help_text, required=not field.null)
+
+
+@convert_django_field.register(models.TimeField)
+def convert_date_to_string(field, registry=None):
+    return Time(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.OneToOneRel)
