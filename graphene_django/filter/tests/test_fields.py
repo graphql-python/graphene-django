@@ -11,6 +11,7 @@ from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
+
 if DJANGO_FILTER_INSTALLED:
     import django_filters
     from graphene_django.filter import (GlobalIDFilter, DjangoFilterConnectionField,
@@ -22,27 +23,29 @@ else:
 pytestmark.append(pytest.mark.django_db)
 
 
-class ArticleNode(DjangoObjectType):
+if DJANGO_FILTER_INSTALLED:
+    class ArticleNode(DjangoObjectType):
 
-    class Meta:
-        model = Article
-        interfaces = (Node, )
-
-
-class ReporterNode(DjangoObjectType):
-
-    class Meta:
-        model = Reporter
-        interfaces = (Node, )
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+            filter_fields = ('headline', )
 
 
-class PetNode(DjangoObjectType):
+    class ReporterNode(DjangoObjectType):
 
-    class Meta:
-        model = Pet
-        interfaces = (Node, )
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
 
-# schema = Schema()
+
+    class PetNode(DjangoObjectType):
+
+        class Meta:
+            model = Pet
+            interfaces = (Node, )
+
+    # schema = Schema()
 
 
 def get_args(field):
@@ -110,8 +113,8 @@ def test_filter_explicit_filterset_orderable():
 
 
 def test_filter_shortcut_filterset_orderable_true():
-    field = DjangoFilterConnectionField(ReporterNode, order_by=True)
-    assert_orderable(field)
+    field = DjangoFilterConnectionField(ReporterNode)
+    assert_not_orderable(field)
 
 
 # def test_filter_shortcut_filterset_orderable_headline():
@@ -126,9 +129,9 @@ def test_filter_explicit_filterset_not_orderable():
 
 def test_filter_shortcut_filterset_extra_meta():
     field = DjangoFilterConnectionField(ArticleNode, extra_filter_meta={
-        'order_by': True
+        'exclude': ('headline', )
     })
-    assert_orderable(field)
+    assert 'headline' not in field.filterset_class.get_fields()
 
 
 def test_filter_filterset_information_on_meta():
@@ -138,11 +141,10 @@ def test_filter_filterset_information_on_meta():
             model = Reporter
             interfaces = (Node, )
             filter_fields = ['first_name', 'articles']
-            filter_order_by = True
 
     field = DjangoFilterConnectionField(ReporterFilterNode)
     assert_arguments(field, 'first_name', 'articles')
-    assert_orderable(field)
+    assert_not_orderable(field)
 
 
 def test_filter_filterset_information_on_meta_related():
@@ -152,7 +154,6 @@ def test_filter_filterset_information_on_meta_related():
             model = Reporter
             interfaces = (Node, )
             filter_fields = ['first_name', 'articles']
-            filter_order_by = True
 
     class ArticleFilterNode(DjangoObjectType):
 
@@ -160,7 +161,6 @@ def test_filter_filterset_information_on_meta_related():
             model = Article
             interfaces = (Node, )
             filter_fields = ['headline', 'reporter']
-            filter_order_by = True
 
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
@@ -171,7 +171,7 @@ def test_filter_filterset_information_on_meta_related():
     schema = Schema(query=Query)
     articles_field = ReporterFilterNode._meta.fields['articles'].get_type()
     assert_arguments(articles_field, 'headline', 'reporter')
-    assert_orderable(articles_field)
+    assert_not_orderable(articles_field)
 
 
 def test_filter_filterset_related_results():
@@ -181,7 +181,6 @@ def test_filter_filterset_related_results():
             model = Reporter
             interfaces = (Node, )
             filter_fields = ['first_name', 'articles']
-            filter_order_by = True
 
     class ArticleFilterNode(DjangoObjectType):
 
@@ -189,7 +188,6 @@ def test_filter_filterset_related_results():
             interfaces = (Node, )
             model = Article
             filter_fields = ['headline', 'reporter']
-            filter_order_by = True
 
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)

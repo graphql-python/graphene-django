@@ -98,7 +98,6 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
         class Meta:
             model = Category
             filter_fields = ['name', 'ingredients']
-            filter_order_by = ['name']
             interfaces = (relay.Node, )
 
 
@@ -112,7 +111,6 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
                 'category': ['exact'],
                 'category__name': ['exact'],
             }
-            filter_order_by = ['name', 'category__name']
             interfaces = (relay.Node, )
 
 

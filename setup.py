@@ -42,7 +42,7 @@ setup(
         'pytest-runner',
     ],
     tests_require=[
-        'django-filter>=0.10.0',
+        'django-filter>=1.0.0',
         'pytest',
         'pytest-django==2.9.1',
         'mock',

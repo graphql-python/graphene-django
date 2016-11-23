@@ -8,7 +8,7 @@ if not DJANGO_FILTER_INSTALLED:
     )
 else:
     from .fields import DjangoFilterConnectionField
-    from .filterset import GrapheneFilterSet, GlobalIDFilter, GlobalIDMultipleChoiceFilter
+    from .filterset import GlobalIDFilter, GlobalIDMultipleChoiceFilter
 
-    __all__ = ['DjangoFilterConnectionField', 'GrapheneFilterSet',
+    __all__ = ['DjangoFilterConnectionField',
                'GlobalIDFilter', 'GlobalIDMultipleChoiceFilter']

@@ -22,9 +22,8 @@ before_install:
 install:
 - |
   if [ "$TEST_TYPE" = build ]; then
+    pip install pytest==3.0.2 pytest-cov pytest-benchmark coveralls six pytest-django==2.9.1 mock django-filter
     pip install django==$DJANGO_VERSION
-    pip install pytest==3.0.2 pytest-cov pytest-benchmark coveralls six pytest-django==2.9.1 mock
-    pip install django==$DJANGO_FILTER_VERSION
     pip install -e .
     python setup.py develop
   elif [ "$TEST_TYPE" = lint ]; then
@@ -46,18 +45,18 @@ after_success:
   fi
 env:
   matrix:
-  - TEST_TYPE=build DJANGO_VERSION=1.10 DJANGO_FILTER_VERSION=1.0.0
+  - TEST_TYPE=build DJANGO_VERSION=1.10
 matrix:
   fast_finish: true
   include:
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.6 DJANGO_FILTER_VERSION=0.15.3
+    env: TEST_TYPE=build DJANGO_VERSION=1.6
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.7 DJANGO_FILTER_VERSION=0.15.3
+    env: TEST_TYPE=build DJANGO_VERSION=1.7
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.8 DJANGO_FILTER_VERSION=0.15.3
+    env: TEST_TYPE=build DJANGO_VERSION=1.8
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.9 DJANGO_FILTER_VERSION=1.0.0
+    env: TEST_TYPE=build DJANGO_VERSION=1.9
   - python: '2.7'
     env: TEST_TYPE=lint
 deploy:
