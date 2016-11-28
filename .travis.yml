@@ -45,7 +45,7 @@ after_success:
   fi
 env:
   matrix:
-  - TEST_TYPE=build
+  - TEST_TYPE=build DJANGO_VERSION=1.10
 matrix:
   fast_finish: true
   include:

@@ -91,50 +91,13 @@ Which you could query as follows:
       }
     }
 
-Orderable fields
-----------------
-
-Ordering can also be specified using ``filter_order_by``. Like
-``filter_fields``, this value is also passed directly to
-``django-filter`` as the ``order_by`` field. For full details see the
-`order\_by
-documentation <https://django-filter.readthedocs.org/en/latest/usage.html#ordering-using-order-by>`__.
-
-For example:
-
-.. code:: python
-
-    class AnimalNode(DjangoObjectType):
-        class Meta:
-            model = Animal
-            filter_fields = ['name', 'genus', 'is_domesticated']
-            # Either a tuple/list of fields upon which ordering is allowed, or
-            # True to allow filtering on all fields specified in filter_fields
-            filter_order_by = True
-            interfaces = (relay.Node, )
-
-You can then control the ordering via the ``orderBy`` argument:
-
-.. code::
-
-    query {
-      allAnimals(orderBy: "name") {
-        edges {
-          node {
-            id,
-            name
-          }
-        }
-      }
-    }
-
 Custom Filtersets
 -----------------
 
 By default Graphene provides easy access to the most commonly used
 features of ``django-filter``. This is done by transparently creating a
 ``django_filters.FilterSet`` class for you and passing in the values for
-``filter_fields`` and ``filter_order_by``.
+``filter_fields``.
 
 However, you may find this to be insufficient. In these cases you can
 create your own ``Filterset`` as follows:
