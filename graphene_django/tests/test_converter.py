@@ -5,7 +5,7 @@ from py.test import raises
 
 import graphene
 from graphene.relay import ConnectionField, Node
-from graphene.types.datetime import DateTime
+from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 
 from ..compat import (ArrayField, HStoreField, JSONField, MissingType,
@@ -16,7 +16,7 @@ from ..types import DjangoObjectType
 from .models import Article, Film, FilmDetails, Reporter
 
 
-# from graphene.core.types.custom_scalars import DateTime, JSONString
+# from graphene.core.types.custom_scalars import DateTime, Time, JSONString
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
@@ -42,6 +42,10 @@ def test_should_unknown_django_field_raise_exception():
 
 def test_should_date_convert_string():
     assert_conversion(models.DateField, DateTime)
+
+
+def test_should_time_convert_string():
+    assert_conversion(models.TimeField, Time)
 
 
 def test_should_char_convert_string():
