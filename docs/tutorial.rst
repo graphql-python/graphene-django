@@ -31,6 +31,7 @@ We will setup the project, create the following:
 
     # Set up a new project with a single application
     django-admin.py startproject cookbook .  # Note the trailing '.' character
+    cd cookbook
     django-admin.py startapp ingredients
 
 Now sync your database for the first time:
