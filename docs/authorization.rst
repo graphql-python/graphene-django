@@ -12,7 +12,7 @@ Let's use a simple example model.
     from django.db import models
 
     class Post(models.Model):
-        name = models.CharField(max_length=100)
+        title = models.CharField(max_length=100)
         content = models.TextField()
         published = models.BooleanField(default=False)
         owner = models.ForeignKey('auth.User')
