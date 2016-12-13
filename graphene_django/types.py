@@ -21,8 +21,7 @@ def construct_fields(options):
     exclude_fields = options.exclude_fields
 
     fields = OrderedDict()
-    for field in _model_fields:
-        name = field.name
+    for name, field in _model_fields:
         is_not_in_only = only_fields and name not in options.only_fields
         is_already_created = name in options.fields
         is_excluded = name in exclude_fields or is_already_created

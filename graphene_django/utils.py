@@ -30,11 +30,11 @@ def get_reverse_fields(model):
             # Hack for making it compatible with Django 1.6
             new_related = RelatedObject(related.parent_model, related.model, related.field)
             new_related.name = name
-            yield new_related
+            yield (name, new_related)
         elif isinstance(related, models.ManyToOneRel):
-            yield related
+            yield (name, related)
         elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
-            yield related
+            yield (name, related)
 
 
 def maybe_queryset(value):
@@ -45,8 +45,13 @@ def maybe_queryset(value):
 
 def get_model_fields(model):
     reverse_fields = get_reverse_fields(model)
-    all_fields = sorted(list(model._meta.fields) +
-                        list(model._meta.local_many_to_many))
+    all_fields = [
+        (field.name, field)
+        for field
+        in sorted(list(model._meta.fields) +
+                  list(model._meta.local_many_to_many))
+    ]
+
     all_fields += list(reverse_fields)
 
     return all_fields
