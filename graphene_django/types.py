@@ -33,8 +33,6 @@ def construct_fields(options):
             # Or when there is no back reference.
             continue
         converted = convert_django_field_with_choices(field, options.registry)
-        if not converted:
-            continue
         fields[name] = converted
 
     return fields
