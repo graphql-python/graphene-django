@@ -29,7 +29,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             qs = resolver(root, args, context, info)
             if qs is None:
                 qs = default_manager.get_queryset()
-            qs = filterset_class(data=filter_kwargs, queryset=qs).qs
+            qs = filterset_class(data=filter_kwargs, queryset=qs)
             return qs
 
         return DjangoConnectionField.connection_resolver(new_resolver, connection, None, root, args, context, info)
