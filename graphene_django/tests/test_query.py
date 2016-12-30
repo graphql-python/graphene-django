@@ -345,25 +345,21 @@ def test_should_query_node_filtering():
     '''
 
     expected = {
-		"allReporters": {
-			"edges": [
-				{
-					"node": {
-						"id": "UmVwb3J0ZXJUeXBlOjE=", 
-						"articles": {
-							"edges": [
-								{
-									"node": {
-										"id": "QXJ0aWNsZVR5cGU6MQ=="
-									}
-								}
-							]
-						}
-					}
-				}
-			]
-		}
-	}
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                    'articles': {
+                        'edges': [{
+                            'node': {
+                                'id': 'QXJ0aWNsZVR5cGU6MQ=='
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
  
     result = schema.execute(query)
     assert not result.errors
