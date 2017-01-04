@@ -27,12 +27,16 @@ def convert_choice_name(name):
 
 
 def get_choices(choices):
+    converted_names = []
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
             for choice in get_choices(help_text):
                 yield choice
         else:
             name = convert_choice_name(value)
+            if name in converted_names:
+                name += '_' + str(len(converted_names))
+            converted_names.append(name)
             description = help_text
             yield name, value, description
 
