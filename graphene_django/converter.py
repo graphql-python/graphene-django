@@ -34,7 +34,7 @@ def get_choices(choices):
                 yield choice
         else:
             name = convert_choice_name(value)
-            if name in converted_names:
+            while name in converted_names:
                 name += '_' + str(len(converted_names))
             converted_names.append(name)
             description = help_text

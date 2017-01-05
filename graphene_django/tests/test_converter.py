@@ -178,6 +178,7 @@ def test_field_with_choices_gettext():
 
 def test_field_with_choices_collision():
     field = models.CharField(help_text='Timezone', choices=(
+        ('Etc/GMT+1+2', 'Fake choice to produce double collision'),
         ('Etc/GMT+1', 'Greenwich Mean Time +1'),
         ('Etc/GMT-1', 'Greenwich Mean Time -1'),
     ))
