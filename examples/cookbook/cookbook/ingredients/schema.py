@@ -12,7 +12,6 @@ class CategoryNode(DjangoObjectType):
         model = Category
         interfaces = (Node, )
         filter_fields = ['name', 'ingredients']
-        filter_order_by = ['name']
 
 
 class IngredientNode(DjangoObjectType):
@@ -27,7 +26,6 @@ class IngredientNode(DjangoObjectType):
             'category': ['exact'],
             'category__name': ['exact'],
         }
-        filter_order_by = ['name', 'category__name']
 
 
 class Query(AbstractType):

@@ -13,7 +13,6 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     def __init__(self, type, fields=None, order_by=None,
                  extra_filter_meta=None, filterset_class=None,
                  *args, **kwargs):
-        self._order_by = order_by
         self._fields = fields
         self._type = type
         self._filterset_class = filterset_class
@@ -28,14 +27,9 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return self._type
 
     @property
-    def order_by(self):
-        return self._order_by or self.node_type._meta.filter_order_by
-
-    @property
     def meta(self):
         meta = dict(model=self.node_type._meta.model,
-                    fields=self.fields,
-                    order_by=self.order_by)
+                    fields=self.fields)
         if self._extra_filter_meta:
             meta.update(self._extra_filter_meta)
         return meta
@@ -64,12 +58,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     def connection_resolver(resolver, connection, default_manager, filterset_class, filtering_args,
                             root, args, context, info):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
-        order = args.get('order_by', None)
         qs = default_manager.get_queryset()
-        if order:
-            qs = qs.order_by(order)
-        qs = filterset_class(data=filter_kwargs, queryset=qs)
-
+        qs = filterset_class(data=filter_kwargs, queryset=qs).qs
         return DjangoConnectionField.connection_resolver(resolver, connection, qs, root, args, context, info)
 
     def get_resolver(self, parent_resolver):
