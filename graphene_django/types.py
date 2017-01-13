@@ -65,7 +65,6 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             # we allow more attributes in Meta
             defaults.update(
                 filter_fields=(),
-                filter_order_by=(),
             )
 
         options = Options(

@@ -31,6 +31,7 @@ We will setup the project, create the following:
 
     # Set up a new project with a single application
     django-admin.py startproject cookbook .  # Note the trailing '.' character
+    cd cookbook
     django-admin.py startapp ingredients
 
 Now sync your database for the first time:
@@ -98,7 +99,6 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
         class Meta:
             model = Category
             filter_fields = ['name', 'ingredients']
-            filter_order_by = ['name']
             interfaces = (relay.Node, )
 
 
@@ -112,7 +112,6 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
                 'category': ['exact'],
                 'category__name': ['exact'],
             }
-            filter_order_by = ['name', 'category__name']
             interfaces = (relay.Node, )
 
 

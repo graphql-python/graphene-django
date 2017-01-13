@@ -6,19 +6,19 @@ python:
 - 3.5
 - pypy
 before_install:
-  - |
-      if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
-        export PYENV_ROOT="$HOME/.pyenv"
-        if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
-          cd "$PYENV_ROOT" && git pull
-        else
-          rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
-        fi
-        export PYPY_VERSION="4.0.1"
-        "$PYENV_ROOT/bin/pyenv" install "pypy-$PYPY_VERSION"
-        virtualenv --python="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin/python" "$HOME/virtualenvs/pypy-$PYPY_VERSION"
-        source "$HOME/virtualenvs/pypy-$PYPY_VERSION/bin/activate"
-      fi
+- |
+  if [ "$TRAVIS_PYTHON_VERSION" = "pypy" ]; then
+    export PYENV_ROOT="$HOME/.pyenv"
+    if [ -f "$PYENV_ROOT/bin/pyenv" ]; then
+      cd "$PYENV_ROOT" && git pull
+    else
+      rm -rf "$PYENV_ROOT" && git clone --depth 1 https://github.com/yyuu/pyenv.git "$PYENV_ROOT"
+    fi
+    export PYPY_VERSION="4.0.1"
+    "$PYENV_ROOT/bin/pyenv" install "pypy-$PYPY_VERSION"
+    virtualenv --python="$PYENV_ROOT/versions/pypy-$PYPY_VERSION/bin/python" "$HOME/virtualenvs/pypy-$PYPY_VERSION"
+    source "$HOME/virtualenvs/pypy-$PYPY_VERSION/bin/activate"
+  fi
 install:
 - |
   if [ "$TEST_TYPE" = build ]; then
@@ -45,7 +45,7 @@ after_success:
   fi
 env:
   matrix:
-  - TEST_TYPE=build
+  - TEST_TYPE=build DJANGO_VERSION=1.10
 matrix:
   fast_finish: true
   include:
@@ -59,3 +59,10 @@ matrix:
     env: TEST_TYPE=build DJANGO_VERSION=1.9
   - python: '2.7'
     env: TEST_TYPE=lint
+deploy:
+  provider: pypi
+  user: syrusakbary
+  on:
+    tags: true
+  password:
+    secure: kymIFCEPUbkgRqe2NAXkWfxMmGRfWvWBOP6LIXdVdkOOkm91fU7bndPGrAjos+/7gN0Org609ZmHSlVXNMJUWcsL2or/x5LcADJ4cZDe+79qynuoRb9xs1Ri4O4SBAuVMZxuVJvs8oUzT2R11ql5vASSMtXgbX+ZDGpmPRVZStkCuXgOc4LBhbPKyl3OFy7UQFPgAEmy3Yjh4ZSKzlXheK+S6mmr60+DCIjpaA0BWPxYK9FUE0qm7JJbHLUbwsUP/QMp5MmGjwFisXCNsIe686B7QKRaiOw62eJc2R7He8AuEC8T9OM4kRwDlecSn8mMpkoSB7QWtlJ+6XdLrJFPNvtrOfgfzS9/96Qrw9WlOslk68hMlhJeRb0s2YUD8tiV3UUkvbL1mfFoS4SI9U+rojS55KhUEJWHg1w7DjoOPoZmaIL2ChRupmvrFYNAGae1cxwG3Urh+t3wYlN3gpKsRDe5GOT7Wm2tr0ad3McCpDGUwSChX59BAJXe/MoLxkKScTrMyR8yMxHOF0b4zpVn5l7xB/o2Ik4zavx5q/0rGBMK2D+5d+gpQogKShoquTPsZUwO7sB5hYeH2hqGqpeGzZtb76E2zZYd18pJ0FsBudm5+KWjYdZ+vbtGrLxdTXJ1EEtzVXm0lscykTpqUucbXSa51dhStJvW2xEEz6p3rHo=

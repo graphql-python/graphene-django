@@ -9,7 +9,7 @@ class RecipeNode(DjangoObjectType):
         model = Recipe
         interfaces = (Node, )
         filter_fields = ['title','amounts']
-        filter_order_by = ['title']
+
 
 class RecipeIngredientNode(DjangoObjectType):
 
@@ -22,7 +22,7 @@ class RecipeIngredientNode(DjangoObjectType):
             'recipe': ['exact'],
             'recipe__title': ['icontains'],
         }
-        filter_order_by = ['ingredient__name', 'recipe__title',]
+
 
 class Query(AbstractType):
     recipe = Node.Field(RecipeNode)
