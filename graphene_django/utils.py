@@ -43,11 +43,13 @@ def maybe_queryset(value):
     return value
 
 
-def get_model_fields(model):
-    reverse_fields = get_reverse_fields(model)
+def get_model_fields(options):
+    model = options.model
     all_fields = sorted(list(model._meta.fields) +
                         list(model._meta.local_many_to_many))
-    all_fields += list(reverse_fields)
+    if options.reverse_fields:
+        reverse_fields = get_reverse_fields(model)
+        all_fields += list(reverse_fields)
 
     return all_fields
 
