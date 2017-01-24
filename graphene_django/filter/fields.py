@@ -48,11 +48,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @property
     def filterset_class(self):
-        if self.node_type()._meta.filterset_class:
-            filterset_class = self.node_type()._meta.filterset_class
-        else:
-            filterset_class = get_filterset_class(self._filterset_class, **self.meta)
-        return filterset_class
+        return get_filterset_class(self._filterset_class, **self.meta)
 
     @property
     def filtering_args(self):
