@@ -108,3 +108,28 @@ method to your ``DjangoObjectType``.
             if post.published or context.user == post.owner:
                 return post
             return None
+
+
+Permission node access
+----------------------
+
+For restrict access using permissions, use the `has_perm` decorator in node.
+
+.. code:: python
+
+    from graphene_django.types import DjangoObjectType
+    from graphene_django.decorator import has_perms
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+            only_fields = ('title', 'content')
+            interfaces = (relay.Node, )
+
+        @has_perms(["django_app.django_can_see_content_permission"])
+        def resolve_content(self, id, context, info):
+            return self.content
+
+
+
