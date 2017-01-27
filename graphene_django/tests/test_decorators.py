@@ -78,3 +78,10 @@ class TestHasPermsDecorator(TestCase):
         request = TestHasPermsDecorator.check_user_perms_func(None, context=context)
         self.assertEqual(request.status_code, 403)
         self.assertEqual(request.content, 'Forbidden. User without access')
+
+
+    def test_user_without_context(self):
+        context = type('Mock', (object,), dict())
+        request = TestHasPermsDecorator.check_user_perms_func(None, context=context)
+        self.assertEqual(request.status_code, 403)
+        self.assertEqual(request.content, 'Forbidden. No context, no access.')
