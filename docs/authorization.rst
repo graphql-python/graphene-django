@@ -34,7 +34,7 @@ This is easy, simply use the ``only_fields`` meta attribute.
             only_fields = ('title', 'content')
             interfaces = (relay.Node, )
 
-conversely you can use ``exclude_fields`` meta atrribute
+conversely you can use ``exclude_fields`` meta atrribute.
 
 .. code:: python
 
