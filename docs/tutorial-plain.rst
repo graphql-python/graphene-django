@@ -218,7 +218,7 @@ accessed. Requests to this URL are handled by Graphene's ``GraphQLView``
 view.
 
 This view will serve as GraphQL endpoint. As we want to have the
-aforementioned GraphiQL we specify that on the params with ``graphiql=True``.
+aforementioned GraphiQL we specify that on the parameters with ``graphiql=True``.
 
 .. code:: python
 
@@ -308,7 +308,7 @@ If you are using the provided fixtures, you will see the following response:
 
 You can experiment with ``allCategories`` too.
 
-Something to have in mind is the `auto camelcasing <http://docs.graphene-python.org/en/latest/types/schema/#auto-camelcase-field-names>`__ that is happeing.
+Something to have in mind is the `auto camelcasing <http://docs.graphene-python.org/en/latest/types/schema/#auto-camelcase-field-names>`__ that is happening.
 
 
 Getting relations
