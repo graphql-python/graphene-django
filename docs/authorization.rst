@@ -34,6 +34,20 @@ This is easy, simply use the ``only_fields`` meta attribute.
             only_fields = ('title', 'content')
             interfaces = (relay.Node, )
 
+conversely you can use ``exclude_fields`` meta atrribute.
+
+.. code:: python
+
+    from graphene import relay
+    from graphene_django.types import DjangoObjectType
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+            exclude_fields = ('published', 'owner')
+            interfaces = (relay.Node, )
+
 Queryset Filtering On Lists
 ---------------------------
 
