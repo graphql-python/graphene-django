@@ -1,5 +1,5 @@
-Graphene-Django Tutorial
-========================
+Graphene-Django Tutorial using Relay
+====================================
 
 Graphene has a number of additional features that are designed to make
 working with Django *really simple*.
