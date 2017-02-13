@@ -106,7 +106,7 @@ class GraphQLView(View):
             if self.batch:
                 responses = [self.get_response(request, entry) for entry in data]
                 if not responses:
-                    result, status_code = self.get_response(request, data, show_graphiql)    
+                    result, status_code = self.get_response(request, data, show_graphiql)
                 else:
                     result = '[{}]'.format(','.join([response[0] for response in responses]))
                     status_code = max(responses, key=lambda response: response[1])[1]
