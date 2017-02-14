@@ -11,6 +11,10 @@ A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest
 Setup the Django project
 ------------------------
 
+You can find the entire project in ``examples/cookbook-plain``.
+
+----
+
 We will setup the project, create the following:
 
 -  A Django project called ``cookbook``
