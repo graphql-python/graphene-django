@@ -499,6 +499,14 @@ This will give us the following results:
       }
     }
 
-As an excercise, you can try making some queries to ``ingredient``.
+As an exercise, you can try making some queries to ``ingredient``.
 
 Something to keep in mind - since we are using one field several times in our query, we need `aliases <http://graphql.org/learn/queries/#aliases>`__
+
+
+Summary
+-------
+
+As you can see, GraphQL is very powerful but there are a lot of repetitions in our example. We can do a lot of improvements by adding layers of abstraction on top of ``graphene-django``.
+
+In the next tutorial, we are going to use the **Relay specificiation** combined with ``django-filter``
