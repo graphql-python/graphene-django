@@ -276,7 +276,7 @@ from the command line.
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
-Go to `localhost:8000/graphiql <http://localhost:8000/graphiql>`__ and
+Go to `localhost:8000/graphql <http://localhost:8000/graphql>`__ and
 type your first query!
 
 .. code::
