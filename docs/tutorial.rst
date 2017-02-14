@@ -90,7 +90,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
     from graphene_django import DjangoObjectType
     from graphene_django.filter import DjangoFilterConnectionField
 
-    from cookbook.ingredients.models import Category, Ingredient
+    from ingredients.models import Category, Ingredient
 
 
     # Graphene will automatically map the Category model's fields onto the CategoryNode.
@@ -145,10 +145,10 @@ Create the parent project-level ``cookbook/schema.py``:
 
     import graphene
 
-    import cookbook.ingredients.schema
+    import ingredients.schema
 
 
-    class Query(cookbook.ingredients.schema.Query, graphene.ObjectType):
+    class Query(ingredients.schema.Query, graphene.ObjectType):
         # This class will inherit from multiple Queries
         # as we begin to add more apps to our project
         pass
