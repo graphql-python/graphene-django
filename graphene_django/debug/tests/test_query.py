@@ -6,8 +6,13 @@ from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 from ...tests.models import Reporter
+from ...registry import reset_global_registry
 from ..middleware import DjangoDebugMiddleware
 from ..types import DjangoDebug
+
+
+def setup_function(function):
+    reset_global_registry()
 
 
 class context(object):

@@ -3,10 +3,11 @@ from mock import patch
 from graphene import Interface, ObjectType, Schema
 from graphene.relay import Node
 
-from ..registry import reset_global_registry
+from ..registry import Registry, reset_global_registry
 from ..types import DjangoObjectType
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
+
 
 reset_global_registry()
 

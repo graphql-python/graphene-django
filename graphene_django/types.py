@@ -58,7 +58,7 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             only_fields=(),
             exclude_fields=(),
             interfaces=(),
-            skip_registry=False,
+            skip_global_registry=False,
             registry=None
         )
         if DJANGO_FILTER_INSTALLED:
@@ -72,6 +72,14 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             attrs.pop('Meta', None),
             **defaults
         )
+        # If the DjangoObjectType wants to skip the registry
+        # we will automatically create one, so the model is isolated
+        # there.
+        if options.skip_global_registry:
+            assert not options.registry, (
+                "The attribute skip_global_registry requires have an empty registry in {}.Meta"
+            ).format(name)
+            options.registry = Registry()
         if not options.registry:
             options.registry = get_global_registry()
         assert isinstance(options.registry, Registry), (

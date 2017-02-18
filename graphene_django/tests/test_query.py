@@ -12,9 +12,14 @@ from ..utils import DJANGO_FILTER_INSTALLED
 from ..compat import MissingType, RangeField
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
+from ..registry import reset_global_registry
 from .models import Article, Reporter
 
 pytestmark = pytest.mark.django_db
+
+
+def setup_function(function):
+    reset_global_registry()
 
 
 def test_should_query_only_fields():
