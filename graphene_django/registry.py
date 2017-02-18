@@ -13,7 +13,8 @@ class Registry(object):
         # assert self.get_type_for_model(cls._meta.model) == cls, (
         #     'Multiple DjangoObjectTypes registered for "{}"'.format(cls._meta.model)
         # )
-        self._registry[cls._meta.model] = cls
+        if not getattr(cls._meta, 'skip_registry', False):
+            self._registry[cls._meta.model] = cls
 
     def get_type_for_model(self, model):
         return self._registry.get(model)
