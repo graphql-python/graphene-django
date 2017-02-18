@@ -72,7 +72,7 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             attrs.pop('Meta', None),
             **defaults
         )
-        # If the DjangoObjectType wants to skip the registry
+        # If the DjangoObjectType wants to skip the global registry
         # we will automatically create one, so the model is isolated
         # there.
         if options.skip_global_registry:

@@ -9,8 +9,15 @@ class Registry(object):
         model = cls._meta.model
         assert self._registry.get(model, cls) == cls, (
             'Django Model "{}.{}" already associated with {}. '
-            'You can use a different registry for {} or skip the global Registry with "{}.Meta.skip_global_registry = True".'
-        ).format(model._meta.app_label, model._meta.object_name, repr(self.get_type_for_model(cls._meta.model)), repr(cls), cls)
+            'You can use a different registry for {} or skip '
+            'the global Registry with "{}.Meta.skip_global_registry = True".'
+        ).format(
+            model._meta.app_label,
+            model._meta.object_name,
+            repr(self.get_type_for_model(cls._meta.model)),
+            repr(cls),
+            cls
+        )
         assert issubclass(
             cls, DjangoObjectType), 'Only DjangoObjectTypes can be registered, received "{}"'.format(
             cls.__name__)

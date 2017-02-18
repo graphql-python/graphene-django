@@ -27,6 +27,9 @@ def test_registry_multiple_types():
         class Meta:
             model = ReporterModel
 
+    class Reporter2(object):
+        pass
+
     with raises(Exception) as exc_info:
         class Reporter2(DjangoObjectType):
             '''Reporter2 description'''
@@ -34,10 +37,10 @@ def test_registry_multiple_types():
                 model = ReporterModel
 
     assert str(exc_info.value) == (
-      'Django Model "tests.Reporter" already associated with <class \'graphene_django.tests.test_registry.Reporter\'>. '
-      'You can use a different registry for <class \'graphene_django.tests.test_registry.Reporter2\'> '
+      'Django Model "tests.Reporter" already associated with {}. '
+      'You can use a different registry for {} '
       'or skip the global Registry with "Reporter2.Meta.skip_global_registry = True".'
-    )
+    ).format(repr(Reporter), repr(Reporter2))
 
 
 def test_registry_multiple_types_dont_collision_if_skip_global_registry():
