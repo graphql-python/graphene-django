@@ -126,7 +126,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
     model = get_related_model(field)
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_unique_type_for_model(model)
         if not _type:
             return
 
@@ -145,7 +145,7 @@ def convert_field_to_list_or_connection(field, registry=None):
     model = get_related_model(field)
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_unique_type_for_model(model)
         if not _type:
             return
 
@@ -163,7 +163,7 @@ def convert_relatedfield_to_djangomodel(field, registry=None):
     model = field.model
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_unique_type_for_model(model)
         if not _type:
             return
 
@@ -183,7 +183,7 @@ def convert_field_to_djangomodel(field, registry=None):
     model = get_related_model(field)
 
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
+        _type = registry.get_unique_type_for_model(model)
         if not _type:
             return
 

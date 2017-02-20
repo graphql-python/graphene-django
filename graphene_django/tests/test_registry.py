@@ -18,29 +18,34 @@ def test_registry_basic():
             model = ReporterModel
 
     assert Reporter._meta.registry == global_registry
-    assert global_registry.get_type_for_model(ReporterModel) == Reporter
+    assert global_registry.get_unique_type_for_model(ReporterModel) == Reporter
 
 
 def test_registry_multiple_types():
+    global_registry = get_global_registry()
+
     class Reporter(DjangoObjectType):
         '''Reporter description'''
         class Meta:
             model = ReporterModel
 
-    class Reporter2(object):
-        pass
+    class Reporter2(DjangoObjectType):
+        '''Reporter2 description'''
+        class Meta:
+            model = ReporterModel
+
+    assert global_registry.get_types_for_model(ReporterModel) == [Reporter, Reporter2]
 
     with raises(Exception) as exc_info:
-        class Reporter2(DjangoObjectType):
-            '''Reporter2 description'''
-            class Meta:
-                model = ReporterModel
+        global_registry.get_unique_type_for_model(ReporterModel) == [Reporter, Reporter2]
 
     assert str(exc_info.value) == (
-      'Django Model "tests.Reporter" already associated with {}. '
-      'You can use a different registry for {} '
-      'or skip the global Registry with "Reporter2.Meta.skip_global_registry = True".'
-    ).format(repr(Reporter), repr(Reporter2))
+       'Found multiple ObjectTypes associated with the same '
+       'Django Model "tests.Reporter": {}. You can use a different '
+       'registry for each or skip the global Registry with '
+       'Meta.skip_global_registry = True". '
+       'Read more at http://docs.graphene-python.org/projects/django/en/latest/registry/ .'
+    ).format(repr([Reporter, Reporter2]))
 
 
 def test_registry_multiple_types_dont_collision_if_skip_global_registry():

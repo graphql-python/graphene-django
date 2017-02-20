@@ -25,7 +25,7 @@ You retrieve using the function ``get_global_registry`` in
             model = ReporterModel
 
     global_registry = get_global_registry
-    global_registry.get_type_for_model(ReporterModel) # == Reporter
+    global_registry.get_unique_type_for_model(ReporterModel) # == Reporter
 
 
 Multiple types for one model
