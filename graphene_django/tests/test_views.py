@@ -184,9 +184,9 @@ def test_batch_allows_post_with_json_encoding(client):
 
 
 def test_batch_fails_if_is_empty(client):
-    response = client.post(batch_url_string(), j([]), 'application/json')
+    response = client.post(batch_url_string(), '[]', 'application/json')
 
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert response_json(response) == {
         'errors': [{'message': 'Received an empty list in the batch request.'}]
     }
@@ -441,8 +441,17 @@ def test_handles_errors_caused_by_a_lack_of_query(client):
     }
 
 
-def test_handles_invalid_json_bodies(client):
+def test_handles_not_expected_json_bodies(client):
     response = client.post(url_string(), '[]', 'application/json')
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'The received data is not a valid JSON query.'}]
+    }
+
+
+def test_handles_invalid_json_bodies(client):
+    response = client.post(url_string(), '[oh}', 'application/json')
 
     assert response.status_code == 400
     assert response_json(response) == {
