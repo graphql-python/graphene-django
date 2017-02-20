@@ -8,10 +8,12 @@ This way, we make the library smart enough to convert automatically the
 relations between models to Graphene fields automatically (when possible).
 
 
-get_global_registry
--------------------
+Global registry
+---------------
 
 By default, all model/objecttype relations will live in the global registry.
+You retrieve using the function ``get_global_registry`` in
+``graphene_django.registry``.
 
 .. code:: python
 
@@ -26,11 +28,15 @@ By default, all model/objecttype relations will live in the global registry.
     global_registry.get_type_for_model(ReporterModel) # == Reporter
 
 
-One Model, multiple types
--------------------------
+Multiple types for one model
+----------------------------
 
 There will be some cases where we need one Django Model to
 have multiple graphene ``ObjectType``s associated to it.
+
+In this case, we can either use ``skip_global_registry`` to create
+a new isolated registry for that type (so it doesn't interfere with
+the global registry), or we can create a custom registry for it.
 
 .. code:: python
 
@@ -48,6 +54,7 @@ have multiple graphene ``ObjectType``s associated to it.
             skip_global_registry = True
             # We can also specify a custom registry with
             # registry = Registry()
+
 
 This way, the ``ReporterModel`` could have two different types living in the same
 schema.
