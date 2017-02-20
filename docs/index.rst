@@ -11,3 +11,4 @@ Contents:
    authorization
    debug
    introspection
+   registry

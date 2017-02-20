@@ -1,8 +1,12 @@
 from py.test import raises
 
-from ..registry import Registry
+from ..registry import Registry, reset_global_registry
 from ..types import DjangoObjectType
 from .models import Reporter
+
+
+def setup_function(function):
+    reset_global_registry()
 
 
 def test_should_raise_if_no_model():
