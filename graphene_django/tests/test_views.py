@@ -183,6 +183,15 @@ def test_batch_allows_post_with_json_encoding(client):
     }]
 
 
+def test_batch_fails_if_is_empty(client):
+    response = client.post(batch_url_string(), j([]), 'application/json')
+
+    assert response.status_code == 200
+    assert response_json(response) == {
+        'errors': [{'message': 'Received an empty list in the batch request.'}]
+    }
+
+
 def test_allows_sending_a_mutation_via_post(client):
     response = client.post(url_string(), j(query='mutation TestMutation { writeTest { test } }'), 'application/json')
 
