@@ -513,4 +513,4 @@ Summary
 
 As you can see, GraphQL is very powerful but there are a lot of repetitions in our example. We can do a lot of improvements by adding layers of abstraction on top of ``graphene-django``.
 
-In the next tutorial, we are going to use the **Relay specificiation** combined with ``django-filter``
+If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the **relay tutorial.**
