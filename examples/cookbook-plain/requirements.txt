@@ -1,0 +1,5 @@
+graphene
+graphene-django
+django_graphiql
+graphql-core
+django==1.9

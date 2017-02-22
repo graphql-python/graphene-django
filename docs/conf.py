@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Graphene Django'
-copyright = u'Graphene 2016'
+copyright = u'Graphene 2017'
 author = u'Syrus Akbary'
 
 # The version info for the project you're documenting, acts as replacement for
