@@ -5,6 +5,7 @@ from functools import partial
 
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
+from graphene.relay import is_node
 from .utils import get_filtering_args_from_filterset, get_filterset_class
 
 
@@ -28,7 +29,15 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @property
     def meta(self):
-        meta = dict(model=self.node_type._meta.model,
+        if is_node(self.node_type):
+            _model = self.node_type._meta.model
+        else:
+            # ConnectionFields can also be passed Connections,
+            # in which case, we need to use the Node of the connection
+            # to get our relevant args.
+            _model = self.node_type._meta.node._meta.model
+
+        meta = dict(model=_model,
                     fields=self.fields)
         if self._extra_filter_meta:
             meta.update(self._extra_filter_meta)
@@ -36,7 +45,16 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @property
     def fields(self):
-        return self._fields or self.node_type._meta.filter_fields
+        if self._fields:
+            return self._fields
+
+        if is_node(self.node_type):
+            return self.node_type._meta.filter_fields
+        else:
+            # ConnectionFields can also be passed Connections,
+            # in which case, we need to use the Node of the connection
+            # to get our relevant args.
+            return self.node_type._meta.node._meta.filter_fields
 
     @property
     def args(self):

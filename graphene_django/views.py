@@ -193,10 +193,19 @@ class GraphQLView(View):
             try:
                 request_json = json.loads(request.body.decode('utf-8'))
                 if self.batch:
-                    assert isinstance(request_json, list)
+                    assert isinstance(request_json, list), (
+                        'Batch requests should receive a list, but received {}.'
+                    ).format(repr(request_json))
+                    assert len(request_json) > 0, (
+                        'Received an empty list in the batch request.'
+                    )
                 else:
-                    assert isinstance(request_json, dict)
+                    assert isinstance(request_json, dict), (
+                        'The received data is not a valid JSON query.'
+                    )
                 return request_json
+            except AssertionError as e:
+                raise HttpError(HttpResponseBadRequest(str(e)))
             except:
                 raise HttpError(HttpResponseBadRequest('POST body sent invalid JSON.'))
 

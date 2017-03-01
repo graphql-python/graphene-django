@@ -3,7 +3,7 @@ Cookbook Example Django Project
 
 This example project demos integration between Graphene and Django.
 The project contains two apps, one named `ingredients` and another
-named `recipes`.
+named `recepies`.
 
 Getting started
 ---------------

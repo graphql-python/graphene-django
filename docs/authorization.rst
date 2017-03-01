@@ -1,7 +1,7 @@
 Authorization in Django
 =======================
 
-There are two main ways you may want to limit access to data when
+There are several ways you may want to limit access to data when
 working with Graphene and Django: limiting which fields are accessible
 via GraphQL and limiting which objects a user can access.
 
@@ -32,6 +32,20 @@ This is easy, simply use the ``only_fields`` meta attribute.
         class Meta:
             model = Post
             only_fields = ('title', 'content')
+            interfaces = (relay.Node, )
+
+conversely you can use ``exclude_fields`` meta atrribute.
+
+.. code:: python
+
+    from graphene import relay
+    from graphene_django.types import DjangoObjectType
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+            exclude_fields = ('published', 'owner')
             interfaces = (relay.Node, )
 
 Queryset Filtering On Lists
@@ -108,3 +122,28 @@ method to your ``DjangoObjectType``.
             if post.published or context.user == post.owner:
                 return post
             return None
+
+Adding login required
+---------------------
+
+If you want to use the standard Django LoginRequiredMixin_ you can create your own view, which includes the ``LoginRequiredMixin`` and subclasses the ``GraphQLView``:
+
+.. code:: python
+
+    from django.contrib.auth.mixins import LoginRequiredMixin
+    from graphene_django.views import GraphQLView
+
+
+    class PrivateGraphQLView(LoginRequiredMixin, GraphQLView):
+        pass
+
+After this, you can use the new ``PrivateGraphQLView`` in ``urls.py``:
+
+.. code:: python
+
+    urlpatterns = [
+      # some other urls
+      url(r'^graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+    ]
+
+.. _LoginRequiredMixin: https://docs.djangoproject.com/en/1.10/topics/auth/default/#the-loginrequired-mixin

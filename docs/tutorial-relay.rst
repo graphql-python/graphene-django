@@ -1,11 +1,16 @@
-Graphene-Django Tutorial
-========================
+Graphene and Django Tutorial using Relay
+========================================
 
 Graphene has a number of additional features that are designed to make
 working with Django *really simple*.
 
 Note: The code in this quickstart is pulled from the `cookbook example
 app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
+
+A good idea is to check the following things first:
+
+* `Graphene Relay documentation <http://docs.graphene-python.org/en/latest/relay/>`__
+* `GraphQL Relay Specification <https://facebook.github.io/relay/docs/graphql-relay-specification.html>`__
 
 Setup the Django project
 ------------------------
@@ -43,7 +48,7 @@ Now sync your database for the first time:
 Let's create a few simple models...
 
 Defining our models
--------------------
+^^^^^^^^^^^^^^^^^^^
 
 Let's get started with these models:
 
@@ -68,6 +73,33 @@ Let's get started with these models:
         def __str__(self):
             return self.name
 
+Don't forget to create & run migrations:
+
+.. code:: bash
+
+    python manage.py makemigrations
+    python manage.py migrate
+
+Load some test data
+^^^^^^^^^^^^^^^^^^^
+
+Now is a good time to load up some test data. The easiest option will be
+to `download the
+ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/master/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
+fixture and place it in
+``cookbook/ingredients/fixtures/ingredients.json``. You can then run the
+following:
+
+.. code:: bash
+
+    $ python ./manage.py loaddata ingredients
+
+    Installed 6 object(s) from 1 fixture(s)
+
+Alternatively you can use the Django admin interface to create some data
+yourself. You'll need to run the development server (see below), and
+create a login for yourself too (``./manage.py createsuperuser``).
+
 Schema
 ------
 
@@ -90,7 +122,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
     from graphene_django import DjangoObjectType
     from graphene_django.filter import DjangoFilterConnectionField
 
-    from cookbook.ingredients.models import Category, Ingredient
+    from ingredients.models import Category, Ingredient
 
 
     # Graphene will automatically map the Category model's fields onto the CategoryNode.
@@ -145,10 +177,10 @@ Create the parent project-level ``cookbook/schema.py``:
 
     import graphene
 
-    import cookbook.ingredients.schema
+    import ingredients.schema
 
 
-    class Query(cookbook.ingredients.schema.Query, graphene.ObjectType):
+    class Query(ingredients.schema.Query, graphene.ObjectType):
         # This class will inherit from multiple Queries
         # as we begin to add more apps to our project
         pass
@@ -158,8 +190,11 @@ Create the parent project-level ``cookbook/schema.py``:
 You can think of this as being something like your top-level ``urls.py``
 file (although it currently lacks any namespacing).
 
+Testing everything so far
+-------------------------
+
 Update settings
----------------
+^^^^^^^^^^^^^^^
 
 Next, install your app and GraphiQL in your Django project. GraphiQL is
 a web-based integrated development environment to assist in the writing
@@ -191,7 +226,7 @@ Alternatively, we can specify the schema to be used in the urls definition,
 as explained below.
 
 Creating GraphQL and GraphiQL views
------------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Unlike a RESTful API, there is only a single URL from which GraphQL is
 accessed. Requests to this URL are handled by Graphene's ``GraphQLView``
@@ -230,39 +265,9 @@ as explained above, we can do so here using:
         url(r'^graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
-Apply model changes to database
--------------------------------
-
-Tell Django that we've added models and update the database schema to
-reflect these additions.
-
-.. code:: bash
-
-    python manage.py makemigrations
-    python manage.py migrate
-
-Load some test data
--------------------
-
-Now is a good time to load up some test data. The easiest option will be
-to `download the
-ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/master/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
-fixture and place it in
-``cookbook/ingredients/fixtures/ingredients.json``. You can then run the
-following:
-
-.. code:: bash
-
-    $ python ./manage.py loaddata ingredients
-
-    Installed 6 object(s) from 1 fixture(s)
-
-Alternatively you can use the Django admin interface to create some data
-yourself. You'll need to run the development server (see below), and
-create a login for yourself too (``./manage.py createsuperuser``).
 
 Testing our GraphQL schema
---------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We're now ready to test the API we've built. Let's fire up the server
 from the command line.
@@ -276,7 +281,7 @@ from the command line.
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
-Go to `localhost:8000/graphiql <http://localhost:8000/graphiql>`__ and
+Go to `localhost:8000/graphql <http://localhost:8000/graphql>`__ and
 type your first query!
 
 .. code::

@@ -58,6 +58,7 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             only_fields=(),
             exclude_fields=(),
             interfaces=(),
+            skip_registry=False,
             registry=None
         )
         if DJANGO_FILTER_INSTALLED:
