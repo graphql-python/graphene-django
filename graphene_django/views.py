@@ -160,11 +160,8 @@ class GraphQLView(View):
                 response['data'] = execution_result.data
 
             if self.batch:
-                response = {
-                    'id': id,
-                    'payload': response,
-                    'status': status_code,
-                }
+                response['id'] = id
+                response['status'] = status_code
 
             result = self.json_encode(request, response, pretty=show_graphiql)
         else:
