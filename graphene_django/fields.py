@@ -33,8 +33,12 @@ class DjangoConnectionField(ConnectionField):
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
+    def node_type(self):
+        return self.type._meta.node
+
+    @property
     def model(self):
-        return self.type._meta.node._meta.model
+        return self.node_type._meta.model
 
     def get_manager(self):
         if self.on:
