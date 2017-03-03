@@ -1,5 +1,15 @@
 from setuptools import find_packages, setup
 
+tests_require = [
+    'pytest>=2.7.2',
+    'pytest-cov',
+    'coveralls',
+    'mock',
+    'pytz',
+    'django-filter',
+    'pytest-django==2.9.1',
+]
+
 setup(
     name='graphene-django',
     version='1.2.1',
@@ -41,14 +51,10 @@ setup(
     setup_requires=[
         'pytest-runner',
     ],
-    tests_require=[
-        'django-filter>=1.0.0',
-        'pytest',
-        'pytest-django==2.9.1',
-        'mock',
-        # Required for Django postgres fields testing
-        'psycopg2',
-    ],
+    tests_require=tests_require,
+    extras_require={
+        'test': tests_require,
+    },
     include_package_data=True,
     zip_safe=False,
     platforms='any',

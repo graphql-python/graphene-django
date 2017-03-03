@@ -109,21 +109,21 @@ After cloning this repo, ensure dependencies are installed by running:
 
 .. code:: sh
 
-    python setup.py install
+    pip install -e ".[test]"
 
 After developing, the full test suite can be evaluated by running:
 
 .. code:: sh
 
-    python setup.py test # Use --pytest-args="-v -s" for verbose mode
+    py.test graphene_django --cov=graphene_django # Use -v -s for verbose mode
 
 Documentation
 ~~~~~~~~~~~~~
 
-The documentation can be generated using the excellent
+The documentation is generated using the excellent
 `Sphinx <http://www.sphinx-doc.org/>`__ and a custom theme.
 
-To install the documentation dependencies, run the following:
+The documentation dependencies are installed by running:
 
 .. code:: sh
 
