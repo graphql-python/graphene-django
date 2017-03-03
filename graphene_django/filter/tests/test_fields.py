@@ -348,3 +348,20 @@ def test_filter_filterset_related_results():
     assert not result.errors
     # We should only get two reporters
     assert len(result.data['allReporters']['edges']) == 2
+
+
+def test_recursive_filter_connection():
+    class ReporterFilterNode(DjangoObjectType):
+        child_reporters = DjangoFilterConnectionField(lambda: ReporterFilterNode)
+
+        def resolve_child_reporters(self, args, context, info):
+            return []
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+
+    assert ReporterFilterNode._meta.fields['child_reporters'].node_type == ReporterFilterNode
