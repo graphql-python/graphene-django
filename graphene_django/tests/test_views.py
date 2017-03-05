@@ -178,7 +178,7 @@ def test_batch_allows_post_with_json_encoding(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': { 'data': {'test': "Hello World"} },
+        'data': {'test': "Hello World"},
         'status': 200,
     }]
 
@@ -233,7 +233,7 @@ def test_batch_supports_post_json_query_with_string_variables(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': { 'data': {'test': "Hello Dolly"} },
+        'data': {'test': "Hello Dolly"},
         'status': 200,
     }]
 
@@ -260,7 +260,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': { 'data': {'test': "Hello Dolly"} },
+        'data': {'test': "Hello Dolly"},
         'status': 200,
     }]
 
@@ -356,11 +356,9 @@ def test_batch_allows_post_with_operation_name(client):
     assert response.status_code == 200
     assert response_json(response) == [{
         'id': 1,
-        'payload': {
-            'data': {
-                'test': 'Hello World',
-                'shared': 'Hello Everyone'
-            }
+        'data': {
+            'test': 'Hello World',
+            'shared': 'Hello Everyone'
         },
         'status': 200,
     }]
