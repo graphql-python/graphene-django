@@ -75,5 +75,6 @@ def test_mutations():
         }
     }
     result = schema.execute(query)
+    print(result.data)
     assert not result.errors
     assert result.data == expected
