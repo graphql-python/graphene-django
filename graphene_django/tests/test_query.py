@@ -368,6 +368,98 @@ def test_should_query_node_filtering():
     assert result.data == expected
 
 
+@pytest.mark.skipif(not DJANGO_FILTER_INSTALLED,
+                    reason="django-filter should be installed")
+def test_should_query_node_multiple_filtering():
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class ArticleType(DjangoObjectType):
+
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+            filter_fields = ('lang', 'tag')
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+    Article.objects.create(
+        headline='Article Node 1',
+        pub_date=datetime.date.today(),
+        reporter=r,
+        editor=r,
+        lang='es',
+        tag='one'
+    )
+    Article.objects.create(
+        headline='Article Node 2',
+        pub_date=datetime.date.today(),
+        reporter=r,
+        editor=r,
+        lang='en',
+        tag='two'
+    )
+    Article.objects.create(
+        headline='Article Node 3',
+        pub_date=datetime.date.today(),
+        reporter=r,
+        editor=r,
+        lang='en',
+        tag='three'
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        articles(lang: "es", tag: "two") {
+                            edges {
+                                node {
+                                    id
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                    'articles': {
+                        'edges': [{
+                            'node': {
+                                'id': 'QXJ0aWNsZVR5cGU6MQ=='
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_should_query_filter_node_limit():
     class ReporterFilter(FilterSet):
         limit = NumberFilter(method='filter_limit')
