@@ -488,18 +488,18 @@ def test_should_query_filter_node_limit():
         )
 
         def resolve_all_reporters(self, args, context, info):
-            return Reporter.objects.all()
+            return Reporter.objects.order_by('a_choice')
 
-    r = Reporter.objects.create(
-        first_name='John',
-        last_name='Doe',
-        email='johndoe@example.com',
-        a_choice=1
-    )
     Reporter.objects.create(
         first_name='Bob',
         last_name='Doe',
         email='bobdoe@example.com',
+        a_choice=2
+    )
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
         a_choice=1
     )
 
