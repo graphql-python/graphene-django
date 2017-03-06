@@ -405,7 +405,7 @@ def test_should_query_node_multiple_filtering():
         pub_date=datetime.date.today(),
         reporter=r,
         editor=r,
-        lang='en'
+        lang='es'
     )
     Article.objects.create(
         headline='Article Node 3',
@@ -422,7 +422,7 @@ def test_should_query_node_multiple_filtering():
                 edges {
                     node {
                         id
-                        articles(lang: "es", headline: "Article Node 2") {
+                        articles(lang: "es", headline: "Article Node 1") {
                             edges {
                                 node {
                                     id
