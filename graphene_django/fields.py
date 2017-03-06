@@ -53,9 +53,11 @@ class DjangoConnectionField(ConnectionField):
             iterable = default_manager
         iterable = maybe_queryset(iterable)
         if isinstance(iterable, QuerySet):
-            if default_manager is not None and iterable is not default_manager:
-                iterable &= maybe_queryset(default_manager)
-            _len = iterable.count()
+            if iterable is not default_manager:
+                iterable = list(set(iterable).intersection(maybe_queryset(default_manager)))
+                _len = len(iterable)
+            else:
+                _len = iterable.count()
         else:
             _len = len(iterable)
         connection = connection_from_list_slice(
