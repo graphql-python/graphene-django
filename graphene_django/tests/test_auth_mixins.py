@@ -2,7 +2,7 @@ import graphene
 from graphene import Schema, relay, ObjectType
 from ..filter import DjangoFilterConnectionField
 from django.test import TestCase, RequestFactory
-from ..types import DjangoObjectType
+from graphene_django import DjangoObjectType
 from .models import Pet
 from ..auth.mixins import AuthNodeMixin, AuthMutationMixin
 
