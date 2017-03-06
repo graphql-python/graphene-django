@@ -1,6 +1,5 @@
 import graphene
 from graphene import Schema, relay, ObjectType
-from graphene_django.filter import DjangoFilterConnectionField
 from django.test import TestCase, RequestFactory
 from graphene_django import DjangoObjectType
 from graphene_django.auth.mixins import AuthNodeMixin, AuthMutationMixin
