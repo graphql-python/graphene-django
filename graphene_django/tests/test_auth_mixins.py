@@ -1,10 +1,10 @@
 import graphene
 from graphene import Schema, relay, ObjectType
-from ..filter import DjangoFilterConnectionField
+from graphene_django.filter import DjangoFilterConnectionField
 from django.test import TestCase, RequestFactory
 from graphene_django import DjangoObjectType
+from graphene_django.auth.mixins import AuthNodeMixin, AuthMutationMixin
 from .models import Pet
-from ..auth.mixins import AuthNodeMixin, AuthMutationMixin
 
 
 class PetNode(AuthNodeMixin, DjangoObjectType):
@@ -45,7 +45,6 @@ class CreatePet(AuthMutationMixin, graphene.Mutation):
 
 class QueryRoot(ObjectType):
     pet = relay.Node.Field(PetNode)
-    pets = DjangoFilterConnectionField(PetNode)
 
 
 class MutationRoot(ObjectType):
@@ -160,8 +159,6 @@ class AuthorizationTests(TestCase):
         Making query with an user who does not have the permission
         """
         result = self.schema.execute(self.query_node, context_value={'user': self.storm_tropper})
-        print(result.errors)
-        print(result.data)
         self.assertNotEqual(result.errors, [])
         self.assertEqual(result.errors[0].message, 'Permission Denied')
 
@@ -170,6 +167,4 @@ class AuthorizationTests(TestCase):
         Making query with an user who has the permission
         """
         result = self.schema.execute(self.query_node, context_value={'user': self.luke})
-        print(result.errors)
-        print(result.data)
         self.assertEqual(result.errors, [])
