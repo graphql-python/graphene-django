@@ -382,7 +382,7 @@ def test_should_query_node_multiple_filtering():
         class Meta:
             model = Article
             interfaces = (Node, )
-            filter_fields = ('lang', 'tag')
+            filter_fields = ('lang', 'headline')
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -398,24 +398,21 @@ def test_should_query_node_multiple_filtering():
         pub_date=datetime.date.today(),
         reporter=r,
         editor=r,
-        lang='es',
-        tag='one'
+        lang='es'
     )
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.date.today(),
         reporter=r,
         editor=r,
-        lang='en',
-        tag='two'
+        lang='en'
     )
     Article.objects.create(
         headline='Article Node 3',
         pub_date=datetime.date.today(),
         reporter=r,
         editor=r,
-        lang='en',
-        tag='three'
+        lang='en'
     )
 
     schema = graphene.Schema(query=Query)
@@ -425,7 +422,7 @@ def test_should_query_node_multiple_filtering():
                 edges {
                     node {
                         id
-                        articles(lang: "es", tag: "two") {
+                        articles(lang: "es", headline: "Article Node 2") {
                             edges {
                                 node {
                                     id
