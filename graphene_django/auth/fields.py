@@ -1,5 +1,5 @@
 from django.core.exceptions import PermissionDenied
-from graphene_django.filter import DjangoFilterConnectionField
+from graphene_django.filter.fields import DjangoFilterConnectionField
 from graphene_django.fields import DjangoConnectionField
 
 
@@ -31,7 +31,8 @@ class AuthDjangoFilterConnectionField(DjangoFilterConnectionField):
     def connection_resolver(self, resolver, connection, default_manager, filterset_class, filtering_args,
                             root, args, context, info):
         if self.has_perm(context) is not True:
-            return DjangoConnectionField.connection_resolver(resolver, connection, [PermissionDenied('Permission Denied'), ], root, args, context, info)
+            return DjangoConnectionField.connection_resolver(
+                resolver, connection, [PermissionDenied('Permission Denied'), ], root, args, context, info)
         return super(AuthDjangoFilterConnectionField, self).connection_resolver(
             resolver, connection, default_manager, filterset_class, filtering_args,
             root, args, context, info)
