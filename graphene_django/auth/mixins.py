@@ -9,15 +9,15 @@ class AuthNodeMixin():
 
         def has_perm(object_instance):
             if context is None:
-                return PermissionDenied('Permission Denied')
+                return False
             if type(context) is dict:
                 user = context.get('user', None)
                 if user is None:
-                    return PermissionDenied('Permission Denied')
+                    return False
             else:
                 user = context.user
                 if user.is_authenticated() is False:
-                    return PermissionDenied('Permission Denied')
+                    return False
 
             if type(cls._permission) is tuple:
                 for permission in cls._permission:

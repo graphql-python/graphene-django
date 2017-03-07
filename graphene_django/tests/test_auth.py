@@ -3,6 +3,8 @@ from graphene import Schema, relay, ObjectType
 from django.test import TestCase, RequestFactory
 from graphene_django import DjangoObjectType
 from graphene_django.auth.mixins import AuthNodeMixin, AuthMutationMixin
+from graphene_django.auth.fields import AuthDjangoFilterConnectionField
+from django.core.exceptions import PermissionDenied
 from .models import Pet
 
 
@@ -42,8 +44,13 @@ class CreatePet(AuthMutationMixin, graphene.Mutation):
         return CreatePet(pet=pet)
 
 
+class PetFilterConnection(AuthDjangoFilterConnectionField):
+    _permission = 'app.create_pet'
+
+
 class QueryRoot(ObjectType):
     pet = relay.Node.Field(PetNode)
+    pets = PetFilterConnection(PetNode)
 
 
 class MutationRoot(ObjectType):
@@ -94,6 +101,18 @@ class AuthorizationTests(TestCase):
               pet(id: "UGV0Tm9kZTox"){
                 id
                 name
+              }
+            }
+        '''
+        cls.query_filter = '''
+            query {
+              pets{
+                edges{
+                    node{
+                        id
+                        name
+                    }
+                }
               }
             }
         '''
@@ -167,3 +186,22 @@ class AuthorizationTests(TestCase):
         """
         result = self.schema.execute(self.query_node, context_value={'user': self.luke})
         self.assertEqual(result.errors, [])
+
+    def test_filter_has_permission(self):
+        """
+        Making query with an user who has the permission
+        """
+        result = self.schema.execute(self.query_filter, context_value={'user': self.luke})
+        print(result.data)
+        print(result.errors)
+        self.assertEqual(result.errors, [])
+
+    def test_filter_non_permission(self):
+        """
+        Making query with an user who has the permission
+        """
+        result = self.schema.execute(self.query_filter, context_value={'user': self.storm_tropper})
+        print(result.data)
+        print(result.errors)
+        self.assertNotEqual(result.errors, [])
+        self.assertEqual(result.errors[0].message, 'Permission Denied')
