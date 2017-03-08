@@ -43,7 +43,8 @@ class AuthMutationMixin():
 
     @classmethod
     def has_permision(cls, context):
-        user = None
+        if context is None:
+            return PermissionDenied('Permission Denied')
         if type(context) is dict:
             user = context.get('user', None)
             if user is None:

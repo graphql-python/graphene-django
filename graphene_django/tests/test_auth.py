@@ -1,3 +1,4 @@
+import collections
 import graphene
 from graphene import Schema, relay, ObjectType
 from django.test import TestCase, RequestFactory
@@ -10,6 +11,14 @@ from .models import Pet
 
 class PetNode(AuthNodeMixin, DjangoObjectType):
     _permission = 'app.view_pet'
+
+    class Meta:
+        model = Pet
+        interfaces = (relay.Node, )
+
+
+class PetNodeMultiplePermissions(AuthNodeMixin, DjangoObjectType):
+    _permission = ('app.view_pet', 'app.add_pet')
 
     class Meta:
         model = Pet
@@ -44,8 +53,40 @@ class CreatePet(AuthMutationMixin, graphene.Mutation):
         return CreatePet(pet=pet)
 
 
+class CreatePetMultiple(AuthMutationMixin, graphene.Mutation):
+    """
+    Mutation for create user
+    example mutation:
+        mutation {
+            createPet(name: "Mila") {
+                pet {
+                    id
+                    name
+                }
+            }
+        }
+    """
+    _permission = ('app.view_pet', 'app.add_pet')
+    pet = graphene.Field(PetNode)
+
+    class Input:
+        name = graphene.String(required=True)
+
+    @classmethod
+    def mutate(cls, root, input, context, info):
+        if cls.has_permision(context) is not True:
+            return cls.has_permision(context)
+        pet_name = input.get('name')
+        pet = Pet.objects.create(name=pet_name)
+        return CreatePet(pet=pet)
+
+
 class PetFilterConnection(AuthDjangoFilterConnectionField):
     _permission = 'app.create_pet'
+
+
+class PetFilterConnectionMultiple(AuthDjangoFilterConnectionField):
+    _permission = ('app.view_pet', 'app.add_pet')
 
 
 class QueryRoot(ObjectType):
@@ -205,3 +246,56 @@ class AuthorizationTests(TestCase):
         print(result.errors)
         self.assertNotEqual(result.errors, [])
         self.assertEqual(result.errors[0].message, 'Permission Denied')
+
+    def test_auth_node(self):
+        pn = PetNode()
+        result = pn.get_node(id=1, context=None, info=None)
+        assert isinstance(result, PermissionDenied)
+        result = pn.get_node(id=1, context={'user': None}, info=None)
+        assert isinstance(result, PermissionDenied)
+        Context = collections.namedtuple('Context', ['user', ])
+        context = Context(MockUserContext(authenticated=False))
+        result = pn.get_node(id=1, context=context, info=None)
+        assert isinstance(result, PermissionDenied)
+        pn_multiple = PetNodeMultiplePermissions()
+        context = Context(MockUserContext(authenticated=True))
+        result = pn_multiple.get_node(id=1, context=context, info=None)
+        assert isinstance(result, PermissionDenied)
+        pn_multiple = PetNodeMultiplePermissions()
+        context = Context(MockUserContext(authenticated=True))
+        result = pn_multiple.get_node(id=10, context=context, info=None)
+        assert result is None
+
+    def test_auth_mutation(self):
+        pet_mutation = CreatePet()
+        result = pet_mutation.has_permision(context=None)
+        assert isinstance(result, PermissionDenied)
+        result = pet_mutation.has_permision(context={'user': None})
+        assert isinstance(result, PermissionDenied)
+        Context = collections.namedtuple('Context', ['user', ])
+        context = Context(MockUserContext(authenticated=False))
+        result = pet_mutation.has_permision(context=context)
+        assert isinstance(result, PermissionDenied)
+        pet_mutation_multiple = CreatePetMultiple()
+        context = Context(MockUserContext(authenticated=True))
+        result = pet_mutation_multiple.has_permision(context=context)
+        assert isinstance(result, PermissionDenied)
+        pet_mutation_multiple = CreatePetMultiple()
+        context = Context(MockUserContext(authenticated=True, perms=('app.view_pet', 'app.add_pet')))
+        result = pet_mutation_multiple.has_permision(context=context)
+        assert result is True
+
+    def test_auth_filter_connection_field(self):
+        pet_filter = PetFilterConnection(PetNode)
+        result = pet_filter.has_perm(context=None)
+        assert result is False
+        result = pet_filter.has_perm(context={'user': None})
+        assert result is False
+        Context = collections.namedtuple('Context', ['user', ])
+        context = Context(MockUserContext(authenticated=False))
+        result = pet_filter.has_perm(context=context)
+        assert result is False
+        pet_filter_mulitple = PetFilterConnectionMultiple(PetNode)
+        context = Context(MockUserContext(authenticated=True, perms=('app.view_pet', )))
+        result = pet_filter_mulitple.has_perm(context=context)
+        assert result is False
