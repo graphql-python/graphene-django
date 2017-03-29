@@ -6,7 +6,7 @@ tests_require = [
     'coveralls',
     'mock',
     'pytz',
-    'django-filter',
+    'django-filter==1.0.1',
     'pytest-django==2.9.1',
 ]
 
