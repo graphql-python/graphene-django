@@ -91,13 +91,13 @@ class CreatePetMultiple(AuthMutationMixin, graphene.Mutation):
         pet = Pet.objects.create(name=pet_name)
         return CreatePet(pet=pet)
 
+if DJANGO_FILTER_INSTALLED:
+    class PetFilterConnection(AuthDjangoFilterConnectionField):
+        _permission = 'app.create_pet'
 
-class PetFilterConnection(AuthDjangoFilterConnectionField):
-    _permission = 'app.create_pet'
 
-
-class PetFilterConnectionMultiple(AuthDjangoFilterConnectionField):
-    _permission = ('app.view_pet', 'app.add_pet')
+    class PetFilterConnectionMultiple(AuthDjangoFilterConnectionField):
+        _permission = ('app.view_pet', 'app.add_pet')
 
 
 class QueryRoot(ObjectType):
