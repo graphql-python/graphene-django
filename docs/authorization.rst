@@ -229,3 +229,16 @@ We can set multiple required permissions like this:
             pet_name = input.get('name')
             pet = Pet.objects.create(name=pet_name)
             return CreatePet(pet=pet)
+
+Adding permissions to filters
+-----------------------------
+We use DjangoFilterConnectionField to create filters to our nodes. Graphene-django has a field with
+permission required ``AuthDjangoFilterConnectionField``. This field requires permissions to access
+to it's nodes and is simple to create your filters.
+
+.. code:: python
+
+    class MyCustomFilter(AuthDjangoFilterConnectionField):
+        _permission = ('app.add_pet', 'app.delete_pet')
+
+With this example code we can implement filters with required permissions.
