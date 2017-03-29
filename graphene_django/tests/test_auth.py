@@ -102,7 +102,8 @@ if DJANGO_FILTER_INSTALLED:
 
 class QueryRoot(ObjectType):
     pet = relay.Node.Field(PetNode)
-    pets = PetFilterConnection(PetNode)
+    if DJANGO_FILTER_INSTALLED:
+        pets = PetFilterConnection(PetNode)
 
 
 class MutationRoot(ObjectType):
