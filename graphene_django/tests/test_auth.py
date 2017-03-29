@@ -1,12 +1,23 @@
 import collections
 import graphene
+import pytest
 from graphene import Schema, relay, ObjectType
 from django.test import TestCase, RequestFactory
 from graphene_django import DjangoObjectType
 from graphene_django.auth.mixins import AuthNodeMixin, AuthMutationMixin
-from graphene_django.auth.fields import AuthDjangoFilterConnectionField
 from django.core.exceptions import PermissionDenied
 from .models import Pet
+
+from graphene_django.utils import DJANGO_FILTER_INSTALLED
+
+pytestmark = []
+
+if DJANGO_FILTER_INSTALLED:
+    from graphene_django.auth.fields import AuthDjangoFilterConnectionField
+else:
+    pytestmark.append(pytest.mark.skipif(True, reason='django_filters not installed'))
+
+pytestmark.append(pytest.mark.django_db)
 
 
 class PetNode(AuthNodeMixin, DjangoObjectType):
