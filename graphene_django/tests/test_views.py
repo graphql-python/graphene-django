@@ -457,6 +457,17 @@ def test_handles_invalid_json_bodies(client):
     }
 
 
+def test_handles_django_request_error(client, settings):
+    settings.DATA_UPLOAD_MAX_MEMORY_SIZE = 1000
+    valid_json = json.dumps(dict(test='x' * 1000))
+    response = client.post(url_string(), valid_json, 'application/json')
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'Request body exceeded settings.DATA_UPLOAD_MAX_MEMORY_SIZE.'}]
+    }
+
+
 def test_handles_incomplete_json_bodies(client):
     response = client.post(url_string(), '{"query":', 'application/json')
 
