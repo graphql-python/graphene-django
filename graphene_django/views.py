@@ -282,6 +282,8 @@ class GraphQLView(View):
                 raise HttpError(HttpResponseBadRequest('Variables are invalid JSON.'))
 
         operation_name = request.GET.get('operationName') or data.get('operationName')
+        if operation_name == "null":
+            operation_name = None
 
         return query, variables, operation_name, id
 
