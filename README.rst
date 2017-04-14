@@ -120,7 +120,7 @@ After developing, the full test suite can be evaluated by running:
 Documentation
 ~~~~~~~~~~~~~
 
-The documentation is generated using the excellent
+The `documentation <http://docs.graphene-python.org/projects/django/en/latest/>`__ is generated using the excellent
 `Sphinx <http://www.sphinx-doc.org/>`__ and a custom theme.
 
 The documentation dependencies are installed by running:
