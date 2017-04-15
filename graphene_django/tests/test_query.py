@@ -525,10 +525,12 @@ def test_should_query_filter_node_limit():
                 edges {
                     node {
                         id
+                        firstName
                         articles(lang: "es") {
                             edges {
                                 node {
                                     id
+                                    lang
                                 }
                             }
                         }
@@ -542,11 +544,13 @@ def test_should_query_filter_node_limit():
         'allReporters': {
             'edges': [{
                 'node': {
-                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                    'id': 'UmVwb3J0ZXJUeXBlOjI=',
+                    'firstName': 'John',
                     'articles': {
                         'edges': [{
                             'node': {
-                                'id': 'QXJ0aWNsZVR5cGU6MQ=='
+                                'id': 'QXJ0aWNsZVR5cGU6MQ==',
+                                'lang': 'ES'
                             }
                         }]
                     }
@@ -558,3 +562,63 @@ def test_should_query_filter_node_limit():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_query_filter_node_double_limit_raises():
+    class ReporterFilter(FilterSet):
+        limit = NumberFilter(method='filter_limit')
+
+        def filter_limit(self, queryset, name, value):
+            return queryset[:value]
+
+        class Meta:
+            model = Reporter
+            fields = ['first_name', ]
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType,
+            filterset_class=ReporterFilter
+        )
+
+        def resolve_all_reporters(self, args, context, info):
+            return Reporter.objects.order_by('a_choice')[:2]
+
+    Reporter.objects.create(
+        first_name='Bob',
+        last_name='Doe',
+        email='bobdoe@example.com',
+        a_choice=2
+    )
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(limit: 1) {
+                edges {
+                    node {
+                        id
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+
+    result = schema.execute(query)
+    assert len(result.errors) == 1
+    assert str(result.errors[0]) == (
+        'Received two sliced querysets (high mark) in the connection, please slice only in one.'
+    )
