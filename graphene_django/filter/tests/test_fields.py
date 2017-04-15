@@ -14,11 +14,13 @@ pytestmark = []
 
 if DJANGO_FILTER_INSTALLED:
     import django_filters
+    from django_filters import FilterSet, NumberFilter
+
     from graphene_django.filter import (GlobalIDFilter, DjangoFilterConnectionField,
                                         GlobalIDMultipleChoiceFilter)
     from graphene_django.filter.tests.filters import ArticleFilter, PetFilter, ReporterFilter
 else:
-    pytestmark.append(pytest.mark.skipif(True, reason='django_filters not installed'))
+    pytestmark.append(pytest.mark.skipif(True, reason='django_filters not installed or not compatible'))
 
 pytestmark.append(pytest.mark.django_db)
 
@@ -365,3 +367,170 @@ def test_recursive_filter_connection():
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
 
     assert ReporterFilterNode._meta.fields['child_reporters'].node_type == ReporterFilterNode
+
+
+def test_should_query_filter_node_limit():
+    class ReporterFilter(FilterSet):
+        limit = NumberFilter(method='filter_limit')
+
+        def filter_limit(self, queryset, name, value):
+            return queryset[:value]
+
+        class Meta:
+            model = Reporter
+            fields = ['first_name', ]
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class ArticleType(DjangoObjectType):
+
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+            filter_fields = ('lang', )
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType,
+            filterset_class=ReporterFilter
+        )
+
+        def resolve_all_reporters(self, args, context, info):
+            return Reporter.objects.order_by('a_choice')
+
+    Reporter.objects.create(
+        first_name='Bob',
+        last_name='Doe',
+        email='bobdoe@example.com',
+        a_choice=2
+    )
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    Article.objects.create(
+        headline='Article Node 1',
+        pub_date=datetime.now(),
+        reporter=r,
+        editor=r,
+        lang='es'
+    )
+    Article.objects.create(
+        headline='Article Node 2',
+        pub_date=datetime.now(),
+        reporter=r,
+        editor=r,
+        lang='en'
+    )
+
+    schema = Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(limit: 1) {
+                edges {
+                    node {
+                        id
+                        firstName
+                        articles(lang: "es") {
+                            edges {
+                                node {
+                                    id
+                                    lang
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjI=',
+                    'firstName': 'John',
+                    'articles': {
+                        'edges': [{
+                            'node': {
+                                'id': 'QXJ0aWNsZVR5cGU6MQ==',
+                                'lang': 'ES'
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_query_filter_node_double_limit_raises():
+    class ReporterFilter(FilterSet):
+        limit = NumberFilter(method='filter_limit')
+
+        def filter_limit(self, queryset, name, value):
+            return queryset[:value]
+
+        class Meta:
+            model = Reporter
+            fields = ['first_name', ]
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType,
+            filterset_class=ReporterFilter
+        )
+
+        def resolve_all_reporters(self, args, context, info):
+            return Reporter.objects.order_by('a_choice')[:2]
+
+    Reporter.objects.create(
+        first_name='Bob',
+        last_name='Doe',
+        email='bobdoe@example.com',
+        a_choice=2
+    )
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    schema = Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(limit: 1) {
+                edges {
+                    node {
+                        id
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+
+    result = schema.execute(query)
+    assert len(result.errors) == 1
+    assert str(result.errors[0]) == (
+        'Received two sliced querysets (high mark) in the connection, please slice only in one.'
+    )

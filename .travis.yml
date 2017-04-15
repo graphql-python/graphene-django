@@ -46,20 +46,20 @@ after_success:
   fi
 env:
   matrix:
-  - TEST_TYPE=build DJANGO_VERSION=1.11 DJANGO_FILTER_VERSION=1.0.2
+  - TEST_TYPE=build DJANGO_VERSION=1.11
 matrix:
   fast_finish: true
   include:
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.6 DJANGO_FILTER_VERSION=1.0.0
+    env: TEST_TYPE=build DJANGO_VERSION=1.6
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.7 DJANGO_FILTER_VERSION=1.0.0
+    env: TEST_TYPE=build DJANGO_VERSION=1.7
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.8 DJANGO_FILTER_VERSION=1.0.2
+    env: TEST_TYPE=build DJANGO_VERSION=1.8
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.9 DJANGO_FILTER_VERSION=1.0.2
+    env: TEST_TYPE=build DJANGO_VERSION=1.9
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.10 DJANGO_FILTER_VERSION=1.0.2
+    env: TEST_TYPE=build DJANGO_VERSION=1.10
   - python: '2.7'
     env: TEST_TYPE=lint
 deploy:
