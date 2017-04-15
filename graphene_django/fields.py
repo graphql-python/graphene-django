@@ -6,6 +6,7 @@ from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
+from .settings import graphene_settings
 from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
 
 
@@ -30,6 +31,14 @@ class DjangoConnectionField(ConnectionField):
 
     def __init__(self, *args, **kwargs):
         self.on = kwargs.pop('on', False)
+        self.max_limit = kwargs.pop(
+            'max_limit',
+            graphene_settings.RELAY_CONNECTION_MAX_LIMIT
+        )
+        self.enforce_first_or_last = kwargs.pop(
+            'enforce_first_or_last',
+            graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST
+        )
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
@@ -51,7 +60,29 @@ class DjangoConnectionField(ConnectionField):
         return default_queryset & queryset
 
     @classmethod
-    def connection_resolver(cls, resolver, connection, default_manager, root, args, context, info):
+    def connection_resolver(cls, resolver, connection, default_manager, max_limit,
+                            enforce_first_or_last, root, args, context, info):
+        first = args.get('first')
+        last = args.get('last')
+
+        if enforce_first_or_last:
+            assert first or last, (
+                'You must provide a `first` or `last` value to properly paginate the `{}` connection.'
+            ).format(info.field_name)
+
+        if max_limit:
+            if first:
+                assert first <= max_limit, (
+                    'Requesting {} records on the `{}` connection exceeds the `first` limit of {} records.'
+                ).format(first, info.field_name, max_limit)
+                args['first'] = min(first, max_limit)
+
+            if last:
+                assert last <= max_limit, (
+                    'Requesting {} records on the `{}` connection exceeds the `last` limit of {} records.'
+                ).format(first, info.field_name, max_limit)
+                args['last'] = min(last, max_limit)
+
         iterable = resolver(root, args, context, info)
         if iterable is None:
             iterable = default_manager
@@ -78,7 +109,14 @@ class DjangoConnectionField(ConnectionField):
         return connection
 
     def get_resolver(self, parent_resolver):
-        return partial(self.connection_resolver, parent_resolver, self.type, self.get_manager())
+        return partial(
+            self.connection_resolver,
+            parent_resolver,
+            self.type,
+            self.get_manager(),
+            self.max_limit,
+            self.enforce_first_or_last
+        )
 
 
 def get_connection_field(*args, **kwargs):

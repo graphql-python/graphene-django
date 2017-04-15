@@ -67,16 +67,35 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return queryset
 
     @classmethod
-    def connection_resolver(cls, resolver, connection, default_manager, filterset_class, filtering_args,
+    def connection_resolver(cls, resolver, connection, default_manager, max_limit,
+                            enforce_first_or_last, filterset_class, filtering_args,
                             root, args, context, info):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
         qs = filterset_class(
             data=filter_kwargs,
             queryset=default_manager.get_queryset()
         ).qs
+
         return super(DjangoFilterConnectionField, cls).connection_resolver(
-            resolver, connection, qs, root, args, context, info)
+            resolver,
+            connection,
+            qs,
+            max_limit,
+            enforce_first_or_last,
+            root,
+            args,
+            context,
+            info
+        )
 
     def get_resolver(self, parent_resolver):
-        return partial(self.connection_resolver, parent_resolver, self.type, self.get_manager(),
-                       self.filterset_class, self.filtering_args)
+        return partial(
+            self.connection_resolver,
+            parent_resolver,
+            self.type,
+            self.get_manager(),
+            self.max_limit,
+            self.enforce_first_or_last,
+            self.filterset_class,
+            self.filtering_args
+        )

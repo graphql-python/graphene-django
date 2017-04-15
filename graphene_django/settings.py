@@ -30,6 +30,11 @@ DEFAULTS = {
     'SCHEMA_OUTPUT': 'schema.json',
     'SCHEMA_INDENT': None,
     'MIDDLEWARE': (),
+    # Set to True if the connection fields must have
+    # either the first or last argument
+    'RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST': False,
+    # Max items returned in ConnectionFields / FilterConnectionFields
+    'RELAY_CONNECTION_MAX_LIMIT': 100,
 }
 
 if settings.DEBUG:
