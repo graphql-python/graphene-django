@@ -25,7 +25,6 @@ install:
     pip install -e .[test]
     pip install psycopg2 # Required for Django postgres fields testing
     pip install django==$DJANGO_VERSION
-    pip install django-filter==$DJANGO_FILTER_VERSION
     python setup.py develop
   elif [ "$TEST_TYPE" = lint ]; then
     pip install flake8
