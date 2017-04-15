@@ -3,12 +3,12 @@ from mock import patch
 from graphene import Interface, ObjectType, Schema
 from graphene.relay import Node
 
-from ..registry import reset_global_registry
+from .. import registry
 from ..types import DjangoObjectType
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
-reset_global_registry()
+registry.reset_global_registry()
 
 
 class Reporter(DjangoObjectType):
@@ -124,3 +124,42 @@ type RootQuery {
 }
 """.lstrip()
     assert str(schema) == expected
+
+
+def with_local_registry(func):
+    def inner(*args, **kwargs):
+        old = registry.get_global_registry()
+        registry.reset_global_registry()
+        try:
+            retval = func(*args, **kwargs)
+        except Exception as e:
+            registry.registry = old
+            raise e
+        else:
+            registry.registry = old
+            return retval
+    return inner
+
+
+@with_local_registry
+def test_django_objecttype_only_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            only_fields = ('id', 'email', 'films')
+
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == ['id', 'email', 'films']
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            exclude_fields = ('email')
+
+
+    fields = list(Reporter._meta.fields.keys())
+    assert 'email' not in fields
