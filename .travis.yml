@@ -45,7 +45,7 @@ after_success:
   fi
 env:
   matrix:
-  - TEST_TYPE=build DJANGO_VERSION=1.10
+  - TEST_TYPE=build DJANGO_VERSION=1.11
 matrix:
   fast_finish: true
   include:
@@ -57,6 +57,8 @@ matrix:
     env: TEST_TYPE=build DJANGO_VERSION=1.8
   - python: '2.7'
     env: TEST_TYPE=build DJANGO_VERSION=1.9
+  - python: '2.7'
+    env: TEST_TYPE=build DJANGO_VERSION=1.10
   - python: '2.7'
     env: TEST_TYPE=lint
 deploy:
