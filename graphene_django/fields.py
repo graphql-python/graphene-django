@@ -46,18 +46,21 @@ class DjangoConnectionField(ConnectionField):
         else:
             return self.model._default_manager
 
-    @staticmethod
-    def connection_resolver(resolver, connection, default_manager, root, args, context, info):
+    @classmethod
+    def merge_querysets(cls, default_queryset, queryset):
+        return default_queryset & queryset
+
+    @classmethod
+    def connection_resolver(cls, resolver, connection, default_manager, root, args, context, info):
         iterable = resolver(root, args, context, info)
         if iterable is None:
             iterable = default_manager
         iterable = maybe_queryset(iterable)
         if isinstance(iterable, QuerySet):
             if iterable is not default_manager:
-                iterable = list(set(iterable).intersection(maybe_queryset(default_manager)))
-                _len = len(iterable)
-            else:
-                _len = iterable.count()
+                default_queryset = maybe_queryset(default_manager)
+                iterable = cls.merge_querysets(default_queryset, iterable)
+            _len = iterable.count()
         else:
             _len = len(iterable)
         connection = connection_from_list_slice(

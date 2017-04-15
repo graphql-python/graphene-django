@@ -45,14 +45,37 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return get_filtering_args_from_filterset(self.filterset_class, self.node_type)
 
     @staticmethod
-    def connection_resolver(resolver, connection, default_manager, filterset_class, filtering_args,
+    def merge_querysets(default_queryset, queryset):
+        # There could be the case where the default queryset (returned from the filterclass)
+        # and the resolver queryset have some limits on it.
+        # We only would be able to apply one of those, but not both
+        # at the same time.
+
+        # See related PR: https://github.com/graphql-python/graphene-django/pull/126
+
+        assert not (default_queryset.query.low_mark and queryset.query.low_mark), (
+            'Received two sliced querysets (low mark) in the connection, please slice only in one.'
+        )
+        assert not (default_queryset.query.high_mark and queryset.query.high_mark), (
+            'Received two sliced querysets (high mark) in the connection, please slice only in one.'
+        )
+        low = default_queryset.query.low_mark or queryset.query.low_mark
+        high = default_queryset.query.high_mark or queryset.query.high_mark
+        default_queryset.query.clear_limits()
+        queryset = default_queryset & queryset
+        queryset.query.set_limits(low, high)
+        return queryset
+
+    @classmethod
+    def connection_resolver(cls, resolver, connection, default_manager, filterset_class, filtering_args,
                             root, args, context, info):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
         qs = filterset_class(
             data=filter_kwargs,
             queryset=default_manager.get_queryset()
         ).qs
-        return DjangoConnectionField.connection_resolver(resolver, connection, qs, root, args, context, info)
+        return super(DjangoFilterConnectionField, cls).connection_resolver(
+            resolver, connection, qs, root, args, context, info)
 
     def get_resolver(self, parent_resolver):
         return partial(self.connection_resolver, parent_resolver, self.type, self.get_manager(),
