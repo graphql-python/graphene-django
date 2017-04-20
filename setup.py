@@ -12,7 +12,7 @@ tests_require = [
 
 setup(
     name='graphene-django',
-    version='1.2.1',
+    version='1.3',
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),
@@ -43,7 +43,7 @@ setup(
 
     install_requires=[
         'six>=1.10.0',
-        'graphene>=1.1.3',
+        'graphene>=1.4',
         'Django>=1.6.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
