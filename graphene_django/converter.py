@@ -41,6 +41,10 @@ def get_choices(choices):
 
 
 def convert_django_field_with_choices(field, registry=None):
+    if registry:
+        converted = registry.get_converted_field(field)
+        if converted:
+            return converted
     choices = getattr(field, 'choices', None)
     if choices:
         meta = field.model._meta
@@ -56,8 +60,12 @@ def convert_django_field_with_choices(field, registry=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        return enum(description=field.help_text, required=not field.null)
-    return convert_django_field(field, registry)
+        converted = enum(description=field.help_text, required=not field.null)
+    else:
+        converted = convert_django_field(field, registry)
+    if registry:
+        registry.register_converted_field(field, converted)
+    return converted
 
 
 @singledispatch

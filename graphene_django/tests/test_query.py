@@ -747,3 +747,35 @@ def test_should_query_dataloader_fields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_handle_inherited_choices():
+    class BaseModel(models.Model):
+        choice_field = models.IntegerField(choices=((0, 'zero'), (1, 'one')))
+
+    class ChildModel(BaseModel):
+        class Meta:
+            proxy = True
+
+    class BaseType(DjangoObjectType):
+        class Meta:
+            model = BaseModel
+
+    class ChildType(DjangoObjectType):
+        class Meta:
+            model = ChildModel
+
+    class Query(graphene.ObjectType):
+        base = graphene.Field(BaseType)
+        child = graphene.Field(ChildType)
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query {
+          child {
+            choiceField
+          }
+        }
+    '''
+    result = schema.execute(query)
+    assert not result.errors
