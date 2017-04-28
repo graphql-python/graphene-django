@@ -141,7 +141,6 @@ def convert_fields(model, only_fields, exclude_fields):
         converted = convert_django_field_with_choices(field, None)
         if not converted:
             continue
-        
         fields[name] = converted
         print(fields)
     return fields
@@ -171,8 +170,8 @@ class DjangoModelInputMeta(type):
 
 class DjangoModelInput(six.with_metaclass(DjangoModelInputMeta)):
     """
-    Derive a mutation's Input class from this and define a meta class with 
-    `model` and `only_fields` members. This will populate the input class
+    Derive a mutation's Input class from this and define a meta class with
+    `model` and `only_fields` and 'exclude_field' members. This will populate the input class
     with the converted django members.
     """
     pass
