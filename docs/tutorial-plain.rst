@@ -95,6 +95,9 @@ following:
     $ python ./manage.py loaddata ingredients
 
     Installed 6 object(s) from 1 fixture(s)
+    
+Note:
+If your run ``$ python ./manage.py loaddata ingredients`` without installing ``ingredients`` app in the project ``settings.py`` you will get the following error ``CommandError: No fixture named 'ingredients' found``. So make sure ``ingredients`` app has been put on the ``settings.py`` INSTALLED_APPS section before running ``$ python ./manage.py loaddata ingredients``. 
 
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
