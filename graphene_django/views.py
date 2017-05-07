@@ -154,7 +154,7 @@ class GraphQLView(View):
             if execution_result.errors:
                 response['errors'] = [self.format_error(e) for e in execution_result.errors]
 
-            if execution_result.invalid:
+            if execution_result.invalid or execution_result.errors:
                 status_code = 400
             else:
                 response['data'] = execution_result.data
