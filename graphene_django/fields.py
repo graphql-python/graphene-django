@@ -62,6 +62,32 @@ class DjangoConnectionField(ConnectionField):
         return default_queryset & queryset
 
     @classmethod
+    def resolve_connection(cls, connection, default_manager, args, iterable):
+        if iterable is None:
+            iterable = default_manager
+        iterable = maybe_queryset(iterable)
+        if isinstance(iterable, QuerySet):
+            if iterable is not default_manager:
+                default_queryset = maybe_queryset(default_manager)
+                iterable = cls.merge_querysets(default_queryset, iterable)
+            _len = iterable.count()
+        else:
+            _len = len(iterable)
+        connection = connection_from_list_slice(
+            iterable,
+            args,
+            slice_start=0,
+            list_length=_len,
+            list_slice_length=_len,
+            connection_type=connection,
+            edge_type=connection.Edge,
+            pageinfo_type=PageInfo,
+        )
+        connection.iterable = iterable
+        connection.length = _len
+        return connection
+
+    @classmethod
     def connection_resolver(cls, resolver, connection, default_manager, max_limit,
                             enforce_first_or_last, root, args, context, info):
         first = args.get('first')
@@ -86,30 +112,12 @@ class DjangoConnectionField(ConnectionField):
                 args['last'] = min(last, max_limit)
 
         iterable = resolver(root, args, context, info)
-        iterable = Promise.resolve(iterable).get()
-        if iterable is None:
-            iterable = default_manager
-        iterable = maybe_queryset(iterable)
-        if isinstance(iterable, QuerySet):
-            if iterable is not default_manager:
-                default_queryset = maybe_queryset(default_manager)
-                iterable = cls.merge_querysets(default_queryset, iterable)
-            _len = iterable.count()
-        else:
-            _len = len(iterable)
-        connection = connection_from_list_slice(
-            iterable,
-            args,
-            slice_start=0,
-            list_length=_len,
-            list_slice_length=_len,
-            connection_type=connection,
-            edge_type=connection.Edge,
-            pageinfo_type=PageInfo,
-        )
-        connection.iterable = iterable
-        connection.length = _len
-        return connection
+        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+
+        if Promise.is_thenable(iterable):
+            return Promise.resolve(iterable).then(on_resolve)
+
+        return on_resolve(iterable)
 
     def get_resolver(self, parent_resolver):
         return partial(
