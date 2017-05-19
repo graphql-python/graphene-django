@@ -2,6 +2,8 @@ from functools import partial
 
 from django.db.models.query import QuerySet
 
+from promise import Promise
+
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -84,6 +86,7 @@ class DjangoConnectionField(ConnectionField):
                 args['last'] = min(last, max_limit)
 
         iterable = resolver(root, args, context, info)
+        iterable = Promise.resolve(iterable).get()
         if iterable is None:
             iterable = default_manager
         iterable = maybe_queryset(iterable)

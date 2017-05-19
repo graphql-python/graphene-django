@@ -545,3 +545,146 @@ def test_should_error_if_first_is_greater_than_max():
     assert result.data == expected
 
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
+
+
+def test_should_query_promise_connectionfields():
+    from promise import Promise
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, *args, **kwargs):
+            return Promise.resolve([Reporter(id=1)])
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterPromiseConnectionQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE='
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_query_dataloader_fields():
+    from promise import Promise
+    from promise.dataloader import DataLoader
+
+    def article_batch_load_fn(keys):
+        queryset = Article.objects.filter(reporter_id__in=keys)
+        return Promise.resolve([
+            [article for article in queryset if article.reporter_id == id]
+            for id in keys
+        ])
+
+    article_loader = DataLoader(article_batch_load_fn)
+
+    class ArticleType(DjangoObjectType):
+
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+        articles = DjangoConnectionField(ArticleType)
+
+        def resolve_articles(self, *args, **kwargs):
+            return article_loader.load(self.id)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+    Article.objects.create(
+        headline='Article Node 1',
+        pub_date=datetime.date.today(),
+        reporter=r,
+        editor=r,
+        lang='es'
+    )
+    Article.objects.create(
+        headline='Article Node 2',
+        pub_date=datetime.date.today(),
+        reporter=r,
+        editor=r,
+        lang='en'
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterPromiseConnectionQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        id
+                        articles(first: 2) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                    'articles': {
+                        'edges': [{
+                            'node': {
+                                'headline': 'Article Node 1',
+                            }
+                        }, {
+                            'node': {
+                                'headline': 'Article Node 2'
+                            }
+                        }]
+                    }
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected

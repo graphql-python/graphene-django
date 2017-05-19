@@ -47,6 +47,7 @@ setup(
         'Django>=1.6.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
+        'promise>=2.0',
     ],
     setup_requires=[
         'pytest-runner',
