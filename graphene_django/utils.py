@@ -33,7 +33,7 @@ def get_reverse_fields(model):
             yield (name, new_related)
         elif isinstance(related, models.ManyToOneRel):
             yield (name, related)
-        elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
+        elif isinstance(related, models.ManyToManyRel) and attr.reverse and not related.symmetrical:
             yield (name, related)
 
 
