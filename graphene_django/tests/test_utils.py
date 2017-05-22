@@ -7,7 +7,7 @@ from .models import Film, Reporter
 def test_get_reverse_fields_correct():
     reporter_reverse_fields = get_reverse_fields(Reporter)
     reporter_field_names = [field[0] for field in reporter_reverse_fields]
-    assert reporter_field_names == [
+    assert sorted(reporter_field_names) == [
         'articles', 'films'
     ]
 
