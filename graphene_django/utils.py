@@ -33,7 +33,7 @@ def get_reverse_fields(model):
             yield (name, new_related)
         elif isinstance(related, models.ManyToOneRel):
             yield (name, related)
-        elif isinstance(related, models.ManyToManyRel) and attr.reverse and not related.symmetrical:
+        elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
             yield (name, related)
 
 
@@ -52,7 +52,14 @@ def get_model_fields(model):
                   list(model._meta.local_many_to_many))
     ]
 
-    all_fields += list(reverse_fields)
+    # Make sure we don't duplicate local fields with "reverse" version
+    all_field_names = [field[0] for field in all_fields]
+    actual_reverse_fields = [
+        reverse_field for reverse_field in reverse_fields
+        if reverse_field[0] not in all_field_names
+    ]
+
+    all_fields += list(actual_reverse_fields)
 
     return all_fields
 
