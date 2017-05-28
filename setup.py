@@ -1,5 +1,10 @@
 from setuptools import find_packages, setup
 
+rest_framework_require = [
+    'djangorestframework==3.6.3',
+]
+
+
 tests_require = [
     'pytest>=2.7.2',
     'pytest-cov',
@@ -8,7 +13,7 @@ tests_require = [
     'pytz',
     'django-filter',
     'pytest-django==2.9.1',
-]
+] + rest_framework_require
 
 setup(
     name='graphene-django',
@@ -53,8 +58,10 @@ setup(
         'pytest-runner',
     ],
     tests_require=tests_require,
+    rest_framework_require=rest_framework_require,
     extras_require={
         'test': tests_require,
+        'rest_framework': rest_framework_require,
     },
     include_package_data=True,
     zip_safe=False,
