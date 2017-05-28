@@ -1,9 +1,11 @@
-from functools import singledispatch
-
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
 
 import graphene
+
+from ..utils import import_single_dispatch
+
+singledispatch = import_single_dispatch()
 
 
 @singledispatch
@@ -53,5 +55,3 @@ def convert_serializer_field_to_bool(field):
 @required_if_input_and_required
 def convert_serializer_field_to_float(field):
     return graphene.Float
-
-
