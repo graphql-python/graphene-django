@@ -8,6 +8,21 @@ from ..utils import import_single_dispatch
 singledispatch = import_single_dispatch()
 
 
+def convert_serializer_to_input_type(serializer_class):
+    serializer = serializer_class()
+
+    items = {
+        name: convert_serializer_field(field)
+        for name, field in serializer.fields.items()
+    }
+
+    return type(
+        '{}Input'.format(serializer.__class__.__name__),
+        (graphene.InputObjectType, ),
+        items
+    )
+
+
 @singledispatch
 def convert_serializer_field(field):
     raise ImproperlyConfigured(
