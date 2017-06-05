@@ -57,7 +57,7 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
-        return default_queryset & queryset
+        return queryset & default_queryset
 
     @classmethod
     def connection_resolver(cls, resolver, connection, default_manager, max_limit,
