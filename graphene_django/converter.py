@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.encoding import force_text
+from django.contrib.postgres.fields import ArrayField, HStoreField, RangeField
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String)
@@ -9,8 +10,8 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
-from .compat import (ArrayField, HStoreField, JSONField, RangeField,
-                     RelatedObject, UUIDField, DurationField)
+
+from .compat import JSONField, RelatedObject
 from .fields import get_connection_field, DjangoListField
 from .utils import get_related_model, import_single_dispatch
 
@@ -80,7 +81,7 @@ def convert_field_to_string(field, registry=None):
 
 
 @convert_django_field.register(models.AutoField)
-@convert_django_field.register(UUIDField)
+@convert_django_field.register(models.UUIDField)
 def convert_field_to_id(field, registry=None):
     return ID(description=field.help_text, required=not field.null)
 
@@ -106,7 +107,7 @@ def convert_field_to_nullboolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 @convert_django_field.register(models.FloatField)
-@convert_django_field.register(DurationField)
+@convert_django_field.register(models.DurationField)
 def convert_field_to_float(field, registry=None):
     return Float(description=field.help_text, required=not field.null)
 
