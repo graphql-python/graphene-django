@@ -11,4 +11,5 @@ Contents:
    filtering
    authorization
    debug
+   rest-framework
    introspection
