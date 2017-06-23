@@ -8,7 +8,7 @@ from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 
-from ..compat import JSONField, RelatedObject
+from ..compat import JSONField
 from ..converter import convert_django_field, convert_django_field_with_choices
 from ..registry import Registry
 from ..types import DjangoObjectType

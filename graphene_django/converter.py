@@ -9,8 +9,7 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
-from .compat import (ArrayField, HStoreField, JSONField, RangeField,
-                     RelatedObject)
+from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import get_connection_field, DjangoListField
 from .utils import get_related_model, import_single_dispatch
 
@@ -152,26 +151,6 @@ def convert_field_to_list_or_connection(field, registry=None):
         if is_node(_type):
             return get_connection_field(_type)
 
-        return DjangoListField(_type)
-
-    return Dynamic(dynamic_type)
-
-
-# For Django 1.6
-@convert_django_field.register(RelatedObject)
-def convert_relatedfield_to_djangomodel(field, registry=None):
-    model = field.model
-
-    def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        if not _type:
-            return
-
-        if isinstance(field.field, models.OneToOneField):
-            return Field(_type)
-
-        if is_node(_type):
-            return get_connection_field(_type)
         return DjangoListField(_type)
 
     return Dynamic(dynamic_type)
