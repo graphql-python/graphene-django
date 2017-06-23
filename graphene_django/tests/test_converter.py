@@ -1,8 +1,6 @@
 import pytest
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
-from django.contrib.postgres.fields import ArrayField, HStoreField
-
 from py.test import raises
 
 import graphene
@@ -10,7 +8,7 @@ from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 
-from ..compat import JSONField, MissingType
+from ..compat import JSONField, RelatedObject
 from ..converter import convert_django_field, convert_django_field_with_choices
 from ..registry import Registry
 from ..types import DjangoObjectType
@@ -264,6 +262,8 @@ def test_should_onetoone_reverse_convert_model():
     assert dynamic_field.type == A
 
 
+@pytest.mark.skipif(ArrayField is MissingType,
+                    reason="ArrayField should exist")
 def test_should_postgres_array_convert_list():
     field = assert_conversion(ArrayField, graphene.List, models.CharField(max_length=100))
     assert isinstance(field.type, graphene.NonNull)
@@ -271,6 +271,8 @@ def test_should_postgres_array_convert_list():
     assert field.type.of_type.of_type == graphene.String
 
 
+@pytest.mark.skipif(ArrayField is MissingType,
+                    reason="ArrayField should exist")
 def test_should_postgres_array_multiple_convert_list():
     field = assert_conversion(ArrayField, graphene.List, ArrayField(models.CharField(max_length=100)))
     assert isinstance(field.type, graphene.NonNull)
@@ -279,6 +281,8 @@ def test_should_postgres_array_multiple_convert_list():
     assert field.type.of_type.of_type.of_type == graphene.String
 
 
+@pytest.mark.skipif(HStoreField is MissingType,
+                    reason="HStoreField should exist")
 def test_should_postgres_hstore_convert_string():
     assert_conversion(HStoreField, JSONString)
 
@@ -289,6 +293,8 @@ def test_should_postgres_json_convert_string():
     assert_conversion(JSONField, JSONString)
 
 
+@pytest.mark.skipif(RangeField is MissingType,
+                    reason="RangeField should exist")
 def test_should_postgres_range_convert_list():
     from django.contrib.postgres.fields import IntegerRangeField
     field = assert_conversion(IntegerRangeField, graphene.List)

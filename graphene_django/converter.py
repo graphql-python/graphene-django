@@ -1,6 +1,5 @@
 from django.db import models
 from django.utils.encoding import force_text
-from django.contrib.postgres.fields import ArrayField, HStoreField, RangeField
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String)
@@ -10,8 +9,8 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
-
-from .compat import JSONField, RelatedObject
+from .compat import (ArrayField, HStoreField, JSONField, RangeField,
+                     RelatedObject)
 from .fields import get_connection_field, DjangoListField
 from .utils import get_related_model, import_single_dispatch
 
