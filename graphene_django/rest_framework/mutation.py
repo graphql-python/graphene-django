@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 
+import six
 import graphene
 from graphene.types import Argument, Field
 from graphene.types.mutation import Mutation, MutationMeta
@@ -98,7 +99,7 @@ class SerializerMutationMeta(MutationMeta):
         return fields
 
 
-class SerializerMutation(Mutation, metaclass=SerializerMutationMeta):
+class SerializerMutation(six.with_metaclass(SerializerMutationMeta, Mutation)):
     errors = graphene.List(
         ErrorType,
         description='May contain more than one error for '
