@@ -457,6 +457,21 @@ def test_handles_invalid_json_bodies(client):
     }
 
 
+def test_handles_django_request_error(client, monkeypatch):
+    def mocked_read(*args):
+        raise IOError("foo-bar")
+
+    monkeypatch.setattr("django.http.request.HttpRequest.read", mocked_read)
+
+    valid_json = json.dumps(dict(foo='bar'))
+    response = client.post(url_string(), valid_json, 'application/json')
+
+    assert response.status_code == 400
+    assert response_json(response) == {
+        'errors': [{'message': 'foo-bar'}]
+    }
+
+
 def test_handles_incomplete_json_bodies(client):
     response = client.post(url_string(), '{"query":', 'application/json')
 

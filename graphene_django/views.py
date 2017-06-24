@@ -179,7 +179,6 @@ class GraphQLView(View):
         return json.dumps(d, sort_keys=True,
                           indent=2, separators=(',', ': '))
 
-    # noinspection PyBroadException
     def parse_body(self, request):
         content_type = self.get_content_type(request)
 
@@ -187,8 +186,14 @@ class GraphQLView(View):
             return {'query': request.body.decode()}
 
         elif content_type == 'application/json':
+            # noinspection PyBroadException
             try:
-                request_json = json.loads(request.body.decode('utf-8'))
+                body = request.body.decode('utf-8')
+            except Exception as e:
+                raise HttpError(HttpResponseBadRequest(str(e)))
+
+            try:
+                request_json = json.loads(body)
                 if self.batch:
                     assert isinstance(request_json, list), (
                         'Batch requests should receive a list, but received {}.'
@@ -203,7 +208,7 @@ class GraphQLView(View):
                 return request_json
             except AssertionError as e:
                 raise HttpError(HttpResponseBadRequest(str(e)))
-            except:
+            except (TypeError, ValueError):
                 raise HttpError(HttpResponseBadRequest('POST body sent invalid JSON.'))
 
         elif content_type in ['application/x-www-form-urlencoded', 'multipart/form-data']:
