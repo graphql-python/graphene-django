@@ -44,7 +44,7 @@ setup(
     install_requires=[
         'six>=1.10.0',
         'graphene>=1.4',
-        'Django>=1.6.0',
+        'Django>=1.8.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
     ],

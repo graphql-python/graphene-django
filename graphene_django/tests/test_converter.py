@@ -8,8 +8,7 @@ from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import DateTime, Time
 from graphene.types.json import JSONString
 
-from ..compat import (ArrayField, HStoreField, JSONField, MissingType,
-                      RangeField, UUIDField, DurationField)
+from ..compat import JSONField, ArrayField, HStoreField, RangeField, MissingType
 from ..converter import convert_django_field, convert_django_field_with_choices
 from ..registry import Registry
 from ..types import DjangoObjectType
@@ -84,14 +83,12 @@ def test_should_auto_convert_id():
     assert_conversion(models.AutoField, graphene.ID, primary_key=True)
 
 
-@pytest.mark.skipif(UUIDField == MissingType, reason="requires Django UUIDField")
 def test_should_auto_convert_id():
-    assert_conversion(UUIDField, graphene.ID)
+    assert_conversion(models.UUIDField, graphene.ID)
 
 
-@pytest.mark.skipif(DurationField == MissingType, reason="requires Django DurationField")
 def test_should_auto_convert_duration():
-    assert_conversion(DurationField, graphene.Float)
+    assert_conversion(models.DurationField, graphene.Float)
 
 
 def test_should_positive_integer_convert_int():

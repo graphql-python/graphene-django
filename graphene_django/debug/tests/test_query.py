@@ -3,7 +3,6 @@ import pytest
 import graphene
 from graphene.relay import Node
 from graphene_django import DjangoConnectionField, DjangoObjectType
-from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 from ...tests.models import Reporter
 from ..middleware import DjangoDebugMiddleware
@@ -167,8 +166,6 @@ def test_should_query_connection():
     assert result.data['__debug']['sql'][1]['rawSql'] == query
 
 
-@pytest.mark.skipif(not DJANGO_FILTER_INSTALLED,
-                    reason="requires django-filter")
 def test_should_query_connectionfilter():
     from ...filter import DjangoFilterConnectionField
 

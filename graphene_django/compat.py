@@ -1,27 +1,10 @@
-from django.db import models
-
-
 class MissingType(object):
     pass
 
 
 try:
-    DurationField = models.DurationField
-    UUIDField = models.UUIDField
-except AttributeError:
-    # Improved compatibility for Django 1.6
-    DurationField = MissingType
-    UUIDField = MissingType
-
-try:
-    from django.db.models.related import RelatedObject
-except:
-    # Improved compatibility for Django 1.6
-    RelatedObject = MissingType
-
-
-try:
-    # Postgres fields are only available in Django 1.8+
+    # Postgres fields are only available in Django with psycopg2 installed
+    # and we cannot have psycopg2 on PyPy
     from django.contrib.postgres.fields import ArrayField, HStoreField, RangeField
 except ImportError:
     ArrayField, HStoreField, JSONField, RangeField = (MissingType, ) * 4

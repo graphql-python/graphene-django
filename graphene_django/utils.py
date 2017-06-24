@@ -3,8 +3,6 @@ import inspect
 from django.db import models
 from django.db.models.manager import Manager
 
-from .compat import RelatedObject
-
 
 # from graphene.utils import LazyList
 
@@ -13,12 +11,8 @@ class LazyList(object):
     pass
 
 
-try:
-    import django_filters  # noqa
-    DJANGO_FILTER_INSTALLED = True
-except (ImportError, AttributeError):
-    # AtributeError raised if DjangoFilters installed with a incompatible Django Version
-    DJANGO_FILTER_INSTALLED = False
+import django_filters  # noqa
+DJANGO_FILTER_INSTALLED = True
 
 
 def get_reverse_fields(model, local_field_names):
@@ -30,12 +24,7 @@ def get_reverse_fields(model, local_field_names):
         # Django =>1.9 uses 'rel', django <1.9 uses 'related'
         related = getattr(attr, 'rel', None) or \
             getattr(attr, 'related', None)
-        if isinstance(related, RelatedObject):
-            # Hack for making it compatible with Django 1.6
-            new_related = RelatedObject(related.parent_model, related.model, related.field)
-            new_related.name = name
-            yield (name, new_related)
-        elif isinstance(related, models.ManyToOneRel):
+        if isinstance(related, models.ManyToOneRel):
             yield (name, related)
         elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
             yield (name, related)
