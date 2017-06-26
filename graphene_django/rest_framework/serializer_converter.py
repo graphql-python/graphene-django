@@ -91,3 +91,8 @@ def convert_serializer_field_to_dict(field):
 @get_graphene_type_from_serializer_field.register(serializers.JSONField)
 def convert_serializer_field_to_jsonstring(field):
     return graphene.types.json.JSONString
+
+
+@get_graphene_type_from_serializer_field.register(serializers.MultipleChoiceField)
+def convert_serializer_field_to_list_of_string(field):
+    return (graphene.List, graphene.String)

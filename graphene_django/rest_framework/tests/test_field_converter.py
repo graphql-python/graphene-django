@@ -144,3 +144,9 @@ def test_should_image_convert_string():
 
 def test_should_json_convert_jsonstring():
     assert_conversion(serializers.JSONField, graphene.types.json.JSONString)
+
+
+def test_should_multiplechoicefield_convert_to_list_of_string():
+    field = assert_conversion(serializers.MultipleChoiceField, graphene.List, choices=[1,2,3])
+
+    assert field.of_type == graphene.String
