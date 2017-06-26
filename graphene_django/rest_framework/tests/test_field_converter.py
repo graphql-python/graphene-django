@@ -120,3 +120,7 @@ def test_should_list_convert_to_list():
 
 def test_should_dict_convert_dict():
     assert_conversion(serializers.DictField, DictType)
+
+
+def test_should_duration_convert_string():
+    assert_conversion(serializers.DurationField, graphene.String)
