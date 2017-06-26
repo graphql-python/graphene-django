@@ -124,4 +124,6 @@ class SerializerMutation(six.with_metaclass(SerializerMutationMeta, Mutation)):
 
     @classmethod
     def perform_mutate(cls, serializer, info):
-        return serializer.save()
+        obj = serializer.save()
+
+        return cls(**obj)
