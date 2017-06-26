@@ -38,13 +38,20 @@ def convert_serializer_field(field, is_input=True):
     and the field itself is required
     """
 
-    # TODO: sub types? kwargs
-
     graphql_type = get_graphene_type_from_serializer_field(field)
 
-    return graphql_type(
-        description=field.help_text, required=is_input and field.required
-    )
+    kwargs = {
+        'description': field.help_text,
+        'required': is_input and field.required,
+    }
+
+    # if it is a tuple or a list it means that we are returning
+    # the graphql type and the child type
+    if isinstance(graphql_type, (list, tuple)):
+        kwargs['of_type'] = graphql_type[1]
+        graphql_type = graphql_type[0]
+
+    return graphql_type(**kwargs)
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)
@@ -66,3 +73,10 @@ def convert_serializer_field_to_bool(field):
 @get_graphene_type_from_serializer_field.register(serializers.DecimalField)
 def convert_serializer_field_to_float(field):
     return graphene.Float
+
+
+@get_graphene_type_from_serializer_field.register(serializers.ListField)
+def convert_serializer_field_to_list(field, is_input=True):
+    child_type = get_graphene_type_from_serializer_field(field.child)
+
+    return (graphene.List, child_type)

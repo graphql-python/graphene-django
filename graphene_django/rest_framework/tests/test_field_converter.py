@@ -98,3 +98,20 @@ def test_should_float_convert_float():
 
 def test_should_decimal_convert_float():
     assert_conversion(serializers.DecimalField, graphene.Float, max_digits=4, decimal_places=2)
+
+
+def test_should_list_convert_to_list():
+    class StringListField(serializers.ListField):
+        child = serializers.CharField()
+
+    field_a = assert_conversion(
+        serializers.ListField,
+        graphene.List,
+        child=serializers.IntegerField(min_value=0, max_value=100)
+    )
+
+    assert field_a.of_type == graphene.Int
+
+    field_b = assert_conversion(StringListField, graphene.List)
+
+    assert field_b.of_type == graphene.String
