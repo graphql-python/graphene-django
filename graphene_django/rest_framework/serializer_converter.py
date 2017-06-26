@@ -4,6 +4,7 @@ from rest_framework import serializers
 import graphene
 
 from ..utils import import_single_dispatch
+from .types import DictType
 
 singledispatch = import_single_dispatch()
 
@@ -80,3 +81,8 @@ def convert_serializer_field_to_list(field, is_input=True):
     child_type = get_graphene_type_from_serializer_field(field.child)
 
     return (graphene.List, child_type)
+
+
+@get_graphene_type_from_serializer_field.register(serializers.DictField)
+def convert_serializer_field_to_dict(field):
+    return DictType

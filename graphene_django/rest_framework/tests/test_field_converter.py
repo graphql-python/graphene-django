@@ -5,6 +5,7 @@ from py.test import raises
 import graphene
 
 from ..serializer_converter import convert_serializer_field
+from ..types import DictType
 
 
 def _get_type(rest_framework_field, **kwargs):
@@ -115,3 +116,7 @@ def test_should_list_convert_to_list():
     field_b = assert_conversion(StringListField, graphene.List)
 
     assert field_b.of_type == graphene.String
+
+
+def test_should_dict_convert_dict():
+    assert_conversion(serializers.DictField, DictType)
