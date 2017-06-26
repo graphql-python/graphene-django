@@ -128,3 +128,7 @@ def test_should_duration_convert_string():
 
 def test_should_file_convert_string():
     assert_conversion(serializers.FileField, graphene.String)
+
+
+def test_should_filepath_convert_string():
+    assert_conversion(serializers.FilePathField, graphene.String)
