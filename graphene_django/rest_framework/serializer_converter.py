@@ -86,3 +86,8 @@ def convert_serializer_field_to_list(field, is_input=True):
 @get_graphene_type_from_serializer_field.register(serializers.DictField)
 def convert_serializer_field_to_dict(field):
     return DictType
+
+
+@get_graphene_type_from_serializer_field.register(serializers.JSONField)
+def convert_serializer_field_to_jsonstring(field):
+    return graphene.types.json.JSONString

@@ -140,3 +140,7 @@ def test_should_ip_convert_string():
 
 def test_should_image_convert_string():
     assert_conversion(serializers.ImageField, graphene.String)
+
+
+def test_should_json_convert_jsonstring():
+    assert_conversion(serializers.JSONField, graphene.types.json.JSONString)
