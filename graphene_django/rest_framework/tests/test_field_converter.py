@@ -136,3 +136,7 @@ def test_should_filepath_convert_string():
 
 def test_should_ip_convert_string():
     assert_conversion(serializers.IPAddressField, graphene.String)
+
+
+def test_should_image_convert_string():
+    assert_conversion(serializers.ImageField, graphene.String)
