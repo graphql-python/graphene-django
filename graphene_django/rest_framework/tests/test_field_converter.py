@@ -1,3 +1,4 @@
+import copy
 from rest_framework import serializers
 from py.test import raises
 
@@ -6,23 +7,30 @@ import graphene
 from ..serializer_converter import convert_serializer_field
 
 
-# TODO: test required
+def _get_type(rest_framework_field, **kwargs):
+    # prevents the following error:
+    # AssertionError: The `source` argument is not meaningful when applied to a `child=` field.
+    # Remove `source=` from the field declaration.
+    # since we are reusing the same child in when testing the required attribute
+
+    if 'child' in kwargs:
+        kwargs['child'] = copy.deepcopy(kwargs['child'])
+
+    field = rest_framework_field(**kwargs)
+
+    return convert_serializer_field(field)
+
 
 def assert_conversion(rest_framework_field, graphene_field, **kwargs):
-    field = rest_framework_field(help_text='Custom Help Text', **kwargs)
-    graphene_type = convert_serializer_field(field)
+    graphene_type = _get_type(rest_framework_field, help_text='Custom Help Text', **kwargs)
     assert isinstance(graphene_type, graphene_field)
 
-    field = graphene_type.Field()
-    assert field.description == 'Custom Help Text'
-    assert not isinstance(field, graphene.NonNull)
+    graphene_type_required = _get_type(
+        rest_framework_field, help_text='Custom Help Text', required=True, **kwargs
+    )
+    assert isinstance(graphene_type_required, graphene_field)
 
-    field = rest_framework_field(help_text='Custom Help Text', required=True, **kwargs)
-    graphene_type = convert_serializer_field(field)
-    field = graphene_type.Field()
-    assert isinstance(field.type, graphene.NonNull)
-
-    return field
+    return graphene_type
 
 
 def test_should_unknown_rest_framework_field_raise_exception():
