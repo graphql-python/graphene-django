@@ -284,6 +284,65 @@ def test_should_query_connectionfields():
     }
 
 
+def test_should_keep_annotations():
+    from django.db.models import (
+        Count,
+        Avg,
+    )
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            only_fields = ('articles', )
+
+    class ArticleType(DjangoObjectType):
+
+        class Meta:
+            model = Article
+            interfaces = (Node, )
+            filter_fields = ('lang', )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        all_articles = DjangoConnectionField(ArticleType)
+
+        def resolve_all_reporters(self, args, context, info):
+            return Reporter.objects.annotate(articles_c=Count('articles')).order_by('articles_c')
+
+        def resolve_all_articles(self, args, context, info):
+            return Article.objects.annotate(import_avg=Avg('importance')).order_by('import_avg')
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterConnectionQuery {
+          allReporters {
+            pageInfo {
+              hasNextPage
+            }
+            edges {
+              node {
+                id
+              }
+            }
+          }
+          allArticles {
+            pageInfo {
+              hasNextPage
+            }
+            edges {
+              node {
+                id
+              }
+            }
+          }
+        }
+    '''
+    result = schema.execute(query)
+    assert not result.errors
+
+
 @pytest.mark.skipif(not DJANGO_FILTER_INSTALLED,
                     reason="django-filter should be installed")
 def test_should_query_node_filtering():

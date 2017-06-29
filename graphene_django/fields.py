@@ -59,7 +59,7 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
-        return default_queryset & queryset
+        return queryset & default_queryset
 
     @classmethod
     def resolve_connection(cls, connection, default_manager, args, iterable):
