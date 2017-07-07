@@ -1,3 +1,5 @@
+import enum
+
 from django.db import models
 from django.utils.encoding import force_text
 
@@ -17,6 +19,8 @@ singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):
+    if isinstance(name, enum.Enum):
+        name = name.name
     name = to_const(force_text(name))
     try:
         assert_valid_name(name)
