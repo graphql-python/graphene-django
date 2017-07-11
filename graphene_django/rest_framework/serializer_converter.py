@@ -91,6 +91,17 @@ def convert_serializer_field_to_float(field):
     return graphene.Float
 
 
+@get_graphene_type_from_serializer_field.register(serializers.DateTimeField)
+@get_graphene_type_from_serializer_field.register(serializers.DateField)
+def convert_serializer_field_to_date_time(field):
+    return graphene.types.datetime.DateTime
+
+
+@get_graphene_type_from_serializer_field.register(serializers.TimeField)
+def convert_serializer_field_to_time(field):
+    return graphene.types.datetime.Time
+
+
 @get_graphene_type_from_serializer_field.register(serializers.ListField)
 def convert_serializer_field_to_list(field, is_input=True):
     child_type = get_graphene_type_from_serializer_field(field.child)
