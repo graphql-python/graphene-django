@@ -72,14 +72,14 @@ class GraphQLView(View):
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
 
-        self.schema = schema
+        self.schema = self.schema or schema
         if middleware is not None:
             self.middleware = list(instantiate_middleware(middleware))
         self.executor = executor
         self.root_value = root_value
-        self.pretty = pretty
-        self.graphiql = graphiql
-        self.batch = batch
+        self.pretty = self.pretty or pretty
+        self.graphiql = self.graphiql or graphiql
+        self.batch = self.batch or batch
 
         assert isinstance(
             self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
