@@ -64,18 +64,22 @@ class BaseFormMutation(graphene.Mutation):
         form = cls.get_form(root, args, context, info)
 
         if form.is_valid():
-            return cls.perform_mutate(form, info)
+            return cls.form_valid(form, info)
         else:
-            errors = [
-                ErrorType(field=key, messages=value)
-                for key, value in form.errors.items()
-            ]
-            return cls(errors=errors)
+            return cls.form_invalid(form, info)
 
     @classmethod
-    def perform_mutate(cls, form, info):
+    def form_valid(cls, form, info):
         form.save()
         return cls(errors=[])
+
+    @classmethod
+    def form_invalid(cls, form, info):
+        errors = [
+            ErrorType(field=key, messages=value)
+            for key, value in form.errors.items()
+        ]
+        return cls(errors=errors)
 
     @classmethod
     def get_form(cls, root, args, context, info):
@@ -151,7 +155,7 @@ class ModelFormMutation(six.with_metaclass(ModelFormMutationMeta, BaseFormMutati
     errors = graphene.List(ErrorType)
 
     @classmethod
-    def perform_mutate(cls, form, info):
+    def form_valid(cls, form, info):
         obj = form.save()
         kwargs = {cls.return_field_name: obj}
         return cls(errors=[], **kwargs)

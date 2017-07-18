@@ -60,7 +60,7 @@ Form validation
 
 Form mutations will call ``is_valid()`` on your forms.
 
-If the form is valid then ``perform_mutate(form, info)`` is called on the mutation. Override this method to change how
+If the form is valid then ``form_valid(form, info)`` is called on the mutation. Override this method to change how
 the form is saved or to return a different Graphene object type.
 
 If the form is *not* valid then a list of errors will be returned. These errors have two fields: ``field``, a string
