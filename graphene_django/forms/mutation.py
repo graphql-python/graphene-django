@@ -46,7 +46,7 @@ class FormMutationMeta(MutationMeta):
 
         cls.Input = convert_form_to_input_type(options.form_class)
 
-        field_kwargs = {cls.options.input_field_name: Argument(cls.Input, required=True)}
+        field_kwargs = {options.input_field_name: Argument(cls.Input, required=True)}
         cls.Field = partial(
             Field,
             cls,
@@ -127,7 +127,7 @@ class ModelFormMutationMeta(MutationMeta):
 
         cls.Input = convert_form_to_input_type(options.form_class)
 
-        field_kwargs = {cls.options.input_field_name: Argument(cls.Input, required=True)}
+        field_kwargs = {options.input_field_name: Argument(cls.Input, required=True)}
         cls.Field = partial(
             Field,
             cls,
