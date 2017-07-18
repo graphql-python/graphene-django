@@ -10,6 +10,7 @@ from graphene.types.utils import merge, yank_fields_from_attrs
 from graphene.utils.is_base_type import is_base_type
 
 from .converter import convert_django_field_with_choices
+from .optimization import optimize_queryset
 from .registry import Registry, get_global_registry
 from .utils import (DJANGO_FILTER_INSTALLED, get_model_fields,
                     is_valid_django_model)
@@ -55,6 +56,7 @@ class DjangoObjectTypeMeta(ObjectTypeMeta):
             only_fields=(),
             exclude_fields=(),
             interfaces=(),
+            optimizations=None,
             skip_registry=False,
             registry=None
         )
@@ -118,7 +120,9 @@ class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
 
     @classmethod
     def get_node(cls, id, context, info):
+        query = cls._meta.model._meta.default_manager
+        query = optimize_queryset(cls._meta.model, query, info.field_asts[0])
         try:
-            return cls._meta.model.objects.get(pk=id)
+            return query.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None

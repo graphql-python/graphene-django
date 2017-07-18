@@ -4,6 +4,7 @@ from functools import partial
 # from graphene.relay import is_node
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
+from ..optimization import optimize_queryset
 from .utils import get_filtering_args_from_filterset, get_filterset_class
 
 
@@ -75,6 +76,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             data=filter_kwargs,
             queryset=default_manager.get_queryset()
         ).qs
+        qs = optimize_queryset(default_manager.model, qs, info.field_asts[0])
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
             resolver,
