@@ -1,1 +1,1 @@
-from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
+from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField  # noqa
