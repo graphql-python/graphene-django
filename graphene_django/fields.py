@@ -8,6 +8,7 @@ from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
+from .optimization import optimize_queryset
 from .settings import graphene_settings
 from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
 
@@ -62,7 +63,7 @@ class DjangoConnectionField(ConnectionField):
         return queryset & default_queryset
 
     @classmethod
-    def resolve_connection(cls, connection, default_manager, args, iterable):
+    def resolve_connection(cls, connection, default_manager, args, info, iterable):
         if iterable is None:
             iterable = default_manager
         iterable = maybe_queryset(iterable)
@@ -70,6 +71,7 @@ class DjangoConnectionField(ConnectionField):
             if iterable is not default_manager:
                 default_queryset = maybe_queryset(default_manager)
                 iterable = cls.merge_querysets(default_queryset, iterable)
+            iterable = optimize_queryset(default_manager.model, iterable, info.field_asts[0])
             _len = iterable.count()
         else:
             _len = len(iterable)
@@ -112,7 +114,7 @@ class DjangoConnectionField(ConnectionField):
                 args['last'] = min(last, max_limit)
 
         iterable = resolver(root, args, context, info)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        on_resolve = partial(cls.resolve_connection, connection, default_manager, args, info)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
