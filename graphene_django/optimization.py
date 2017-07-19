@@ -17,9 +17,21 @@ def model_fields_as_dict(model):
     return dict((f.name, f) for f in model._meta.get_fields())
 
 
+def find_model_selections(ast):
+    selections = ast.selection_set.selections
+
+    for selection in selections:
+        if selection.name.value == 'edges':
+            for sub_selection in selection.selection_set.selections:
+                if sub_selection.name.value == 'node':
+                    return sub_selection.selection_set.selections
+
+    return selections
+
+
 def get_related_fetches_for_model(model, graphql_ast):
     model_fields = model_fields_as_dict(model)
-    selections = graphql_ast.selection_set.selections
+    selections = find_model_selections(graphql_ast)
 
     graphene_obj_type = REGISTRY.get_type_for_model(model)
     optimizations = {}
