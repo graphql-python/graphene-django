@@ -24,7 +24,12 @@ class DjangoListField(Field):
 
     @staticmethod
     def list_resolver(resolver, root, args, context, info):
-        return maybe_queryset(resolver(root, args, context, info))
+        qs = maybe_queryset(resolver(root, args, context, info))
+
+        if isinstance(qs, QuerySet):
+            qs = optimize_queryset(qs.model, qs, info.field_asts[0])
+
+        return qs
 
     def get_resolver(self, parent_resolver):
         return partial(self.list_resolver, parent_resolver)
