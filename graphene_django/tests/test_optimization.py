@@ -44,7 +44,7 @@ class RootQuery(graphene.ObjectType):
 
     def resolve_article(self, args, context, info):
         qs = ArticleModel.objects
-        qs = optimize_queryset(qs, info.field_asts[0])
+        qs = optimize_queryset(qs, info)
         return qs.get(**args)
 
     def resolve_reporters(self, args, context, info):

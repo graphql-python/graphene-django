@@ -76,7 +76,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             data=filter_kwargs,
             queryset=default_manager.get_queryset()
         ).qs
-        qs = optimize_queryset(qs, info.field_asts[0])
+        qs = optimize_queryset(qs, info)
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
             resolver,
