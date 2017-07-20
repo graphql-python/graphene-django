@@ -120,7 +120,7 @@ class DjangoObjectType(six.with_metaclass(DjangoObjectTypeMeta, ObjectType)):
 
     @classmethod
     def get_node(cls, id, context, info):
-        query = cls._meta.model._meta.default_manager
+        query = cls._meta.model._default_manager
         query = optimize_queryset(query, info)
         try:
             return query.get(pk=id)

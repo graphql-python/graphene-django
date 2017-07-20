@@ -1,7 +1,12 @@
 from collections import namedtuple
 
+try:
+    from django.db.models.fields.reverse_related import ForeignObjectRel
+except ImportError:
+    # Django 1.7 doesn't have the reverse_related distinction
+    from django.db.models.fields.related import ForeignObjectRel
+
 from django.db.models import ForeignKey
-from django.db.models.fields.reverse_related import ForeignObjectRel
 from graphene.utils.str_converters import to_snake_case
 
 from .registry import get_global_registry
