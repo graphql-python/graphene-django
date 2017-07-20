@@ -27,7 +27,7 @@ class DjangoListField(Field):
         qs = maybe_queryset(resolver(root, args, context, info))
 
         if isinstance(qs, QuerySet):
-            qs = optimize_queryset(qs.model, qs, info.field_asts[0])
+            qs = optimize_queryset(qs, info.field_asts[0])
 
         return qs
 
@@ -76,7 +76,7 @@ class DjangoConnectionField(ConnectionField):
             if iterable is not default_manager:
                 default_queryset = maybe_queryset(default_manager)
                 iterable = cls.merge_querysets(default_queryset, iterable)
-            iterable = optimize_queryset(default_manager.model, iterable, info.field_asts[0])
+            iterable = optimize_queryset(iterable, info.field_asts[0])
             _len = iterable.count()
         else:
             _len = len(iterable)

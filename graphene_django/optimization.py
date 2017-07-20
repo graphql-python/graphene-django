@@ -82,8 +82,8 @@ def get_related_fetches_for_model(model, graphql_ast):
     return relateds
 
 
-def optimize_queryset(model, queryset, graphql_ast):
-    relateds = get_related_fetches_for_model(model, graphql_ast)
+def optimize_queryset(queryset, graphql_ast):
+    relateds = get_related_fetches_for_model(queryset.model, graphql_ast)
 
     for related in relateds:
         if related.fetch_type == SELECT:
