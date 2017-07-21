@@ -8,7 +8,7 @@ from ..serializer_converter import convert_serializer_field
 from ..types import DictType
 
 
-def _get_type(rest_framework_field, **kwargs):
+def _get_type(rest_framework_field, is_input=True, **kwargs):
     # prevents the following error:
     # AssertionError: The `source` argument is not meaningful when applied to a `child=` field.
     # Remove `source=` from the field declaration.
@@ -19,7 +19,7 @@ def _get_type(rest_framework_field, **kwargs):
 
     field = rest_framework_field(**kwargs)
 
-    return convert_serializer_field(field)
+    return convert_serializer_field(field, is_input=is_input)
 
 
 def assert_conversion(rest_framework_field, graphene_field, **kwargs):
@@ -38,18 +38,6 @@ def test_should_unknown_rest_framework_field_raise_exception():
     with raises(Exception) as excinfo:
         convert_serializer_field(None)
     assert 'Don\'t know how to convert the serializer field' in str(excinfo.value)
-
-
-def test_should_date_convert_string():
-    assert_conversion(serializers.DateField, graphene.String)
-
-
-def test_should_time_convert_string():
-    assert_conversion(serializers.TimeField, graphene.String)
-
-
-def test_should_date_time_convert_string():
-    assert_conversion(serializers.DateTimeField, graphene.String)
 
 
 def test_should_char_convert_string():
@@ -83,6 +71,28 @@ def test_should_regex_convert_string():
 def test_should_uuid_convert_string():
     if hasattr(serializers, 'UUIDField'):
         assert_conversion(serializers.UUIDField, graphene.String)
+
+
+def test_should_model_convert_field():
+
+    class MyModelSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = None
+            fields = '__all__'
+
+    assert_conversion(MyModelSerializer, graphene.Field, is_input=False)
+
+
+def test_should_date_time_convert_datetime():
+    assert_conversion(serializers.DateTimeField, graphene.types.datetime.DateTime)
+
+
+def test_should_date_convert_datetime():
+    assert_conversion(serializers.DateField, graphene.types.datetime.DateTime)
+
+
+def test_should_time_convert_time():
+    assert_conversion(serializers.TimeField, graphene.types.datetime.Time)
 
 
 def test_should_integer_convert_int():

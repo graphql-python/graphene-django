@@ -3,6 +3,7 @@ from rest_framework import serializers
 
 import graphene
 
+from ..registry import get_global_registry
 from ..utils import import_single_dispatch
 from .types import DictType
 
@@ -41,6 +42,7 @@ def convert_serializer_field(field, is_input=True):
 
     graphql_type = get_graphene_type_from_serializer_field(field)
 
+    args = []
     kwargs = {
         'description': field.help_text,
         'required': is_input and field.required,
@@ -52,12 +54,25 @@ def convert_serializer_field(field, is_input=True):
         kwargs['of_type'] = graphql_type[1]
         graphql_type = graphql_type[0]
 
-    return graphql_type(**kwargs)
+    if isinstance(field, serializers.ModelSerializer):
+        if is_input:
+            graphql_type = convert_serializer_to_input_type(field.__class__)
+        else:
+            global_registry = get_global_registry()
+            field_model = field.Meta.model
+            args = [global_registry.get_type_for_model(field_model)]
+
+    return graphql_type(*args, **kwargs)
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)
 def convert_serializer_field_to_string(field):
     return graphene.String
+
+
+@get_graphene_type_from_serializer_field.register(serializers.ModelSerializer)
+def convert_serializer_to_field(field):
+    return graphene.Field
 
 
 @get_graphene_type_from_serializer_field.register(serializers.IntegerField)
@@ -74,6 +89,17 @@ def convert_serializer_field_to_bool(field):
 @get_graphene_type_from_serializer_field.register(serializers.DecimalField)
 def convert_serializer_field_to_float(field):
     return graphene.Float
+
+
+@get_graphene_type_from_serializer_field.register(serializers.DateTimeField)
+@get_graphene_type_from_serializer_field.register(serializers.DateField)
+def convert_serializer_field_to_date_time(field):
+    return graphene.types.datetime.DateTime
+
+
+@get_graphene_type_from_serializer_field.register(serializers.TimeField)
+def convert_serializer_field_to_time(field):
+    return graphene.types.datetime.Time
 
 
 @get_graphene_type_from_serializer_field.register(serializers.ListField)
