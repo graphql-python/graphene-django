@@ -11,8 +11,11 @@ class LazyList(object):
     pass
 
 
-import django_filters  # noqa
-DJANGO_FILTER_INSTALLED = True
+try:
+    import django_filters  # noqa
+    DJANGO_FILTER_INSTALLED = True
+except ImportError:
+    DJANGO_FILTER_INSTALLED = False
 
 
 def get_reverse_fields(model, local_field_names):
