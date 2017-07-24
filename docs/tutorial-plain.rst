@@ -73,12 +73,23 @@ Let's get started with these models:
         def __str__(self):
             return self.name
 
+Add ingredients as INSTALLED_APPS:
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        ...
+        # Install the ingredients app
+        'ingredients',
+    ]
+
 Don't forget to create & run migrations:
 
 .. code:: bash
 
     python manage.py makemigrations
     python manage.py migrate
+    
 
 Load some test data
 ^^^^^^^^^^^^^^^^^^^
@@ -96,9 +107,6 @@ following:
 
     Installed 6 object(s) from 1 fixture(s)
     
-Note:
-If your run ``$ python ./manage.py loaddata ingredients`` without installing ``ingredients`` app in the project ``settings.py`` you will get the following error ``CommandError: No fixture named 'ingredients' found``. So make sure ``ingredients`` app has been put on the ``settings.py`` INSTALLED_APPS section before running ``$ python ./manage.py loaddata ingredients``. 
-
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
 create a login for yourself too (``./manage.py createsuperuser``).
@@ -193,7 +201,7 @@ a web-based integrated development environment to assist in the writing
 and executing of GraphQL queries. It will provide us with a simple and
 easy way of testing our cookbook project.
 
-Add ``ingredients`` and ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/settings.py``:
+Add ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/settings.py``:
 
 .. code:: python
 
@@ -201,9 +209,6 @@ Add ``ingredients`` and ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/
         ...
         # This will also make the `graphql_schema` management command available
         'graphene_django',
-
-        # Install the ingredients app
-        'ingredients',
     ]
 
 And then add the ``SCHEMA`` to the ``GRAPHENE`` config in ``cookbook/settings.py``:
