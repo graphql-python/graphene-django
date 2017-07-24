@@ -36,7 +36,7 @@ method as such:
     class MySecondAwesomeMutation(SerializerMutation):
         
         @classmethod
-        def instantiate_serializer(cls, instance, args, request, info):
+        def get_serializer(cls, instance, args, request, info):
             
             input = args.get('input')
             

@@ -105,19 +105,16 @@ class SerializerMutation(six.with_metaclass(SerializerMutationMeta, Mutation)):
         description='May contain more than one error for '
         'same field.'
     )
-    
+
     @classmethod
-    def instantiate_serializer(cls, instance, args, request, info):
-        
+    def get_serializer(cls, instance, args, request, info):
         input = args.get('input')
-        
+
         return cls._meta.serializer_class(data=dict(input))
 
     @classmethod
     def mutate(cls, instance, args, request, info):
-
-        serializer = cls.instantiate_serializer(instance, args, request, info)
-
+        serializer = cls.get_serializer(instance, args, request, info)
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
         else:
