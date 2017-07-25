@@ -2,27 +2,13 @@ from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
 
 import graphene
+from graphene import Dynamic
 
 from ..registry import get_global_registry
 from ..utils import import_single_dispatch
 from .types import DictType
 
 singledispatch = import_single_dispatch()
-
-
-def convert_serializer_to_input_type(serializer_class):
-    serializer = serializer_class()
-
-    items = {
-        name: convert_serializer_field(field)
-        for name, field in serializer.fields.items()
-    }
-
-    return type(
-        '{}Input'.format(serializer.__class__.__name__),
-        (graphene.InputObjectType, ),
-        items
-    )
 
 
 @singledispatch
@@ -56,7 +42,8 @@ def convert_serializer_field(field, is_input=True):
 
     if isinstance(field, serializers.ModelSerializer):
         if is_input:
-            graphql_type = convert_serializer_to_input_type(field.__class__)
+            return Dynamic(lambda: None)
+            # graphql_type = convert_serializer_to_input_type(field.__class__)
         else:
             global_registry = get_global_registry()
             field_model = field.Meta.model

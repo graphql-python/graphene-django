@@ -181,7 +181,7 @@ def test_should_query_connectionfilter():
             interfaces = (Node, )
 
     class Query(graphene.ObjectType):
-        all_reporters = DjangoFilterConnectionField(ReporterType)
+        all_reporters = DjangoFilterConnectionField(ReporterType, fields=['last_name'])
         s = graphene.String(resolver=lambda *_: "S")
         debug = graphene.Field(DjangoDebug, name='__debug')
 

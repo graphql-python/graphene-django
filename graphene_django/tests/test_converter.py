@@ -84,7 +84,7 @@ def test_should_auto_convert_id():
 
 
 def test_should_auto_convert_id():
-    assert_conversion(models.UUIDField, graphene.ID)
+    assert_conversion(models.UUIDField, graphene.UUID)
 
 
 def test_should_auto_convert_duration():

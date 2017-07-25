@@ -1,7 +1,5 @@
 from collections import OrderedDict
 
-import six
-
 from django.utils.functional import SimpleLazyObject
 from graphene import Field
 from graphene.relay import Connection, Node
@@ -21,7 +19,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
     for name, field in _model_fields:
         is_not_in_only = only_fields and name not in only_fields
         # is_already_created = name in options.fields
-        is_excluded = name in exclude_fields # or is_already_created
+        is_excluded = name in exclude_fields  # or is_already_created
         # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
         is_no_backref = str(name).endswith('+')
         if is_not_in_only or is_excluded or is_no_backref:
@@ -46,7 +44,8 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
 class DjangoObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-        only_fields=(), exclude_fields=(), filter_fields=None, connection=None, use_connection=None, interfaces=(), **options):
+                                    only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
+                                    use_connection=None, interfaces=(), **options):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
@@ -75,7 +74,9 @@ class DjangoObjectType(ObjectType):
             connection = Connection.create_type('{}Connection'.format(cls.__name__), node=cls)
 
         if connection is not None:
-            assert issubclass(connection, Connection), "The connection must be a Connection. Received {}".format(connection.__name__)
+            assert issubclass(connection, Connection), (
+                "The connection must be a Connection. Received {}"
+            ).format(connection.__name__)
 
         _meta = DjangoObjectTypeOptions(cls)
         _meta.model = model
@@ -85,7 +86,7 @@ class DjangoObjectType(ObjectType):
         _meta.connection = connection
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(_meta=_meta, interfaces=interfaces, **options)
-            
+
         if not skip_registry:
             registry.register(cls)
 

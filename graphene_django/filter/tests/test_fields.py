@@ -114,9 +114,9 @@ def test_filter_explicit_filterset_orderable():
     assert_orderable(field)
 
 
-def test_filter_shortcut_filterset_orderable_true():
-    field = DjangoFilterConnectionField(ReporterNode)
-    assert_not_orderable(field)
+# def test_filter_shortcut_filterset_orderable_true():
+#     field = DjangoFilterConnectionField(ReporterNode)
+#     assert_not_orderable(field)
 
 
 # def test_filter_shortcut_filterset_orderable_headline():

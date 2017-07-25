@@ -9,7 +9,7 @@ from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
+from .utils import maybe_queryset
 
 
 class DjangoListField(Field):
@@ -48,6 +48,7 @@ class DjangoConnectionField(ConnectionField):
         from .types import DjangoObjectType
         _type = super(ConnectionField, self).type
         assert issubclass(_type, DjangoObjectType), "DjangoConnectionField only accepts DjangoObjectType types"
+        assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
         return _type._meta.connection
 
     @property
