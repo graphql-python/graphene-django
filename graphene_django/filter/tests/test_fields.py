@@ -356,7 +356,7 @@ def test_recursive_filter_connection():
     class ReporterFilterNode(DjangoObjectType):
         child_reporters = DjangoFilterConnectionField(lambda: ReporterFilterNode)
 
-        def resolve_child_reporters(self, args, context, info):
+        def resolve_child_reporters(self, **args):
             return []
 
         class Meta:
@@ -399,7 +399,7 @@ def test_should_query_filter_node_limit():
             filterset_class=ReporterFilter
         )
 
-        def resolve_all_reporters(self, args, context, info):
+        def resolve_all_reporters(self, **args):
             return Reporter.objects.order_by('a_choice')
 
     Reporter.objects.create(
@@ -499,7 +499,7 @@ def test_should_query_filter_node_double_limit_raises():
             filterset_class=ReporterFilter
         )
 
-        def resolve_all_reporters(self, args, context, info):
+        def resolve_all_reporters(self, **args):
             return Reporter.objects.order_by('a_choice')[:2]
 
     Reporter.objects.create(

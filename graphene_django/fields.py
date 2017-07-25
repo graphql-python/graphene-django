@@ -44,6 +44,13 @@ class DjangoConnectionField(ConnectionField):
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
+    def type(self):
+        from .types import DjangoObjectType
+        _type = super(ConnectionField, self).type
+        assert issubclass(_type, DjangoObjectType), "DjangoConnectionField only accepts DjangoObjectType types"
+        return _type._meta.connection
+
+    @property
     def node_type(self):
         return self.type._meta.node
 
@@ -128,10 +135,3 @@ class DjangoConnectionField(ConnectionField):
             self.max_limit,
             self.enforce_first_or_last
         )
-
-
-def get_connection_field(*args, **kwargs):
-    if DJANGO_FILTER_INSTALLED:
-        from .filter.fields import DjangoFilterConnectionField
-        return DjangoFilterConnectionField(*args, **kwargs)
-    return DjangoConnectionField(*args, **kwargs)

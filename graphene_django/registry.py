@@ -1,8 +1,10 @@
+
 class Registry(object):
 
     def __init__(self):
         self._registry = {}
         self._registry_models = {}
+        self._connection_types = {}
 
     def register(self, cls):
         from .types import DjangoObjectType

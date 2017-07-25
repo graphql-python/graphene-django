@@ -22,7 +22,7 @@ class Human(DjangoObjectType):
         model = Article
         interfaces = (relay.Node, )
 
-    def resolve_raises(self, *args):
+    def resolve_raises(self):
         raise Exception("This field should raise exception")
 
     def get_node(self, id):
@@ -32,7 +32,7 @@ class Human(DjangoObjectType):
 class Query(graphene.ObjectType):
     human = graphene.Field(Human)
 
-    def resolve_human(self, args, context, info):
+    def resolve_human(self):
         return Human()
 
 
