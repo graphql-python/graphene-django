@@ -71,7 +71,7 @@ def test_nested_model():
     assert 'cool_name' in model_input_type._meta.fields
     
 
-def test_custom_serializer(capfd):
+def test_custom_serializer():
 
     class MyBasicSerializer(serializers.Serializer):
         whatever = serializers.CharField(required=False)
