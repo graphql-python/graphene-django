@@ -1,7 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 
-# from graphene.relay import is_node
+from graphene import final_resolver
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
@@ -89,7 +89,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         )
 
     def get_resolver(self, parent_resolver):
-        return partial(
+        return final_resolver(partial(
             self.connection_resolver,
             parent_resolver,
             self.type,
@@ -98,4 +98,4 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self.enforce_first_or_last,
             self.filterset_class,
             self.filtering_args
-        )
+        ))

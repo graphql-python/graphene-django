@@ -4,6 +4,7 @@ from django.db.models.query import QuerySet
 
 from promise import Promise
 
+from graphene import final_resolver
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -128,11 +129,11 @@ class DjangoConnectionField(ConnectionField):
         return on_resolve(iterable)
 
     def get_resolver(self, parent_resolver):
-        return partial(
+        return final_resolver(partial(
             self.connection_resolver,
             parent_resolver,
             self.type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last
-        )
+        ))
