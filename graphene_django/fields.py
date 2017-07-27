@@ -27,7 +27,7 @@ class DjangoListField(Field):
         return maybe_queryset(resolver(root, args, context, info))
 
     def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
+        return final_resolver(partial(self.list_resolver, parent_resolver))
 
 
 class DjangoConnectionField(ConnectionField):
