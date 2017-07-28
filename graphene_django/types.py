@@ -90,11 +90,11 @@ class DjangoObjectType(ObjectType):
         if not skip_registry:
             registry.register(cls)
 
-    def resolve_id(self):
+    def resolve_id(self, info):
         return self.pk
 
     @classmethod
-    def is_type_of(cls, root, context, info):
+    def is_type_of(cls, root, info):
         if isinstance(root, SimpleLazyObject):
             root._setup()
             root = root._wrapped
@@ -108,7 +108,7 @@ class DjangoObjectType(ObjectType):
         return model == cls._meta.model
 
     @classmethod
-    def get_node(cls, id, context, info):
+    def get_node(cls, info, id):
         try:
             return cls._meta.model.objects.get(pk=id)
         except cls._meta.model.DoesNotExist:

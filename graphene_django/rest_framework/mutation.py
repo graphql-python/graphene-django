@@ -1,7 +1,6 @@
 from collections import OrderedDict
 
 import graphene
-from graphene import annotate, Context, ResolveInfo
 from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
 from graphene.relay.mutation import ClientIDMutation
@@ -68,12 +67,11 @@ class SerializerMutation(ClientIDMutation):
         super(SerializerMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
 
     @classmethod
-    @annotate(context=Context, info=ResolveInfo)
-    def mutate_and_get_payload(cls, root, input, context, info):
-        serializer = cls._meta.serializer_class(data=dict(input))
+    def mutate_and_get_payload(cls, root, info, **input):
+        serializer = cls._meta.serializer_class(data=input)
 
         if serializer.is_valid():
-            return cls.perform_mutate(serializer, context, info)
+            return cls.perform_mutate(serializer, info)
         else:
             errors = [
                 ErrorType(field=key, messages=value)
@@ -83,6 +81,6 @@ class SerializerMutation(ClientIDMutation):
             return cls(errors=errors)
 
     @classmethod
-    def perform_mutate(cls, serializer, context, info):
+    def perform_mutate(cls, serializer, info):
         obj = serializer.save()
         return cls(**obj)

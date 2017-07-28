@@ -399,7 +399,7 @@ def test_should_query_filter_node_limit():
             filterset_class=ReporterFilter
         )
 
-        def resolve_all_reporters(self, **args):
+        def resolve_all_reporters(self, info, **args):
             return Reporter.objects.order_by('a_choice')
 
     Reporter.objects.create(
@@ -499,7 +499,7 @@ def test_should_query_filter_node_double_limit_raises():
             filterset_class=ReporterFilter
         )
 
-        def resolve_all_reporters(self, **args):
+        def resolve_all_reporters(self, info, **args):
             return Reporter.objects.order_by('a_choice')[:2]
 
     Reporter.objects.create(
