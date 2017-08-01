@@ -11,7 +11,7 @@ class Character(DjangoObjectType):
         model = Reporter
         interfaces = (relay.Node, )
 
-    def get_node(self, id, context, info):
+    def get_node(self, info, id):
         pass
 
 
@@ -22,17 +22,17 @@ class Human(DjangoObjectType):
         model = Article
         interfaces = (relay.Node, )
 
-    def resolve_raises(self):
+    def resolve_raises(self, info):
         raise Exception("This field should raise exception")
 
-    def get_node(self, id):
+    def get_node(self, info, id):
         pass
 
 
 class Query(graphene.ObjectType):
     human = graphene.Field(Human)
 
-    def resolve_human(self):
+    def resolve_human(self, info):
         return Human()
 
 

@@ -46,7 +46,7 @@ def test_should_query_simplelazy_objects():
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
 
-        def resolve_reporter(self):
+        def resolve_reporter(self, info):
             return SimpleLazyObject(lambda: Reporter(id=1))
 
     schema = graphene.Schema(query=Query)
@@ -75,7 +75,7 @@ def test_should_query_well():
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
 
-        def resolve_reporter(self):
+        def resolve_reporter(self, info):
             return Reporter(first_name='ABA', last_name='X')
 
     query = '''
@@ -119,7 +119,7 @@ def test_should_query_postgres_fields():
     class Query(graphene.ObjectType):
         event = graphene.Field(EventType)
 
-        def resolve_event(self):
+        def resolve_event(self, info):
             return Event(
                 ages=(0, 10),
                 data={'angry_babies': True},
@@ -162,10 +162,10 @@ def test_should_node():
             interfaces = (Node, )
 
         @classmethod
-        def get_node(cls, id, context, info):
+        def get_node(cls, info, id):
             return Reporter(id=2, first_name='Cookie Monster')
 
-        def resolve_articles(self, **args):
+        def resolve_articles(self, info, **args):
             return [Article(headline='Hi!')]
 
     class ArticleNode(DjangoObjectType):
@@ -175,7 +175,7 @@ def test_should_node():
             interfaces = (Node, )
 
         @classmethod
-        def get_node(cls, id, context, info):
+        def get_node(cls, info, id):
             return Article(id=1, headline='Article node', pub_date=datetime.date(2002, 3, 11))
 
     class Query(graphene.ObjectType):
@@ -183,7 +183,7 @@ def test_should_node():
         reporter = graphene.Field(ReporterNode)
         article = graphene.Field(ArticleNode)
 
-        def resolve_reporter(self):
+        def resolve_reporter(self, info):
             return Reporter(id=1, first_name='ABA', last_name='X')
 
     query = '''
@@ -250,7 +250,7 @@ def test_should_query_connectionfields():
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
-        def resolve_all_reporters(self, **args):
+        def resolve_all_reporters(self, info, **args):
             return [Reporter(id=1)]
 
     schema = graphene.Schema(query=Query)
@@ -308,10 +308,10 @@ def test_should_keep_annotations():
         all_reporters = DjangoConnectionField(ReporterType)
         all_articles = DjangoConnectionField(ArticleType)
 
-        def resolve_all_reporters(self, **args):
+        def resolve_all_reporters(self, info, **args):
             return Reporter.objects.annotate(articles_c=Count('articles')).order_by('articles_c')
 
-        def resolve_all_articles(self, **args):
+        def resolve_all_articles(self, info, **args):
             return Article.objects.annotate(import_avg=Avg('importance')).order_by('import_avg')
 
     schema = graphene.Schema(query=Query)
@@ -618,7 +618,7 @@ def test_should_query_promise_connectionfields():
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
-        def resolve_all_reporters(self, **args):
+        def resolve_all_reporters(self, info, **args):
             return Promise.resolve([Reporter(id=1)])
 
     schema = graphene.Schema(query=Query)
@@ -677,7 +677,7 @@ def test_should_query_dataloader_fields():
 
         articles = DjangoConnectionField(ArticleType)
 
-        def resolve_articles(self, **args):
+        def resolve_articles(self, info, **args):
             return article_loader.load(self.id)
 
     class Query(graphene.ObjectType):

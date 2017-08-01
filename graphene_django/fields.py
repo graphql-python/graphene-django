@@ -4,7 +4,6 @@ from django.db.models.query import QuerySet
 
 from promise import Promise
 
-from graphene import final_resolver
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
@@ -23,11 +22,11 @@ class DjangoListField(Field):
         return self.type.of_type._meta.node._meta.model
 
     @staticmethod
-    def list_resolver(resolver, root, args, context, info):
-        return maybe_queryset(resolver(root, args, context, info))
+    def list_resolver(resolver, root, info, **args):
+        return maybe_queryset(resolver(root, info, **args))
 
     def get_resolver(self, parent_resolver):
-        return final_resolver(partial(self.list_resolver, parent_resolver))
+        return partial(self.list_resolver, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):
@@ -98,7 +97,7 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(cls, resolver, connection, default_manager, max_limit,
-                            enforce_first_or_last, root, args, context, info):
+                            enforce_first_or_last, root, info, **args):
         first = args.get('first')
         last = args.get('last')
 
@@ -120,7 +119,7 @@ class DjangoConnectionField(ConnectionField):
                 ).format(first, info.field_name, max_limit)
                 args['last'] = min(last, max_limit)
 
-        iterable = resolver(root, args, context, info)
+        iterable = resolver(root, info, **args)
         on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
 
         if Promise.is_thenable(iterable):
@@ -129,11 +128,11 @@ class DjangoConnectionField(ConnectionField):
         return on_resolve(iterable)
 
     def get_resolver(self, parent_resolver):
-        return final_resolver(partial(
+        return partial(
             self.connection_resolver,
             parent_resolver,
             self.type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last
-        ))
+        )

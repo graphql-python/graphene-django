@@ -38,7 +38,7 @@ def test_django_interface():
 
 @patch('graphene_django.tests.models.Article.objects.get', return_value=Article(id=1))
 def test_django_get_node(get):
-    article = Article.get_node(1, None, None)
+    article = Article.get_node(None, 1)
     get.assert_called_with(pk=1)
     assert article.id == 1
 
