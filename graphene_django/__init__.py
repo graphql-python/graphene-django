@@ -5,5 +5,10 @@ from .fields import (
     DjangoConnectionField,
 )
 
-__all__ = ['DjangoObjectType',
-           'DjangoConnectionField']
+__version__ = '2.0.dev2017073101'
+
+__all__ = [
+    '__version__',
+    'DjangoObjectType',
+    'DjangoConnectionField'
+]

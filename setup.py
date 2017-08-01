@@ -1,4 +1,13 @@
 from setuptools import find_packages, setup
+import sys
+import ast
+import re
+
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('graphene_django/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
 
 rest_framework_require = [
     'djangorestframework>=3.6.3',
@@ -17,7 +26,7 @@ tests_require = [
 
 setup(
     name='graphene-django',
-    version='2.0.dev2017072601',
+    version=version,
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),
