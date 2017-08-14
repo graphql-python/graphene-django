@@ -56,13 +56,6 @@ def get_model_fields(model):
     return all_fields
 
 
-def get_related_model(field):
-    if hasattr(field, 'rel'):
-        # Django 1.6, 1.7
-        return field.rel.to
-    return field.related_model
-
-
 def is_valid_django_model(model):
     return inspect.isclass(model) and issubclass(model, models.Model)
 
