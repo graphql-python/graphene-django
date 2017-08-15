@@ -26,7 +26,7 @@ Filterable fields
 The ``filter_fields`` parameter is used to specify the fields which can
 be filtered upon. The value specified here is passed directly to
 ``django-filter``, so see the `filtering
-documentation <https://django-filter.readthedocs.org/en/latest/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.io/en/latest/guide/usage.html#the-filter>`__
 for full details on the range of options available.
 
 For example:
