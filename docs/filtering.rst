@@ -4,7 +4,7 @@ Filtering
 Graphene integrates with
 `django-filter <https://django-filter.readthedocs.org>`__ to provide
 filtering of results. See the `usage
-documentation <https://django-filter.readthedocs.org/en/latest/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.io/en/latest/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
 This filtering is automatically available when implementing a ``relay.Node``.
