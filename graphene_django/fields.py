@@ -9,7 +9,7 @@ from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import DJANGO_FILTER_INSTALLED, maybe_queryset
+from .utils import maybe_queryset
 
 
 class DjangoListField(Field):
@@ -22,8 +22,8 @@ class DjangoListField(Field):
         return self.type.of_type._meta.node._meta.model
 
     @staticmethod
-    def list_resolver(resolver, root, args, context, info):
-        return maybe_queryset(resolver(root, args, context, info))
+    def list_resolver(resolver, root, info, **args):
+        return maybe_queryset(resolver(root, info, **args))
 
     def get_resolver(self, parent_resolver):
         return partial(self.list_resolver, parent_resolver)
@@ -42,6 +42,14 @@ class DjangoConnectionField(ConnectionField):
             graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST
         )
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
+
+    @property
+    def type(self):
+        from .types import DjangoObjectType
+        _type = super(ConnectionField, self).type
+        assert issubclass(_type, DjangoObjectType), "DjangoConnectionField only accepts DjangoObjectType types"
+        assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
+        return _type._meta.connection
 
     @property
     def node_type(self):
@@ -89,7 +97,7 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(cls, resolver, connection, default_manager, max_limit,
-                            enforce_first_or_last, root, args, context, info):
+                            enforce_first_or_last, root, info, **args):
         first = args.get('first')
         last = args.get('last')
 
@@ -111,7 +119,7 @@ class DjangoConnectionField(ConnectionField):
                 ).format(first, info.field_name, max_limit)
                 args['last'] = min(last, max_limit)
 
-        iterable = resolver(root, args, context, info)
+        iterable = resolver(root, info, **args)
         on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
 
         if Promise.is_thenable(iterable):
@@ -128,10 +136,3 @@ class DjangoConnectionField(ConnectionField):
             self.max_limit,
             self.enforce_first_or_last
         )
-
-
-def get_connection_field(*args, **kwargs):
-    if DJANGO_FILTER_INSTALLED:
-        from .filter.fields import DjangoFilterConnectionField
-        return DjangoFilterConnectionField(*args, **kwargs)
-    return DjangoConnectionField(*args, **kwargs)
