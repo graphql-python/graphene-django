@@ -8,21 +8,20 @@ class QueryRoot(ObjectType):
     request = graphene.String(required=True)
     test = graphene.String(who=graphene.String())
 
-    def resolve_thrower(self, args, context, info):
+    def resolve_thrower(self, info):
         raise Exception("Throws!")
 
-    def resolve_request(self, args, context, info):
-        request = context
-        return request.GET.get('q')
+    def resolve_request(self, info):
+        return info.context.GET.get('q')
 
-    def resolve_test(self, args, context, info):
-        return 'Hello %s' % (args.get('who') or 'World')
+    def resolve_test(self, info, who=None):
+        return 'Hello %s' % (who or 'World')
 
 
 class MutationRoot(ObjectType):
     write_test = graphene.Field(QueryRoot)
 
-    def resolve_write_test(self, args, context, info):
+    def resolve_write_test(self, info):
         return QueryRoot()
 
 

@@ -39,7 +39,8 @@ class DjangoDebugContext(object):
 
 class DjangoDebugMiddleware(object):
 
-    def resolve(self, next, root, args, context, info):
+    def resolve(self, next, root, info, **args):
+        context = info.context
         django_debug = getattr(context, 'django_debug', None)
         if not django_debug:
             if context is None:
@@ -52,6 +53,6 @@ class DjangoDebugMiddleware(object):
                 ))
         if info.schema.get_type('DjangoDebug') == info.return_type:
             return context.django_debug.get_debug_promise()
-        promise = next(root, args, context, info)
+        promise = next(root, info, **args)
         context.django_debug.add_promise(promise)
         return promise

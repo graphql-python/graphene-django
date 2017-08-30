@@ -16,7 +16,7 @@ class Ship(DjangoObjectType):
         interfaces = (relay.Node, )
 
     @classmethod
-    def get_node(cls, id, context, info):
+    def get_node(cls, info, id):
         node = get_ship(id)
         return node
 
@@ -34,7 +34,7 @@ class Faction(DjangoObjectType):
         interfaces = (relay.Node, )
 
     @classmethod
-    def get_node(cls, id, context, info):
+    def get_node(cls, info, id):
         return get_faction(id)
 
 
@@ -48,9 +48,7 @@ class IntroduceShip(relay.ClientIDMutation):
     faction = graphene.Field(Faction)
 
     @classmethod
-    def mutate_and_get_payload(cls, input, context, info):
-        ship_name = input.get('ship_name')
-        faction_id = input.get('faction_id')
+    def mutate_and_get_payload(cls, root, info, ship_name, faction_id, client_mutation_id=None):
         ship = create_ship(ship_name, faction_id)
         faction = get_faction(faction_id)
         return IntroduceShip(ship=ship, faction=faction)
