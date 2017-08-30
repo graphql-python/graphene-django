@@ -114,7 +114,7 @@ create your own ``Filterset`` as follows:
 
     class AnimalFilter(django_filters.FilterSet):
         # Do case-insensitive lookups on 'name'
-        name = django_filters.CharFilter(lookup_type='iexact')
+        name = django_filters.CharFilter(lookup_expr=['iexact'])
 
         class Meta:
             model = Animal
