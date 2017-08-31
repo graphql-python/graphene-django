@@ -22,6 +22,9 @@ class MySerializer(serializers.Serializer):
     text = serializers.CharField()
     model = MyModelSerializer()
 
+    def create(self, validated_data):
+        return validated_data
+
 
 def test_needs_serializer_class():
     with raises(Exception) as exc:
@@ -68,3 +71,29 @@ def test_nested_model():
     model_input_type = model_input._type.of_type
     assert issubclass(model_input_type, InputObjectType)
     assert 'cool_name' in model_input_type._meta.fields
+
+
+def test_mutate_and_get_payload_success():
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MySerializer
+
+    result = MyMutation.mutate_and_get_payload(None, None, **{
+        'text': 'value',
+        'model': {
+            'cool_name': 'other_value'
+        }
+    })
+    assert result.errors is None
+
+
+def test_mutate_and_get_payload_error():
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MySerializer
+
+    # missing required fields
+    result = MyMutation.mutate_and_get_payload(None, None, **{})
+    assert len(result.errors) > 0

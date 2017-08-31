@@ -84,4 +84,4 @@ class SerializerMutation(ClientIDMutation):
     @classmethod
     def perform_mutate(cls, serializer, info):
         obj = serializer.save()
-        return cls(**obj)
+        return cls(errors=None, **obj)
