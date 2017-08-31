@@ -65,7 +65,6 @@ def test_nested_model():
     assert model_field.type == MyFakeModelGrapheneType
 
     model_input = MyMutation.Input._meta.fields['model']
-    model_input_type = model_input.get_type()
-    assert not model_input_type
-    # assert issubclass(model_input_type, InputObjectType)
-    # assert 'cool_name' in model_input_type._meta.fields
+    model_input_type = model_input._type.of_type
+    assert issubclass(model_input_type, InputObjectType)
+    assert 'cool_name' in model_input_type._meta.fields
