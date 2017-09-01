@@ -2,7 +2,6 @@ from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
 
 import graphene
-from graphene import Dynamic
 
 from ..registry import get_global_registry
 from ..utils import import_single_dispatch
