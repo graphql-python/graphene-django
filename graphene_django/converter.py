@@ -10,7 +10,7 @@ from graphql import assert_valid_name
 
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
-from .utils import get_related_model, import_single_dispatch
+from .utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()
 
@@ -125,7 +125,7 @@ def convert_time_to_string(field, registry=None):
 
 @convert_django_field.register(models.OneToOneRel)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
-    model = get_related_model(field)
+    model = field.related_model
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
@@ -144,7 +144,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 @convert_django_field.register(models.ManyToManyRel)
 @convert_django_field.register(models.ManyToOneRel)
 def convert_field_to_list_or_connection(field, registry=None):
-    model = get_related_model(field)
+    model = field.related_model
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
@@ -170,7 +170,7 @@ def convert_field_to_list_or_connection(field, registry=None):
 @convert_django_field.register(models.OneToOneField)
 @convert_django_field.register(models.ForeignKey)
 def convert_field_to_djangomodel(field, registry=None):
-    model = get_related_model(field)
+    model = field.related_model
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
