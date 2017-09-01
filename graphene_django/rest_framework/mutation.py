@@ -55,6 +55,7 @@ class SerializerMutation(ClientIDMutation):
         output_fields = fields_for_serializer(serializer, only_fields, exclude_fields, is_input=False)
 
         _meta = SerializerMutationOptions(cls)
+        _meta.serializer_class = serializer_class
         _meta.fields = yank_fields_from_attrs(
             output_fields,
             _as=Field,
@@ -83,4 +84,4 @@ class SerializerMutation(ClientIDMutation):
     @classmethod
     def perform_mutate(cls, serializer, info):
         obj = serializer.save()
-        return cls(**obj)
+        return cls(errors=None, **obj)
