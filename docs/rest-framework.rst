@@ -34,14 +34,12 @@ method as such:
     from graphene_django.rest_framework.mutation import SerializerMutation
 
     class MySecondAwesomeMutation(SerializerMutation):
-        
-        @classmethod
-        def get_serializer(cls, instance, args, request, info):
-            
-            input = args.get('input')
-            
-            return cls._meta.serializer_class(data=dict(input),
-                                              context={'request': request})
       
         class Meta:
             serializer_class = MySerializer
+
+        @classmethod
+        def get_serializer(cls, root, info, input):
+            request = info.context
+            return cls._meta.serializer_class(data=dict(input),
+                                              context={'request': request})
