@@ -10,21 +10,6 @@ from .types import DictType
 singledispatch = import_single_dispatch()
 
 
-def convert_serializer_to_input_type(serializer_class):
-    serializer = serializer_class()
-
-    items = {
-        name: convert_serializer_field(field)
-        for name, field in serializer.fields.items()
-    }
-
-    return type(
-        '{}Input'.format(serializer.__class__.__name__),
-        (graphene.InputObjectType, ),
-        items
-    )
-
-
 @singledispatch
 def get_graphene_type_from_serializer_field(field):
     raise ImproperlyConfigured(
@@ -63,6 +48,21 @@ def convert_serializer_field(field, is_input=True):
             args = [global_registry.get_type_for_model(field_model)]
 
     return graphql_type(*args, **kwargs)
+
+
+def convert_serializer_to_input_type(serializer_class):
+    serializer = serializer_class()
+
+    items = {
+        name: convert_serializer_field(field)
+        for name, field in serializer.fields.items()
+    }
+
+    return type(
+        '{}Input'.format(serializer.__class__.__name__),
+        (graphene.InputObjectType,),
+        items
+    )
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)

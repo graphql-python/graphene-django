@@ -1,6 +1,6 @@
 Please read
-`UPGRADE-v1.0.md <https://github.com/graphql-python/graphene/blob/master/UPGRADE-v1.0.md>`__
-to learn how to upgrade to Graphene ``1.0``.
+`UPGRADE-v2.0.md <https://github.com/graphql-python/graphene/blob/master/UPGRADE-v2.0.md>`__
+to learn how to upgrade to Graphene ``2.0``.
 
 --------------
 
@@ -17,7 +17,7 @@ For instaling graphene, just run this command in your shell
 
 .. code:: bash
 
-    pip install "graphene-django>=1.0"
+    pip install "graphene-django>=2.0.dev"
 
 Settings
 ~~~~~~~~

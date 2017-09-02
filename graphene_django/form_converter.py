@@ -1,7 +1,7 @@
 from django import forms
 from django.forms.fields import BaseTemporalField
 
-from graphene import ID, Boolean, Float, Int, List, String
+from graphene import ID, Boolean, Float, Int, List, String, UUID
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from .utils import import_single_dispatch
@@ -32,9 +32,13 @@ def convert_form_field(field):
 @convert_form_field.register(forms.ChoiceField)
 @convert_form_field.register(forms.RegexField)
 @convert_form_field.register(forms.Field)
-@convert_form_field.register(UUIDField)
 def convert_form_field_to_string(field):
     return String(description=field.help_text, required=field.required)
+
+
+@convert_form_field.register(UUIDField)
+def convert_form_field_to_uuid(field):
+    return UUID(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.IntegerField)

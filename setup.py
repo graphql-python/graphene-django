@@ -1,7 +1,16 @@
 from setuptools import find_packages, setup
+import sys
+import ast
+import re
+
+_version_re = re.compile(r'__version__\s+=\s+(.*)')
+
+with open('graphene_django/__init__.py', 'rb') as f:
+    version = str(ast.literal_eval(_version_re.search(
+        f.read().decode('utf-8')).group(1)))
 
 rest_framework_require = [
-    'djangorestframework==3.6.3',
+    'djangorestframework>=3.6.3',
 ]
 
 
@@ -17,7 +26,7 @@ tests_require = [
 
 setup(
     name='graphene-django',
-    version='1.3',
+    version=version,
 
     description='Graphene Django integration',
     long_description=open('README.rst').read(),
@@ -48,11 +57,11 @@ setup(
 
     install_requires=[
         'six>=1.10.0',
-        'graphene>=1.4',
+        'graphene>=2.0.dev',
         'Django>=1.8.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
-        'promise>=2.0',
+        'promise>=2.1.dev',
     ],
     setup_requires=[
         'pytest-runner',

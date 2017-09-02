@@ -65,7 +65,7 @@ def test_should_regex_convert_string():
 
 def test_should_uuid_convert_string():
     if hasattr(forms, 'UUIDField'):
-        assert_conversion(forms.UUIDField, graphene.String)
+        assert_conversion(forms.UUIDField, graphene.UUID)
 
 
 def test_should_integer_convert_int():

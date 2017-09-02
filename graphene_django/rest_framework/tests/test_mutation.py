@@ -23,13 +23,16 @@ class MySerializer(serializers.Serializer):
     text = serializers.CharField()
     model = MyModelSerializer()
 
+    def create(self, validated_data):
+        return validated_data
+
 
 def test_needs_serializer_class():
     with raises(Exception) as exc:
         class MyMutation(SerializerMutation):
             pass
 
-    assert exc.value.args[0] == 'Missing serializer_class'
+    assert str(exc.value) == 'serializer_class is required for the SerializerMutation'
 
 
 def test_has_fields():
@@ -90,13 +93,11 @@ def test_custom_serializer():
         user = String()
         
         @classmethod
-        def get_serializer(cls, instance, args, request, info):
-            input = args.get('input')
-            
+        def get_serializer(cls, root, info, input):
             return cls._meta.serializer_class(data=dict(input),
                                               context={'request': request})
                                               
-    class MyAbstractMutation(AbstractType, ObjectType):
+    class MyAbstractMutation(ObjectType):
         myAwesomeMutation = MyAwesomeMutation.Field()
             
     schema = Schema(query=MyBasicGrapheneType, mutation=MyAbstractMutation)    
@@ -112,4 +113,28 @@ def test_custom_serializer():
                             context_value={'user': 1})
     assert result.data['myAwesomeMutation']['user'] == '1'
             
-    
+
+def test_mutate_and_get_payload_success():
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MySerializer
+
+    result = MyMutation.mutate_and_get_payload(None, None, **{
+        'text': 'value',
+        'model': {
+            'cool_name': 'other_value'
+        }
+    })
+    assert result.errors is None
+
+
+def test_mutate_and_get_payload_error():
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MySerializer
+
+    # missing required fields
+    result = MyMutation.mutate_and_get_payload(None, None, **{})
+    assert len(result.errors) > 0
