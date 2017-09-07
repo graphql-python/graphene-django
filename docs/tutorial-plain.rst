@@ -157,10 +157,10 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
         all_categories = graphene.List(CategoryType)
         all_ingredients = graphene.List(IngredientType)
 
-        def resolve_all_categories(self, args, context, info):
+        def resolve_all_categories(self, info, **kwargs):
             return Category.objects.all()
 
-        def resolve_all_ingredients(self, args, context, info):
+        def resolve_all_ingredients(self, info, **kwargs):
             # We can easily optimize query count in the resolve method
             return Ingredient.objects.select_related('category').all()
 
@@ -438,15 +438,15 @@ We can update our schema to support that, by adding new query for ``ingredient``
                                   name=graphene.String())
       all_ingredients = graphene.List(IngredientType)
 
-      def resolve_all_categories(self, args, context, info):
+      def resolve_all_categories(self, info, **kwargs):
           return Category.objects.all()
 
-      def resolve_all_ingredients(self, args, context, info):
+      def resolve_all_ingredients(self, info, **kwargs):
           return Ingredient.objects.all()
 
-      def resolve_category(self, args, context, info):
-          id = args.get('id')
-          name = args.get('name')
+      def resolve_category(self, info, **kwargs):
+          id = kargs.get('id')
+          name = kargs.get('name')
 
           if id is not None:
               return Category.objects.get(pk=id)
@@ -456,9 +456,9 @@ We can update our schema to support that, by adding new query for ``ingredient``
 
           return None
 
-      def resolve_ingredient(self, args, context, info):
-          id = args.get('id')
-          name = args.get('name')
+      def resolve_ingredient(self, info, **kwargs):
+          id = kargs.get('id')
+          name = kargs.get('name')
 
           if id is not None:
               return Ingredient.objects.get(pk=id)
