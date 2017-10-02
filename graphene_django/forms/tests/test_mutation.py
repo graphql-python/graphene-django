@@ -2,7 +2,7 @@ from django import forms
 from django.test import TestCase
 from py.test import raises
 
-from graphene_django.tests.models import Pet
+from graphene_django.tests.models import Pet, Film
 from ..mutation import FormMutation, ModelFormMutation
 
 
@@ -22,10 +22,10 @@ def test_needs_form_class():
         class MyMutation(FormMutation):
             pass
 
-    assert exc.value.args[0] == 'Missing form_class'
+    assert exc.value.args[0] == 'form_class is required for FormMutation'
 
 
-def test_has_fields():
+def test_has_output_fields():
     class MyMutation(FormMutation):
         class Meta:
             form_class = MyForm
@@ -43,20 +43,32 @@ def test_has_input_fields():
 
 class ModelFormMutationTests(TestCase):
 
-    def test_model_form_mutation(self):
+    def test_default_meta_fields(self):
         class PetMutation(ModelFormMutation):
             class Meta:
                 form_class = PetForm
 
-        self.assertEqual(PetMutation.model, Pet)
-        self.assertEqual(PetMutation.return_field_name, 'pet')
+        self.assertEqual(PetMutation._meta.model, Pet)
+        self.assertEqual(PetMutation._meta.return_field_name, 'pet')
+        self.assertIn('pet', PetMutation._meta.fields)
+
+    def test_custom_return_field_name(self):
+        class PetMutation(ModelFormMutation):
+            class Meta:
+                form_class = PetForm
+                model = Film
+                return_field_name = 'animal'
+
+        self.assertEqual(PetMutation._meta.model, Film)
+        self.assertEqual(PetMutation._meta.return_field_name, 'animal')
+        self.assertIn('animal', PetMutation._meta.fields)
 
     def test_model_form_mutation_mutate(self):
         class PetMutation(ModelFormMutation):
             class Meta:
                 form_class = PetForm
 
-        PetMutation.mutate(None, {'input': {'name': 'Fluffy'}}, None, None)
+        PetMutation.mutate_and_get_payload(None, None, name='Fluffy')
 
         self.assertEqual(Pet.objects.count(), 1)
         pet = Pet.objects.get()

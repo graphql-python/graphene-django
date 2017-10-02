@@ -4,7 +4,7 @@ from django.core.exceptions import ImproperlyConfigured
 import graphene
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
-from .utils import import_single_dispatch
+from ..utils import import_single_dispatch
 
 try:
     UUIDField = forms.UUIDField
@@ -40,7 +40,7 @@ def convert_form_field(field):
     )
 
 
-@convert_form_field.register(forms.BaseTemporalField)
+@convert_form_field.register(forms.fields.BaseTemporalField)
 @convert_form_field.register(forms.CharField)
 @convert_form_field.register(forms.EmailField)
 @convert_form_field.register(forms.SlugField)

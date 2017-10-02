@@ -5,7 +5,6 @@ import graphene
 from graphene import ID, List, NonNull
 
 from ..converter import convert_form_field
-from .models import Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args):
@@ -24,15 +23,15 @@ def test_should_unknown_django_field_raise_exception():
 
 
 def test_should_date_convert_string():
-    assert_conversion(forms.DateField, graphene.String)
+    assert_conversion(forms.DateField, graphene.types.datetime.DateTime)
 
 
 def test_should_time_convert_string():
-    assert_conversion(forms.TimeField, graphene.String)
+    assert_conversion(forms.TimeField, graphene.types.datetime.Time)
 
 
 def test_should_date_time_convert_string():
-    assert_conversion(forms.DateTimeField, graphene.String)
+    assert_conversion(forms.DateTimeField, graphene.types.datetime.DateTime)
 
 
 def test_should_char_convert_string():
@@ -91,13 +90,13 @@ def test_should_decimal_convert_float():
 
 
 def test_should_multiple_choice_convert_connectionorlist():
-    field = forms.ModelMultipleChoiceField(Reporter.objects.all())
+    field = forms.ModelMultipleChoiceField(queryset=None)
     graphene_type = convert_form_field(field)
     assert isinstance(graphene_type, List)
     assert graphene_type.of_type == ID
 
 
 def test_should_manytoone_convert_connectionorlist():
-    field = forms.ModelChoiceField(Reporter.objects.all())
+    field = forms.ModelChoiceField(queryset=None)
     graphene_type = convert_form_field(field)
     assert isinstance(graphene_type, graphene.ID)

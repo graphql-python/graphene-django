@@ -1,161 +1,141 @@
-from functools import partial
+from collections import OrderedDict
 
-import six
 import graphene
-from graphene import Field, Argument
-from graphene.types.mutation import MutationMeta
-from graphene.types.objecttype import ObjectTypeMeta
-from graphene.types.options import Options
-from graphene.types.utils import get_field_as, merge
-from graphene.utils.is_base_type import is_base_type
+from graphene import Field, InputField
+from graphene.relay.mutation import ClientIDMutation
+from graphene.types.mutation import MutationOptions
+from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 
-from .converter import convert_form_to_input_type
+from .converter import convert_form_field
 from .types import ErrorType
 
 
-class FormMutationMeta(MutationMeta):
-    def __new__(cls, name, bases, attrs):
-        if not is_base_type(bases, FormMutationMeta):
-            return type.__new__(cls, name, bases, attrs)
-
-        options = Options(
-            attrs.pop('Meta', None),
-            name=name,
-            description=attrs.pop('__doc__', None),
-            form_class=None,
-            input_field_name='input',
-            local_fields=None,
-            only_fields=(),
-            exclude_fields=(),
-            interfaces=(),
-            registry=None
+def fields_for_form(form, only_fields, exclude_fields):
+    fields = OrderedDict()
+    for name, field in form.fields.items():
+        is_not_in_only = only_fields and name not in only_fields
+        is_excluded = (
+            name in exclude_fields  # or
+            # name in already_created_fields
         )
 
-        if not options.form_class:
-            raise Exception('Missing form_class')
+        if is_not_in_only or is_excluded:
+            continue
 
-        cls = ObjectTypeMeta.__new__(
-            cls, name, bases, dict(attrs, _meta=options)
-        )
-
-        options.fields = merge(
-            options.interface_fields, options.base_fields, options.local_fields,
-            {'errors': get_field_as(cls.errors, Field)}
-        )
-
-        cls.Input = convert_form_to_input_type(options.form_class)
-
-        field_kwargs = {options.input_field_name: Argument(cls.Input, required=True)}
-        cls.Field = partial(
-            Field,
-            cls,
-            resolver=cls.mutate,
-            **field_kwargs
-        )
-
-        return cls
+        fields[name] = convert_form_field(field)
+    return fields
 
 
-class BaseFormMutation(graphene.Mutation):
+class BaseFormMutation(ClientIDMutation):
+    class Meta:
+        abstract = True
 
     @classmethod
-    def mutate(cls, root, args, context, info):
-        form = cls.get_form(root, args, context, info)
+    def mutate_and_get_payload(cls, root, info, **input):
+        form = cls._meta.form_class(data=input)
 
         if form.is_valid():
-            return cls.form_valid(form, info)
+            return cls.perform_mutate(form, info)
         else:
-            return cls.form_invalid(form, info)
+            errors = [
+                ErrorType(field=key, messages=value)
+                for key, value in form.errors.items()
+            ]
 
-    @classmethod
-    def form_valid(cls, form, info):
-        form.save()
-        return cls(errors=[])
-
-    @classmethod
-    def form_invalid(cls, form, info):
-        errors = [
-            ErrorType(field=key, messages=value)
-            for key, value in form.errors.items()
-        ]
-        return cls(errors=errors)
-
-    @classmethod
-    def get_form(cls, root, args, context, info):
-        form_data = args.get(cls._meta.input_field_name)
-        kwargs = cls.get_form_kwargs(root, args, context, info)
-        return cls._meta.form_class(data=form_data, **kwargs)
-
-    @classmethod
-    def get_form_kwargs(cls, root, args, context, info):
-        return {}
+            return cls(errors=errors)
 
 
-class FormMutation(six.with_metaclass(FormMutationMeta, BaseFormMutation)):
+class FormMutationOptions(MutationOptions):
+    form_class = None
+
+
+class FormMutation(BaseFormMutation):
+    class Meta:
+        abstract = True
 
     errors = graphene.List(ErrorType)
 
+    @classmethod
+    def __init_subclass_with_meta__(cls, form_class=None,
+                                    only_fields=(), exclude_fields=(), **options):
 
-class ModelFormMutationMeta(MutationMeta):
-    def __new__(cls, name, bases, attrs):
-        if not is_base_type(bases, ModelFormMutationMeta):
-            return type.__new__(cls, name, bases, attrs)
+        if not form_class:
+            raise Exception('form_class is required for FormMutation')
 
-        options = Options(
-            attrs.pop('Meta', None),
-            name=name,
-            description=attrs.pop('__doc__', None),
-            form_class=None,
-            input_field_name='input',
-            return_field_name=None,
-            model=None,
-            local_fields=None,
-            only_fields=(),
-            exclude_fields=(),
-            interfaces=(),
-            registry=None
+        form = form_class()
+        input_fields = fields_for_form(form, only_fields, exclude_fields)
+        output_fields = fields_for_form(form, only_fields, exclude_fields)
+
+        _meta = FormMutationOptions(cls)
+        _meta.form_class = form_class
+        _meta.fields = yank_fields_from_attrs(
+            output_fields,
+            _as=Field,
         )
 
-        if not options.form_class:
-            raise Exception('Missing form_class')
-
-        cls = ObjectTypeMeta.__new__(
-            cls, name, bases, dict(attrs, _meta=options)
+        input_fields = yank_fields_from_attrs(
+            input_fields,
+            _as=InputField,
         )
+        super(FormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
 
-        options.fields = merge(
-            options.interface_fields, options.base_fields, options.local_fields,
-            {'errors': get_field_as(cls.errors, Field)}
-        )
+    @classmethod
+    def perform_mutate(cls, form, info):
+        form.save()
+        return cls(errors=None)
 
-        cls.Input = convert_form_to_input_type(options.form_class)
 
-        field_kwargs = {options.input_field_name: Argument(cls.Input, required=True)}
-        cls.Field = partial(
-            Field,
-            cls,
-            resolver=cls.mutate,
-            **field_kwargs
-        )
+class ModelFormMutationOptions(FormMutationOptions):
+    model = None
+    return_field_name = None
 
-        cls.model = options.model or options.form_class.Meta.model
-        cls.return_field_name = cls._meta.return_field_name or cls.model._meta.model_name
+
+class ModelFormMutation(BaseFormMutation):
+    class Meta:
+        abstract = True
+
+    errors = graphene.List(ErrorType)
+
+    @classmethod
+    def __init_subclass_with_meta__(cls, form_class=None, model=None, return_field_name=None,
+                                    only_fields=(), exclude_fields=(), **options):
+
+        if not form_class:
+            raise Exception('form_class is required for ModelFormMutation')
+
+        if not model:
+            model = form_class._meta.model
+
+        if not model:
+            raise Exception('model is required for ModelFormMutation')
+
+        form = form_class()
+        input_fields = fields_for_form(form, only_fields, exclude_fields)
 
         registry = get_global_registry()
-        model_type = registry.get_type_for_model(cls.model)
+        model_type = registry.get_type_for_model(model)
+        return_field_name = return_field_name or model._meta.model_name
+        output_fields = OrderedDict()
+        output_fields[return_field_name] = graphene.Field(model_type)
 
-        options.fields[cls.return_field_name] = graphene.Field(model_type)
+        _meta = ModelFormMutationOptions(cls)
+        _meta.form_class = form_class
+        _meta.model = model
+        _meta.return_field_name = return_field_name
+        _meta.fields = yank_fields_from_attrs(
+            output_fields,
+            _as=Field,
+        )
 
-        return cls
-
-
-class ModelFormMutation(six.with_metaclass(ModelFormMutationMeta, BaseFormMutation)):
-
-    errors = graphene.List(ErrorType)
+        input_fields = yank_fields_from_attrs(
+            input_fields,
+            _as=InputField,
+        )
+        super(ModelFormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
 
     @classmethod
-    def form_valid(cls, form, info):
+    def perform_mutate(cls, form, info):
         obj = form.save()
-        kwargs = {cls.return_field_name: obj}
-        return cls(errors=[], **kwargs)
+        kwargs = {cls._meta.return_field_name: obj}
+        return cls(errors=None, **kwargs)
