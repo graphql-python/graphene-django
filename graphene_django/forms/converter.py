@@ -16,21 +16,6 @@ except AttributeError:
 singledispatch = import_single_dispatch()
 
 
-def convert_form_to_input_type(form_class):
-    form = form_class()
-
-    items = {
-        name: convert_form_field(field)
-        for name, field in form.fields.items()
-    }
-
-    return type(
-        '{}Input'.format(form.__class__.__name__),
-        (graphene.InputObjectType, ),
-        items
-    )
-
-
 @singledispatch
 def convert_form_field(field):
     raise ImproperlyConfigured(

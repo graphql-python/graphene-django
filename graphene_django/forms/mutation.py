@@ -83,7 +83,7 @@ class FormMutation(BaseFormMutation):
     @classmethod
     def perform_mutate(cls, form, info):
         form.save()
-        return cls(errors=None)
+        return cls(errors=[])
 
 
 class ModelFormMutationOptions(FormMutationOptions):
@@ -138,4 +138,4 @@ class ModelFormMutation(BaseFormMutation):
     def perform_mutate(cls, form, info):
         obj = form.save()
         kwargs = {cls._meta.return_field_name: obj}
-        return cls(errors=None, **kwargs)
+        return cls(errors=[], **kwargs)

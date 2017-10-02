@@ -68,8 +68,23 @@ class ModelFormMutationTests(TestCase):
             class Meta:
                 form_class = PetForm
 
-        PetMutation.mutate_and_get_payload(None, None, name='Fluffy')
+        result = PetMutation.mutate_and_get_payload(None, None, name='Fluffy')
 
         self.assertEqual(Pet.objects.count(), 1)
         pet = Pet.objects.get()
         self.assertEqual(pet.name, 'Fluffy')
+        self.assertEqual(result.errors, [])
+
+    def test_model_form_mutation_mutate_invalid_form(self):
+        class PetMutation(ModelFormMutation):
+            class Meta:
+                form_class = PetForm
+
+        result = PetMutation.mutate_and_get_payload(None, None)
+
+        # A pet was not created
+        self.assertEqual(Pet.objects.count(), 0)
+
+        self.assertEqual(len(result.errors), 1)
+        self.assertEqual(result.errors[0].field, 'name')
+        self.assertEqual(result.errors[0].messages, ['This field is required.'])
