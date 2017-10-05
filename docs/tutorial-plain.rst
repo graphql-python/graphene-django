@@ -8,14 +8,14 @@ Our primary focus here is to give a good understanding of how to connect models 
 
 A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__ documentation first.
 
-Setup the Django project
-------------------------
+Set up the Django project
+-------------------------
 
 You can find the entire project in ``examples/cookbook-plain``.
 
 ----
 
-We will setup the project, create the following:
+We will set up the project, create the following:
 
 -  A Django project called ``cookbook``
 -  An app within ``cookbook`` called ``ingredients``
