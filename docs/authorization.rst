@@ -81,12 +81,12 @@ with the context argument.
     class Query(ObjectType):
         my_posts = DjangoFilterConnectionField(CategoryNode)
 
-        def resolve_my_posts(self, args, context, info):
+        def resolve_my_posts(self, info):
             # context will reference to the Django request
-            if not context.user.is_authenticated():
+            if not info.context.user.is_authenticated():
                 return Post.objects.none()
             else:
-                return Post.objects.filter(owner=context.user)
+                return Post.objects.filter(owner=info.context.user)
 
 If you're using your own view, passing the request context into the
 schema is simple.
