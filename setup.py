@@ -10,7 +10,7 @@ with open('graphene_django/__init__.py', 'rb') as f:
         f.read().decode('utf-8')).group(1)))
 
 rest_framework_require = [
-    'djangorestframework>=3.6.3,<3.7.0',
+    'djangorestframework>=3.6.3',
 ]
 
 
