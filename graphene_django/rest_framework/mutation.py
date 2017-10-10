@@ -69,7 +69,7 @@ class SerializerMutation(ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
-        serializer = cls._meta.serializer_class(data=input)
+        serializer = cls._meta.serializer_class(data=input, context=getattr(info, 'context', None))
 
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
