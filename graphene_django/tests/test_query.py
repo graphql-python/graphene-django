@@ -478,7 +478,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
         'films': {
             'edges': [{
                 'node': {
-                    'genre': 'ot'
+                    'genre': 'OT'
                 }
             }]
         }
