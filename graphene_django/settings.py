@@ -35,6 +35,8 @@ DEFAULTS = {
     'RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST': False,
     # Max items returned in ConnectionFields / FilterConnectionFields
     'RELAY_CONNECTION_MAX_LIMIT': 100,
+    # Set to True if you want all models to include ForeignKey id fields
+    'INCLUDE_FOREIGNKEY_IDS': False
 }
 
 if settings.DEBUG:

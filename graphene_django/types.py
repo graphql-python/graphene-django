@@ -9,6 +9,7 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices, convert_field_to_id
 from .registry import Registry, get_global_registry
+from .settings import graphene_settings
 from .utils import (DJANGO_FILTER_INSTALLED, get_model_fields,
                     is_valid_django_model)
 
@@ -34,7 +35,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
         attname = getattr(field, 'attname', '')
         add_foreignkey_attname = all([
             isinstance(field, ForeignKey),
-            options.include_foreignkey_ids,
+            graphene_settings.INCLUDE_FOREIGNKEY_IDS,
             attname not in fields,
         ])
         if add_foreignkey_attname:
