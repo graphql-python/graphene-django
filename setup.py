@@ -57,11 +57,11 @@ setup(
 
     install_requires=[
         'six>=1.10.0',
-        'graphene>=2.0.dev',
+        'graphene>=2.0',
         'Django>=1.8.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
-        'promise>=2.1.dev',
+        'promise>=2.1',
     ],
     setup_requires=[
         'pytest-runner',
