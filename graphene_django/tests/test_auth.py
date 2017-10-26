@@ -37,11 +37,8 @@ class MockUserContext(object):
         return self.authenticated
 
     def has_perm(self, check_perms):
-        print(self.username, self.perms)
         if check_perms not in self.perms:
-            print("NO PERMS")
             return False
-        print("HAS PERMS")
         return True
 
 
@@ -145,7 +142,7 @@ def test_node_anonymous_user():
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name='John',
         last_name='Doe',
         email='johndoe@example.com',
@@ -184,7 +181,7 @@ def test_node_no_context():
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name='John',
         last_name='Doe',
         email='johndoe@example.com',
@@ -221,7 +218,7 @@ def test_node_authenticated_user_no_permissions():
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name='John',
         last_name='Doe',
         email='johndoe@example.com',
@@ -260,7 +257,7 @@ def test_node_authenticated_user_with_permissions():
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name='John',
         last_name='Doe',
         email='johndoe@example.com',

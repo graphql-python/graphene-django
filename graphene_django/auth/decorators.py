@@ -34,7 +34,6 @@ def connection_require_permission(permissions):
                 cls, resolver, connection, default_manager, max_limit,
                 enforce_first_or_last, root, info, **args):
             if has_perm(permissions=permissions, context=info.context):
-                print("Has Perms")
                 return func(
                     cls, resolver, connection, default_manager, max_limit,
                     enforce_first_or_last, root, info, **args)
