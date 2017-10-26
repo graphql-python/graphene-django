@@ -22,7 +22,7 @@ from ..rest_framework.mutation import SerializerMutation
 
 pytestmark = pytest.mark.django_db
 
-if sys.version_info < (3, 0):
+if sys.version_info > (3, 0):
     from unittest.mock import Mock
 else:
     from mock import Mock
