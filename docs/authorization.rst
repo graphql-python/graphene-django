@@ -143,7 +143,7 @@ Node example:
             interfaces = (Node, )
 
         @classmethod
-        @node_require_permission(permissions=('can_view_report',, 'can_edit_foo', ))
+        @node_require_permission(permissions=('can_view_report', 'can_edit_foo', ))
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
@@ -188,7 +188,7 @@ Connection example:
             interfaces = (Node, )
 
         @classmethod
-        @node_require_permission(permissions=('can_view_report',, 'can_edit_foo', ))
+        @node_require_permission(permissions=('can_view_report', 'can_edit_foo', ))
         def get_node(cls, info, id):
             return super(ReporterType, cls).get_node(info, id)
 
