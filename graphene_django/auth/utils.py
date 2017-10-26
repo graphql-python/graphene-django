@@ -14,7 +14,7 @@ def is_related_to_user(object_instance, user, field):
     return False
 
 
-def is_authorized_to_mutate_object(model, user, field):
+def is_authorized_to_mutate_object(model, user, id, field):
     """Return True when the when the user is unauthorized."""
     object_instance = model.objects.get(pk=id)
     if is_related_to_user(object_instance, user, field):
@@ -26,19 +26,14 @@ def has_perm(permissions, context):
     """
     Validates if the user in the context has the permission required.
     """
+    assert permissions
     if context is None:
         return False
     user = context.user
     if user.is_authenticated() is False:
         return False
 
-    print("Username", user.username)
-    print("Username Auth", user.is_authenticated())
-
-    if type(permissions) is tuple:
-        print("permissions", permissions)
-        for permission in permissions:
-            print("User has perm", user.has_perm(permission))
-            if not user.has_perm(permission):
-                return False
+    for permission in permissions:
+        if not user.has_perm(permission):
+            return False
     return True
