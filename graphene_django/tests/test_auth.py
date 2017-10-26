@@ -58,7 +58,6 @@ user_anonymous = MockUserContext(authenticated=False)
 user_with_permissions = MockUserContext(authenticated=True, perms=('can_view_foo', 'can_view_bar'))
 
 
-# Mutations
 class MyFakeModel(models.Model):
     cool_name = models.CharField(max_length=50)
 

@@ -123,6 +123,90 @@ method to your ``DjangoObjectType``.
                 return post
             return None
 
+Require permissions
+---------------------
+
+If you want you can require Django permissions to access to *Nodes*,
+*Mutations* and *Connections*.
+
+Node example:
+
+.. code:: python
+    from graphene_django.types import DjangoObjectType
+    from graphene_django.auth import node_require_permission
+    from .models import Reporter
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+        @classmethod
+        @node_require_permission(permissions=('can_view_report',, 'can_edit_foo', ))
+        def get_node(cls, info, id):
+            return super(ReporterType, cls).get_node(info, id)
+
+Mutation example:
+
+.. code:: python
+    from rest_framework import serializers
+    from graphene_django.types import DjangoObjectType
+    from graphene_django.auth import node_require_permission
+    from graphene_django.rest_framework.mutation import SerializerMutation
+    from .models import Reporter
+
+
+    class ReporterSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Reporter
+            fields = '__all__'
+
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = ReporterSerializer
+
+        @classmethod
+        @mutation_require_permission(permissions=('can_view_foo', 'can_edit_foo', ))
+        def mutate_and_get_payload(cls, root, info, **input):
+            return super(MyMutation, cls).mutate_and_get_payload(root, info, **input)
+
+Connection example:
+
+.. code:: python
+    import graphene
+    from graphene_django.fields import DjangoConnectionField
+    from graphene_django.auth import connection_require_permission, node_require_permission
+    from graphene_django.types import DjangoObjectType
+    from .models import Reporter
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+        @classmethod
+        @node_require_permission(permissions=('can_view_report',, 'can_edit_foo', ))
+        def get_node(cls, info, id):
+            return super(ReporterType, cls).get_node(info, id)
+
+    class MyAuthDjangoConnectionField(DjangoConnectionField):
+
+        @classmethod
+        @connection_require_permission(permissions=('can_view_foo', ))
+        def connection_resolver(cls, resolver, connection, default_manager, max_limit,
+                                enforce_first_or_last, root, info, **args):
+            return super(MyAuthDjangoConnectionField, cls).connection_resolver(
+                resolver, connection, default_manager, max_limit,
+                enforce_first_or_last, root, info, **args)
+
+    class Query(graphene.ObjectType):
+        all_reporters = MyAuthDjangoConnectionField(ReporterType)
+
+
+
 Adding login required
 ---------------------
 
