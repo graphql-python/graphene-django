@@ -26,12 +26,14 @@ def has_perm(permissions, context):
     """
     Validates if the user in the context has the permission required.
     """
-    print("context", type(context))
     if context is None:
         return False
     user = context.user
     if user.is_authenticated() is False:
         return False
+
+    print("Username", user.username)
+    print("Username Auth", user.is_authenticated())
 
     if type(permissions) is tuple:
         print("permissions", permissions)

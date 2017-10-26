@@ -12,9 +12,11 @@ def node_require_permission(permissions, user_field=None):
                 user_field is not None
                 if is_authorized_to_mutate_object(cls._meta.model, info.context.user, user_field):
                     return func(cls, info, id)
+            print("Has Perm Result", has_perm(permissions=permissions, context=info.context))
             if has_perm(permissions=permissions, context=info.context):
+                print("Node has persmissions")
                 return func(cls, info, id)
-            return PermissionDenied('Permission Denied')
+            raise PermissionDenied('Permission Denied')
         return func_wrapper
     return require_permission_decorator
 
