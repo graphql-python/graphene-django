@@ -1,7 +1,7 @@
 import datetime
+import sys
 
 import pytest
-from unittest.mock import Mock
 from django.db import models
 from django.utils.functional import SimpleLazyObject
 from py.test import raises
@@ -21,6 +21,11 @@ from ..auth.utils import is_related_to_user, is_authorized_to_mutate_object
 from ..rest_framework.mutation import SerializerMutation
 
 pytestmark = pytest.mark.django_db
+
+if sys.version_info < (3, 0):
+    from unittest.mock import Mock
+else:
+    from mock import Mock
 
 
 class MockUserContext(object):
