@@ -1,16 +1,12 @@
 from collections import OrderedDict
 
 import graphene
+from graphene.relay.mutation import ClientIDMutation
 from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
-from graphene.relay.mutation import ClientIDMutation
-from graphene.types.objecttype import (
-    yank_fields_from_attrs
-)
+from graphene.types.objecttype import yank_fields_from_attrs
 
-from .serializer_converter import (
-    convert_serializer_field
-)
+from .serializer_converter import convert_serializer_field
 from .types import ErrorType
 
 
@@ -69,7 +65,8 @@ class SerializerMutation(ClientIDMutation):
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
-        serializer = cls._meta.serializer_class(data=input)
+        existing = cls.load_existing(cls._meta.serializer_class, input)
+        serializer = cls._meta.serializer_class(existing, data=input)
 
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
@@ -82,6 +79,14 @@ class SerializerMutation(ClientIDMutation):
             return cls(errors=errors)
 
     @classmethod
+    def load_existing(cls, serializer_class, data):
+        id = data.get('id')
+        if id is not None:
+            model_class = serializer_class.Meta.model
+            return model_class.objects.get(id=data['id'])
+        return None
+
+    @classmethod
     def perform_mutate(cls, serializer, info):
-        obj = serializer.save()
-        return cls(errors=None, **obj)
+        serializer.save()
+        return cls(errors=None, **serializer.data)
