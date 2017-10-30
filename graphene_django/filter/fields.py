@@ -2,7 +2,9 @@ from collections import OrderedDict
 from functools import partial
 
 from graphene.types.argument import to_arguments
+
 from ..fields import DjangoConnectionField
+from ..utils import maybe_queryset
 from .utils import get_filtering_args_from_filterset, get_filterset_class
 
 
@@ -72,7 +74,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
         qs = filterset_class(
             data=filter_kwargs,
-            queryset=default_manager.get_queryset()
+            queryset=maybe_queryset(default_manager)
         ).qs
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
