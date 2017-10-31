@@ -41,7 +41,7 @@ def get_choices(choices):
 
 
 def convert_django_field_with_choices(field, registry=None):
-    if registry:
+    if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
@@ -63,7 +63,7 @@ def convert_django_field_with_choices(field, registry=None):
         converted = enum(description=field.help_text, required=not field.null)
     else:
         converted = convert_django_field(field, registry)
-    if registry:
+    if registry is not None:
         registry.register_converted_field(field, converted)
     return converted
 
