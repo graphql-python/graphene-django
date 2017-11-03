@@ -61,7 +61,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         low = default_queryset.query.low_mark or queryset.query.low_mark
         high = default_queryset.query.high_mark or queryset.query.high_mark
         default_queryset.query.clear_limits()
-        queryset = default_queryset & queryset
+        queryset = queryset & default_queryset
         queryset.query.set_limits(low, high)
         return queryset
 
