@@ -2,7 +2,7 @@ from datetime import datetime
 
 import pytest
 
-from graphene import Field, ObjectType, Schema, Argument, Float
+from graphene import Field, ObjectType, Schema, Argument, Float, Boolean
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import (GlobalIDFormField,
@@ -534,3 +534,82 @@ def test_should_query_filter_node_double_limit_raises():
     assert str(result.errors[0]) == (
         'Received two sliced querysets (high mark) in the connection, please slice only in one.'
     )
+
+def test_order_by_is_perserved():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType, reverse_order=Boolean())
+
+        def resolve_all_reporters(self, info, reverse_order=False, **args):
+            reporters = Reporter.objects.order_by('first_name')
+
+            if reverse_order:
+                return reporters.reverse()
+                
+            return reporters
+
+    Reporter.objects.create(
+        first_name='b',
+    )
+    r = Reporter.objects.create(
+        first_name='a',
+    )
+
+    schema = Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'firstName': 'a',
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+    reverse_query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1, reverseOrder: true) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+
+    reverse_expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'firstName': 'b',
+                }
+            }]
+        }
+    }
+
+    reverse_result = schema.execute(reverse_query)
+
+    assert not reverse_result.errors
+    assert reverse_result.data == reverse_expected
