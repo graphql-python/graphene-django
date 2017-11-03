@@ -2,13 +2,17 @@ from datetime import datetime
 
 import pytest
 
-from graphene import Field, ObjectType, Schema, Argument, Float, Boolean
+from graphene import Field, ObjectType, Schema, Argument, Float, Boolean, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import (GlobalIDFormField,
                                    GlobalIDMultipleChoiceField)
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
+
+# for annotation test
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 
 pytestmark = []
 
@@ -613,3 +617,56 @@ def test_order_by_is_perserved():
 
     assert not reverse_result.errors
     assert reverse_result.data == reverse_expected
+
+def test_annotation_is_perserved():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+        
+        def resolve_full_name(instance, info, **args):
+            return instance.full_name
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.annotate(
+                full_name=Concat('first_name', Value(' '), 'last_name', output_field=TextField())
+            )
+
+    Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+    )
+
+    schema = Schema(query=Query)
+
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'fullName': 'John Doe',
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
