@@ -445,8 +445,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return Ingredient.objects.all()
 
       def resolve_category(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Category.objects.get(pk=id)
@@ -457,8 +457,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return None
 
       def resolve_ingredient(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Ingredient.objects.get(pk=id)
