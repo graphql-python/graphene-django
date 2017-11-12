@@ -87,6 +87,6 @@ class SerializerMutation(ClientIDMutation):
 
         kwargs = {}
         for f, field in serializer.fields.items():
-          kwargs[f] = field.get_attribute(obj)
+            kwargs[f] = field.get_attribute(obj)
 
         return cls(errors=None, **kwargs)
