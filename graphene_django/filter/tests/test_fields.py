@@ -140,6 +140,48 @@ def test_filter_shortcut_filterset_extra_meta():
     assert 'headline' not in field.filterset_class.get_fields()
 
 
+def test_filter_shortcut_filterset_context():
+    class ArticleContextFilter(django_filters.FilterSet):
+
+        class Meta:
+            model = Article
+            exclude = set()
+
+        @property
+        def qs(self):
+            qs = super(ArticleContextFilter, self).qs
+            return qs.filter(reporter=self.request.reporter)
+
+    class Query(ObjectType):
+        context_articles = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleContextFilter)
+
+    r1 = Reporter.objects.create(first_name='r1', last_name='r1', email='r1@test.com')
+    r2 = Reporter.objects.create(first_name='r2', last_name='r2', email='r2@test.com')
+    Article.objects.create(headline='a1', pub_date=datetime.now(), reporter=r1, editor=r1)
+    Article.objects.create(headline='a2', pub_date=datetime.now(), reporter=r2, editor=r2)
+
+    class context(object):
+        reporter = r2
+
+    query = '''
+    query {
+        contextArticles {
+            edges {
+                node {
+                    headline
+                }
+            }
+        }
+    }
+    '''
+    schema = Schema(query=Query)
+    result = schema.execute(query, context_value=context())
+    assert not result.errors
+
+    assert len(result.data['contextArticles']['edges']) == 1
+    assert result.data['contextArticles']['edges'][0]['node']['headline'] == 'a2'
+
+
 def test_filter_filterset_information_on_meta():
     class ReporterFilterNode(DjangoObjectType):
 
