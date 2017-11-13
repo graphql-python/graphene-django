@@ -8,6 +8,7 @@ SECRET_KEY = 1
 
 INSTALLED_APPS = [
     'graphene_django',
+    'graphene_django.rest_framework',
     'graphene_django.tests',
     'starwars',
 ]
