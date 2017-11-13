@@ -10,6 +10,7 @@ from ..mutation import SerializerMutation
 
 class MyFakeModel(models.Model):
     cool_name = models.CharField(max_length=50)
+    created = models.DateTimeField(auto_now_add=True)
 
 
 class MyModelSerializer(serializers.ModelSerializer):
@@ -71,6 +72,7 @@ def test_nested_model():
     model_input_type = model_input._type.of_type
     assert issubclass(model_input_type, InputObjectType)
     assert 'cool_name' in model_input_type._meta.fields
+    assert 'created' in model_input_type._meta.fields
 
 
 def test_mutate_and_get_payload_success():
