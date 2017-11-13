@@ -43,8 +43,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     def filtering_args(self):
         return get_filtering_args_from_filterset(self.filterset_class, self.node_type)
 
-    @staticmethod
-    def merge_querysets(default_queryset, queryset):
+    @classmethod
+    def merge_querysets(cls, default_queryset, queryset):
         # There could be the case where the default queryset (returned from the filterclass)
         # and the resolver queryset have some limits on it.
         # We only would be able to apply one of those, but not both
@@ -61,7 +61,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         low = default_queryset.query.low_mark or queryset.query.low_mark
         high = default_queryset.query.high_mark or queryset.query.high_mark
         default_queryset.query.clear_limits()
-        queryset = default_queryset & queryset
+        queryset = super(cls, cls).merge_querysets(default_queryset, queryset)
         queryset.query.set_limits(low, high)
         return queryset
 
@@ -72,7 +72,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
         qs = filterset_class(
             data=filter_kwargs,
-            queryset=default_manager.get_queryset()
+            queryset=default_manager.get_queryset(),
+            request=context
         ).qs
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(

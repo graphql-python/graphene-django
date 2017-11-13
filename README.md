@@ -67,7 +67,6 @@ class User(DjangoObjectType):
 class Query(graphene.ObjectType):
     users = graphene.List(User)
 
-    @graphene.resolve_only_args
     def resolve_users(self):
         return UserModel.objects.all()
 
