@@ -45,7 +45,7 @@ class DjangoObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
                                     only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
-                                    use_connection=None, interfaces=(), **options):
+                                    connection_class=None, use_connection=None, interfaces=(), **options):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
@@ -71,7 +71,11 @@ class DjangoObjectType(ObjectType):
 
         if use_connection and not connection:
             # We create the connection automatically
-            connection = Connection.create_type('{}Connection'.format(cls.__name__), node=cls)
+            if not connection_class:
+                connection_class = Connection
+
+            connection = connection_class.create_type(
+                '{}Connection'.format(cls.__name__), node=cls)
 
         if connection is not None:
             assert issubclass(connection, Connection), (
