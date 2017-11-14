@@ -73,7 +73,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         qs = filterset_class(
             data=filter_kwargs,
             queryset=default_manager.get_queryset(),
-            request=context
+            request=info.context
         ).qs
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
