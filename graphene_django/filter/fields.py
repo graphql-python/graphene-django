@@ -61,7 +61,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         low = default_queryset.query.low_mark or queryset.query.low_mark
         high = default_queryset.query.high_mark or queryset.query.high_mark
         default_queryset.query.clear_limits()
-        queryset = super(cls, cls).merge_querysets(default_queryset, queryset)
+        queryset = super(DjangoFilterConnectionField, cls).merge_querysets(default_queryset, queryset)
         queryset.query.set_limits(low, high)
         return queryset
 
@@ -73,7 +73,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         qs = filterset_class(
             data=filter_kwargs,
             queryset=default_manager.get_queryset(),
-            request=context
+            request=info.context
         ).qs
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
