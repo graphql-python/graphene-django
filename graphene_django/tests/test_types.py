@@ -1,6 +1,6 @@
 from mock import patch
 
-from graphene import Interface, ObjectType, Schema
+from graphene import Interface, ObjectType, Schema, Connection, String
 from graphene.relay import Node
 
 from .. import registry
@@ -17,11 +17,23 @@ class Reporter(DjangoObjectType):
         model = ReporterModel
 
 
+class ArticleConnection(Connection):
+    '''Article Connection'''
+    test = String()
+
+    def resolve_test():
+        return 'test'
+
+    class Meta:
+        abstract = True
+
+
 class Article(DjangoObjectType):
     '''Article description'''
     class Meta:
         model = ArticleModel
         interfaces = (Node, )
+        connection_class = ArticleConnection
 
 
 class RootQuery(ObjectType):
@@ -74,6 +86,7 @@ type Article implements Node {
 type ArticleConnection {
   pageInfo: PageInfo!
   edges: [ArticleEdge]!
+  test: String
 }
 
 type ArticleEdge {

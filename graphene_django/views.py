@@ -81,8 +81,10 @@ class GraphQLView(View):
         self.graphiql = graphiql
         self.batch = batch
 
-        assert isinstance(self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
-        assert not all((graphiql, batch)), 'Use either graphiql or batch processing'
+        assert isinstance(
+            self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
+        assert not all((graphiql, batch)
+                       ), 'Use either graphiql or batch processing'
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -98,20 +100,24 @@ class GraphQLView(View):
     def dispatch(self, request, *args, **kwargs):
         try:
             if request.method.lower() not in ('get', 'post'):
-                raise HttpError(HttpResponseNotAllowed(['GET', 'POST'], 'GraphQL only supports GET and POST requests.'))
+                raise HttpError(HttpResponseNotAllowed(
+                    ['GET', 'POST'], 'GraphQL only supports GET and POST requests.'))
 
             data = self.parse_body(request)
-            show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
+            show_graphiql = self.graphiql and self.can_display_graphiql(
+                request, data)
 
             if self.batch:
                 responses = [self.get_response(request, entry) for entry in data]
                 result = '[{}]'.format(','.join([response[0] for response in responses]))
                 status_code = responses and max(responses, key=lambda response: response[1])[1] or 200
             else:
-                result, status_code = self.get_response(request, data, show_graphiql)
+                result, status_code = self.get_response(
+                    request, data, show_graphiql)
 
             if show_graphiql:
-                query, variables, operation_name, id = self.get_graphql_params(request, data)
+                query, variables, operation_name, id = self.get_graphql_params(
+                    request, data)
                 return self.render_graphiql(
                     request,
                     graphiql_version=self.graphiql_version,
@@ -136,7 +142,8 @@ class GraphQLView(View):
             return response
 
     def get_response(self, request, data, show_graphiql=False):
-        query, variables, operation_name, id = self.get_graphql_params(request, data)
+        query, variables, operation_name, id = self.get_graphql_params(
+            request, data)
 
         execution_result = self.execute_graphql_request(
             request,
@@ -152,7 +159,8 @@ class GraphQLView(View):
             response = {}
 
             if execution_result.errors:
-                response['errors'] = [self.format_error(e) for e in execution_result.errors]
+                response['errors'] = [self.format_error(
+                    e) for e in execution_result.errors]
 
             if execution_result.invalid:
                 status_code = 400
@@ -209,7 +217,8 @@ class GraphQLView(View):
             except AssertionError as e:
                 raise HttpError(HttpResponseBadRequest(str(e)))
             except (TypeError, ValueError):
-                raise HttpError(HttpResponseBadRequest('POST body sent invalid JSON.'))
+                raise HttpError(HttpResponseBadRequest(
+                    'POST body sent invalid JSON.'))
 
         elif content_type in ['application/x-www-form-urlencoded', 'multipart/form-data']:
             return request.POST
@@ -223,7 +232,8 @@ class GraphQLView(View):
         if not query:
             if show_graphiql:
                 return None
-            raise HttpError(HttpResponseBadRequest('Must provide query string.'))
+            raise HttpError(HttpResponseBadRequest(
+                'Must provide query string.'))
 
         source = Source(query, name='GraphQL request')
 
@@ -245,7 +255,8 @@ class GraphQLView(View):
                     return None
 
                 raise HttpError(HttpResponseNotAllowed(
-                    ['POST'], 'Can only perform a {} operation from a POST request.'.format(operation_ast.operation)
+                    ['POST'], 'Can only perform a {} operation from a POST request.'.format(
+                        operation_ast.operation)
                 ))
 
         try:
@@ -283,10 +294,12 @@ class GraphQLView(View):
         if variables and isinstance(variables, six.text_type):
             try:
                 variables = json.loads(variables)
-            except:
-                raise HttpError(HttpResponseBadRequest('Variables are invalid JSON.'))
+            except Exception:
+                raise HttpError(HttpResponseBadRequest(
+                    'Variables are invalid JSON.'))
 
-        operation_name = request.GET.get('operationName') or data.get('operationName')
+        operation_name = request.GET.get(
+            'operationName') or data.get('operationName')
         if operation_name == "null":
             operation_name = None
 
@@ -302,5 +315,6 @@ class GraphQLView(View):
     @staticmethod
     def get_content_type(request):
         meta = request.META
-        content_type = meta.get('CONTENT_TYPE', meta.get('HTTP_CONTENT_TYPE', ''))
+        content_type = meta.get(
+            'CONTENT_TYPE', meta.get('HTTP_CONTENT_TYPE', ''))
         return content_type.split(';', 1)[0].lower()

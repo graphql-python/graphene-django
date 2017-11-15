@@ -12,7 +12,7 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 For instaling graphene, just run this command in your shell
 
 ```bash
-pip install "graphene-django>=2.0.dev"
+pip install "graphene-django>=2.0"
 ```
 
 ### Settings
@@ -67,7 +67,6 @@ class User(DjangoObjectType):
 class Query(graphene.ObjectType):
     users = graphene.List(User)
 
-    @graphene.resolve_only_args
     def resolve_users(self):
         return UserModel.objects.all()
 
