@@ -1,15 +1,14 @@
-from django.db import models
+import datetime
+
 from graphene import Field
 from graphene.types.inputobjecttype import InputObjectType
 from py.test import raises
+from py.test import mark
 from rest_framework import serializers
 
 from ...types import DjangoObjectType
+from ..models import MyFakeModel
 from ..mutation import SerializerMutation
-
-
-class MyFakeModel(models.Model):
-    cool_name = models.CharField(max_length=50)
 
 
 class MyModelSerializer(serializers.ModelSerializer):
@@ -71,6 +70,7 @@ def test_nested_model():
     model_input_type = model_input._type.of_type
     assert issubclass(model_input_type, InputObjectType)
     assert 'cool_name' in model_input_type._meta.fields
+    assert 'created' in model_input_type._meta.fields
 
 
 def test_mutate_and_get_payload_success():
@@ -88,11 +88,34 @@ def test_mutate_and_get_payload_success():
     assert result.errors is None
 
 
+@mark.django_db
+def test_model_mutate_and_get_payload_success():
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer
+
+    result = MyMutation.mutate_and_get_payload(None, None, **{
+        'cool_name': 'Narf',
+    })
+    assert result.errors is None
+    assert result.cool_name == 'Narf'
+    assert isinstance(result.created, datetime.datetime)
+
 def test_mutate_and_get_payload_error():
 
     class MyMutation(SerializerMutation):
         class Meta:
             serializer_class = MySerializer
+
+    # missing required fields
+    result = MyMutation.mutate_and_get_payload(None, None, **{})
+    assert len(result.errors) > 0
+
+def test_model_mutate_and_get_payload_error():
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer
 
     # missing required fields
     result = MyMutation.mutate_and_get_payload(None, None, **{})
