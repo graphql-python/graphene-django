@@ -153,7 +153,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             model = Ingredient
 
 
-    class Query(graphene.AbstractType):
+    class Query(object):
         all_categories = graphene.List(CategoryType)
         all_ingredients = graphene.List(IngredientType)
 
@@ -426,7 +426,7 @@ We can update our schema to support that, by adding new query for ``ingredient``
           model = Ingredient
 
 
-  class Query(graphene.AbstractType):
+  class Query(object):
       category = graphene.Field(CategoryType,
                                 id=graphene.Int(),
                                 name=graphene.String())
