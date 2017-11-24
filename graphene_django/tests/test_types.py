@@ -1,10 +1,11 @@
 from mock import patch
 
+from django.test import override_settings
 from graphene import Interface, ObjectType, Schema, Connection, String
 from graphene.relay import Node
 
 from .. import registry
-from ..types import DjangoObjectType
+from ..types import DjangoObjectType, construct_fields
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -176,3 +177,26 @@ def test_django_objecttype_exclude_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert 'email' not in fields
+
+
+def test_construct_fields_ignores_fkids_by_default():
+    fields = construct_fields(
+        ArticleModel,
+        registry.registry,
+        (), ()
+    )
+
+    assert 'reporter_id' not in fields
+    assert 'editor_id' not in fields
+
+
+@override_settings(GRAPHENE={'INCLUDE_FOREIGNKEY_IDS': True})
+def test_construct_fields_adds_fkids_when_setting_is_true():
+    fields = construct_fields(
+        ArticleModel,
+        registry.registry,
+        (), ()
+    )
+
+    assert 'reporter_id' in fields
+    assert 'editor_id' in fields
