@@ -1,10 +1,10 @@
 from mock import patch
 
-from django.test import override_settings
 from graphene import Interface, ObjectType, Schema, Connection, String
 from graphene.relay import Node
 
 from .. import registry
+from ..settings import graphene_settings
 from ..types import DjangoObjectType, construct_fields
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
@@ -190,13 +190,14 @@ def test_construct_fields_ignores_fkids_by_default():
     assert 'editor_id' not in fields
 
 
-@override_settings(GRAPHENE={'INCLUDE_FOREIGNKEY_IDS': True})
 def test_construct_fields_adds_fkids_when_setting_is_true():
+    graphene_settings.INCLUDE_FOREIGNKEY_IDS = True
     fields = construct_fields(
         ArticleModel,
         registry.registry,
         (), ()
     )
+    graphene_settings.INCLUDE_FOREIGNKEY_IDS = False
 
     assert 'reporter_id' in fields
     assert 'editor_id' in fields
