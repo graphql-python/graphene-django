@@ -77,7 +77,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
                                     only_fields=(), exclude_fields=(), **options):
 
         if not form_class:
-            raise Exception('form_class is required for FormMutation')
+            raise Exception('form_class is required for DjangoFormMutation')
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
@@ -128,6 +128,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
+        input_fields['id'] = convert_form_field(model._meta.pk)
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
