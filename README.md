@@ -9,7 +9,7 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 
 ## Installation
 
-For instaling graphene, just run this command in your shell
+For installing graphene, just run this command in your shell
 
 ```bash
 pip install "graphene-django>=2.0"
