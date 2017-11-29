@@ -153,7 +153,11 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
             input_fields,
             _as=InputField,
         )
-        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
+        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
+            _meta=_meta,
+            input_fields=input_fields,
+            **options
+        )
 
     @classmethod
     def perform_mutate(cls, form, info):
