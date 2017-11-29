@@ -13,7 +13,7 @@ A `Django <https://www.djangoproject.com/>`__ integration for
 Installation
 ------------
 
-For instaling graphene, just run this command in your shell
+For installing graphene, just run this command in your shell
 
 .. code:: bash
 
