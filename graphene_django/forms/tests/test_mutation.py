@@ -22,7 +22,7 @@ def test_needs_form_class():
         class MyMutation(DjangoFormMutation):
             pass
 
-    assert exc.value.args[0] == 'form_class is required for FormMutation'
+    assert exc.value.args[0] == 'form_class is required for DjangoFormMutation'
 
 
 def test_has_output_fields():
