@@ -27,13 +27,13 @@ def fields_for_form(form, only_fields, exclude_fields):
     return fields
 
 
-class BaseFormMutation(ClientIDMutation):
+class BaseDjangoFormMutation(ClientIDMutation):
     class Meta:
         abstract = True
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
-        form = cls._meta.form_class(data=input)
+        form = cls.get_form(root, info, **input)
 
         if form.is_valid():
             return cls.perform_mutate(form, info)
@@ -45,12 +45,28 @@ class BaseFormMutation(ClientIDMutation):
 
             return cls(errors=errors)
 
+    @classmethod
+    def get_form(cls, root, info, **input):
+        form_kwargs = cls.get_form_kwargs(root, info, **input)
+        return cls._meta.form_class(**form_kwargs)
 
-class FormMutationOptions(MutationOptions):
+    @classmethod
+    def get_form_kwargs(cls, root, info, **input):
+        kwargs = {'data': input}
+
+        pk = input.pop('id', None)
+        if pk:
+            instance = cls._meta.model._default_manager.get(pk=pk)
+            kwargs['instance'] = instance
+
+        return kwargs
+
+
+class DjangoFormMutationOptions(MutationOptions):
     form_class = None
 
 
-class FormMutation(BaseFormMutation):
+class DjangoFormMutation(BaseDjangoFormMutation):
     class Meta:
         abstract = True
 
@@ -67,7 +83,7 @@ class FormMutation(BaseFormMutation):
         input_fields = fields_for_form(form, only_fields, exclude_fields)
         output_fields = fields_for_form(form, only_fields, exclude_fields)
 
-        _meta = FormMutationOptions(cls)
+        _meta = DjangoFormMutationOptions(cls)
         _meta.form_class = form_class
         _meta.fields = yank_fields_from_attrs(
             output_fields,
@@ -78,7 +94,7 @@ class FormMutation(BaseFormMutation):
             input_fields,
             _as=InputField,
         )
-        super(FormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
+        super(DjangoFormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
 
     @classmethod
     def perform_mutate(cls, form, info):
@@ -86,12 +102,12 @@ class FormMutation(BaseFormMutation):
         return cls(errors=[])
 
 
-class ModelFormMutationOptions(FormMutationOptions):
+class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
     model = None
     return_field_name = None
 
 
-class ModelFormMutation(BaseFormMutation):
+class DjangoModelFormMutation(BaseDjangoFormMutation):
     class Meta:
         abstract = True
 
@@ -102,13 +118,13 @@ class ModelFormMutation(BaseFormMutation):
                                     only_fields=(), exclude_fields=(), **options):
 
         if not form_class:
-            raise Exception('form_class is required for ModelFormMutation')
+            raise Exception('form_class is required for DjangoModelFormMutation')
 
         if not model:
             model = form_class._meta.model
 
         if not model:
-            raise Exception('model is required for ModelFormMutation')
+            raise Exception('model is required for DjangoModelFormMutation')
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
@@ -119,7 +135,7 @@ class ModelFormMutation(BaseFormMutation):
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
 
-        _meta = ModelFormMutationOptions(cls)
+        _meta = DjangoModelDjangoFormMutationOptions(cls)
         _meta.form_class = form_class
         _meta.model = model
         _meta.return_field_name = return_field_name
@@ -132,7 +148,7 @@ class ModelFormMutation(BaseFormMutation):
             input_fields,
             _as=InputField,
         )
-        super(ModelFormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
+        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(_meta=_meta, input_fields=input_fields, **options)
 
     @classmethod
     def perform_mutate(cls, form, info):

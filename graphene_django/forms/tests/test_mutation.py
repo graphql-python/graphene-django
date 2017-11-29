@@ -3,7 +3,7 @@ from django.test import TestCase
 from py.test import raises
 
 from graphene_django.tests.models import Pet, Film
-from ..mutation import FormMutation, ModelFormMutation
+from ..mutation import DjangoFormMutation, DjangoModelFormMutation
 
 
 class MyForm(forms.Form):
@@ -19,14 +19,14 @@ class PetForm(forms.ModelForm):
 
 def test_needs_form_class():
     with raises(Exception) as exc:
-        class MyMutation(FormMutation):
+        class MyMutation(DjangoFormMutation):
             pass
 
     assert exc.value.args[0] == 'form_class is required for FormMutation'
 
 
 def test_has_output_fields():
-    class MyMutation(FormMutation):
+    class MyMutation(DjangoFormMutation):
         class Meta:
             form_class = MyForm
 
@@ -34,7 +34,7 @@ def test_has_output_fields():
 
 
 def test_has_input_fields():
-    class MyMutation(FormMutation):
+    class MyMutation(DjangoFormMutation):
         class Meta:
             form_class = MyForm
 
@@ -44,7 +44,7 @@ def test_has_input_fields():
 class ModelFormMutationTests(TestCase):
 
     def test_default_meta_fields(self):
-        class PetMutation(ModelFormMutation):
+        class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
 
@@ -53,7 +53,7 @@ class ModelFormMutationTests(TestCase):
         self.assertIn('pet', PetMutation._meta.fields)
 
     def test_custom_return_field_name(self):
-        class PetMutation(ModelFormMutation):
+        class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
                 model = Film
@@ -64,19 +64,33 @@ class ModelFormMutationTests(TestCase):
         self.assertIn('animal', PetMutation._meta.fields)
 
     def test_model_form_mutation_mutate(self):
-        class PetMutation(ModelFormMutation):
+        class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
 
-        result = PetMutation.mutate_and_get_payload(None, None, name='Fluffy')
+        pet = Pet.objects.create(name='Axel')
+
+        result = PetMutation.mutate_and_get_payload(None, None, id=pet.pk, name='Mia')
+
+        self.assertEqual(Pet.objects.count(), 1)
+        pet.refresh_from_db()
+        self.assertEqual(pet.name, 'Mia')
+        self.assertEqual(result.errors, [])
+
+    def test_model_form_mutation_updates_existing_(self):
+        class PetMutation(DjangoModelFormMutation):
+            class Meta:
+                form_class = PetForm
+
+        result = PetMutation.mutate_and_get_payload(None, None, name='Mia')
 
         self.assertEqual(Pet.objects.count(), 1)
         pet = Pet.objects.get()
-        self.assertEqual(pet.name, 'Fluffy')
+        self.assertEqual(pet.name, 'Mia')
         self.assertEqual(result.errors, [])
 
     def test_model_form_mutation_mutate_invalid_form(self):
-        class PetMutation(ModelFormMutation):
+        class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
 
