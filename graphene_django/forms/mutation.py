@@ -131,7 +131,11 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
-        return_field_name = return_field_name or model._meta.model_name
+        return_field_name = return_field_name
+        if not return_field_name:
+            model_name = model.__name__
+            return_field_name = model_name[:1].lower() + model_name[1:]
+
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
 
