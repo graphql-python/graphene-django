@@ -68,7 +68,8 @@ Let's get started with these models:
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
-        category = models.ForeignKey(Category, related_name='ingredients')
+        category = models.ForeignKey(
+            Category, related_name='ingredients', on_delete=models.CASCADE)
 
         def __str__(self):
             return self.name
@@ -80,8 +81,20 @@ Add ingredients as INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         # Install the ingredients app
-        'ingredients',
+        'cookbook.ingredients',
     ]
+
+Register models with admin panel:
+
+.. code:: python
+
+    # cookbook/ingredients/admin.py
+    from django.contrib import admin
+    from cookbook.ingredients.models import Category, Ingredient
+
+    admin.site.register(Category)
+    admin.site.register(Ingredient)
+
 
 Don't forget to create & run migrations:
 
