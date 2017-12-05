@@ -37,6 +37,7 @@ class Reporter(models.Model):
 class Article(models.Model):
     headline = models.CharField(max_length=100)
     pub_date = models.DateField()
+    pub_date_time = models.DateTimeField()
     reporter = models.ForeignKey(Reporter, on_delete=models.CASCADE, related_name='articles')
     editor = models.ForeignKey(Reporter, on_delete=models.CASCADE, related_name='edited_articles_+')
     lang = models.CharField(max_length=2, help_text='Language', choices=[

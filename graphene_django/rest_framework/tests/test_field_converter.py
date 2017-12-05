@@ -87,8 +87,8 @@ def test_should_date_time_convert_datetime():
     assert_conversion(serializers.DateTimeField, graphene.types.datetime.DateTime)
 
 
-def test_should_date_convert_datetime():
-    assert_conversion(serializers.DateField, graphene.types.datetime.DateTime)
+def test_should_date_convert_date():
+    assert_conversion(serializers.DateField, graphene.types.datetime.Date)
 
 
 def test_should_time_convert_time():
