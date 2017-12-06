@@ -57,7 +57,10 @@ class GrapheneFilterSetMixin(BaseFilterSet):
         Global IDs (the default implementation expects database
         primary keys)
         """
-        rel = f.field.remote_field
+        try:
+            rel = f.field.remote_field
+        except AttributeError:
+            rel = f.field.rel
         default = {
             'name': name,
             'label': capfirst(rel.related_name)
