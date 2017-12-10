@@ -1,64 +1,33 @@
 import importlib
 import json
-from distutils.version import StrictVersion
-from optparse import make_option
 
-from django import get_version as get_django_version
 from django.core.management.base import BaseCommand, CommandError
 
 from graphene_django.settings import graphene_settings
 
-LT_DJANGO_1_8 = StrictVersion(get_django_version()) < StrictVersion('1.8')
+class CommandArguments(BaseCommand):
 
-if LT_DJANGO_1_8:
-    class CommandArguments(BaseCommand):
-        option_list = BaseCommand.option_list + (
-            make_option(
-                '--schema',
-                type=str,
-                dest='schema',
-                default='',
-                help='Django app containing schema to dump, e.g. myproject.core.schema.schema',
-            ),
-            make_option(
-                '--out',
-                type=str,
-                dest='out',
-                default='',
-                help='Output file (default: schema.json)'
-            ),
-            make_option(
-                '--indent',
-                type=int,
-                dest='indent',
-                default=None,
-                help='Output file indent (default: None)'
-            ),
-        )
-else:
-    class CommandArguments(BaseCommand):
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--schema',
+            type=str,
+            dest='schema',
+            default=graphene_settings.SCHEMA,
+            help='Django app containing schema to dump, e.g. myproject.core.schema.schema')
 
-        def add_arguments(self, parser):
-            parser.add_argument(
-                '--schema',
-                type=str,
-                dest='schema',
-                default=graphene_settings.SCHEMA,
-                help='Django app containing schema to dump, e.g. myproject.core.schema.schema')
+        parser.add_argument(
+            '--out',
+            type=str,
+            dest='out',
+            default=graphene_settings.SCHEMA_OUTPUT,
+            help='Output file (default: schema.json)')
 
-            parser.add_argument(
-                '--out',
-                type=str,
-                dest='out',
-                default=graphene_settings.SCHEMA_OUTPUT,
-                help='Output file (default: schema.json)')
-
-            parser.add_argument(
-                '--indent',
-                type=int,
-                dest='indent',
-                default=graphene_settings.SCHEMA_INDENT,
-                help='Output file indent (default: None)')
+        parser.add_argument(
+            '--indent',
+            type=int,
+            dest='indent',
+            default=graphene_settings.SCHEMA_INDENT,
+            help='Output file indent (default: None)')
 
 
 class Command(CommandArguments):
