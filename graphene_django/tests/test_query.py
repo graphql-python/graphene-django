@@ -667,7 +667,7 @@ def test_should_query_promise_connectionfields():
 
         def resolve_all_reporters(self, info, **args):
             return Promise.resolve([Reporter(id=1)])
-
+    
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterPromiseConnectionQuery {
@@ -695,8 +695,14 @@ def test_should_query_promise_connectionfields():
     assert not result.errors
     assert result.data == expected
 
-def test_should_query_promise_connectionfields_with_last():
-    from promise import Promise
+def test_should_query_connectionfields_with_last():
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
 
     class ReporterType(DjangoObjectType):
 
@@ -708,11 +714,11 @@ def test_should_query_promise_connectionfields_with_last():
         all_reporters = DjangoConnectionField(ReporterType)
 
         def resolve_all_reporters(self, info, **args):
-            return Promise.resolve([Reporter(id=1)])
-
+            return Reporter.objects.all()
+    
     schema = graphene.Schema(query=Query)
     query = '''
-        query ReporterPromiseConnectionQuery {
+        query ReporterLastQuery {
             allReporters(last: 1) {
                 edges {
                     node {
