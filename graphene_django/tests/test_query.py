@@ -606,6 +606,53 @@ def test_should_error_if_first_is_greater_than_max():
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
+def test_should_error_if_last_is_greater_than_max():
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(last: 101) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': None
+    }
+
+    result = schema.execute(query)
+    assert len(result.errors) == 1
+    assert str(result.errors[0]) == (
+        'Requesting 101 records on the `allReporters` connection '
+        'exceeds the `last` limit of 100 records.'
+    )
+    assert result.data == expected
+
+    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
+
+
 def test_should_query_promise_connectionfields():
     from promise import Promise
 

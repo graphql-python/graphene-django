@@ -116,7 +116,7 @@ class DjangoConnectionField(ConnectionField):
             if last:
                 assert last <= max_limit, (
                     'Requesting {} records on the `{}` connection exceeds the `last` limit of {} records.'
-                ).format(first, info.field_name, max_limit)
+                ).format(last, info.field_name, max_limit)
                 args['last'] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
