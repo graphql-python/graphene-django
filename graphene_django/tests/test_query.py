@@ -695,6 +695,48 @@ def test_should_query_promise_connectionfields():
     assert not result.errors
     assert result.data == expected
 
+def test_should_query_promise_connectionfields_with_last():
+    from promise import Promise
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Promise.resolve([Reporter(id=1)])
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterPromiseConnectionQuery {
+            allReporters(last: 1) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE='
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
 
 def test_should_query_dataloader_fields():
     from promise import Promise
