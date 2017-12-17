@@ -283,10 +283,10 @@ class GraphQLView(View):
         accepted_length = len(accepted)
         #the list will be ordered in preferred first - so we have to make
         #sure the most preferred gets the highest number
-        html_index = accepted_length - accepted.index('text/html') if 'text/html' in accepted else 0
-        json_index = accepted_length - accepted.index('application/json') if 'application/json' in accepted else 0
+        html_priority = accepted_length - accepted.index('text/html') if 'text/html' in accepted else 0
+        json_priority = accepted_length - accepted.index('application/json') if 'application/json' in accepted else 0
 
-        return html_index > json_index
+        return html_priority > json_priority
 
     @staticmethod
     def get_graphql_params(request, data):
