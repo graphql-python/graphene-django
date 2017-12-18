@@ -122,7 +122,7 @@ def convert_field_to_float(field, registry=None):
 
 
 @convert_django_field.register(models.DateTimeField)
-def convert_date_to_string(field, registry=None):
+def convert_datetime_to_string(field, registry=None):
     return DateTime(description=field.help_text, required=not field.null)
 
 

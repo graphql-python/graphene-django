@@ -92,7 +92,7 @@ def convert_serializer_field_to_float(field):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DateTimeField)
-def convert_serializer_field_to_date_time(field):
+def convert_serializer_field_to_datetime_time(field):
     return graphene.types.datetime.DateTime
 
 
