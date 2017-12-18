@@ -281,8 +281,8 @@ class GraphQLView(View):
     def request_wants_html(cls, request):
         accepted = get_accepted_content_types(request)
         accepted_length = len(accepted)
-        #the list will be ordered in preferred first - so we have to make
-        #sure the most preferred gets the highest number
+        # the list will be ordered in preferred first - so we have to make
+        # sure the most preferred gets the highest number
         html_priority = accepted_length - accepted.index('text/html') if 'text/html' in accepted else 0
         json_priority = accepted_length - accepted.index('application/json') if 'application/json' in accepted else 0
 
