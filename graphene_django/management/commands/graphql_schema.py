@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from graphene_django.settings import graphene_settings
 
+
 class CommandArguments(BaseCommand):
 
     def add_arguments(self, parser):
