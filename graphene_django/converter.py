@@ -81,6 +81,7 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(models.URLField)
 @convert_django_field.register(models.GenericIPAddressField)
 @convert_django_field.register(models.FileField)
+@convert_django_field.register(models.FilePathField)
 def convert_field_to_string(field, registry=None):
     return String(description=field.help_text, required=not field.null)
 
