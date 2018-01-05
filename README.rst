@@ -136,7 +136,7 @@ Then to produce a HTML version of the documentation:
 
     make html
 
-.. |Graphene Logo| image:: http://graphene-python.org/favicon.png
+.. |Graphene Logo| image:: https://github.com/graphql-python/graphene-python.org/raw/master/pages/favicon.png
 .. |Build Status| image:: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master
    :target: https://travis-ci.org/graphql-python/graphene-django
 .. |PyPI version| image:: https://badge.fury.io/py/graphene-django.svg
