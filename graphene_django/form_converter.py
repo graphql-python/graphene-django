@@ -2,6 +2,7 @@ from django import forms
 from django.forms.fields import BaseTemporalField
 
 from graphene import ID, Boolean, Float, Int, List, String, UUID
+from graphene.types.datetime import Date, DateTime, Time
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from .utils import import_single_dispatch
@@ -61,6 +62,21 @@ def convert_form_field_to_float(field):
 @convert_form_field.register(GlobalIDMultipleChoiceField)
 def convert_form_field_to_list(field):
     return List(ID, required=field.required)
+
+
+@convert_form_field.register(forms.DateField)
+def convert_form_field_to_date(field):
+    return Date(description=field.help_text, required=field.required)
+
+
+@convert_form_field.register(forms.DateTimeField)
+def convert_form_field_to_datetime(field):
+    return DateTime(description=field.help_text, required=field.required)
+
+
+@convert_form_field.register(forms.TimeField)
+def convert_form_field_to_time(field):
+    return Time(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.ModelChoiceField)
