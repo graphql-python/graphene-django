@@ -45,7 +45,7 @@ class DjangoObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
                                     only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
-                                    connection_class=None, use_connection=None, interfaces=(), **options):
+                                    connection_class=None, use_connection=None, interfaces=(), _meta=None, **options):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
@@ -82,7 +82,9 @@ class DjangoObjectType(ObjectType):
                 "The connection must be a Connection. Received {}"
             ).format(connection.__name__)
 
-        _meta = DjangoObjectTypeOptions(cls)
+        if not _meta:
+            _meta = DjangoObjectTypeOptions(cls)
+
         _meta.model = model
         _meta.registry = registry
         _meta.filter_fields = filter_fields
