@@ -68,7 +68,8 @@ Let's get started with these models:
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
-        category = models.ForeignKey(Category, related_name='ingredients')
+        category = models.ForeignKey(Category, related_name='ingredients',
+           on_delete=models.CASCADE)
 
         def __str__(self):
             return self.name
@@ -80,7 +81,7 @@ Add ingredients as INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         # Install the ingredients app
-        'ingredients',
+        'cookbook.ingredients',
     ]
 
 Don't forget to create & run migrations:
