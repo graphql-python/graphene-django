@@ -8,12 +8,6 @@ from .utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()
 
-try:
-    UUIDField = forms.UUIDField
-except AttributeError:
-    class UUIDField(object):
-        pass
-
 
 @singledispatch
 def convert_form_field(field):
@@ -36,7 +30,7 @@ def convert_form_field_to_string(field):
     return String(description=field.help_text, required=field.required)
 
 
-@convert_form_field.register(UUIDField)
+@convert_form_field.register(forms.UUIDField)
 def convert_form_field_to_uuid(field):
     return UUID(description=field.help_text, required=field.required)
 
