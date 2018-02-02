@@ -52,6 +52,19 @@ def test_has_input_fields():
     assert 'model' in MyMutation.Input._meta.fields
 
 
+def test_exclude_fields():
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer
+            exclude_fields = ['created']
+
+    assert 'cool_name' in MyMutation._meta.fields
+    assert 'created' not in MyMutation._meta.fields
+    assert 'errors' in MyMutation._meta.fields
+    assert 'cool_name' in MyMutation.Input._meta.fields
+    assert 'created' not in MyMutation.Input._meta.fields
+
+
 def test_nested_model():
 
     class MyFakeModelGrapheneType(DjangoObjectType):

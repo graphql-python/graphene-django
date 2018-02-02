@@ -22,6 +22,9 @@ class Film(models.Model):
     reporters = models.ManyToManyField('Reporter',
                                        related_name='films')
 
+class DoeReporterManager(models.Manager):
+    def get_queryset(self):
+        return super(DoeReporterManager, self).get_queryset().filter(last_name="Doe")
 
 class Reporter(models.Model):
     first_name = models.CharField(max_length=30)
@@ -29,6 +32,8 @@ class Reporter(models.Model):
     email = models.EmailField()
     pets = models.ManyToManyField('self')
     a_choice = models.CharField(max_length=30, choices=CHOICES)
+    objects = models.Manager()
+    doe_objects = DoeReporterManager()
 
     def __str__(self):              # __unicode__ on Python 2
         return "%s %s" % (self.first_name, self.last_name)

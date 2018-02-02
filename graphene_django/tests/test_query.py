@@ -606,6 +606,53 @@ def test_should_error_if_first_is_greater_than_max():
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
+def test_should_error_if_last_is_greater_than_max():
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(last: 101) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': None
+    }
+
+    result = schema.execute(query)
+    assert len(result.errors) == 1
+    assert str(result.errors[0]) == (
+        'Requesting 101 records on the `allReporters` connection '
+        'exceeds the `last` limit of 100 records.'
+    )
+    assert result.data == expected
+
+    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
+
+
 def test_should_query_promise_connectionfields():
     from promise import Promise
 
@@ -620,11 +667,114 @@ def test_should_query_promise_connectionfields():
 
         def resolve_all_reporters(self, info, **args):
             return Promise.resolve([Reporter(id=1)])
-
+    
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterPromiseConnectionQuery {
             allReporters(first: 1) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE='
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+def test_should_query_connectionfields_with_last():
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.all()
+    
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterLastQuery {
+            allReporters(last: 1) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE='
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+def test_should_query_connectionfields_with_manager():
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    r = Reporter.objects.create(
+        first_name='John',
+        last_name='NotDoe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType, on='doe_objects')
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.all()
+    
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ReporterLastQuery {
+            allReporters(first: 2) {
                 edges {
                     node {
                         id
