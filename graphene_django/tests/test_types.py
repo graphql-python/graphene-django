@@ -4,7 +4,7 @@ from graphene import Interface, ObjectType, Schema, Connection, String
 from graphene.relay import Node
 
 from .. import registry
-from ..types import DjangoObjectType
+from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -65,6 +65,26 @@ def test_django_objecttype_map_correct_fields():
 def test_django_objecttype_with_node_have_correct_fields():
     fields = Article._meta.fields
     assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'editor', 'lang', 'importance']
+
+
+def test_django_objecttype_with_custom_meta():
+    class ArticleTypeOptions(DjangoObjectTypeOptions):
+        '''Article Type Options'''
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, _meta=None, **options):
+            _meta = ArticleTypeOptions(cls)
+            super().__init_subclass_with_meta__(_meta=_meta, **options)
+
+    class Article(ArticleType):
+        class Meta:
+            model = ArticleModel
+
+    assert isinstance(Article._meta, ArticleTypeOptions)
 
 
 def test_schema_representation():
