@@ -38,7 +38,8 @@ class Reporter(models.Model):
         'Reporter Type',
         null=True,
         blank=True,
-        choices=[(1, u'Regular'), (2, u'CNN Reporter')] )
+        choices=[(1, u'Regular'), (2, u'CNN Reporter')]
+    )
 
     def __str__(self):              # __unicode__ on Python 2
         return "%s %s" % (self.first_name, self.last_name)
