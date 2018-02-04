@@ -74,12 +74,8 @@ class SerializerMutation(ClientIDMutation):
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
         else:
-            errors = [
-                ErrorType(field=key, messages=value)
-                for key, value in serializer.errors.items()
-            ]
-
-            return cls(errors=errors)
+            errors = serializer.errors
+            raise Exception(errors)
 
     @classmethod
     def perform_mutate(cls, serializer, info):
