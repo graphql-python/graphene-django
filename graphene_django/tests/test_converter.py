@@ -1,4 +1,5 @@
 import pytest
+from django.contrib.gis.db.models import GeometryField
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from py.test import raises
@@ -73,6 +74,10 @@ def test_should_ipaddress_convert_string():
 
 def test_should_file_convert_string():
     assert_conversion(models.FileField, graphene.String)
+
+
+def test_should_geometry_convert_string():
+    assert_conversion(GeometryField, graphene.String)
 
 
 def test_should_image_convert_string():
