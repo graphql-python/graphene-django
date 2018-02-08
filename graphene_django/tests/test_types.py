@@ -64,7 +64,7 @@ def test_django_objecttype_map_correct_fields():
 
 def test_django_objecttype_with_node_have_correct_fields():
     fields = Article._meta.fields
-    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'reporter', 'editor', 'lang', 'importance']
+    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'pub_date_time', 'reporter', 'editor', 'lang', 'importance']
 
 
 def test_django_objecttype_with_custom_meta():
@@ -96,7 +96,8 @@ schema {
 type Article implements Node {
   id: ID!
   headline: String!
-  pubDate: DateTime!
+  pubDate: Date!
+  pubDateTime: DateTime!
   reporter: Reporter!
   editor: Reporter!
   lang: ArticleLang!
@@ -123,6 +124,8 @@ enum ArticleLang {
   ES
   EN
 }
+
+scalar Date
 
 scalar DateTime
 

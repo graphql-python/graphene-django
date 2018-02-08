@@ -157,8 +157,8 @@ def test_filter_shortcut_filterset_context():
 
     r1 = Reporter.objects.create(first_name='r1', last_name='r1', email='r1@test.com')
     r2 = Reporter.objects.create(first_name='r2', last_name='r2', email='r2@test.com')
-    Article.objects.create(headline='a1', pub_date=datetime.now(), reporter=r1, editor=r1)
-    Article.objects.create(headline='a2', pub_date=datetime.now(), reporter=r2, editor=r2)
+    Article.objects.create(headline='a1', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r1, editor=r1)
+    Article.objects.create(headline='a2', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r2, editor=r2)
 
     class context(object):
         reporter = r2
@@ -245,8 +245,8 @@ def test_filter_filterset_related_results():
 
     r1 = Reporter.objects.create(first_name='r1', last_name='r1', email='r1@test.com')
     r2 = Reporter.objects.create(first_name='r2', last_name='r2', email='r2@test.com')
-    Article.objects.create(headline='a1', pub_date=datetime.now(), reporter=r1)
-    Article.objects.create(headline='a2', pub_date=datetime.now(), reporter=r2)
+    Article.objects.create(headline='a1', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r1)
+    Article.objects.create(headline='a2', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r2)
 
     query = '''
     query {
@@ -464,6 +464,7 @@ def test_should_query_filter_node_limit():
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -471,6 +472,7 @@ def test_should_query_filter_node_limit():
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
         reporter=r,
         editor=r,
         lang='en'

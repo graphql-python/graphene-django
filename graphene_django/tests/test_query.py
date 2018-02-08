@@ -371,6 +371,7 @@ def test_should_query_node_filtering():
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -378,6 +379,7 @@ def test_should_query_node_filtering():
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='en'
@@ -453,6 +455,7 @@ def test_should_query_node_multiple_filtering():
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -460,6 +463,7 @@ def test_should_query_node_multiple_filtering():
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -467,6 +471,7 @@ def test_should_query_node_multiple_filtering():
     Article.objects.create(
         headline='Article Node 3',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='en'
@@ -842,6 +847,7 @@ def test_should_query_dataloader_fields():
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -849,6 +855,7 @@ def test_should_query_dataloader_fields():
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
         reporter=r,
         editor=r,
         lang='en'
