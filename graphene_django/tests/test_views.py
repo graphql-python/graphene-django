@@ -30,6 +30,20 @@ jl = lambda **kwargs: json.dumps([kwargs])
 def test_graphiql_is_enabled(client):
     response = client.get(url_string(), HTTP_ACCEPT='text/html')
     assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'text/html'
+
+def test_qfactor_graphiql(client):
+    response = client.get(url_string(query='{test}'), HTTP_ACCEPT='application/json;q=0.8, text/html;q=0.9')
+    assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'text/html'
+
+def test_qfactor_json(client):
+    response = client.get(url_string(query='{test}'), HTTP_ACCEPT='text/html;q=0.8, application/json;q=0.9')
+    assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'application/json'
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
 
 
 def test_allows_get_with_query_param(client):
