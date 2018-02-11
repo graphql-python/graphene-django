@@ -30,8 +30,6 @@ def test_should_date_convert_date():
 def test_should_time_convert_time():
     assert_conversion(forms.TimeField, graphene.types.datetime.Time)
 
-def test_should_date_convert_string():
-    assert_conversion(forms.DateField, graphene.String)
 
 def test_should_date_time_convert_date_time():
     assert_conversion(forms.DateTimeField, graphene.types.datetime.DateTime)
