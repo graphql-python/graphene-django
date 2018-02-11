@@ -110,7 +110,8 @@ class DjangoObjectType(ObjectType):
             raise Exception((
                 'Received incompatible instance "{}".'
             ).format(root))
-        model = root._meta.model
+
+        model = root._meta.model._meta.concrete_model
         return model == cls._meta.model
 
     @classmethod

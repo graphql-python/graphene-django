@@ -13,7 +13,11 @@ from ..compat import MissingType, JSONField
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..settings import graphene_settings
-from .models import Article, Reporter
+from .models import (
+    Article,
+    CNNReporter,
+    Reporter,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -844,6 +848,7 @@ def test_should_query_dataloader_fields():
         email='johndoe@example.com',
         a_choice=1
     )
+
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.date.today(),
@@ -937,3 +942,139 @@ def test_should_handle_inherited_choices():
     '''
     result = schema.execute(query)
     assert not result.errors
+
+
+def test_proxy_model_support():
+    """
+    This test asserts that we can query for all Reporters,
+    even if some are of a proxy model type at runtime.
+    """
+    class ReporterType(DjangoObjectType):
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            use_connection = True
+
+    reporter_1 = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    reporter_2 = CNNReporter.objects.create(
+        first_name='Some',
+        last_name='Guy',
+        email='someguy@cnn.com',
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                },
+            },
+            {
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjI=',
+                },
+            }
+            ]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_proxy_model_fails():
+    """
+    This test asserts that if you try to query for a proxy model,
+    that query will fail with:
+        GraphQLError('Expected value of type "CNNReporterType" but got: 
+            CNNReporter.',)
+
+    This is because a proxy model has the identical model definition
+    to its superclass, and defines its behavior at runtime, rather than
+    at the database level. Currently, filtering objects of the proxy models'
+    type isn't supported. It would require a field on the model that would
+    represent the type, and it doesn't seem like there is a clear way to
+    enforce this pattern across all projects
+    """
+    class CNNReporterType(DjangoObjectType):
+
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node, )
+            use_connection = True
+
+    reporter_1 = Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+        email='johndoe@example.com',
+        a_choice=1
+    )
+
+    reporter_2 = CNNReporter.objects.create(
+        first_name='Some',
+        last_name='Guy',
+        email='someguy@cnn.com',
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(CNNReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjE=',
+                },
+            },
+            {
+                'node': {
+                    'id': 'UmVwb3J0ZXJUeXBlOjI=',
+                },
+            }
+            ]
+        }
+    }
+
+    result = schema.execute(query)
+    assert result.errors

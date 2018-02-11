@@ -58,7 +58,7 @@ def test_django_get_node(get):
 def test_django_objecttype_map_correct_fields():
     fields = Reporter._meta.fields
     fields = list(fields.keys())
-    assert fields[:-2] == ['id', 'first_name', 'last_name', 'email', 'pets', 'a_choice']
+    assert fields[:-2] == ['id', 'first_name', 'last_name', 'email', 'pets', 'a_choice', 'reporter_type']
     assert sorted(fields[-2:]) == ['articles', 'films']
 
 
@@ -147,10 +147,16 @@ type Reporter {
   email: String!
   pets: [Reporter]
   aChoice: ReporterAChoice!
+  reporterType: ReporterReporterType
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
 
 enum ReporterAChoice {
+  A_1
+  A_2
+}
+
+enum ReporterReporterType {
   A_1
   A_2
 }
