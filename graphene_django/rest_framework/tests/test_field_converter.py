@@ -1,8 +1,10 @@
 import copy
-from rest_framework import serializers
-from py.test import raises
 
 import graphene
+from django.db import models
+from graphene import InputObjectType
+from py.test import raises
+from rest_framework import serializers
 
 from ..serializer_converter import convert_serializer_field
 from ..types import DictType
@@ -74,7 +76,6 @@ def test_should_uuid_convert_string():
 
 
 def test_should_model_convert_field():
-
     class MyModelSerializer(serializers.ModelSerializer):
         class Meta:
             model = None
@@ -128,6 +129,30 @@ def test_should_list_convert_to_list():
     assert field_b.of_type == graphene.String
 
 
+def test_should_list_serializer_convert_to_list():
+    class FooModel(models.Model):
+        pass
+
+    class ChildSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = FooModel
+            fields = '__all__'
+
+    class ParentSerializer(serializers.ModelSerializer):
+        child = ChildSerializer(many=True)
+
+        class Meta:
+            model = FooModel
+            fields = '__all__'
+
+    converted_type = convert_serializer_field(ParentSerializer().get_fields()['child'], is_input=True)
+    assert isinstance(converted_type, graphene.List)
+
+    converted_type = convert_serializer_field(ParentSerializer().get_fields()['child'], is_input=False)
+    assert isinstance(converted_type, graphene.List)
+    assert converted_type.of_type is None
+
+
 def test_should_dict_convert_dict():
     assert_conversion(serializers.DictField, DictType)
 
@@ -157,6 +182,6 @@ def test_should_json_convert_jsonstring():
 
 
 def test_should_multiplechoicefield_convert_to_list_of_string():
-    field = assert_conversion(serializers.MultipleChoiceField, graphene.List, choices=[1,2,3])
+    field = assert_conversion(serializers.MultipleChoiceField, graphene.List, choices=[1, 2, 3])
 
     assert field.of_type == graphene.String
