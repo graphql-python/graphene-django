@@ -294,6 +294,17 @@ class GraphQLView(View):
         variables = request.GET.get('variables') or data.get('variables')
         id = request.GET.get('id') or data.get('id')
 
+        # try to get params from POST
+        if not query:
+            if request.POST.get("operations"):
+                parsed_post = json.loads(request.POST.get("operations"))
+
+                if 'query' in parsed_post:
+                    query = parsed_post['query']
+
+                if 'variables' in parsed_post:
+                    variables = parsed_post['variables']
+
         if variables and isinstance(variables, six.text_type):
             try:
                 variables = json.loads(variables)
