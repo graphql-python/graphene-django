@@ -451,7 +451,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
         # def resolve_all_reporters_with_berlin_films(self, args, context, info):
         #    return Reporter.objects.filter(Q(films__film__location__contains="Berlin") | Q(a_choice=1))
 
-        def resolve_films(self, args, context, info):
+        def resolve_films(self, info, **args):
             return Film.objects.filter(Q(details__location__contains="Berlin") | Q(genre__in=['ot'])).distinct()
 
     f = Film.objects.create(
