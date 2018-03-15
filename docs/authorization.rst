@@ -61,7 +61,7 @@ define a resolve method for that field and return the desired queryset.
     from .models import Post
 
     class Query(ObjectType):
-        all_posts = DjangoFilterConnectionField(CategoryNode)
+        all_posts = DjangoFilterConnectionField(PostNode)
 
         def resolve_all_posts(self, args, info):
             return Post.objects.filter(published=True)
@@ -79,7 +79,7 @@ with the context argument.
     from .models import Post
 
     class Query(ObjectType):
-        my_posts = DjangoFilterConnectionField(CategoryNode)
+        my_posts = DjangoFilterConnectionField(PostNode)
 
         def resolve_my_posts(self, info):
             # context will reference to the Django request
