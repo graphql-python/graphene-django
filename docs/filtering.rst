@@ -145,4 +145,4 @@ pre-filter animals owned by the authenticated user (set in ``context.user``).
         @property
         def qs(self):
             # The query context can be found in self.request.
-            return super(AnimalFilter, self).filter(owner=self.request.user)
+            return super(AnimalFilter, self).qs.filter(owner=self.request.user)
