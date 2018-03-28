@@ -486,7 +486,6 @@ def test_should_query_node_filtering_with_distinct_queryset():
 
     result = schema.execute(query)
     assert not result.errors
-    print(result.data)
     assert result.data == expected
 
 
@@ -735,7 +734,7 @@ def test_should_query_promise_connectionfields():
 
         def resolve_all_reporters(self, info, **args):
             return Promise.resolve([Reporter(id=1)])
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterPromiseConnectionQuery {
@@ -783,7 +782,7 @@ def test_should_query_connectionfields_with_last():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterLastQuery {
@@ -838,7 +837,7 @@ def test_should_query_connectionfields_with_manager():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterLastQuery {
@@ -1071,7 +1070,7 @@ def test_proxy_model_fails():
     """
     This test asserts that if you try to query for a proxy model,
     that query will fail with:
-        GraphQLError('Expected value of type "CNNReporterType" but got: 
+        GraphQLError('Expected value of type "CNNReporterType" but got:
             CNNReporter.',)
 
     This is because a proxy model has the identical model definition
