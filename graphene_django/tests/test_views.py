@@ -400,6 +400,24 @@ def test_allows_post_with_get_operation_name(client):
     }
 
 
+@pytest.mark.urls('graphene_django.tests.urls_inherited')
+def test_inherited_class_with_attributes_works(client):
+    inherited_url = '/graphql/inherited/'
+    # Check schema and pretty attributes work
+    response = client.post(url_string(inherited_url, query='{test}'))
+    assert response.content.decode() == (
+        '{\n'
+        '  "data": {\n'
+        '    "test": "Hello World"\n'
+        '  }\n'
+        '}'
+    )
+
+    # Check graphiql works
+    response = client.get(url_string(inherited_url), HTTP_ACCEPT='text/html')
+    assert response.status_code == 200
+
+
 @pytest.mark.urls('graphene_django.tests.urls_pretty')
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query='{test}'))
