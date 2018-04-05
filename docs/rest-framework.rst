@@ -27,10 +27,6 @@ customize this use the `model_operations` attribute. The update
 operation looks up models by the primary key by default. You can
 customize the look up with the lookup attribute.
 
-Other default attributes:
-
-`partial = False`: Accept updates without all the input fields.
-
 .. code:: python
 
     from graphene_django.rest_framework.mutation import SerializerMutation
