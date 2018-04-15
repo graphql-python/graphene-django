@@ -30,6 +30,20 @@ jl = lambda **kwargs: json.dumps([kwargs])
 def test_graphiql_is_enabled(client):
     response = client.get(url_string(), HTTP_ACCEPT='text/html')
     assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'text/html'
+
+def test_qfactor_graphiql(client):
+    response = client.get(url_string(query='{test}'), HTTP_ACCEPT='application/json;q=0.8, text/html;q=0.9')
+    assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'text/html'
+
+def test_qfactor_json(client):
+    response = client.get(url_string(query='{test}'), HTTP_ACCEPT='text/html;q=0.8, application/json;q=0.9')
+    assert response.status_code == 200
+    assert response['Content-Type'].split(';')[0] == 'application/json'
+    assert response_json(response) == {
+        'data': {'test': "Hello World"}
+    }
 
 
 def test_allows_get_with_query_param(client):
@@ -384,6 +398,24 @@ def test_allows_post_with_get_operation_name(client):
             'shared': 'Hello Everyone'
         }
     }
+
+
+@pytest.mark.urls('graphene_django.tests.urls_inherited')
+def test_inherited_class_with_attributes_works(client):
+    inherited_url = '/graphql/inherited/'
+    # Check schema and pretty attributes work
+    response = client.post(url_string(inherited_url, query='{test}'))
+    assert response.content.decode() == (
+        '{\n'
+        '  "data": {\n'
+        '    "test": "Hello World"\n'
+        '  }\n'
+        '}'
+    )
+
+    # Check graphiql works
+    response = client.get(url_string(inherited_url), HTTP_ACCEPT='text/html')
+    assert response.status_code == 200
 
 
 @pytest.mark.urls('graphene_django.tests.urls_pretty')

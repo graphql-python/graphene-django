@@ -3,7 +3,7 @@ from django.utils.encoding import force_text
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String, UUID)
-from graphene.types.datetime import DateTime, Time
+from graphene.types.datetime import DateTime, Date, Time
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
@@ -121,9 +121,14 @@ def convert_field_to_float(field, registry=None):
     return Float(description=field.help_text, required=not field.null)
 
 
+@convert_django_field.register(models.DateTimeField)
+def convert_datetime_to_string(field, registry=None):
+    return DateTime(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.DateField)
 def convert_date_to_string(field, registry=None):
-    return DateTime(description=field.help_text, required=not field.null)
+    return Date(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.TimeField)

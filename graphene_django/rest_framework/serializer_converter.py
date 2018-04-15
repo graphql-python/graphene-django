@@ -46,6 +46,15 @@ def convert_serializer_field(field, is_input=True):
             global_registry = get_global_registry()
             field_model = field.Meta.model
             args = [global_registry.get_type_for_model(field_model)]
+    elif isinstance(field, serializers.ListSerializer):
+        field = field.child
+        if is_input:
+            kwargs['of_type'] = convert_serializer_to_input_type(field.__class__)
+        else:
+            del kwargs['of_type']
+            global_registry = get_global_registry()
+            field_model = field.Meta.model
+            args = [global_registry.get_type_for_model(field_model)]
 
     return graphql_type(*args, **kwargs)
 
@@ -75,6 +84,12 @@ def convert_serializer_to_field(field):
     return graphene.Field
 
 
+@get_graphene_type_from_serializer_field.register(serializers.ListSerializer)
+def convert_list_serializer_to_field(field):
+    child_type = get_graphene_type_from_serializer_field(field.child)
+    return (graphene.List, child_type)
+
+
 @get_graphene_type_from_serializer_field.register(serializers.IntegerField)
 def convert_serializer_field_to_int(field):
     return graphene.Int
@@ -92,9 +107,13 @@ def convert_serializer_field_to_float(field):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DateTimeField)
+def convert_serializer_field_to_datetime_time(field):
+    return graphene.types.datetime.DateTime
+
+
 @get_graphene_type_from_serializer_field.register(serializers.DateField)
 def convert_serializer_field_to_date_time(field):
-    return graphene.types.datetime.DateTime
+    return graphene.types.datetime.Date
 
 
 @get_graphene_type_from_serializer_field.register(serializers.TimeField)

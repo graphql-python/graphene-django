@@ -5,7 +5,7 @@ from py.test import raises
 
 import graphene
 from graphene.relay import ConnectionField, Node
-from graphene.types.datetime import DateTime, Time
+from graphene.types.datetime import DateTime, Date, Time
 from graphene.types.json import JSONString
 
 from ..compat import JSONField, ArrayField, HStoreField, RangeField, MissingType
@@ -38,9 +38,12 @@ def test_should_unknown_django_field_raise_exception():
         convert_django_field(None)
     assert 'Don\'t know how to convert the Django field' in str(excinfo.value)
 
+def test_should_date_time_convert_string():
+    assert_conversion(models.DateTimeField, DateTime)
+
 
 def test_should_date_convert_string():
-    assert_conversion(models.DateField, DateTime)
+    assert_conversion(models.DateField, Date)
 
 
 def test_should_time_convert_string():

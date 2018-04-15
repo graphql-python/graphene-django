@@ -58,7 +58,7 @@ setup(
 
     install_requires=[
         'six>=1.10.0',
-        'graphene>=2.0,<3',
+        'graphene>=2.0.1,<3',
         django_version,
         'iso8601',
         'singledispatch>=3.4.0.3',

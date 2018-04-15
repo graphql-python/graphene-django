@@ -23,16 +23,16 @@ def test_should_unknown_django_field_raise_exception():
     assert 'Don\'t know how to convert the Django form field' in str(excinfo.value)
 
 
-def test_should_date_convert_string():
-    assert_conversion(forms.DateField, graphene.String)
+def test_should_date_convert_date():
+    assert_conversion(forms.DateField, graphene.types.datetime.Date)
 
 
-def test_should_time_convert_string():
-    assert_conversion(forms.TimeField, graphene.String)
+def test_should_time_convert_time():
+    assert_conversion(forms.TimeField, graphene.types.datetime.Time)
 
 
-def test_should_date_time_convert_string():
-    assert_conversion(forms.DateTimeField, graphene.String)
+def test_should_date_time_convert_date_time():
+    assert_conversion(forms.DateTimeField, graphene.types.datetime.DateTime)
 
 
 def test_should_char_convert_string():
