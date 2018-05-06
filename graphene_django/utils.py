@@ -43,8 +43,9 @@ def get_model_fields(model):
     local_fields = [
         (field.name, field)
         for field
-        in sorted(list(model._meta.fields) +
-                  list(model._meta.local_many_to_many))
+        in sorted(set(list(model._meta.fields) +
+                  list(model._meta.many_to_many) +
+                  list(model._meta.local_many_to_many)))
     ]
 
     # Make sure we don't duplicate local fields with "reverse" version
