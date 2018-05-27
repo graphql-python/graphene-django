@@ -154,7 +154,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             model = Ingredient
 
 
-    class Query(object):
+    class Query(graphene.AbstractType):
         all_categories = graphene.List(CategoryType)
         all_ingredients = graphene.List(IngredientType)
 
