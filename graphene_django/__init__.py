@@ -5,7 +5,7 @@ from .fields import (
     DjangoConnectionField,
 )
 
-__version__ = '2.0.1'
+__version__ = '2.1rc0'
 
 __all__ = [
     '__version__',
