@@ -2,6 +2,7 @@ Integration with Django forms
 =============================
 
 Graphene-Django comes with mutation classes that will convert the fields on Django forms into inputs on a mutation.
+*Note: the API is experimental and will likely change in the future.*
 
 FormMutation
 ------------
@@ -37,7 +38,7 @@ ModelFormMutation
         class Meta:
             model = Pet
 
-    class PetMutation(ModelFormMutation):
+    class PetMutation(DjangoModelFormMutation):
         class Meta:
             form_class = PetForm
 
@@ -49,7 +50,7 @@ You can change the input name (default is ``input``) and the return field name (
 
 .. code:: python
 
-    class PetMutation(ModelFormMutation):
+    class PetMutation(DjangoModelFormMutation):
         class Meta:
             form_class = PetForm
             input_field_name = 'data'
