@@ -2,8 +2,7 @@ from django.db import models
 from django.utils.encoding import force_text
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
-                      NonNull, String, UUID)
-from graphene.types.datetime import DateTime, Date, Time
+                      NonNull, String, UUID, DateTime, Date, Time)
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
