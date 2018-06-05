@@ -15,7 +15,7 @@ class Pet(models.Model):
 
 class FilmDetails(models.Model):
     location = models.CharField(max_length=30)
-    film = models.OneToOneField('Film', related_name='details')
+    film = models.OneToOneField('Film', on_delete=models.CASCADE, related_name='details')
 
 
 class Film(models.Model):
@@ -74,8 +74,8 @@ class Article(models.Model):
     headline = models.CharField(max_length=100)
     pub_date = models.DateField()
     pub_date_time = models.DateTimeField()
-    reporter = models.ForeignKey(Reporter, related_name='articles')
-    editor = models.ForeignKey(Reporter, related_name='edited_articles_+')
+    reporter = models.ForeignKey(Reporter, on_delete=models.CASCADE, related_name='articles')
+    editor = models.ForeignKey(Reporter, on_delete=models.CASCADE, related_name='edited_articles_+')
     lang = models.CharField(max_length=2, help_text='Language', choices=[
         ('es', 'Spanish'),
         ('en', 'English')
