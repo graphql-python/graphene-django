@@ -15,7 +15,6 @@ from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
-from graphql.utils.get_operation_ast import get_operation_ast
 
 from .settings import graphene_settings
 
