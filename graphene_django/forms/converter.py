@@ -1,25 +1,25 @@
 from django import forms
-from django.forms.fields import BaseTemporalField
+from django.core.exceptions import ImproperlyConfigured
 
-from graphene import ID, Boolean, Float, Int, List, String, UUID
-from graphene.types.datetime import Date, DateTime, Time
+from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
-from .utils import import_single_dispatch
+from ..utils import import_single_dispatch
+
 
 singledispatch = import_single_dispatch()
 
 
 @singledispatch
 def convert_form_field(field):
-    raise Exception(
+    raise ImproperlyConfigured(
         "Don't know how to convert the Django form field %s (%s) "
         "to Graphene type" %
         (field, field.__class__)
     )
 
 
-@convert_form_field.register(BaseTemporalField)
+@convert_form_field.register(forms.fields.BaseTemporalField)
 @convert_form_field.register(forms.CharField)
 @convert_form_field.register(forms.EmailField)
 @convert_form_field.register(forms.SlugField)

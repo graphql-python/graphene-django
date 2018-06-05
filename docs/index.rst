@@ -12,4 +12,5 @@ Contents:
    authorization
    debug
    rest-framework
+   form-mutations
    introspection

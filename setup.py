@@ -58,7 +58,7 @@ setup(
 
     install_requires=[
         'six>=1.10.0',
-        'graphene>=2.0.1,<3',
+        'graphene>=2.1,<3',
         'graphql-core>=2.1rc1',
         django_version,
         'iso8601',
