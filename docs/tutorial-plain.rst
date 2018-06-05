@@ -84,17 +84,6 @@ Add ingredients as INSTALLED_APPS:
         'cookbook.ingredients',
     ]
 
-Register models with admin panel:
-
-.. code:: python
-
-    # cookbook/ingredients/admin.py
-    from django.contrib import admin
-    from cookbook.ingredients.models import Category, Ingredient
-
-    admin.site.register(Category)
-    admin.site.register(Ingredient)
-
 
 Don't forget to create & run migrations:
 
@@ -123,6 +112,18 @@ following:
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
 create a login for yourself too (``./manage.py createsuperuser``).
+
+Register models with admin panel:
+
+.. code:: python
+
+    # cookbook/ingredients/admin.py
+    from django.contrib import admin
+    from cookbook.ingredients.models import Category, Ingredient
+
+    admin.site.register(Category)
+    admin.site.register(Ingredient)
+
 
 Hello GraphQL - Schema and Object Types
 ---------------------------------------
