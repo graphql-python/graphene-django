@@ -3,7 +3,7 @@ class Registry(object):
 
     def __init__(self):
         self._registry = {}
-        self._registry_models = {}
+        self._field_registry = {}
 
     def register(self, cls):
         from .types import DjangoObjectType
@@ -19,6 +19,12 @@ class Registry(object):
 
     def get_type_for_model(self, model):
         return self._registry.get(model)
+
+    def register_converted_field(self, field, converted):
+        self._field_registry[field] = converted
+
+    def get_converted_field(self, field):
+        return self._field_registry.get(field)
 
 
 registry = None

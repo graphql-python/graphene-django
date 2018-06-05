@@ -2,13 +2,17 @@ from datetime import datetime
 
 import pytest
 
-from graphene import Field, ObjectType, Schema, Argument, Float
+from graphene import Field, ObjectType, Schema, Argument, Float, Boolean, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import (GlobalIDFormField,
                                    GlobalIDMultipleChoiceField)
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
+
+# for annotation test
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 
 pytestmark = []
 
@@ -136,6 +140,48 @@ def test_filter_shortcut_filterset_extra_meta():
     assert 'headline' not in field.filterset_class.get_fields()
 
 
+def test_filter_shortcut_filterset_context():
+    class ArticleContextFilter(django_filters.FilterSet):
+
+        class Meta:
+            model = Article
+            exclude = set()
+
+        @property
+        def qs(self):
+            qs = super(ArticleContextFilter, self).qs
+            return qs.filter(reporter=self.request.reporter)
+
+    class Query(ObjectType):
+        context_articles = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleContextFilter)
+
+    r1 = Reporter.objects.create(first_name='r1', last_name='r1', email='r1@test.com')
+    r2 = Reporter.objects.create(first_name='r2', last_name='r2', email='r2@test.com')
+    Article.objects.create(headline='a1', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r1, editor=r1)
+    Article.objects.create(headline='a2', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r2, editor=r2)
+
+    class context(object):
+        reporter = r2
+
+    query = '''
+    query {
+        contextArticles {
+            edges {
+                node {
+                    headline
+                }
+            }
+        }
+    }
+    '''
+    schema = Schema(query=Query)
+    result = schema.execute(query, context_value=context())
+    assert not result.errors
+
+    assert len(result.data['contextArticles']['edges']) == 1
+    assert result.data['contextArticles']['edges'][0]['node']['headline'] == 'a2'
+
+
 def test_filter_filterset_information_on_meta():
     class ReporterFilterNode(DjangoObjectType):
 
@@ -199,8 +245,8 @@ def test_filter_filterset_related_results():
 
     r1 = Reporter.objects.create(first_name='r1', last_name='r1', email='r1@test.com')
     r2 = Reporter.objects.create(first_name='r2', last_name='r2', email='r2@test.com')
-    Article.objects.create(headline='a1', pub_date=datetime.now(), reporter=r1)
-    Article.objects.create(headline='a2', pub_date=datetime.now(), reporter=r2)
+    Article.objects.create(headline='a1', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r1)
+    Article.objects.create(headline='a2', pub_date=datetime.now(), pub_date_time=datetime.now(), reporter=r2)
 
     query = '''
     query {
@@ -418,6 +464,7 @@ def test_should_query_filter_node_limit():
     Article.objects.create(
         headline='Article Node 1',
         pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
         reporter=r,
         editor=r,
         lang='es'
@@ -425,6 +472,7 @@ def test_should_query_filter_node_limit():
     Article.objects.create(
         headline='Article Node 2',
         pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
         reporter=r,
         editor=r,
         lang='en'
@@ -534,3 +582,135 @@ def test_should_query_filter_node_double_limit_raises():
     assert str(result.errors[0]) == (
         'Received two sliced querysets (high mark) in the connection, please slice only in one.'
     )
+
+def test_order_by_is_perserved():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType, reverse_order=Boolean())
+
+        def resolve_all_reporters(self, info, reverse_order=False, **args):
+            reporters = Reporter.objects.order_by('first_name')
+
+            if reverse_order:
+                return reporters.reverse()
+                
+            return reporters
+
+    Reporter.objects.create(
+        first_name='b',
+    )
+    r = Reporter.objects.create(
+        first_name='a',
+    )
+
+    schema = Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'firstName': 'a',
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+    reverse_query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1, reverseOrder: true) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    '''
+
+    reverse_expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'firstName': 'b',
+                }
+            }]
+        }
+    }
+
+    reverse_result = schema.execute(reverse_query)
+
+    assert not reverse_result.errors
+    assert reverse_result.data == reverse_expected
+
+def test_annotation_is_perserved():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+        
+        def resolve_full_name(instance, info, **args):
+            return instance.full_name
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node, )
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.annotate(
+                full_name=Concat('first_name', Value(' '), 'last_name', output_field=TextField())
+            )
+
+    Reporter.objects.create(
+        first_name='John',
+        last_name='Doe',
+    )
+
+    schema = Schema(query=Query)
+
+    query = '''
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    '''
+    expected = {
+        'allReporters': {
+            'edges': [{
+                'node': {
+                    'fullName': 'John Doe',
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected

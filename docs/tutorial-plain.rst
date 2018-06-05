@@ -8,14 +8,14 @@ Our primary focus here is to give a good understanding of how to connect models 
 
 A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__ documentation first.
 
-Setup the Django project
-------------------------
+Set up the Django project
+-------------------------
 
 You can find the entire project in ``examples/cookbook-plain``.
 
 ----
 
-We will setup the project, create the following:
+We will set up the project, create the following:
 
 -  A Django project called ``cookbook``
 -  An app within ``cookbook`` called ``ingredients``
@@ -68,7 +68,8 @@ Let's get started with these models:
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
-        category = models.ForeignKey(Category, related_name='ingredients')
+        category = models.ForeignKey(Category, related_name='ingredients',
+           on_delete=models.CASCADE)
 
         def __str__(self):
             return self.name
@@ -80,7 +81,7 @@ Add ingredients as INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         # Install the ingredients app
-        'ingredients',
+        'cookbook.ingredients',
     ]
 
 Don't forget to create & run migrations:
@@ -153,7 +154,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             model = Ingredient
 
 
-    class Query(graphene.AbstractType):
+    class Query(object):
         all_categories = graphene.List(CategoryType)
         all_ingredients = graphene.List(IngredientType)
 
@@ -426,7 +427,7 @@ We can update our schema to support that, by adding new query for ``ingredient``
           model = Ingredient
 
 
-  class Query(graphene.AbstractType):
+  class Query(object):
       category = graphene.Field(CategoryType,
                                 id=graphene.Int(),
                                 name=graphene.String())
@@ -445,8 +446,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return Ingredient.objects.all()
 
       def resolve_category(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Category.objects.get(pk=id)
@@ -457,8 +458,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return None
 
       def resolve_ingredient(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Ingredient.objects.get(pk=id)

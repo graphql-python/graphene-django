@@ -126,3 +126,23 @@ create your own ``Filterset`` as follows:
         # We specify our custom AnimalFilter using the filterset_class param
         all_animals = DjangoFilterConnectionField(AnimalNode,
                                                   filterset_class=AnimalFilter)
+
+The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/latest/guide/usage.html#request-based-filtering>`__
+in a ``django_filters.FilterSet`` instance. You can use this to customize your
+filters to be context-dependent. We could modify the ``AnimalFilter`` above to
+pre-filter animals owned by the authenticated user (set in ``context.user``).
+
+.. code:: python
+
+    class AnimalFilter(django_filters.FilterSet):
+        # Do case-insensitive lookups on 'name'
+        name = django_filters.CharFilter(lookup_type='iexact')
+
+        class Meta:
+            model = Animal
+            fields = ['name', 'genus', 'is_domesticated']
+
+        @property
+        def qs(self):
+            # The query context can be found in self.request.
+            return super(AnimalFilter, self).qs.filter(owner=self.request.user)

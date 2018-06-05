@@ -34,7 +34,7 @@ This is easy, simply use the ``only_fields`` meta attribute.
             only_fields = ('title', 'content')
             interfaces = (relay.Node, )
 
-conversely you can use ``exclude_fields`` meta atrribute.
+conversely you can use ``exclude_fields`` meta attribute.
 
 .. code:: python
 
@@ -61,7 +61,7 @@ define a resolve method for that field and return the desired queryset.
     from .models import Post
 
     class Query(ObjectType):
-        all_posts = DjangoFilterConnectionField(CategoryNode)
+        all_posts = DjangoFilterConnectionField(PostNode)
 
         def resolve_all_posts(self, args, info):
             return Post.objects.filter(published=True)
@@ -79,14 +79,14 @@ with the context argument.
     from .models import Post
 
     class Query(ObjectType):
-        my_posts = DjangoFilterConnectionField(CategoryNode)
+        my_posts = DjangoFilterConnectionField(PostNode)
 
-        def resolve_my_posts(self, args, context, info):
+        def resolve_my_posts(self, info):
             # context will reference to the Django request
-            if not context.user.is_authenticated():
+            if not info.context.user.is_authenticated():
                 return Post.objects.none()
             else:
-                return Post.objects.filter(owner=context.user)
+                return Post.objects.filter(owner=info.context.user)
 
 If you're using your own view, passing the request context into the
 schema is simple.

@@ -1,16 +1,10 @@
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
 
-import graphene
+from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from ..utils import import_single_dispatch
-
-try:
-    UUIDField = forms.UUIDField
-except AttributeError:
-    class UUIDField(object):
-        pass
 
 
 singledispatch = import_single_dispatch()
@@ -34,54 +28,69 @@ def convert_form_field(field):
 @convert_form_field.register(forms.RegexField)
 @convert_form_field.register(forms.Field)
 def convert_form_field_to_string(field):
-    return graphene.String(description=field.help_text, required=field.required)
+    return String(description=field.help_text, required=field.required)
 
 
-@convert_form_field.register(UUIDField)
+@convert_form_field.register(forms.UUIDField)
 def convert_form_field_to_uuid(field):
-    return graphene.UUID(description=field.help_text, required=field.required)
+    return UUID(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.IntegerField)
 @convert_form_field.register(forms.NumberInput)
 def convert_form_field_to_int(field):
-    return graphene.Int(description=field.help_text, required=field.required)
+    return Int(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.BooleanField)
 def convert_form_field_to_boolean(field):
-    return graphene.Boolean(description=field.help_text, required=True)
+    return Boolean(description=field.help_text, required=True)
 
 
 @convert_form_field.register(forms.NullBooleanField)
 def convert_form_field_to_nullboolean(field):
-    return graphene.Boolean(description=field.help_text)
+    return Boolean(description=field.help_text)
 
 
 @convert_form_field.register(forms.DecimalField)
 @convert_form_field.register(forms.FloatField)
 def convert_form_field_to_float(field):
-    return graphene.Float(description=field.help_text, required=field.required)
+    return Float(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.ModelMultipleChoiceField)
 @convert_form_field.register(GlobalIDMultipleChoiceField)
 def convert_form_field_to_list(field):
-    return graphene.List(graphene.ID, required=field.required)
+    return List(ID, required=field.required)
+
+
+@convert_form_field.register(forms.DateField)
+def convert_form_field_to_date(field):
+    return Date(description=field.help_text, required=field.required)
+
+
+@convert_form_field.register(forms.DateTimeField)
+def convert_form_field_to_datetime(field):
+    return DateTime(description=field.help_text, required=field.required)
+
+
+@convert_form_field.register(forms.TimeField)
+def convert_form_field_to_time(field):
+    return Time(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.ModelChoiceField)
 @convert_form_field.register(GlobalIDFormField)
 def convert_form_field_to_id(field):
-    return graphene.ID(required=field.required)
+    return ID(required=field.required)
 
 
 @convert_form_field.register(forms.DateField)
 @convert_form_field.register(forms.DateTimeField)
 def convert_form_field_to_datetime(field):
-    return graphene.types.datetime.DateTime(description=field.help_text, required=field.required)
+    return DateTime(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.TimeField)
 def convert_form_field_to_time(field):
-    return graphene.types.datetime.Time(description=field.help_text, required=field.required)
+    return Time(description=field.help_text, required=field.required)

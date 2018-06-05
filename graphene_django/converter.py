@@ -3,7 +3,7 @@ from django.utils.encoding import force_text
 
 from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
                       NonNull, String, UUID)
-from graphene.types.datetime import DateTime, Time
+from graphene.types.datetime import DateTime, Date, Time
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
@@ -40,6 +40,10 @@ def get_choices(choices):
 
 
 def convert_django_field_with_choices(field, registry=None):
+    if registry is not None:
+        converted = registry.get_converted_field(field)
+        if converted:
+            return converted
     choices = getattr(field, 'choices', None)
     if choices:
         meta = field.model._meta
@@ -55,8 +59,12 @@ def convert_django_field_with_choices(field, registry=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        return enum(description=field.help_text, required=not field.null)
-    return convert_django_field(field, registry)
+        converted = enum(description=field.help_text, required=not field.null)
+    else:
+        converted = convert_django_field(field, registry)
+    if registry is not None:
+        registry.register_converted_field(field, converted)
+    return converted
 
 
 @singledispatch
@@ -113,9 +121,14 @@ def convert_field_to_float(field, registry=None):
     return Float(description=field.help_text, required=not field.null)
 
 
+@convert_django_field.register(models.DateTimeField)
+def convert_datetime_to_string(field, registry=None):
+    return DateTime(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.DateField)
 def convert_date_to_string(field, registry=None):
-    return DateTime(description=field.help_text, required=not field.null)
+    return Date(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.TimeField)

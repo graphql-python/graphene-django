@@ -35,6 +35,7 @@ def test_should_map_fields_correctly():
         'email',
         'pets',
         'a_choice',
+        'reporter_type'
     ]
 
     assert sorted(fields[-2:]) == [
