@@ -5,6 +5,8 @@ from django.db import models
 from django.utils.functional import SimpleLazyObject
 from py.test import raises
 
+from django.db.models import Q
+
 import graphene
 from graphene.relay import Node
 
@@ -17,6 +19,8 @@ from .models import (
     Article,
     CNNReporter,
     Reporter,
+	Film,
+	FilmDetails,
 )
 
 pytestmark = pytest.mark.django_db
@@ -433,6 +437,60 @@ def test_should_query_node_filtering():
 
 @pytest.mark.skipif(not DJANGO_FILTER_INSTALLED,
                     reason="django-filter should be installed")
+def test_should_query_node_filtering_with_distinct_queryset():
+    class FilmType(DjangoObjectType):
+
+        class Meta:
+            model = Film
+            interfaces = (Node, )
+            filter_fields = ('genre',)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        # def resolve_all_reporters_with_berlin_films(self, args, context, info):
+        #    return Reporter.objects.filter(Q(films__film__location__contains="Berlin") | Q(a_choice=1))
+
+        def resolve_films(self, info, **args):
+            return Film.objects.filter(Q(details__location__contains="Berlin") | Q(genre__in=['ot'])).distinct()
+
+    f = Film.objects.create(
+    )
+    fd = FilmDetails.objects.create(
+        location="Berlin",
+        film=f
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = '''
+        query NodeFilteringQuery {
+            films {
+                edges {
+                    node {
+                        genre
+                    }
+                }
+            }
+        }
+    '''
+
+    expected = {
+        'films': {
+            'edges': [{
+                'node': {
+                    'genre': 'OT'
+                }
+            }]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+@pytest.mark.skipif(not DJANGO_FILTER_INSTALLED,
+                    reason="django-filter should be installed")
 def test_should_query_node_multiple_filtering():
     class ReporterType(DjangoObjectType):
 
@@ -676,7 +734,7 @@ def test_should_query_promise_connectionfields():
 
         def resolve_all_reporters(self, info, **args):
             return Promise.resolve([Reporter(id=1)])
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterPromiseConnectionQuery {
@@ -724,7 +782,7 @@ def test_should_query_connectionfields_with_last():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterLastQuery {
@@ -779,7 +837,7 @@ def test_should_query_connectionfields_with_manager():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
-    
+
     schema = graphene.Schema(query=Query)
     query = '''
         query ReporterLastQuery {
@@ -1012,7 +1070,7 @@ def test_proxy_model_fails():
     """
     This test asserts that if you try to query for a proxy model,
     that query will fail with:
-        GraphQLError('Expected value of type "CNNReporterType" but got: 
+        GraphQLError('Expected value of type "CNNReporterType" but got:
             CNNReporter.',)
 
     This is because a proxy model has the identical model definition
