@@ -1,9 +1,14 @@
+# from django import forms
 from collections import OrderedDict
 
 import graphene
 from graphene import Field, InputField
 from graphene.relay.mutation import ClientIDMutation
 from graphene.types.mutation import MutationOptions
+# from graphene.types.inputobjecttype import (
+#     InputObjectTypeOptions,
+#     InputObjectType,
+# )
 from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 
@@ -60,6 +65,28 @@ class BaseDjangoFormMutation(ClientIDMutation):
             kwargs['instance'] = instance
 
         return kwargs
+
+
+# class DjangoFormInputObjectTypeOptions(InputObjectTypeOptions):
+#     form_class = None
+
+
+# class DjangoFormInputObjectType(InputObjectType):
+#     class Meta:
+#         abstract = True
+
+#     @classmethod
+#     def __init_subclass_with_meta__(cls, form_class=None,
+#                                     only_fields=(), exclude_fields=(), _meta=None, **options):
+#         if not _meta:
+#             _meta = DjangoFormInputObjectTypeOptions(cls)
+#         assert isinstance(form_class, forms.Form), (
+#             'form_class must be an instance of django.forms.Form'
+#         )
+#         _meta.form_class = form_class
+#         form = form_class()
+#         fields = fields_for_form(form, only_fields, exclude_fields)
+#         super(DjangoFormInputObjectType, cls).__init_subclass_with_meta__(_meta=_meta, fields=fields, **options)
 
 
 class DjangoFormMutationOptions(MutationOptions):
