@@ -448,7 +448,11 @@ def test_handles_field_errors_caught_by_graphql(client):
     assert response.status_code == 200
     assert response_json(response) == {
         'data': None,
-        'errors': [{'locations': [{'column': 2, 'line': 1}], 'message': 'Throws!'}]
+        'errors': [{
+            'locations': [{'column': 2, 'line': 1}],
+            'path': ['thrower'],
+            'message': 'Throws!',
+        }]
     }
 
 
@@ -457,7 +461,7 @@ def test_handles_syntax_errors_caught_by_graphql(client):
     assert response.status_code == 400
     assert response_json(response) == {
         'errors': [{'locations': [{'column': 1, 'line': 1}],
-                    'message': 'Syntax Error GraphQL request (1:1) '
+                    'message': 'Syntax Error GraphQL (1:1) '
                                'Unexpected Name "syntaxerror"\n\n1: syntaxerror\n   ^\n'}]
     }
 

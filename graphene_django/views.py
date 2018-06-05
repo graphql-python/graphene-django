@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from graphql import Source, execute, parse, validate
+from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
@@ -59,15 +59,19 @@ class GraphQLView(View):
     schema = None
     graphiql = False
     executor = None
+    backend = None
     middleware = None
     root_value = None
     pretty = False
     batch = False
 
     def __init__(self, schema=None, executor=None, middleware=None, root_value=None, graphiql=False, pretty=False,
-                 batch=False):
+                 batch=False, backend=None):
         if not schema:
             schema = graphene_settings.SCHEMA
+
+        if backend is None:
+            backend = get_default_backend()
 
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
@@ -80,6 +84,7 @@ class GraphQLView(View):
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
+        self.backend = backend
 
         assert isinstance(
             self.schema, GraphQLSchema), 'A Schema is required to be provided to GraphQLView.'
@@ -95,6 +100,9 @@ class GraphQLView(View):
 
     def get_context(self, request):
         return request
+
+    def get_backend(self, request):
+        return self.backend
 
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
@@ -225,9 +233,6 @@ class GraphQLView(View):
 
         return {}
 
-    def execute(self, *args, **kwargs):
-        return execute(self.schema, *args, **kwargs)
-
     def execute_graphql_request(self, request, data, query, variables, operation_name, show_graphiql=False):
         if not query:
             if show_graphiql:
@@ -235,39 +240,37 @@ class GraphQLView(View):
             raise HttpError(HttpResponseBadRequest(
                 'Must provide query string.'))
 
-        source = Source(query, name='GraphQL request')
-
         try:
-            document_ast = parse(source)
-            validation_errors = validate(self.schema, document_ast)
-            if validation_errors:
-                return ExecutionResult(
-                    errors=validation_errors,
-                    invalid=True,
-                )
+            backend = self.get_backend(request)
+            document = backend.document_from_string(self.schema, query)
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
         if request.method.lower() == 'get':
-            operation_ast = get_operation_ast(document_ast, operation_name)
-            if operation_ast and operation_ast.operation != 'query':
+            operation_type = document.get_operation_type(operation_name)
+            if operation_type and operation_type != 'query':
                 if show_graphiql:
                     return None
 
                 raise HttpError(HttpResponseNotAllowed(
                     ['POST'], 'Can only perform a {} operation from a POST request.'.format(
-                        operation_ast.operation)
+                        operation_type)
                 ))
 
         try:
-            return self.execute(
-                document_ast,
-                root_value=self.get_root_value(request),
-                variable_values=variables,
+            extra_options = {}
+            if self.executor:
+                # We only include it optionally since
+                # executor is not a valid argument in all backends
+                extra_options['executor'] = self.executor
+
+            return document.execute(
+                root=self.get_root_value(request),
+                variables=variables,
                 operation_name=operation_name,
-                context_value=self.get_context(request),
+                context=self.get_context(request),
                 middleware=self.get_middleware(request),
-                executor=self.executor,
+                **extra_options
             )
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
