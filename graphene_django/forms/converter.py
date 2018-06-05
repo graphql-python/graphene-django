@@ -85,12 +85,6 @@ def convert_form_field_to_id(field):
     return ID(required=field.required)
 
 
-@convert_form_field.register(forms.DateField)
-@convert_form_field.register(forms.DateTimeField)
-def convert_form_field_to_datetime(field):
-    return DateTime(description=field.help_text, required=field.required)
-
-
 @convert_form_field.register(forms.TimeField)
 def convert_form_field_to_time(field):
     return Time(description=field.help_text, required=field.required)

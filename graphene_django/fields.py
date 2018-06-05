@@ -67,6 +67,10 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
+        if default_queryset.query.distinct and not queryset.query.distinct:
+            queryset = queryset.distinct()
+        elif queryset.query.distinct and not default_queryset.query.distinct:
+            default_queryset = default_queryset.distinct()
         return queryset & default_queryset
 
     @classmethod
