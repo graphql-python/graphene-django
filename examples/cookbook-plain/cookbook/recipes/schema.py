@@ -14,7 +14,7 @@ class RecipeIngredientType(DjangoObjectType):
         model = RecipeIngredient
 
 
-class Query(graphene.AbstractType):
+class Query(object):
     recipe = graphene.Field(RecipeType,
                             id=graphene.Int(),
                             title=graphene.String())
