@@ -67,6 +67,10 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
+        if default_queryset.query.distinct and not queryset.query.distinct:
+            queryset = queryset.distinct()
+        elif queryset.query.distinct and not default_queryset.query.distinct:
+            default_queryset = default_queryset.distinct()
         return queryset & default_queryset
 
     @classmethod
@@ -116,7 +120,7 @@ class DjangoConnectionField(ConnectionField):
             if last:
                 assert last <= max_limit, (
                     'Requesting {} records on the `{}` connection exceeds the `last` limit of {} records.'
-                ).format(first, info.field_name, max_limit)
+                ).format(last, info.field_name, max_limit)
                 args['last'] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
