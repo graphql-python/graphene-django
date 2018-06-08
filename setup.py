@@ -24,7 +24,6 @@ tests_require = [
     'pytest-django>=3.2.1',
 ] + rest_framework_require
 
-django_version = 'Django>=1.8.0,<2' if sys.version_info[0] < 3 else 'Django>=1.8.0'
 setup(
     name='graphene-django',
     version=version,
@@ -60,7 +59,7 @@ setup(
         'six>=1.10.0',
         'graphene>=2.1,<3',
         'graphql-core>=2.1rc1',
-        django_version,
+        'Django>=1.8.0',
         'iso8601',
         'singledispatch>=3.4.0.3',
         'promise>=2.1',
