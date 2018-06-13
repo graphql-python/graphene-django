@@ -5,7 +5,9 @@ import graphene
 from graphene_django.debug import DjangoDebug
 
 
-class Query(cookbook.recipes.schema.Query, cookbook.ingredients.schema.Query, graphene.ObjectType):
+class Query(cookbook.ingredients.schema.Query,
+            cookbook.recipes.schema.Query,
+            graphene.ObjectType):
     debug = graphene.Field(DjangoDebug, name='__debug')
 
 
