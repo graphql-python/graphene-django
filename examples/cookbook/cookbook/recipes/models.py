@@ -8,6 +8,7 @@ class Recipe(models.Model):
     instructions = models.TextField()
     __unicode__ = lambda self: self.title
 
+
 class RecipeIngredient(models.Model):
     recipe = models.ForeignKey(Recipe, related_name='amounts')
     ingredient = models.ForeignKey(Ingredient, related_name='used_by')
