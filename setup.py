@@ -19,7 +19,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
-    "django-filter",
+    "django-filter<2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
 
