@@ -19,11 +19,11 @@ from .models import Article, Film, FilmDetails, Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
-    field = django_field(help_text='Custom Help Text', null=True, *args, **kwargs)
+    field = django_field(help_text="Custom Help Text", null=True, *args, **kwargs)
     graphene_type = convert_django_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
-    assert field.description == 'Custom Help Text'
+    assert field.description == "Custom Help Text"
     nonnull_field = django_field(null=False, *args, **kwargs)
     if not nonnull_field.null:
         nonnull_graphene_type = convert_django_field(nonnull_field)
@@ -36,7 +36,8 @@ def assert_conversion(django_field, graphene_field, *args, **kwargs):
 def test_should_unknown_django_field_raise_exception():
     with raises(Exception) as excinfo:
         convert_django_field(None)
-    assert 'Don\'t know how to convert the Django field' in str(excinfo.value)
+    assert "Don't know how to convert the Django field" in str(excinfo.value)
+
 
 def test_should_date_time_convert_string():
     assert_conversion(models.DateTimeField, DateTime)
@@ -128,70 +129,69 @@ def test_should_nullboolean_convert_boolean():
 
 
 def test_field_with_choices_convert_enum():
-    field = models.CharField(help_text='Language', choices=(
-        ('es', 'Spanish'),
-        ('en', 'English')
-    ))
+    field = models.CharField(
+        help_text="Language", choices=(("es", "Spanish"), ("en", "English"))
+    )
 
     class TranslatedModel(models.Model):
         language = field
 
         class Meta:
-            app_label = 'test'
+            app_label = "test"
 
     graphene_type = convert_django_field_with_choices(field)
     assert isinstance(graphene_type, graphene.Enum)
-    assert graphene_type._meta.name == 'TranslatedModelLanguage'
-    assert graphene_type._meta.enum.__members__['ES'].value == 'es'
-    assert graphene_type._meta.enum.__members__['ES'].description == 'Spanish'
-    assert graphene_type._meta.enum.__members__['EN'].value == 'en'
-    assert graphene_type._meta.enum.__members__['EN'].description == 'English'
+    assert graphene_type._meta.name == "TranslatedModelLanguage"
+    assert graphene_type._meta.enum.__members__["ES"].value == "es"
+    assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
+    assert graphene_type._meta.enum.__members__["EN"].value == "en"
+    assert graphene_type._meta.enum.__members__["EN"].description == "English"
 
 
 def test_field_with_grouped_choices():
-    field = models.CharField(help_text='Language', choices=(
-        ('Europe', (
-            ('es', 'Spanish'),
-            ('en', 'English'),
-        )),
-    ))
+    field = models.CharField(
+        help_text="Language",
+        choices=(("Europe", (("es", "Spanish"), ("en", "English"))),),
+    )
 
     class GroupedChoicesModel(models.Model):
         language = field
 
         class Meta:
-            app_label = 'test'
+            app_label = "test"
 
     convert_django_field_with_choices(field)
 
 
 def test_field_with_choices_gettext():
-    field = models.CharField(help_text='Language', choices=(
-        ('es', _('Spanish')),
-        ('en', _('English'))
-    ))
+    field = models.CharField(
+        help_text="Language", choices=(("es", _("Spanish")), ("en", _("English")))
+    )
 
     class TranslatedChoicesModel(models.Model):
         language = field
 
         class Meta:
-            app_label = 'test'
+            app_label = "test"
 
     convert_django_field_with_choices(field)
 
 
 def test_field_with_choices_collision():
-    field = models.CharField(help_text='Timezone', choices=(
-        ('Etc/GMT+1+2', 'Fake choice to produce double collision'),
-        ('Etc/GMT+1', 'Greenwich Mean Time +1'),
-        ('Etc/GMT-1', 'Greenwich Mean Time -1'),
-    ))
+    field = models.CharField(
+        help_text="Timezone",
+        choices=(
+            ("Etc/GMT+1+2", "Fake choice to produce double collision"),
+            ("Etc/GMT+1", "Greenwich Mean Time +1"),
+            ("Etc/GMT-1", "Greenwich Mean Time -1"),
+        ),
+    )
 
     class CollisionChoicesModel(models.Model):
         timezone = field
 
         class Meta:
-            app_label = 'test'
+            app_label = "test"
 
     convert_django_field_with_choices(field)
 
@@ -208,11 +208,12 @@ def test_should_manytomany_convert_connectionorlist():
 
 def test_should_manytomany_convert_connectionorlist_list():
     class A(DjangoObjectType):
-
         class Meta:
             model = Reporter
 
-    graphene_field = convert_django_field(Reporter._meta.local_many_to_many[0], A._meta.registry)
+    graphene_field = convert_django_field(
+        Reporter._meta.local_many_to_many[0], A._meta.registry
+    )
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
@@ -222,12 +223,13 @@ def test_should_manytomany_convert_connectionorlist_list():
 
 def test_should_manytomany_convert_connectionorlist_connection():
     class A(DjangoObjectType):
-
         class Meta:
             model = Reporter
-            interfaces = (Node, )
+            interfaces = (Node,)
 
-    graphene_field = convert_django_field(Reporter._meta.local_many_to_many[0], A._meta.registry)
+    graphene_field = convert_django_field(
+        Reporter._meta.local_many_to_many[0], A._meta.registry
+    )
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, ConnectionField)
@@ -236,11 +238,11 @@ def test_should_manytomany_convert_connectionorlist_connection():
 
 def test_should_manytoone_convert_connectionorlist():
     # Django 1.9 uses 'rel', <1.9 uses 'related
-    related = getattr(Reporter.articles, 'rel', None) or \
-        getattr(Reporter.articles, 'related')
+    related = getattr(Reporter.articles, "rel", None) or getattr(
+        Reporter.articles, "related"
+    )
 
     class A(DjangoObjectType):
-
         class Meta:
             model = Article
 
@@ -254,11 +256,9 @@ def test_should_manytoone_convert_connectionorlist():
 
 def test_should_onetoone_reverse_convert_model():
     # Django 1.9 uses 'rel', <1.9 uses 'related
-    related = getattr(Film.details, 'rel', None) or \
-        getattr(Film.details, 'related')
+    related = getattr(Film.details, "rel", None) or getattr(Film.details, "related")
 
     class A(DjangoObjectType):
-
         class Meta:
             model = FilmDetails
 
@@ -269,41 +269,41 @@ def test_should_onetoone_reverse_convert_model():
     assert dynamic_field.type == A
 
 
-@pytest.mark.skipif(ArrayField is MissingType,
-                    reason="ArrayField should exist")
+@pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
 def test_should_postgres_array_convert_list():
-    field = assert_conversion(ArrayField, graphene.List, models.CharField(max_length=100))
+    field = assert_conversion(
+        ArrayField, graphene.List, models.CharField(max_length=100)
+    )
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
     assert field.type.of_type.of_type == graphene.String
 
 
-@pytest.mark.skipif(ArrayField is MissingType,
-                    reason="ArrayField should exist")
+@pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
 def test_should_postgres_array_multiple_convert_list():
-    field = assert_conversion(ArrayField, graphene.List, ArrayField(models.CharField(max_length=100)))
+    field = assert_conversion(
+        ArrayField, graphene.List, ArrayField(models.CharField(max_length=100))
+    )
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
     assert isinstance(field.type.of_type.of_type, graphene.List)
     assert field.type.of_type.of_type.of_type == graphene.String
 
 
-@pytest.mark.skipif(HStoreField is MissingType,
-                    reason="HStoreField should exist")
+@pytest.mark.skipif(HStoreField is MissingType, reason="HStoreField should exist")
 def test_should_postgres_hstore_convert_string():
     assert_conversion(HStoreField, JSONString)
 
 
-@pytest.mark.skipif(JSONField is MissingType,
-                    reason="JSONField should exist")
+@pytest.mark.skipif(JSONField is MissingType, reason="JSONField should exist")
 def test_should_postgres_json_convert_string():
     assert_conversion(JSONField, JSONString)
 
 
-@pytest.mark.skipif(RangeField is MissingType,
-                    reason="RangeField should exist")
+@pytest.mark.skipif(RangeField is MissingType, reason="RangeField should exist")
 def test_should_postgres_range_convert_list():
     from django.contrib.postgres.fields import IntegerRangeField
+
     field = assert_conversion(IntegerRangeField, graphene.List)
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)

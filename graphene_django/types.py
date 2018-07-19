@@ -8,8 +8,7 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
-from .utils import (DJANGO_FILTER_INSTALLED, get_model_fields,
-                    is_valid_django_model)
+from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -21,7 +20,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
         # is_already_created = name in options.fields
         is_excluded = name in exclude_fields  # or is_already_created
         # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
-        is_no_backref = str(name).endswith('+')
+        is_no_backref = str(name).endswith("+")
         if is_not_in_only or is_excluded or is_no_backref:
             # We skip this field if we specify only_fields and is not
             # in there. Or when we exclude this field in exclude_fields.
@@ -43,9 +42,21 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
 
 class DjangoObjectType(ObjectType):
     @classmethod
-    def __init_subclass_with_meta__(cls, model=None, registry=None, skip_registry=False,
-                                    only_fields=(), exclude_fields=(), filter_fields=None, connection=None,
-                                    connection_class=None, use_connection=None, interfaces=(), _meta=None, **options):
+    def __init_subclass_with_meta__(
+        cls,
+        model=None,
+        registry=None,
+        skip_registry=False,
+        only_fields=(),
+        exclude_fields=(),
+        filter_fields=None,
+        connection=None,
+        connection_class=None,
+        use_connection=None,
+        interfaces=(),
+        _meta=None,
+        **options
+    ):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
@@ -54,7 +65,7 @@ class DjangoObjectType(ObjectType):
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            'The attribute registry in {} needs to be an instance of '
+            "The attribute registry in {} needs to be an instance of "
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
@@ -62,12 +73,13 @@ class DjangoObjectType(ObjectType):
             raise Exception("Can only set filter_fields if Django-Filter is installed")
 
         django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, only_fields, exclude_fields),
-            _as=Field,
+            construct_fields(model, registry, only_fields, exclude_fields), _as=Field
         )
 
         if use_connection is None and interfaces:
-            use_connection = any((issubclass(interface, Node) for interface in interfaces))
+            use_connection = any(
+                (issubclass(interface, Node) for interface in interfaces)
+            )
 
         if use_connection and not connection:
             # We create the connection automatically
@@ -75,7 +87,8 @@ class DjangoObjectType(ObjectType):
                 connection_class = Connection
 
             connection = connection_class.create_type(
-                '{}Connection'.format(cls.__name__), node=cls)
+                "{}Connection".format(cls.__name__), node=cls
+            )
 
         if connection is not None:
             assert issubclass(connection, Connection), (
@@ -91,7 +104,9 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
-        super(DjangoObjectType, cls).__init_subclass_with_meta__(_meta=_meta, interfaces=interfaces, **options)
+        super(DjangoObjectType, cls).__init_subclass_with_meta__(
+            _meta=_meta, interfaces=interfaces, **options
+        )
 
         if not skip_registry:
             registry.register(cls)
@@ -107,9 +122,7 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(type(root)):
-            raise Exception((
-                'Received incompatible instance "{}".'
-            ).format(root))
+            raise Exception(('Received incompatible instance "{}".').format(root))
 
         model = root._meta.model._meta.concrete_model
         return model == cls._meta.model

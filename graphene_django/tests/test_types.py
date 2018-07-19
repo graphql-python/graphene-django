@@ -12,27 +12,30 @@ registry.reset_global_registry()
 
 
 class Reporter(DjangoObjectType):
-    '''Reporter description'''
+    """Reporter description"""
+
     class Meta:
         model = ReporterModel
 
 
 class ArticleConnection(Connection):
-    '''Article Connection'''
+    """Article Connection"""
+
     test = String()
 
     def resolve_test():
-        return 'test'
+        return "test"
 
     class Meta:
         abstract = True
 
 
 class Article(DjangoObjectType):
-    '''Article description'''
+    """Article description"""
+
     class Meta:
         model = ArticleModel
-        interfaces = (Node, )
+        interfaces = (Node,)
         connection_class = ArticleConnection
 
 
@@ -48,7 +51,7 @@ def test_django_interface():
     assert issubclass(Node, Node)
 
 
-@patch('graphene_django.tests.models.Article.objects.get', return_value=Article(id=1))
+@patch("graphene_django.tests.models.Article.objects.get", return_value=Article(id=1))
 def test_django_get_node(get):
     article = Article.get_node(None, 1)
     get.assert_called_with(pk=1)
@@ -58,18 +61,35 @@ def test_django_get_node(get):
 def test_django_objecttype_map_correct_fields():
     fields = Reporter._meta.fields
     fields = list(fields.keys())
-    assert fields[:-2] == ['id', 'first_name', 'last_name', 'email', 'pets', 'a_choice', 'reporter_type']
-    assert sorted(fields[-2:]) == ['articles', 'films']
+    assert fields[:-2] == [
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "pets",
+        "a_choice",
+        "reporter_type",
+    ]
+    assert sorted(fields[-2:]) == ["articles", "films"]
 
 
 def test_django_objecttype_with_node_have_correct_fields():
     fields = Article._meta.fields
-    assert list(fields.keys()) == ['id', 'headline', 'pub_date', 'pub_date_time', 'reporter', 'editor', 'lang', 'importance']
+    assert list(fields.keys()) == [
+        "id",
+        "headline",
+        "pub_date",
+        "pub_date_time",
+        "reporter",
+        "editor",
+        "lang",
+        "importance",
+    ]
 
 
 def test_django_objecttype_with_custom_meta():
     class ArticleTypeOptions(DjangoObjectTypeOptions):
-        '''Article Type Options'''
+        """Article Type Options"""
 
     class ArticleType(DjangoObjectType):
         class Meta:
@@ -77,7 +97,7 @@ def test_django_objecttype_with_custom_meta():
 
         @classmethod
         def __init_subclass_with_meta__(cls, **options):
-            options.setdefault('_meta', ArticleTypeOptions(cls))
+            options.setdefault("_meta", ArticleTypeOptions(cls))
             super(ArticleType, cls).__init_subclass_with_meta__(**options)
 
     class Article(ArticleType):
@@ -180,6 +200,7 @@ def with_local_registry(func):
         else:
             registry.registry = old
             return retval
+
     return inner
 
 
@@ -188,11 +209,10 @@ def test_django_objecttype_only_fields():
     class Reporter(DjangoObjectType):
         class Meta:
             model = ReporterModel
-            only_fields = ('id', 'email', 'films')
-
+            only_fields = ("id", "email", "films")
 
     fields = list(Reporter._meta.fields.keys())
-    assert fields == ['id', 'email', 'films']
+    assert fields == ["id", "email", "films"]
 
 
 @with_local_registry
@@ -200,8 +220,7 @@ def test_django_objecttype_exclude_fields():
     class Reporter(DjangoObjectType):
         class Meta:
             model = ReporterModel
-            exclude_fields = ('email')
-
+            exclude_fields = "email"
 
     fields = list(Reporter._meta.fields.keys())
-    assert 'email' not in fields
+    assert "email" not in fields

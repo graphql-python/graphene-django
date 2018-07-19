@@ -7,7 +7,7 @@ try:
     # and we cannot have psycopg2 on PyPy
     from django.contrib.postgres.fields import ArrayField, HStoreField, RangeField
 except ImportError:
-    ArrayField, HStoreField, JSONField, RangeField = (MissingType, ) * 4
+    ArrayField, HStoreField, JSONField, RangeField = (MissingType,) * 4
 
 
 try:

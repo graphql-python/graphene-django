@@ -1,8 +1,22 @@
 from django.db import models
 from django.utils.encoding import force_text
 
-from graphene import (ID, Boolean, Dynamic, Enum, Field, Float, Int, List,
-                      NonNull, String, UUID, DateTime, Date, Time)
+from graphene import (
+    ID,
+    Boolean,
+    Dynamic,
+    Enum,
+    Field,
+    Float,
+    Int,
+    List,
+    NonNull,
+    String,
+    UUID,
+    DateTime,
+    Date,
+    Time,
+)
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
@@ -32,7 +46,7 @@ def get_choices(choices):
         else:
             name = convert_choice_name(value)
             while name in converted_names:
-                name += '_' + str(len(converted_names))
+                name += "_" + str(len(converted_names))
             converted_names.append(name)
             description = help_text
             yield name, value, description
@@ -43,16 +57,15 @@ def convert_django_field_with_choices(field, registry=None):
         converted = registry.get_converted_field(field)
         if converted:
             return converted
-    choices = getattr(field, 'choices', None)
+    choices = getattr(field, "choices", None)
     if choices:
         meta = field.model._meta
-        name = to_camel_case('{}_{}'.format(meta.object_name, field.name))
+        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         choices = list(get_choices(choices))
         named_choices = [(c[0], c[1]) for c in choices]
         named_choices_descriptions = {c[0]: c[2] for c in choices}
 
         class EnumWithDescriptionsType(object):
-
             @property
             def description(self):
                 return named_choices_descriptions[self.name]
@@ -69,8 +82,8 @@ def convert_django_field_with_choices(field, registry=None):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field %s (%s)" %
-        (field, field.__class__))
+        "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
+    )
 
 
 @convert_django_field.register(models.CharField)
@@ -147,7 +160,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 
         # We do this for a bug in Django 1.8, where null attr
         # is not available in the OneToOneRel instance
-        null = getattr(field, 'null', True)
+        null = getattr(field, "null", True)
         return Field(_type, required=not null)
 
     return Dynamic(dynamic_type)
@@ -171,6 +184,7 @@ def convert_field_to_list_or_connection(field, registry=None):
             # defined filter_fields in the DjangoObjectType Meta
             if _type._meta.filter_fields:
                 from .filter.fields import DjangoFilterConnectionField
+
                 return DjangoFilterConnectionField(_type)
 
             return DjangoConnectionField(_type)
