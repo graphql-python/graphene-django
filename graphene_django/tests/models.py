@@ -8,6 +8,7 @@ CHOICES = ((1, "this"), (2, _("that")))
 
 class Pet(models.Model):
     name = models.CharField(max_length=30)
+    age = models.PositiveIntegerField()
 
 
 class FilmDetails(models.Model):
