@@ -147,7 +147,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             interfaces = (relay.Node, )
 
 
-    class Query(object):
+    class Query(graphene.ObjectType):
         category = relay.Node.Field(CategoryNode)
         all_categories = DjangoFilterConnectionField(CategoryNode)
 
