@@ -58,7 +58,6 @@ def convert_serializer_field(field, is_input=True):
             field_model = field.Meta.model
             args = [global_registry.get_type_for_model(field_model)]
 
-    print('graphql_type', graphql_type, args)
     return graphql_type(*args, **kwargs)
 
 
