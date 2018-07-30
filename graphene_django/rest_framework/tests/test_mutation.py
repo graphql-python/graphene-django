@@ -8,6 +8,7 @@ from rest_framework import serializers
 
 from ...types import DjangoObjectType
 from ..models import MyFakeModel
+from ..models import OneToOneModel
 from ..mutation import SerializerMutation
 
 
@@ -30,6 +31,17 @@ class MyModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyFakeModel
         fields = "__all__"
+
+
+class OneToOneModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OneToOneModel
+        fields = "__all__"
+
+
+class OneToOneModelMutation(SerializerMutation):
+    class Meta:
+        serializer_class = OneToOneModelSerializer
 
 
 class MyModelMutation(SerializerMutation):
@@ -62,6 +74,23 @@ def test_has_fields():
     assert "text" in MyMutation._meta.fields
     assert "model" in MyMutation._meta.fields
     assert "errors" in MyMutation._meta.fields
+
+
+def test_has_nested_fields():
+    class MyFakeModelGrapheneType(DjangoObjectType):
+        class Meta:
+            model = MyFakeModel
+
+    class OneToOneModelMutation(SerializerMutation):
+        class Meta:
+            serializer_class = OneToOneModelSerializer
+
+    assert "name" in OneToOneModelMutation._meta.fields
+    assert "fake" in OneToOneModelMutation._meta.fields
+    model_field = OneToOneModelMutation._meta.fields['fake']
+    assert isinstance(model_field, Field)
+    assert model_field.type == MyFakeModelGrapheneType
+    assert "errors" in OneToOneModelMutation._meta.fields
 
 
 def test_has_input_fields():
@@ -128,6 +157,21 @@ def test_model_add_mutate_and_get_payload_success():
 
 
 @mark.django_db
+def test_one_to_one_model_with_add_mutate_and_get_payload_success():
+    fake = MyModelMutation.mutate_and_get_payload(
+        None, mock_info(), **{"cool_name": "Narf"}
+    )
+
+    result = OneToOneModelMutation.mutate_and_get_payload(
+        None, mock_info(), **{"name": "Jinkies", "fake": fake.id}
+    )
+    assert result.errors is None
+    assert result.name == "Jinkies"
+    assert result.fake.pk == fake.id
+    assert isinstance(result.created, datetime.datetime)
+
+
+@mark.django_db
 def test_model_update_mutate_and_get_payload_success():
     instance = MyFakeModel.objects.create(cool_name="Narf")
     result = MyModelMutation.mutate_and_get_payload(
@@ -165,6 +209,18 @@ def test_mutate_and_get_payload_error():
 def test_model_mutate_and_get_payload_error():
     # missing required fields
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
+    assert len(result.errors) > 0
+
+
+@mark.django_db
+def test_one_to_one_model_with_add_mutate_and_get_payload_error():
+    MyModelMutation.mutate_and_get_payload(
+        None, mock_info(), **{"cool_name": "Narf"}
+    )
+
+    result = OneToOneModelMutation.mutate_and_get_payload(
+        None, mock_info(), **{"name": "Jinkies", "fake": "invalid"}
+    )
     assert len(result.errors) > 0
 
 

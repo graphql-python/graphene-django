@@ -138,6 +138,9 @@ class SerializerMutation(ClientIDMutation):
 
         kwargs = {}
         for f, field in serializer.fields.items():
-            kwargs[f] = field.get_attribute(obj)
+            if hasattr(field, 'queryset'):
+                kwargs[f] = field.queryset.get(pk=str(field.get_attribute(obj)))
+            else:
+                kwargs[f] = field.get_attribute(obj)
 
         return cls(errors=None, **kwargs)

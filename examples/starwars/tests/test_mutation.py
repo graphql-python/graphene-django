@@ -77,3 +77,33 @@ def test_mutations():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_serializer_mutations():
+    initialize()
+
+    query = '''
+    mutation createCharacter {
+      createCharacter(input:{clientMutationId:"def", name: "Luke", ship: "1"}) {
+        id
+        name
+        ship {
+          id
+          name
+        }
+      }
+    }
+    '''
+    expected = {
+        'createCharacter': {
+            'id': 3,
+            'name': 'Luke',
+            'ship': {
+                'id': 'U2hpcDox',
+                'name': 'X-Wing'
+            }
+        }
+    }
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected

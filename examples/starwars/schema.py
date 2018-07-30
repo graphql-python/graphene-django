@@ -1,12 +1,14 @@
 import graphene
 from graphene import Schema, relay, resolve_only_args
 from graphene_django import DjangoConnectionField, DjangoObjectType
+from graphene_django.rest_framework.mutation import SerializerMutation
 
 from .data import (create_ship, get_empire, get_faction, get_rebels, get_ship,
                    get_ships)
 from .models import Character as CharacterModel
 from .models import Faction as FactionModel
 from .models import Ship as ShipModel
+from .serializers import CharacterSerializer
 
 
 class Ship(DjangoObjectType):
@@ -54,6 +56,11 @@ class IntroduceShip(relay.ClientIDMutation):
         return IntroduceShip(ship=ship, faction=faction)
 
 
+class CreateCharacter(SerializerMutation):
+    class Meta:
+        serializer_class = CharacterSerializer
+
+
 class Query(graphene.ObjectType):
     rebels = graphene.Field(Faction)
     empire = graphene.Field(Faction)
@@ -75,7 +82,7 @@ class Query(graphene.ObjectType):
 
 class Mutation(graphene.ObjectType):
     introduce_ship = IntroduceShip.Field()
-
+    create_character = CreateCharacter.Field()
 
 # We register the Character Model because if not would be
 # inaccessible for the schema

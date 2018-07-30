@@ -11,7 +11,7 @@ singledispatch = import_single_dispatch()
 
 
 @singledispatch
-def get_graphene_type_from_serializer_field(field):
+def get_graphene_type_from_serializer_field(field, **kwargs):
     raise ImproperlyConfigured(
         "Don't know how to convert the serializer field %s (%s) "
         "to Graphene type" % (field, field.__class__)
@@ -25,7 +25,7 @@ def convert_serializer_field(field, is_input=True):
     and the field itself is required
     """
 
-    graphql_type = get_graphene_type_from_serializer_field(field)
+    graphql_type = get_graphene_type_from_serializer_field(field, is_input=is_input)
 
     args = []
     kwargs = {"description": field.help_text, "required": is_input and field.required}
@@ -35,6 +35,11 @@ def convert_serializer_field(field, is_input=True):
     if isinstance(graphql_type, (list, tuple)):
         kwargs["of_type"] = graphql_type[1]
         graphql_type = graphql_type[0]
+
+    if isinstance(field, serializers.PrimaryKeyRelatedField) and not is_input:
+        global_registry = get_global_registry()
+        field_model = field.queryset.model
+        args = [global_registry.get_type_for_model(field_model)]
 
     if isinstance(field, serializers.ModelSerializer):
         if is_input:
@@ -53,6 +58,7 @@ def convert_serializer_field(field, is_input=True):
             field_model = field.Meta.model
             args = [global_registry.get_type_for_model(field_model)]
 
+    print('graphql_type', graphql_type, args)
     return graphql_type(*args, **kwargs)
 
 
@@ -72,49 +78,56 @@ def convert_serializer_to_input_type(serializer_class):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)
-def convert_serializer_field_to_string(field):
+def convert_serializer_field_to_string(field, **kwargs):
     return graphene.String
 
 
 @get_graphene_type_from_serializer_field.register(serializers.ModelSerializer)
-def convert_serializer_to_field(field):
+def convert_serializer_to_field(field, **kwargs):
+    return graphene.Field
+
+
+@get_graphene_type_from_serializer_field.register(serializers.PrimaryKeyRelatedField)
+def convert_serializer_key_to_field(field, is_input=True):
+    if is_input:
+        return graphene.String
     return graphene.Field
 
 
 @get_graphene_type_from_serializer_field.register(serializers.ListSerializer)
-def convert_list_serializer_to_field(field):
+def convert_list_serializer_to_field(field, **kwargs):
     child_type = get_graphene_type_from_serializer_field(field.child)
     return (graphene.List, child_type)
 
 
 @get_graphene_type_from_serializer_field.register(serializers.IntegerField)
-def convert_serializer_field_to_int(field):
+def convert_serializer_field_to_int(field, **kwargs):
     return graphene.Int
 
 
 @get_graphene_type_from_serializer_field.register(serializers.BooleanField)
-def convert_serializer_field_to_bool(field):
+def convert_serializer_field_to_bool(field, **kwargs):
     return graphene.Boolean
 
 
 @get_graphene_type_from_serializer_field.register(serializers.FloatField)
 @get_graphene_type_from_serializer_field.register(serializers.DecimalField)
-def convert_serializer_field_to_float(field):
+def convert_serializer_field_to_float(field, **kwargs):
     return graphene.Float
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DateTimeField)
-def convert_serializer_field_to_datetime_time(field):
+def convert_serializer_field_to_datetime_time(field, **kwargs):
     return graphene.types.datetime.DateTime
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DateField)
-def convert_serializer_field_to_date_time(field):
+def convert_serializer_field_to_date_time(field, **kwargs):
     return graphene.types.datetime.Date
 
 
 @get_graphene_type_from_serializer_field.register(serializers.TimeField)
-def convert_serializer_field_to_time(field):
+def convert_serializer_field_to_time(field, **kwargs):
     return graphene.types.datetime.Time
 
 
@@ -126,15 +139,15 @@ def convert_serializer_field_to_list(field, is_input=True):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DictField)
-def convert_serializer_field_to_dict(field):
+def convert_serializer_field_to_dict(field, **kwargs):
     return DictType
 
 
 @get_graphene_type_from_serializer_field.register(serializers.JSONField)
-def convert_serializer_field_to_jsonstring(field):
+def convert_serializer_field_to_jsonstring(field, **kwargs):
     return graphene.types.json.JSONString
 
 
 @get_graphene_type_from_serializer_field.register(serializers.MultipleChoiceField)
-def convert_serializer_field_to_list_of_string(field):
+def convert_serializer_field_to_list_of_string(field, **kwargs):
     return (graphene.List, graphene.String)
