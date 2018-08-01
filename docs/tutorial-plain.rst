@@ -179,9 +179,9 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             return Ingredient.objects.select_related('category').all()
 
 
-Note that the above ``Query`` class is marked as 'abstract'. This is
-because we will now create a project-level query which will combine all
-our app-level queries.
+Note that the above ``Query`` class is a mixin, inheriting from
+``object``. This is because we will now create a project-level query
+class which will combine all our app-level mixins.
 
 Create the parent project-level ``cookbook/schema.py``:
 
