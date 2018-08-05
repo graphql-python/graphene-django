@@ -19,7 +19,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
-    "django-filter<2",
+    "django-filter>=2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
 
@@ -50,7 +50,7 @@ setup(
         "six>=1.10.0",
         "graphene>=2.1,<3",
         "graphql-core>=2.1rc1",
-        "Django>=1.8.0",
+        "Django>=1.11",
         "iso8601",
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
