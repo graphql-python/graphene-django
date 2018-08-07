@@ -3,7 +3,9 @@ Filtering
 
 Graphene integrates with
 `django-filter <https://django-filter.readthedocs.io/en/1.1.0/>`__ (< 2.0.0) to provide
-filtering of results. See the `usage
+filtering of results (this also means filtering is only compatible with Django < 2.0).
+
+See the `usage
 documentation <https://django-filter.readthedocs.io/en/1.1.0/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
