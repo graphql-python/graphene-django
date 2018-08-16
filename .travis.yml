@@ -45,6 +45,8 @@ matrix:
     env: TEST_TYPE=build DJANGO_VERSION=2.1
   - python: '3.6'
     env: TEST_TYPE=build DJANGO_VERSION=2.1
+  - python: '2.7'
+    env: TEST_TYPE=lint
   - python: '3.6'
     env: TEST_TYPE=lint
 deploy:
