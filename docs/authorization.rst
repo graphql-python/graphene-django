@@ -20,7 +20,7 @@ Let's use a simple example model.
 Limiting Field Access
 ---------------------
 
-This is easy, simply use the ``only_fields`` meta attribute.
+To limit fields in a GraphQL query simply use the ``only_fields`` meta attribute.
 
 .. code:: python
 
@@ -63,8 +63,12 @@ define a resolve method for that field and return the desired queryset.
     class Query(ObjectType):
         all_posts = DjangoFilterConnectionField(PostNode)
 
-        def resolve_all_posts(self, args, info):
-            return Post.objects.filter(published=True)
+        def resolve_all_posts(self, info):
+             post = Post.objects.filter(published=True)
+             if post is not None:
+                 return post
+             else:
+                 return None
 
 User-based Queryset Filtering
 -----------------------------
@@ -95,7 +99,7 @@ schema is simple.
 
     result = schema.execute(query, context_value=request)
 
-Filtering ID-based node access
+Filtering ID-based Node Access
 ------------------------------
 
 In order to add authorization to id-based node access, we need to add a
@@ -113,23 +117,24 @@ method to your ``DjangoObjectType``.
             interfaces = (relay.Node, )
 
         @classmethod
-        def get_node(cls, id, context, info):
+        def get_node(cls, id, info):
             try:
-                post = cls._meta.model.objects.get(id=id)
+                post = cls._meta.model.objects.get(id=id, owner__user = info.context.user)
             except cls._meta.model.DoesNotExist:
                 return None
 
-            if post.published or context.user == post.owner:
+            if post.published or info.context.user == post.owner:
                 return post
             return None
 
-Adding login required
+Adding Login Required
 ---------------------
 
-If you want to use the standard Django LoginRequiredMixin_ you can create your own view, which includes the ``LoginRequiredMixin`` and subclasses the ``GraphQLView``:
+To restrict users from accessing the GraphQL API page the standard Django LoginRequiredMixin_ can be used to create your own standard Django Class Based View, which includes the ``LoginRequiredMixin`` and subclasses the ``GraphQLView``.:
 
 .. code:: python
-
+    #views.py
+    
     from django.contrib.auth.mixins import LoginRequiredMixin
     from graphene_django.views import GraphQLView
 
@@ -137,13 +142,24 @@ If you want to use the standard Django LoginRequiredMixin_ you can create your o
     class PrivateGraphQLView(LoginRequiredMixin, GraphQLView):
         pass
 
-After this, you can use the new ``PrivateGraphQLView`` in ``urls.py``:
+After this, you can use the new ``PrivateGraphQLView`` in the project's URL Configuration file ``url.py``:
+
+For Django 1.9 and below:
 
 .. code:: python
 
     urlpatterns = [
       # some other urls
       url(r'^graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+    ]
+    
+For Django 2.0 and above:
+
+.. code:: python
+
+    urlpatterns = [
+      # some other urls
+      path('graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 .. _LoginRequiredMixin: https://docs.djangoproject.com/en/1.10/topics/auth/default/#the-loginrequired-mixin
