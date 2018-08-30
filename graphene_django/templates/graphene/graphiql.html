@@ -39,7 +39,7 @@ add "&raw" to the end of the URL within a browser.
           decodeURIComponent(entry.slice(eq + 1));
       }
     });
-    // Produce a Location query string from a parameter object.
+    // Produce a Location fragment string from a parameter object.
     function locationQuery(params) {
       return '#' + Object.keys(params).map(function (key) {
         return encodeURIComponent(key) + '=' +
