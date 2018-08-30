@@ -100,22 +100,27 @@ add "&raw" to the end of the URL within a browser.
     function updateURL() {
       history.replaceState(null, null, locationQuery(parameters));
     }
-    // Render <GraphiQL /> into the body.
-    ReactDOM.render(
-      React.createElement(GraphiQL, {
-        fetcher: graphQLFetcher,
+    // If there are any fragment parameters, confirm the user wants to use them.
+    if (Object.keys(parameters).length
+      && !window.confirm("An untrusted query has been loaded, continue loading query?")) {
+      parameters = {};
+    }
+    var options = {
+      fetcher: graphQLFetcher,
         onEditQuery: onEditQuery,
         onEditVariables: onEditVariables,
         onEditOperationName: onEditOperationName,
-        query: '{{ query|escapejs }}',
-        response: '{{ result|escapejs }}',
-        {% if variables %}
-        variables: '{{ variables|escapejs }}',
-        {% endif %}
-        {% if operation_name %}
-        operationName: '{{ operation_name|escapejs }}',
-        {% endif %}
-      }),
+        query: parameters.query,
+    }
+    if (parameters.variables) {
+      options.variables = parameters.variables;
+    }
+    if (parameters.operation_name) {
+      options.operationName = parameters.operation_name;
+    }
+    // Render <GraphiQL /> into the body.
+    ReactDOM.render(
+      React.createElement(GraphiQL, options),
       document.body
     );
   </script>
