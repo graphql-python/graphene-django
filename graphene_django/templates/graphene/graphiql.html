@@ -32,7 +32,7 @@ add "&raw" to the end of the URL within a browser.
 
     // Collect the URL parameters
     var parameters = {};
-    window.location.search.substr(1).split('&').forEach(function (entry) {
+    window.location.hash.substr(1).split('&').forEach(function (entry) {
       var eq = entry.indexOf('=');
       if (eq >= 0) {
         parameters[decodeURIComponent(entry.slice(0, eq))] =
@@ -41,7 +41,7 @@ add "&raw" to the end of the URL within a browser.
     });
     // Produce a Location query string from a parameter object.
     function locationQuery(params) {
-      return '?' + Object.keys(params).map(function (key) {
+      return '#' + Object.keys(params).map(function (key) {
         return encodeURIComponent(key) + '=' +
           encodeURIComponent(params[key]);
       }).join('&');
