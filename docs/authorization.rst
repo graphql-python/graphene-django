@@ -64,11 +64,8 @@ define a resolve method for that field and return the desired queryset.
         all_posts = DjangoFilterConnectionField(PostNode)
 
         def resolve_all_posts(self, info):
-             post = Post.objects.filter(published=True)
-             if post is not None:
-                 return post
-             else:
-                 return None
+             return Post.objects.filter(published=True)
+
 
 User-based Queryset Filtering
 -----------------------------
