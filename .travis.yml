@@ -11,9 +11,6 @@ install:
     pip install -e .[test]
     pip install psycopg2 # Required for Django postgres fields testing
     pip install django==$DJANGO_VERSION
-    if (($(echo "$DJANGO_VERSION <= 1.9" | bc -l))); then # DRF dropped 1.8 and 1.9 support at 3.7.0
-      pip install djangorestframework==3.6.4
-    fi
     python setup.py develop
   elif [ "$TEST_TYPE" = lint ]; then
     pip install flake8
@@ -44,13 +41,13 @@ matrix:
     env: TEST_TYPE=build DJANGO_VERSION=2.0
   - python: '3.6'
     env: TEST_TYPE=build DJANGO_VERSION=2.0
+  - python: '3.5'
+    env: TEST_TYPE=build DJANGO_VERSION=2.1
+  - python: '3.6'
+    env: TEST_TYPE=build DJANGO_VERSION=2.1
   - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.8
-  - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.9
-  - python: '2.7'
-    env: TEST_TYPE=build DJANGO_VERSION=1.10
-  - python: '2.7'
+    env: TEST_TYPE=lint
+  - python: '3.6'
     env: TEST_TYPE=lint
 deploy:
   provider: pypi

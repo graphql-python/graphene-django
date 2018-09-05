@@ -237,16 +237,12 @@ def test_should_manytomany_convert_connectionorlist_connection():
 
 
 def test_should_manytoone_convert_connectionorlist():
-    # Django 1.9 uses 'rel', <1.9 uses 'related
-    related = getattr(Reporter.articles, "rel", None) or getattr(
-        Reporter.articles, "related"
-    )
-
     class A(DjangoObjectType):
         class Meta:
             model = Article
 
-    graphene_field = convert_django_field(related, A._meta.registry)
+    graphene_field = convert_django_field(Reporter.articles.rel, 
+                                          A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
@@ -255,14 +251,12 @@ def test_should_manytoone_convert_connectionorlist():
 
 
 def test_should_onetoone_reverse_convert_model():
-    # Django 1.9 uses 'rel', <1.9 uses 'related
-    related = getattr(Film.details, "rel", None) or getattr(Film.details, "related")
-
     class A(DjangoObjectType):
         class Meta:
             model = FilmDetails
 
-    graphene_field = convert_django_field(related, A._meta.registry)
+    graphene_field = convert_django_field(Film.details.related,
+                                          A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
