@@ -49,10 +49,9 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "six>=1.10.0",
-        "graphene>=2.1,<3",
-        "graphql-core>=2.1rc1",
+        "graphene>=2.1.3,<3",
+        "graphql-core>=2.1.0,<3",
         "Django>=1.11",
-        "iso8601",
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
     ],
