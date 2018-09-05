@@ -116,13 +116,14 @@ method to your ``DjangoObjectType``.
         @classmethod
         def get_node(cls, id, info):
             try:
-                post = cls._meta.model.objects.get(id=id, owner__user = info.context.user)
+                post = cls._meta.model.objects.get(id=id)
             except cls._meta.model.DoesNotExist:
                 return None
 
             if post.published or info.context.user == post.owner:
                 return post
             return None
+
 
 Adding Login Required
 ---------------------
