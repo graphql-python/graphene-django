@@ -161,7 +161,8 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
-        input_fields["id"] = graphene.ID()
+        if "id" not in exclude_fields:
+            input_fields["id"] = graphene.ID()
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)

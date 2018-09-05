@@ -13,7 +13,7 @@ class MyForm(forms.Form):
 class PetForm(forms.ModelForm):
     class Meta:
         model = Pet
-        fields = ("name",)
+        fields = '__all__'
 
 
 def test_needs_form_class():
@@ -51,6 +51,30 @@ class ModelFormMutationTests(TestCase):
         self.assertEqual(PetMutation._meta.return_field_name, "pet")
         self.assertIn("pet", PetMutation._meta.fields)
 
+    def test_default_input_meta_fields(self):
+        class PetMutation(DjangoModelFormMutation):
+            class Meta:
+                form_class = PetForm
+
+        self.assertEqual(PetMutation._meta.model, Pet)
+        self.assertEqual(PetMutation._meta.return_field_name, "pet")
+        self.assertIn("name", PetMutation.Input._meta.fields)
+        self.assertIn("client_mutation_id", PetMutation.Input._meta.fields)
+        self.assertIn("id", PetMutation.Input._meta.fields)
+
+    def test_exclude_fields_input_meta_fields(self):
+        class PetMutation(DjangoModelFormMutation):
+            class Meta:
+                form_class = PetForm
+                exclude_fields = ['id']
+
+        self.assertEqual(PetMutation._meta.model, Pet)
+        self.assertEqual(PetMutation._meta.return_field_name, "pet")
+        self.assertIn("name", PetMutation.Input._meta.fields)
+        self.assertIn("age", PetMutation.Input._meta.fields)
+        self.assertIn("client_mutation_id", PetMutation.Input._meta.fields)
+        self.assertNotIn("id", PetMutation.Input._meta.fields)
+
     def test_return_field_name_is_camelcased(self):
         class PetMutation(DjangoModelFormMutation):
             class Meta:
@@ -76,9 +100,9 @@ class ModelFormMutationTests(TestCase):
             class Meta:
                 form_class = PetForm
 
-        pet = Pet.objects.create(name="Axel")
+        pet = Pet.objects.create(name="Axel", age=10)
 
-        result = PetMutation.mutate_and_get_payload(None, None, id=pet.pk, name="Mia")
+        result = PetMutation.mutate_and_get_payload(None, None, id=pet.pk, name="Mia", age=10)
 
         self.assertEqual(Pet.objects.count(), 1)
         pet.refresh_from_db()
@@ -90,11 +114,12 @@ class ModelFormMutationTests(TestCase):
             class Meta:
                 form_class = PetForm
 
-        result = PetMutation.mutate_and_get_payload(None, None, name="Mia")
+        result = PetMutation.mutate_and_get_payload(None, None, name="Mia", age=10)
 
         self.assertEqual(Pet.objects.count(), 1)
         pet = Pet.objects.get()
         self.assertEqual(pet.name, "Mia")
+        self.assertEqual(pet.age, 10)
         self.assertEqual(result.errors, [])
 
     def test_model_form_mutation_mutate_invalid_form(self):
@@ -107,6 +132,10 @@ class ModelFormMutationTests(TestCase):
         # A pet was not created
         self.assertEqual(Pet.objects.count(), 0)
 
-        self.assertEqual(len(result.errors), 1)
-        self.assertEqual(result.errors[0].field, "name")
+
+        fields_w_error = [e.field for e in result.errors]
+        self.assertEqual(len(result.errors), 2)
+        self.assertIn("name", fields_w_error)
         self.assertEqual(result.errors[0].messages, ["This field is required."])
+        self.assertIn("age", fields_w_error)
+        self.assertEqual(result.errors[1].messages, ["This field is required."])
