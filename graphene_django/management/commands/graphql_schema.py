@@ -21,7 +21,7 @@ class CommandArguments(BaseCommand):
             type=str,
             dest="out",
             default=graphene_settings.SCHEMA_OUTPUT,
-            help="Output file (default: schema.json)",
+            help="Output file, --out=- prints to stdout (default: schema.json)",
         )
 
         parser.add_argument(
@@ -64,9 +64,12 @@ class Command(CommandArguments):
 
         indent = options.get("indent")
         schema_dict = {"data": schema.introspect()}
-        self.save_file(out, schema_dict, indent)
+        if out == '-':
+            self.stdout.write(json.dumps(schema_dict, indent=indent))
+        else:
+            self.save_file(out, schema_dict, indent)
 
-        style = getattr(self, "style", None)
-        success = getattr(style, "SUCCESS", lambda x: x)
+            style = getattr(self, "style", None)
+            success = getattr(style, "SUCCESS", lambda x: x)
 
-        self.stdout.write(success("Successfully dumped GraphQL schema to %s" % out))
+            self.stdout.write(success("Successfully dumped GraphQL schema to %s" % out))
