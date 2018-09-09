@@ -35,30 +35,10 @@
     }
   }
 
-  // If there are any fragment parameters, confirm the user wants to use them.
-  var isReload = window.performance ? performance.navigation.type === 1 : false;
-  var isQueryTrusted = Object.keys(parameters).length === 0 || isReload;
-
   var fetchURL = locationQuery(otherParams);
 
   // Defines a GraphQL fetcher using the fetch API.
   function graphQLFetcher(graphQLParams) {
-    var isIntrospectionQuery = (
-      graphQLParams.query !== parameters.query
-      && graphQLParams.query.indexOf('IntrospectionQuery') !== -1
-    );
-
-    if (!isQueryTrusted
-      && !isIntrospectionQuery
-      && !window.confirm("This query was loaded from a link, are you sure you want to execute it?")) {
-      return Promise.resolve('Aborting query.');
-    }
-
-    // We don't want to set this for the introspection query
-    if (!isIntrospectionQuery) {
-      isQueryTrusted = true;
-    }
-
     var headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
