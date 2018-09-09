@@ -16,8 +16,8 @@ def _get_type(rest_framework_field, is_input=True, **kwargs):
     # Remove `source=` from the field declaration.
     # since we are reusing the same child in when testing the required attribute
 
-    if 'child' in kwargs:
-        kwargs['child'] = copy.deepcopy(kwargs['child'])
+    if "child" in kwargs:
+        kwargs["child"] = copy.deepcopy(kwargs["child"])
 
     field = rest_framework_field(**kwargs)
 
@@ -25,11 +25,13 @@ def _get_type(rest_framework_field, is_input=True, **kwargs):
 
 
 def assert_conversion(rest_framework_field, graphene_field, **kwargs):
-    graphene_type = _get_type(rest_framework_field, help_text='Custom Help Text', **kwargs)
+    graphene_type = _get_type(
+        rest_framework_field, help_text="Custom Help Text", **kwargs
+    )
     assert isinstance(graphene_type, graphene_field)
 
     graphene_type_required = _get_type(
-        rest_framework_field, help_text='Custom Help Text', required=True, **kwargs
+        rest_framework_field, help_text="Custom Help Text", required=True, **kwargs
     )
     assert isinstance(graphene_type_required, graphene_field)
 
@@ -39,7 +41,7 @@ def assert_conversion(rest_framework_field, graphene_field, **kwargs):
 def test_should_unknown_rest_framework_field_raise_exception():
     with raises(Exception) as excinfo:
         convert_serializer_field(None)
-    assert 'Don\'t know how to convert the serializer field' in str(excinfo.value)
+    assert "Don't know how to convert the serializer field" in str(excinfo.value)
 
 
 def test_should_char_convert_string():
@@ -67,11 +69,11 @@ def test_should_base_field_convert_string():
 
 
 def test_should_regex_convert_string():
-    assert_conversion(serializers.RegexField, graphene.String, regex='[0-9]+')
+    assert_conversion(serializers.RegexField, graphene.String, regex="[0-9]+")
 
 
 def test_should_uuid_convert_string():
-    if hasattr(serializers, 'UUIDField'):
+    if hasattr(serializers, "UUIDField"):
         assert_conversion(serializers.UUIDField, graphene.String)
 
 
@@ -79,7 +81,7 @@ def test_should_model_convert_field():
     class MyModelSerializer(serializers.ModelSerializer):
         class Meta:
             model = None
-            fields = '__all__'
+            fields = "__all__"
 
     assert_conversion(MyModelSerializer, graphene.Field, is_input=False)
 
@@ -109,7 +111,9 @@ def test_should_float_convert_float():
 
 
 def test_should_decimal_convert_float():
-    assert_conversion(serializers.DecimalField, graphene.Float, max_digits=4, decimal_places=2)
+    assert_conversion(
+        serializers.DecimalField, graphene.Float, max_digits=4, decimal_places=2
+    )
 
 
 def test_should_list_convert_to_list():
@@ -119,7 +123,7 @@ def test_should_list_convert_to_list():
     field_a = assert_conversion(
         serializers.ListField,
         graphene.List,
-        child=serializers.IntegerField(min_value=0, max_value=100)
+        child=serializers.IntegerField(min_value=0, max_value=100),
     )
 
     assert field_a.of_type == graphene.Int
@@ -136,19 +140,23 @@ def test_should_list_serializer_convert_to_list():
     class ChildSerializer(serializers.ModelSerializer):
         class Meta:
             model = FooModel
-            fields = '__all__'
+            fields = "__all__"
 
     class ParentSerializer(serializers.ModelSerializer):
         child = ChildSerializer(many=True)
 
         class Meta:
             model = FooModel
-            fields = '__all__'
+            fields = "__all__"
 
-    converted_type = convert_serializer_field(ParentSerializer().get_fields()['child'], is_input=True)
+    converted_type = convert_serializer_field(
+        ParentSerializer().get_fields()["child"], is_input=True
+    )
     assert isinstance(converted_type, graphene.List)
 
-    converted_type = convert_serializer_field(ParentSerializer().get_fields()['child'], is_input=False)
+    converted_type = convert_serializer_field(
+        ParentSerializer().get_fields()["child"], is_input=False
+    )
     assert isinstance(converted_type, graphene.List)
     assert converted_type.of_type is None
 
@@ -166,7 +174,7 @@ def test_should_file_convert_string():
 
 
 def test_should_filepath_convert_string():
-    assert_conversion(serializers.FilePathField, graphene.String, path='/')
+    assert_conversion(serializers.FilePathField, graphene.String, path="/")
 
 
 def test_should_ip_convert_string():
@@ -182,6 +190,8 @@ def test_should_json_convert_jsonstring():
 
 
 def test_should_multiplechoicefield_convert_to_list_of_string():
-    field = assert_conversion(serializers.MultipleChoiceField, graphene.List, choices=[1, 2, 3])
+    field = assert_conversion(
+        serializers.MultipleChoiceField, graphene.List, choices=[1, 2, 3]
+    )
 
     assert field.of_type == graphene.String

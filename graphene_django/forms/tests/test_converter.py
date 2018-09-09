@@ -2,24 +2,36 @@ from django import forms
 from py.test import raises
 
 import graphene
-from graphene import String, Int, Boolean, Float, ID, UUID, List, NonNull, DateTime, Date, Time
+from graphene import (
+    String,
+    Int,
+    Boolean,
+    Float,
+    ID,
+    UUID,
+    List,
+    NonNull,
+    DateTime,
+    Date,
+    Time,
+)
 
 from ..converter import convert_form_field
 
 
 def assert_conversion(django_field, graphene_field, *args):
-    field = django_field(*args, help_text='Custom Help Text')
+    field = django_field(*args, help_text="Custom Help Text")
     graphene_type = convert_form_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
-    assert field.description == 'Custom Help Text'
+    assert field.description == "Custom Help Text"
     return field
 
 
 def test_should_unknown_django_field_raise_exception():
     with raises(Exception) as excinfo:
         convert_form_field(None)
-    assert 'Don\'t know how to convert the Django form field' in str(excinfo.value)
+    assert "Don't know how to convert the Django form field" in str(excinfo.value)
 
 
 def test_should_date_convert_date():
@@ -59,11 +71,11 @@ def test_should_base_field_convert_string():
 
 
 def test_should_regex_convert_string():
-    assert_conversion(forms.RegexField, String, '[0-9]+')
+    assert_conversion(forms.RegexField, String, "[0-9]+")
 
 
 def test_should_uuid_convert_string():
-    if hasattr(forms, 'UUIDField'):
+    if hasattr(forms, "UUIDField"):
         assert_conversion(forms.UUIDField, UUID)
 
 

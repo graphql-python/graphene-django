@@ -13,7 +13,6 @@ from .utils import maybe_queryset
 
 
 class DjangoListField(Field):
-
     def __init__(self, _type, *args, **kwargs):
         super(DjangoListField, self).__init__(List(_type), *args, **kwargs)
 
@@ -30,25 +29,28 @@ class DjangoListField(Field):
 
 
 class DjangoConnectionField(ConnectionField):
-
     def __init__(self, *args, **kwargs):
-        self.on = kwargs.pop('on', False)
+        self.on = kwargs.pop("on", False)
         self.max_limit = kwargs.pop(
-            'max_limit',
-            graphene_settings.RELAY_CONNECTION_MAX_LIMIT
+            "max_limit", graphene_settings.RELAY_CONNECTION_MAX_LIMIT
         )
         self.enforce_first_or_last = kwargs.pop(
-            'enforce_first_or_last',
-            graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST
+            "enforce_first_or_last",
+            graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST,
         )
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
     def type(self):
         from .types import DjangoObjectType
+
         _type = super(ConnectionField, self).type
-        assert issubclass(_type, DjangoObjectType), "DjangoConnectionField only accepts DjangoObjectType types"
-        assert _type._meta.connection, "The type {} doesn't have a connection".format(_type.__name__)
+        assert issubclass(
+            _type, DjangoObjectType
+        ), "DjangoConnectionField only accepts DjangoObjectType types"
+        assert _type._meta.connection, "The type {} doesn't have a connection".format(
+            _type.__name__
+        )
         return _type._meta.connection
 
     @property
@@ -100,28 +102,37 @@ class DjangoConnectionField(ConnectionField):
         return connection
 
     @classmethod
-    def connection_resolver(cls, resolver, connection, default_manager, max_limit,
-                            enforce_first_or_last, root, info, **args):
-        first = args.get('first')
-        last = args.get('last')
+    def connection_resolver(
+        cls,
+        resolver,
+        connection,
+        default_manager,
+        max_limit,
+        enforce_first_or_last,
+        root,
+        info,
+        **args
+    ):
+        first = args.get("first")
+        last = args.get("last")
 
         if enforce_first_or_last:
             assert first or last, (
-                'You must provide a `first` or `last` value to properly paginate the `{}` connection.'
+                "You must provide a `first` or `last` value to properly paginate the `{}` connection."
             ).format(info.field_name)
 
         if max_limit:
             if first:
                 assert first <= max_limit, (
-                    'Requesting {} records on the `{}` connection exceeds the `first` limit of {} records.'
+                    "Requesting {} records on the `{}` connection exceeds the `first` limit of {} records."
                 ).format(first, info.field_name, max_limit)
-                args['first'] = min(first, max_limit)
+                args["first"] = min(first, max_limit)
 
             if last:
                 assert last <= max_limit, (
-                    'Requesting {} records on the `{}` connection exceeds the `last` limit of {} records.'
+                    "Requesting {} records on the `{}` connection exceeds the `last` limit of {} records."
                 ).format(last, info.field_name, max_limit)
-                args['last'] = min(last, max_limit)
+                args["last"] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
         on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
@@ -138,5 +149,5 @@ class DjangoConnectionField(ConnectionField):
             self.type,
             self.get_manager(),
             self.max_limit,
-            self.enforce_first_or_last
+            self.enforce_first_or_last,
         )

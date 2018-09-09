@@ -13,6 +13,7 @@ class LazyList(object):
 
 try:
     import django_filters  # noqa
+
     DJANGO_FILTER_INSTALLED = True
 except ImportError:
     DJANGO_FILTER_INSTALLED = False
@@ -25,8 +26,7 @@ def get_reverse_fields(model, local_field_names):
             continue
 
         # Django =>1.9 uses 'rel', django <1.9 uses 'related'
-        related = getattr(attr, 'rel', None) or \
-            getattr(attr, 'related', None)
+        related = getattr(attr, "rel", None) or getattr(attr, "related", None)
         if isinstance(related, models.ManyToOneRel):
             yield (name, related)
         elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
@@ -42,9 +42,9 @@ def maybe_queryset(value):
 def get_model_fields(model):
     local_fields = [
         (field.name, field)
-        for field
-        in sorted(list(model._meta.fields) +
-                  list(model._meta.local_many_to_many))
+        for field in sorted(
+            list(model._meta.fields) + list(model._meta.local_many_to_many)
+        )
     ]
 
     # Make sure we don't duplicate local fields with "reverse" version
