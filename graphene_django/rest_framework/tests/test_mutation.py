@@ -211,6 +211,7 @@ def test_model_mutate_and_get_payload_error():
     # missing required fields
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
     assert len(result.errors) > 0
+    assert result.errors[0].field == 'coolName'
 
 
 def test_invalid_serializer_operations():

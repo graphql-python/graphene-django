@@ -7,6 +7,7 @@ from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
 from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
+from graphene.utils.str_converters import to_camel_case
 
 from .serializer_converter import convert_serializer_field
 from ..types import ErrorType
@@ -128,7 +129,7 @@ class SerializerMutation(ClientIDMutation):
             return cls.perform_mutate(serializer, info)
         else:
             errors = [
-                ErrorType(field=key, messages=value)
+                ErrorType(field=to_camel_case(key), messages=value)
                 for key, value in serializer.errors.items()
             ]
 
