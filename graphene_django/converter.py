@@ -71,7 +71,8 @@ def convert_django_field_with_choices(field, registry=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        converted = enum(description=field.help_text, required=not field.null)
+        required = not (field.blank or field.null or field.default)
+        converted = enum(description=field.help_text, required=required)
     else:
         converted = convert_django_field(field, registry)
     if registry is not None:
