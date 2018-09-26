@@ -61,6 +61,14 @@ def convert_django_field_with_choices(field, registry=None):
     if choices:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
+        # Not null fields with choices and blank=True and without default value
+        if (
+            field.blank and
+            not field.null and
+            field.default == models.fields.NOT_PROVIDED
+        ):
+            choices = list(choices)
+            choices.append(('', ''))
         choices = list(get_choices(choices))
         named_choices = [(c[0], c[1]) for c in choices]
         named_choices_descriptions = {c[0]: c[2] for c in choices}

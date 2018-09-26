@@ -38,7 +38,7 @@ class Reporter(models.Model):
     last_name = models.CharField(max_length=30)
     email = models.EmailField()
     pets = models.ManyToManyField("self")
-    a_choice = models.CharField(max_length=30, choices=CHOICES)
+    a_choice = models.CharField(max_length=30, choices=CHOICES, blank=True)
     objects = models.Manager()
     doe_objects = DoeReporterManager()
 

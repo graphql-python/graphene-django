@@ -174,6 +174,7 @@ type Reporter {
 enum ReporterAChoice {
   A_1
   A_2
+  A_
 }
 
 enum ReporterReporterType {
