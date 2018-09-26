@@ -120,7 +120,7 @@ type Article implements Node {
   pubDateTime: DateTime!
   reporter: Reporter!
   editor: Reporter!
-  lang: ArticleLang!
+  lang: ArticleLang
   importance: ArticleImportance
 }
 
@@ -166,7 +166,7 @@ type Reporter {
   lastName: String!
   email: String!
   pets: [Reporter]
-  aChoice: ReporterAChoice!
+  aChoice: ReporterAChoice
   reporterType: ReporterReporterType
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
@@ -174,6 +174,7 @@ type Reporter {
 enum ReporterAChoice {
   A_1
   A_2
+  A_
 }
 
 enum ReporterReporterType {
