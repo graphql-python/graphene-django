@@ -135,7 +135,8 @@ class DjangoConnectionField(ConnectionField):
                 args["last"] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        queryset = connection._meta.node.get_queryset(info)
+        on_resolve = partial(cls.resolve_connection, connection, queryset, args)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)

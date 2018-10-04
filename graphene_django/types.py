@@ -126,10 +126,14 @@ class DjangoObjectType(ObjectType):
 
         model = root._meta.model._meta.concrete_model
         return model == cls._meta.model
+    
+    @classmethod
+    def get_queryset(cls, info):
+        return cls._meta.model.objects
 
     @classmethod
     def get_node(cls, info, id):
         try:
-            return cls._meta.model.objects.get(pk=id)
+            return cls.get_queryset(info).get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
