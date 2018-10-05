@@ -128,12 +128,13 @@ class DjangoObjectType(ObjectType):
         return model == cls._meta.model
     
     @classmethod
-    def get_queryset(cls, info):
-        return cls._meta.model.objects
+    def get_queryset(cls, queryset, info):
+        return queryset
 
     @classmethod
     def get_node(cls, info, id):
+        queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
-            return cls.get_queryset(info).get(pk=id)
+            return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
