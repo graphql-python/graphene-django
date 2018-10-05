@@ -96,6 +96,29 @@ schema is simple.
 
     result = schema.execute(query, context_value=request)
 
+
+Global Filtering
+----------------
+
+If you are using ``DjangoObjectType`` you can define a custom `get_queryset`.
+
+.. code:: python
+
+    from graphene import relay
+    from graphene_django.types import DjangoObjectType
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            if info.context.user.is_anonymous:
+                return queryset.filter(published=True)
+            return queryset
+
+
 Filtering ID-based Node Access
 ------------------------------
 
