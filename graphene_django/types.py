@@ -126,7 +126,7 @@ class DjangoObjectType(ObjectType):
 
         model = root._meta.model._meta.concrete_model
         return model == cls._meta.model
-    
+
     @classmethod
     def get_queryset(cls, queryset, info):
         return queryset

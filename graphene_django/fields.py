@@ -66,7 +66,7 @@ class DjangoConnectionField(ConnectionField):
             return getattr(self.model, self.on)
         else:
             return self.model._default_manager
-    
+
     @classmethod
     def resolve_queryset(cls, connection, queryset, info, args):
         return connection._meta.node.get_queryset(queryset, info)
