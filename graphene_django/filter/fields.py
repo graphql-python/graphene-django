@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 
+from graphql.error import GraphQLError
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
@@ -89,11 +90,22 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         **args
     ):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
-        qs = filterset_class(
+
+        filterset = filterset_class(
             data=filter_kwargs,
             queryset=default_manager.get_queryset(),
             request=info.context,
-        ).qs
+        )
+
+        if not filterset.is_valid():
+            exc = {
+                key: [e.message for e in error_list]
+                for key, error_list in filterset.errors.as_data().items()
+            }
+
+            raise GraphQLError(exc)
+
+        qs = filterset.qs
 
         return super(DjangoFilterConnectionField, cls).connection_resolver(
             resolver,
