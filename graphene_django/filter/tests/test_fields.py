@@ -290,6 +290,37 @@ def test_filter_filterset_related_results():
     )
 
 
+def test_filter_filterset_validation_errors():
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ("id",)
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+
+    r1 = Reporter.objects.create(first_name="r1", last_name="r1", email="r1@test.com")
+
+    query = """
+    query {
+        allReporters(id:"foo") {
+            edges {
+                node {
+                    id
+                }
+            }
+        }
+    }
+    """
+    schema = Schema(query=Query)
+    result = schema.execute(query)
+
+    assert result.errors
+    # We should get back an error message
+    assert result.to_dict()['errors'][0]["message"] == "{'id': ['Invalid ID specified.']}"
+
+
 def test_global_id_field_implicit():
     field = DjangoFilterConnectionField(ArticleNode, fields=["id"])
     filterset_class = field.filterset_class
