@@ -25,17 +25,14 @@ class Query(object):
                                 name=graphene.String())
     all_ingredients = graphene.List(IngredientType)
 
-    def resolve_all_categories(self, context, **kwargs):
+    def resolve_all_categories(self, context):
         return Category.objects.all()
 
-    def resolve_all_ingredients(self, context, **kwargs):
+    def resolve_all_ingredients(self, context):
         # We can easily optimize query count in the resolve method
         return Ingredient.objects.select_related('category').all()
 
-    def resolve_category(self, context, **kwargs):
-        id = kwargs.get('id')
-        name = kwargs.get('name')
-
+    def resolve_category(self, context, id=None, name=None):
         if id is not None:
             return Category.objects.get(pk=id)
 
@@ -44,10 +41,7 @@ class Query(object):
 
         return None
 
-    def resolve_ingredient(self, context, **kwargs):
-        id = kwargs.get('id')
-        name = kwargs.get('name')
-
+    def resolve_ingredient(self, context, id=None, name=None):
         if id is not None:
             return Ingredient.objects.get(pk=id)
 

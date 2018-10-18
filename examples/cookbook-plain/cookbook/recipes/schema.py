@@ -24,10 +24,7 @@ class Query(object):
                                       id=graphene.Int())
     all_recipeingredients = graphene.List(RecipeIngredientType)
 
-    def resolve_recipe(self, context, **kwargs):
-        id = kwargs.get('id')
-        title = kwargs.get('title')
-
+    def resolve_recipe(self, context, id=None, title=None):
         if id is not None:
             return Recipe.objects.get(pk=id)
 
@@ -36,17 +33,15 @@ class Query(object):
 
         return None
 
-    def resolve_recipeingredient(self, context, **kwargs):
-        id = kwargs.get('id')
-
+    def resolve_recipeingredient(self, context, id=None):
         if id is not None:
             return RecipeIngredient.objects.get(pk=id)
 
         return None
 
-    def resolve_all_recipes(self, context, **kwargs):
+    def resolve_all_recipes(self, context):
         return Recipe.objects.all()
 
-    def resolve_all_recipeingredients(self, context, **kwargs):
+    def resolve_all_recipeingredients(self, context):
         related = ['recipe', 'ingredient']
         return RecipeIngredient.objects.select_related(*related).all()
