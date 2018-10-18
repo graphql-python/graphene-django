@@ -60,8 +60,13 @@ def test_should_url_convert_string():
     assert_conversion(serializers.URLField, graphene.String)
 
 
-def test_should_choice_convert_string():
-    assert_conversion(serializers.ChoiceField, graphene.String, choices=[])
+def test_should_choice_convert_enum():
+    field = assert_conversion(serializers.ChoiceField, graphene.Enum,
+        choices=[('h', 'Hello'), ('w', 'World')], source='word')
+    assert field._meta.enum.__members__["H"].value == "h"
+    assert field._meta.enum.__members__["H"].description == "Hello"
+    assert field._meta.enum.__members__["W"].value == "w"
+    assert field._meta.enum.__members__["W"].description == "World"
 
 
 def test_should_base_field_convert_string():
@@ -174,7 +179,7 @@ def test_should_file_convert_string():
 
 
 def test_should_filepath_convert_string():
-    assert_conversion(serializers.FilePathField, graphene.String, path="/")
+    assert_conversion(serializers.FilePathField, graphene.Enum, path="/")
 
 
 def test_should_ip_convert_string():
