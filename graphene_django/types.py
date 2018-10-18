@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from django.utils.functional import SimpleLazyObject
+import graphene
 from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
@@ -133,3 +134,8 @@ class DjangoObjectType(ObjectType):
             return cls._meta.model.objects.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+
+class ErrorType(ObjectType):
+    field = graphene.String(required=True)
+    messages = graphene.List(graphene.NonNull(graphene.String), required=True)
