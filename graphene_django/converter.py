@@ -24,6 +24,7 @@ from graphql import assert_valid_name
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
+from .settings import graphene_settings
 
 singledispatch = import_single_dispatch()
 
@@ -58,7 +59,7 @@ def convert_django_field_with_choices(field, registry=None):
         if converted:
             return converted
     choices = getattr(field, "choices", None)
-    if choices:
+    if choices and graphene_settings.GRAPHENE_CONVERT_CHOICES_TO_ENUMS:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         choices = list(get_choices(choices))

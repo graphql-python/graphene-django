@@ -35,6 +35,7 @@ DEFAULTS = {
     "RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST": False,
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
+    "GRAPHENE_CONVERT_CHOICES_TO_ENUMS": True,
 }
 
 if settings.DEBUG:
