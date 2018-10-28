@@ -159,13 +159,14 @@ def test_mutate_and_get_payload_error():
 
     # missing required fields
     result = MyMutation.mutate_and_get_payload(None, mock_info(), **{})
-    assert len(result.errors) > 0
+    assert result.errors.text[0] == "This field is required."
+    assert result.errors.model[0] == "This field is required."
 
 
 def test_model_mutate_and_get_payload_error():
     # missing required fields
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
-    assert len(result.errors) > 0
+    assert result.errors.cool_name[0] == "This field is required."
 
 
 def test_invalid_serializer_operations():
