@@ -30,7 +30,7 @@ def test_has_output_fields():
         class Meta:
             form_class = MyForm
 
-    assert "errors" in MyMutation._meta.fields
+    assert "text" in MyMutation._meta.fields
 
 
 def test_has_input_fields():
