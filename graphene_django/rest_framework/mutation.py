@@ -40,10 +40,6 @@ class SerializerMutation(ClientIDMutation):
     class Meta:
         abstract = True
 
-    errors = graphene.List(
-        ErrorType, description="May contain more than one error for same field."
-    )
-
     @classmethod
     def __init_subclass_with_meta__(
         cls,
@@ -55,7 +51,6 @@ class SerializerMutation(ClientIDMutation):
         exclude_fields=(),
         **options
     ):
-
         if not serializer_class:
             raise Exception("serializer_class is required for the SerializerMutation")
 
@@ -77,6 +72,26 @@ class SerializerMutation(ClientIDMutation):
         output_fields = fields_for_serializer(
             serializer, only_fields, exclude_fields, is_input=False
         )
+
+        error_fields = {
+            key: graphene.List(graphene.NonNull(graphene.String))
+            for key in input_fields.keys()
+        }
+
+        # TODO: from settings
+        error_fields['non_field_errors'] = graphene.List(
+            graphene.NonNull(graphene.String)
+        )
+
+        base_name = cls.__name__
+
+        cls.Errors = type(
+            "{}Errors".format(base_name),
+            (graphene.ObjectType, ),
+            yank_fields_from_attrs(error_fields, _as=Field),
+        )
+
+        output_fields['errors'] = graphene.Field(cls.Errors, required=True)
 
         _meta = SerializerMutationOptions(cls)
         _meta.lookup_field = lookup_field

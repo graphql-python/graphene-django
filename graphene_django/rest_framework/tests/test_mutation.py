@@ -1,6 +1,6 @@
 import datetime
 
-from graphene import Field, ResolveInfo
+from graphene import Field, ResolveInfo, NonNull, List, String
 from graphene.types.inputobjecttype import InputObjectType
 from py.test import raises
 from py.test import mark
@@ -177,3 +177,21 @@ def test_invalid_serializer_operations():
                 model_operations = ["Add"]
 
     assert "model_operations" in str(exc.value)
+
+
+def test_errors_field():
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MySerializer
+
+    errors_field = MyMutation._meta.fields['errors']
+
+    assert MyMutation.Errors
+
+    assert type(errors_field.type) == NonNull
+
+    errors_field = errors_field.type.of_type
+
+    assert type(errors_field.model.type) == List
+    assert type(errors_field.model.type.of_type) == NonNull
+    # TODO: how to test that the nonnull type is a string?
