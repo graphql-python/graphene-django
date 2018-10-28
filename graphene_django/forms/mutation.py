@@ -125,8 +125,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
             input_fields
         )
 
-        # TODO: output
-
+        output_fields = OrderedDict()
 
         if hasattr(form, '_meta') and hasattr(form._meta, 'model'):
             model = form._meta.model
@@ -141,15 +140,31 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
             if not return_field_name:
                 model_name = model.__name__
+
                 return_field_name = model_name[:1].lower() + model_name[1:]
 
-            output_fields = OrderedDict()
+            # TODO: model_type might be none
+
             output_fields[return_field_name] = graphene.Field(model_type)
         else:
-            # TODO: return field name support
-            output_fields = fields_for_form(form, only_fields, exclude_fields)
+            form_name = form.__class__.__name__
 
-        return_field_name = 'TODOFROMForm' if not return_field_name else return_field_name
+            if not return_field_name:
+                return_field_name = form_name[:1].lower() + form_name[1:]
+
+            # TODO: registry
+
+            form_fields = fields_for_form(
+                form, only_fields, exclude_fields
+            )
+
+            form_type = type(
+                form_name,
+                (graphene.ObjectType, ),
+                yank_fields_from_attrs(form_fields, _as=graphene.Field),
+            )
+
+            output_fields[return_field_name] = graphene.Field(form_type)
 
         output_fields['errors'] = graphene.Field(cls.Errors, required=True)
 

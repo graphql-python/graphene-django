@@ -38,8 +38,8 @@ def test_has_output_fields():
         class Meta:
             form_class = MyForm
 
-    assert "text" in MyMutation._meta.fields
-
+    assert "myForm" in MyMutation._meta.fields
+    assert 'text' in MyMutation._meta.fields['myForm'].type._meta.fields
 
 def test_has_input_fields():
     class MyMutation(DjangoFormMutation):
@@ -94,6 +94,16 @@ def test_return_field_name_is_camelcased():
 
     assert FilmDetailsMutation._meta.model == FilmDetails
     assert FilmDetailsMutation._meta.return_field_name == "filmDetails"
+
+
+def test_custom_return_field_name():
+    class MyFormMutation(DjangoFormMutation):
+        class Meta:
+            form_class = MyForm
+            return_field_name = "cat"
+
+    assert MyFormMutation._meta.return_field_name == "cat"
+    assert "cat" in MyFormMutation._meta.fields
 
 
 def test_custom_return_field_name_model_form():
