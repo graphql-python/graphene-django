@@ -13,6 +13,7 @@ from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 
+from ..utils import create_errors_type
 from .converter import convert_form_field
 from .types import ErrorType
 
@@ -45,10 +46,8 @@ class BaseDjangoFormMutation(ClientIDMutation):
         if form.is_valid():
             return cls.perform_mutate(form, info)
         else:
-            errors = [
-                ErrorType(field=key, messages=value)
-                for key, value in form.errors.items()
-            ]
+            # TODO: double check non field errors name
+            errors = cls.Errors(**form.errors)
 
             return cls(errors=errors)
 
@@ -99,8 +98,6 @@ class DjangoFormMutation(BaseDjangoFormMutation):
     class Meta:
         abstract = True
 
-    errors = graphene.List(ErrorType)
-
     @classmethod
     def __init_subclass_with_meta__(
         cls, form_class=None, only_fields=(), exclude_fields=(), **options
@@ -112,12 +109,21 @@ class DjangoFormMutation(BaseDjangoFormMutation):
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
         output_fields = fields_for_form(form, only_fields, exclude_fields)
+        input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
+
+        base_name = cls.__name__
+
+        cls.Errors = create_errors_type(
+            "{}Errors".format(base_name),
+            input_fields
+        )
+
+        output_fields['errors'] = graphene.Field(cls.Errors, required=True)
 
         _meta = DjangoFormMutationOptions(cls)
         _meta.form_class = form_class
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
-        input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
         super(DjangoFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
@@ -136,8 +142,6 @@ class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
 class DjangoModelFormMutation(BaseDjangoFormMutation):
     class Meta:
         abstract = True
-
-    errors = graphene.List(ErrorType)
 
     @classmethod
     def __init_subclass_with_meta__(
@@ -173,6 +177,16 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         output_fields = OrderedDict()
         output_fields[return_field_name] = graphene.Field(model_type)
+        input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
+
+        base_name = cls.__name__
+
+        cls.Errors = create_errors_type(
+            "{}Errors".format(base_name),
+            input_fields
+        )
+
+        output_fields['errors'] = graphene.Field(cls.Errors, required=True)
 
         _meta = DjangoModelDjangoFormMutationOptions(cls)
         _meta.form_class = form_class
@@ -180,7 +194,6 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         _meta.return_field_name = return_field_name
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
-        input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
         super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
@@ -189,4 +202,4 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
     def perform_mutate(cls, form, info):
         obj = form.save()
         kwargs = {cls._meta.return_field_name: obj}
-        return cls(errors=[], **kwargs)
+        return cls(errors={}, **kwargs)

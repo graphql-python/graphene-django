@@ -8,6 +8,7 @@ from graphene.types.mutation import MutationOptions
 from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
 
+from ..utils import create_errors_type
 from .serializer_converter import convert_serializer_field
 from .types import ErrorType
 
@@ -73,22 +74,11 @@ class SerializerMutation(ClientIDMutation):
             serializer, only_fields, exclude_fields, is_input=False
         )
 
-        error_fields = {
-            key: graphene.List(graphene.NonNull(graphene.String))
-            for key in input_fields.keys()
-        }
-
-        # TODO: from settings
-        error_fields['non_field_errors'] = graphene.List(
-            graphene.NonNull(graphene.String)
-        )
-
         base_name = cls.__name__
 
-        cls.Errors = type(
+        cls.Errors = create_errors_type(
             "{}Errors".format(base_name),
-            (graphene.ObjectType, ),
-            yank_fields_from_attrs(error_fields, _as=Field),
+            input_fields
         )
 
         output_fields['errors'] = graphene.Field(cls.Errors, required=True)

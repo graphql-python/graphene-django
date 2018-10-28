@@ -1,10 +1,10 @@
 import inspect
 
+import graphene
+from graphene.types.objecttype import yank_fields_from_attrs
+
 from django.db import models
 from django.db.models.manager import Manager
-
-
-# from graphene.utils import LazyList
 
 
 class LazyList(object):
@@ -81,3 +81,21 @@ def import_single_dispatch():
         )
 
     return singledispatch
+
+
+def create_errors_type(name, input_fields):
+    error_fields = {
+        key: graphene.List(graphene.NonNull(graphene.String))
+        for key in input_fields.keys()
+    }
+
+    # TODO: from settings
+    error_fields['non_field_errors'] = graphene.List(
+        graphene.NonNull(graphene.String)
+    )
+
+    return type(
+        name,
+        (graphene.ObjectType, ),
+        yank_fields_from_attrs(error_fields, _as=graphene.Field),
+    )
