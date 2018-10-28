@@ -92,7 +92,8 @@ class BaseDjangoFormMutation(ClientIDMutation):
 
 class DjangoFormMutationOptions(MutationOptions):
     form_class = None
-
+    model = None
+    return_field_name = None
 
 class DjangoFormMutation(BaseDjangoFormMutation):
     class Meta:
@@ -100,54 +101,8 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls, form_class=None, only_fields=(), exclude_fields=(), **options
-    ):
-
-        if not form_class:
-            raise Exception("form_class is required for DjangoFormMutation")
-
-        form = form_class()
-        input_fields = fields_for_form(form, only_fields, exclude_fields)
-        output_fields = fields_for_form(form, only_fields, exclude_fields)
-        input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-
-        base_name = cls.__name__
-
-        cls.Errors = create_errors_type(
-            "{}Errors".format(base_name),
-            input_fields
-        )
-
-        output_fields['errors'] = graphene.Field(cls.Errors, required=True)
-
-        _meta = DjangoFormMutationOptions(cls)
-        _meta.form_class = form_class
-        _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
-
-        super(DjangoFormMutation, cls).__init_subclass_with_meta__(
-            _meta=_meta, input_fields=input_fields, **options
-        )
-
-    @classmethod
-    def perform_mutate(cls, form, info):
-        form.save()
-        return cls(errors=[])
-
-
-class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
-    model = None
-    return_field_name = None
-
-
-class DjangoModelFormMutation(BaseDjangoFormMutation):
-    class Meta:
-        abstract = True
-
-    @classmethod
-    def __init_subclass_with_meta__(
         cls,
         form_class=None,
-        model=None,
         return_field_name=None,
         only_fields=(),
         exclude_fields=(),
@@ -155,46 +110,54 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
     ):
 
         if not form_class:
-            raise Exception("form_class is required for DjangoModelFormMutation")
-
-        if not model:
-            model = form_class._meta.model
-
-        if not model:
-            raise Exception("model is required for DjangoModelFormMutation")
+            raise Exception("form_class is required for DjangoFormMutation")
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
-        if "id" not in exclude_fields:
-            input_fields["id"] = graphene.ID()
-
-        registry = get_global_registry()
-        model_type = registry.get_type_for_model(model)
-        return_field_name = return_field_name
-        if not return_field_name:
-            model_name = model.__name__
-            return_field_name = model_name[:1].lower() + model_name[1:]
-
-        output_fields = OrderedDict()
-        output_fields[return_field_name] = graphene.Field(model_type)
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
 
         base_name = cls.__name__
+
+        _meta = DjangoFormMutationOptions(cls)
 
         cls.Errors = create_errors_type(
             "{}Errors".format(base_name),
             input_fields
         )
 
+        # TODO: output
+
+
+        if hasattr(form, '_meta') and hasattr(form._meta, 'model'):
+            model = form._meta.model
+            _meta.model = model
+
+            registry = get_global_registry()
+            model_type = registry.get_type_for_model(model)
+            return_field_name = return_field_name
+
+            if "id" not in exclude_fields:
+                input_fields["id"] = graphene.ID()
+
+            if not return_field_name:
+                model_name = model.__name__
+                return_field_name = model_name[:1].lower() + model_name[1:]
+
+            output_fields = OrderedDict()
+            output_fields[return_field_name] = graphene.Field(model_type)
+        else:
+            # TODO: return field name support
+            output_fields = fields_for_form(form, only_fields, exclude_fields)
+
+        return_field_name = 'TODOFROMForm' if not return_field_name else return_field_name
+
         output_fields['errors'] = graphene.Field(cls.Errors, required=True)
 
-        _meta = DjangoModelDjangoFormMutationOptions(cls)
-        _meta.form_class = form_class
-        _meta.model = model
         _meta.return_field_name = return_field_name
+        _meta.form_class = form_class
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
-        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
+        super(DjangoFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 

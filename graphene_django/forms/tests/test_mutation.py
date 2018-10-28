@@ -6,7 +6,7 @@ from django.test import TestCase
 from graphene import NonNull, List
 
 from graphene_django.tests.models import Pet, Film, FilmDetails
-from ..mutation import DjangoFormMutation, DjangoModelFormMutation
+from ..mutation import DjangoFormMutation
 
 
 class MyForm(forms.Form):
@@ -16,6 +16,12 @@ class MyForm(forms.Form):
 class PetForm(forms.ModelForm):
     class Meta:
         model = Pet
+        fields = '__all__'
+
+
+class FilmDetailsForm(forms.ModelForm):
+    class Meta:
+        model = FilmDetails
         fields = '__all__'
 
 
@@ -44,7 +50,7 @@ def test_has_input_fields():
 
 
 def test_default_meta_fields():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
 
@@ -55,7 +61,7 @@ def test_default_meta_fields():
 
 
 def test_default_input_meta_fields():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
 
@@ -68,7 +74,7 @@ def test_default_input_meta_fields():
 
 
 def test_exclude_fields_input_meta_fields():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
             exclude_fields = ['id']
@@ -82,30 +88,28 @@ def test_exclude_fields_input_meta_fields():
 
 
 def test_return_field_name_is_camelcased():
-    class PetMutation(DjangoModelFormMutation):
+    class FilmDetailsMutation(DjangoFormMutation):
         class Meta:
-            form_class = PetForm
-            model = FilmDetails
+            form_class = FilmDetailsForm
 
-    assert PetMutation._meta.model == FilmDetails
-    assert PetMutation._meta.return_field_name == "filmDetails"
+    assert FilmDetailsMutation._meta.model == FilmDetails
+    assert FilmDetailsMutation._meta.return_field_name == "filmDetails"
 
 
-def test_custom_return_field_name():
-    class PetMutation(DjangoModelFormMutation):
+def test_custom_return_field_name_model_form():
+    class FilmDetailsMutation(DjangoFormMutation):
         class Meta:
-            form_class = PetForm
-            model = Film
-            return_field_name = "animal"
+            form_class = FilmDetailsForm
+            return_field_name = "movie"
 
-    assert PetMutation._meta.model == Film
-    assert PetMutation._meta.return_field_name == "animal"
-    assert "animal" in PetMutation._meta.fields
+    assert FilmDetailsMutation._meta.model == FilmDetails
+    assert FilmDetailsMutation._meta.return_field_name == "movie"
+    assert "movie" in FilmDetailsMutation._meta.fields
 
 
 @pytest.mark.django_db
 def test_model_form_mutation_mutate():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
 
@@ -121,7 +125,7 @@ def test_model_form_mutation_mutate():
 
 @pytest.mark.django_db
 def test_model_form_mutation_updates_existing():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
 
@@ -136,7 +140,7 @@ def test_model_form_mutation_updates_existing():
 
 @pytest.mark.django_db
 def test_model_form_mutation_mutate_invalid_form():
-    class PetMutation(DjangoModelFormMutation):
+    class PetMutation(DjangoFormMutation):
         class Meta:
             form_class = PetForm
 
