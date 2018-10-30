@@ -99,7 +99,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
         if not (filterset.is_bound and filterset.form.is_valid()):
             exc = {
-                key: [e.message for e in error_list]
+                str(key): [str(e.message) for e in error_list]
                 for key, error_list in filterset.form.errors.as_data().items()
             }
 
