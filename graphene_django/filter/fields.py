@@ -97,7 +97,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             request=info.context,
         )
 
-        if not filterset.is_valid():
+        if not (filterset.is_bound and filterset.form.is_valid()):
             exc = {
                 key: [e.message for e in error_list]
                 for key, error_list in filterset.errors.as_data().items()
