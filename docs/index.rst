@@ -13,4 +13,4 @@ Contents:
    debug
    rest-framework
    form-mutations
-   introspection
+   custom-errors
