@@ -3,7 +3,7 @@ Custom errors
 
 Default GraphQL error format similar to the following snippet
 
-.. code: json
+.. code:: json
 
     {
       "errors": [
@@ -22,7 +22,8 @@ Default GraphQL error format similar to the following snippet
 And there is a way customise it by swapping default ``GraphQLView`` with your own
 and then override ``format_error`` method
 
-.. code: python
+.. code:: python
+
     class MyGraphQLView(GraphQLView):
         @staticmethod
         def format_error(error) -> Dict[str, Any]:
@@ -34,7 +35,8 @@ and then override ``format_error`` method
 
 Here is custom formatting function
 
-.. code: python
+.. code:: python
+
   def format_error(error: GraphQLError) -> Dict[str, Any]:
       """Extract field from ``error`` and return formatted error
       :param error: GraphQLError
