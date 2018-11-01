@@ -51,3 +51,7 @@ Here is custom formatting function
           formatted_error["path"] = error.path
 
       return formatted_error
+
+
+.. note::
+  ``error.nodes`` might be other GraphQL type as well.
