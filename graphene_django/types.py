@@ -8,7 +8,11 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
+from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_neomodel_model
+
+from neomodel import (
+    DoesNotExist,
+)
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -57,8 +61,8 @@ class DjangoObjectType(ObjectType):
         _meta=None,
         **options
     ):
-        assert is_valid_django_model(model), (
-            'You need to pass a valid Django Model in {}.Meta, received "{}".'
+        assert is_valid_neomodel_model(model), (
+            'You need to pass a valid Neomodel Model in {}.Meta, received "{}".'
         ).format(cls.__name__, model)
 
         if not registry:
@@ -82,7 +86,6 @@ class DjangoObjectType(ObjectType):
             )
 
         if use_connection and not connection:
-            # We create the connection automatically
             if not connection_class:
                 connection_class = Connection
 
@@ -112,7 +115,7 @@ class DjangoObjectType(ObjectType):
             registry.register(cls)
 
     def resolve_id(self, info):
-        return self.pk
+        return self.uid
 
     @classmethod
     def is_type_of(cls, root, info):
@@ -121,7 +124,7 @@ class DjangoObjectType(ObjectType):
             root = root._wrapped
         if isinstance(root, cls):
             return True
-        if not is_valid_django_model(type(root)):
+        if not is_valid_neomodel_model(type(root)):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
         model = root._meta.model._meta.concrete_model
@@ -130,6 +133,6 @@ class DjangoObjectType(ObjectType):
     @classmethod
     def get_node(cls, info, id):
         try:
-            return cls._meta.model.objects.get(pk=id)
-        except cls._meta.model.DoesNotExist:
+            return cls._meta.model.nodes.get(uid=id)
+        except DoesNotExist:
             return None

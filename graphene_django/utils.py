@@ -1,7 +1,10 @@
 import inspect
 
 from django.db import models
-from neomodel import NodeSet
+from neomodel import (
+    NodeSet,
+    StructuredNode,
+)
 
 # from graphene.utils import LazyList
 
@@ -55,8 +58,8 @@ def get_model_fields(model):
     return all_fields
 
 
-def is_valid_django_model(model):
-    return inspect.isclass(model) and issubclass(model, models.Model)
+def is_valid_neomodel_model(model):
+    return inspect.isclass(model) and issubclass(model, StructuredNode)
 
 
 def import_single_dispatch():

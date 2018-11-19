@@ -12,7 +12,7 @@ with open("graphene_django/__init__.py", "rb") as f:
 
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
-neomodel_require = ["neomodel>=3.3.0", ]
+neomodel_require = [] #["neomodel>=3.3.0", ]
 
 tests_require = [
     "pytest>=3.6.3",
