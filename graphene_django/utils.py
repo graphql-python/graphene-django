@@ -43,7 +43,7 @@ def maybe_queryset(value):
 
 def get_model_fields(model):
     local_fields = [
-        (field.name, field)
+        (field[0], field[1])
         for field in sorted(
             model.defined_properties().items()
         )
