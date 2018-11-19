@@ -12,6 +12,7 @@ with open("graphene_django/__init__.py", "rb") as f:
 
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
+neomodel_require = ["neomodel>=3.3.0", ]
 
 tests_require = [
     "pytest>=3.6.3",
@@ -54,10 +55,12 @@ setup(
         "Django>=1.11",
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
+        *neomodel_require,
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
     rest_framework_require=rest_framework_require,
+    neomodel_require=neomodel_require,
     extras_require={"test": tests_require, "rest_framework": rest_framework_require},
     include_package_data=True,
     zip_safe=False,

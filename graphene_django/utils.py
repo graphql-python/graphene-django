@@ -1,8 +1,7 @@
 import inspect
 
 from django.db import models
-from django.db.models.manager import Manager
-
+from neomodel import NodeSet
 
 # from graphene.utils import LazyList
 
@@ -34,7 +33,7 @@ def get_reverse_fields(model, local_field_names):
 
 
 def maybe_queryset(value):
-    if isinstance(value, Manager):
+    if isinstance(value, NodeSet):
         value = value.get_queryset()
     return value
 
