@@ -1,5 +1,25 @@
 from django.db import models
 from django.utils.encoding import force_text
+from neomodel import (
+    AliasProperty,
+    ArrayProperty,
+    BooleanProperty,
+    DateProperty,
+    DateTimeProperty,
+    EmailProperty,
+    FloatProperty,
+    IntegerProperty,
+    JSONProperty,
+    RegexProperty,
+    StringProperty,
+    UniqueIdProperty,
+)
+
+try:
+    from neomodel import JsonArrayProperty # noqa
+    jsonArrayProperty = JsonArrayProperty
+except:
+    jsonArrayProperty = StringProperty
 
 from graphene import (
     ID,
@@ -86,67 +106,55 @@ def convert_django_field(field, registry=None):
     )
 
 
-@convert_django_field.register(models.CharField)
-@convert_django_field.register(models.TextField)
-@convert_django_field.register(models.EmailField)
-@convert_django_field.register(models.SlugField)
-@convert_django_field.register(models.URLField)
-@convert_django_field.register(models.GenericIPAddressField)
-@convert_django_field.register(models.FileField)
-@convert_django_field.register(models.FilePathField)
+@convert_django_field.register(StringProperty)
+@convert_django_field.register(RegexProperty)
 def convert_field_to_string(field, registry=None):
     return String(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.AutoField)
+@convert_django_field.register(StringProperty)
 def convert_field_to_id(field, registry=None):
     return ID(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.UUIDField)
+@convert_django_field.register(StringProperty)
 def convert_field_to_uuid(field, registry=None):
     return UUID(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.PositiveIntegerField)
-@convert_django_field.register(models.PositiveSmallIntegerField)
-@convert_django_field.register(models.SmallIntegerField)
-@convert_django_field.register(models.BigIntegerField)
-@convert_django_field.register(models.IntegerField)
+@convert_django_field.register(IntegerProperty)
 def convert_field_to_int(field, registry=None):
     return Int(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.BooleanField)
+@convert_django_field.register(BooleanProperty)
 def convert_field_to_boolean(field, registry=None):
     return NonNull(Boolean, description=field.help_text)
 
 
-@convert_django_field.register(models.NullBooleanField)
-def convert_field_to_nullboolean(field, registry=None):
-    return Boolean(description=field.help_text, required=not field.null)
+#  @convert_django_field.register(models.NullBooleanField)
+#  def convert_field_to_nullboolean(field, registry=None):
+#      return Boolean(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.DecimalField)
-@convert_django_field.register(models.FloatField)
-@convert_django_field.register(models.DurationField)
+@convert_django_field.register(FloatProperty)
 def convert_field_to_float(field, registry=None):
     return Float(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.DateTimeField)
+@convert_django_field.register(DateTimeProperty)
 def convert_datetime_to_string(field, registry=None):
     return DateTime(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.DateField)
+@convert_django_field.register(DateProperty)
 def convert_date_to_string(field, registry=None):
     return Date(description=field.help_text, required=not field.null)
 
 
-@convert_django_field.register(models.TimeField)
-def convert_time_to_string(field, registry=None):
-    return Time(description=field.help_text, required=not field.null)
+#  @convert_django_field.register(models.TimeField)
+#  def convert_time_to_string(field, registry=None):
+#      return Time(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.OneToOneRel)
