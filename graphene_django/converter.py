@@ -109,22 +109,11 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(StringProperty)
 @convert_django_field.register(RegexProperty)
 def convert_field_to_string(field, registry=None):
-    return String(description=field.help_text, required=not field.null)
-
-
-@convert_django_field.register(StringProperty)
-def convert_field_to_id(field, registry=None):
-    return ID(description=field.help_text, required=not field.null)
-
-
-@convert_django_field.register(StringProperty)
-def convert_field_to_uuid(field, registry=None):
-    return UUID(description=field.help_text, required=not field.null)
-
+    return String(description=field.help_text, required=field.required)
 
 @convert_django_field.register(IntegerProperty)
 def convert_field_to_int(field, registry=None):
-    return Int(description=field.help_text, required=not field.null)
+    return Int(description=field.help_text, required=field.required)
 
 
 @convert_django_field.register(BooleanProperty)
@@ -132,29 +121,19 @@ def convert_field_to_boolean(field, registry=None):
     return NonNull(Boolean, description=field.help_text)
 
 
-#  @convert_django_field.register(models.NullBooleanField)
-#  def convert_field_to_nullboolean(field, registry=None):
-#      return Boolean(description=field.help_text, required=not field.null)
-
-
 @convert_django_field.register(FloatProperty)
 def convert_field_to_float(field, registry=None):
-    return Float(description=field.help_text, required=not field.null)
+    return Float(description=field.help_text, required=field.required)
 
 
 @convert_django_field.register(DateTimeProperty)
 def convert_datetime_to_string(field, registry=None):
-    return DateTime(description=field.help_text, required=not field.null)
+    return DateTime(description=field.help_text, required=field.required)
 
 
 @convert_django_field.register(DateProperty)
 def convert_date_to_string(field, registry=None):
-    return Date(description=field.help_text, required=not field.null)
-
-
-#  @convert_django_field.register(models.TimeField)
-#  def convert_time_to_string(field, registry=None):
-#      return Time(description=field.help_text, required=not field.null)
+    return Date(description=field.help_text, required=field.required)
 
 
 @convert_django_field.register(models.OneToOneRel)
@@ -217,23 +196,16 @@ def convert_field_to_djangomodel(field, registry=None):
     return Dynamic(dynamic_type)
 
 
-@convert_django_field.register(ArrayField)
+@convert_django_field.register(ArrayProperty)
 def convert_postgres_array_to_list(field, registry=None):
-    base_type = convert_django_field(field.base_field)
-    if not isinstance(base_type, (List, NonNull)):
-        base_type = type(base_type)
-    return List(base_type, description=field.help_text, required=not field.null)
+    # TODO
+    #  base_type = convert_django_field(field.child)
+    #  if not isinstance(base_type, (List, NonNull)):
+    #      base_type = type(base_type)
+    return List(description=field.help_text, required=field.required)
 
 
-@convert_django_field.register(HStoreField)
-@convert_django_field.register(JSONField)
+@convert_django_field.register(JSONProperty)
+@convert_django_field.register(jsonArrayProperty)
 def convert_posgres_field_to_string(field, registry=None):
-    return JSONString(description=field.help_text, required=not field.null)
-
-
-@convert_django_field.register(RangeField)
-def convert_posgres_range_to_string(field, registry=None):
-    inner_type = convert_django_field(field.base_field)
-    if not isinstance(inner_type, (List, NonNull)):
-        inner_type = type(inner_type)
-    return List(inner_type, description=field.help_text, required=not field.null)
+    return JSONString(description=field.help_text, required=field.required)
