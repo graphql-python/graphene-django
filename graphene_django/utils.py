@@ -45,7 +45,7 @@ def get_model_fields(model):
     local_fields = [
         (field.name, field)
         for field in sorted(
-            list(model._meta.fields) + list(model._meta.local_many_to_many)
+            model.defined_properties().items()
         )
     ]
 
