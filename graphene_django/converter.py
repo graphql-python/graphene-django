@@ -182,8 +182,8 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
             # defined filter_fields in the DjangoObjectType Meta
             if _type._meta.filter_fields:
                 from .filter.fields import DjangoFilterConnectionField # noqa
-                return DjangoFilterConnectionField(_type)
-            return DjangoConnectionField(_type)
+                return DjangoFilterConnectionField(_type, on='nodes')
+            return DjangoConnectionField(_type, on='nodes')
         return DjangoListField(_type)
         #  required = define_null_parameter(manager)
         #  return Field(_type, source='single', required=required)
