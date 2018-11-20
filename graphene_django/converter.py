@@ -13,9 +13,16 @@ from neomodel import (
     RegexProperty,
     StringProperty,
     UniqueIdProperty,
+    ZeroOrMore,
+    ZeroOrOne,
+    One,
+    OneOrMore,
 )
 
+from neomodel.relationship_manager import RelationshipDefinition
+
 try:
+    # TimurMardanov fork branch. Supports contain 2D-xD arrays
     from neomodel import JsonArrayProperty # noqa
     jsonArrayProperty = JsonArrayProperty
 except:
@@ -46,6 +53,27 @@ from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()
+
+
+REQUIRED_CARDINALITY = (One, OneOrMore, )
+NOT_REQUIRED_CARDINALITY = (ZeroOrMore, ZeroOrOne,)
+
+
+@singledispatch
+def define_null_parameter(manager):
+    raise Exception(
+        "Don't know how to convert the Neomodel relationship field"
+    )
+
+@define_null_parameter.register(REQUIRED_CARDINALITY[0])
+@define_null_parameter.register(REQUIRED_CARDINALITY[1])
+def return_required(field):
+    return True
+
+@define_null_parameter.register(NOT_REQUIRED_CARDINALITY[0])
+@define_null_parameter.register(NOT_REQUIRED_CARDINALITY[1])
+def return_required(field):
+    return False
 
 
 def convert_choice_name(name):
@@ -136,9 +164,9 @@ def convert_date_to_string(field, registry=None):
     return Date(description=field.help_text, required=field.required)
 
 
-@convert_django_field.register(models.OneToOneRel)
+@convert_django_field.register(RelationshipDefinition)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
-    model = field.related_model
+    model = field.definition['node_class']
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
@@ -147,8 +175,9 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 
         # We do this for a bug in Django 1.8, where null attr
         # is not available in the OneToOneRel instance
-        null = getattr(field, "null", True)
-        return Field(_type, required=not null)
+
+        required = define_null_parameter(manager)
+        return Field(_type, required=required)
 
     return Dynamic(dynamic_type)
 
@@ -170,7 +199,7 @@ def convert_field_to_list_or_connection(field, registry=None):
             # Use a DjangoFilterConnectionField if there are
             # defined filter_fields in the DjangoObjectType Meta
             if _type._meta.filter_fields:
-                from .filter.fields import DjangoFilterConnectionField
+                from .filter.fields import DjangoFilterConnectionField # noqa
 
                 return DjangoFilterConnectionField(_type)
 
@@ -207,5 +236,5 @@ def convert_postgres_array_to_list(field, registry=None):
 
 @convert_django_field.register(JSONProperty)
 @convert_django_field.register(jsonArrayProperty)
-def convert_posgres_field_to_string(field, registry=None):
+def convert_json_field_to_string(field, registry=None):
     return JSONString(description=field.help_text, required=field.required)
