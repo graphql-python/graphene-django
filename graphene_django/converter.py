@@ -105,11 +105,11 @@ def convert_django_field_with_choices(field, registry=None):
         converted = registry.get_converted_field(field)
         if converted:
             return converted
-    choices = dict(getattr(field, "choices", None))
+    choices = getattr(field, "choices", None)
     if choices:
         field_class = field.owner
         name = to_camel_case("{}_{}".format(field_class.__name__, field.name))
-        choices = list(get_choices(choices))
+        choices = list(get_choices(dict(choices)))
         named_choices = [(c[0], c[1]) for c in choices]
         named_choices_descriptions = {c[0]: c[2] for c in choices}
 
