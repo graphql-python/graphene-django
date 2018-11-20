@@ -167,11 +167,13 @@ def convert_date_to_string(field, registry=None):
 @convert_django_field.register(RelationshipDefinition)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
     model = field._raw_class
+    manager = field.build_manager(model, 'field')
     print('field' , field)
     print('model in convert', model)
+    print('manager definition', manager.definition)
     def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        print(_type)
+        _type = registry.get_type_for_model(manager.definition['node_class'])
+        print('TYPE = ', _type)
         if not _type:
             return
         required = define_null_parameter(manager)
