@@ -186,7 +186,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 @convert_django_field.register(models.ManyToManyRel)
 @convert_django_field.register(models.ManyToOneRel)
 def convert_field_to_list_or_connection(field, registry=None):
-    model = field.related_model
+    model = registry.get_model_by_string(field._raw_class)
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
