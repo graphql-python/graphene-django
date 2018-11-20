@@ -125,6 +125,7 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_neomodel_model(type(root)):
+            print(root, info, cls)
             raise Exception(('Received incompatible instance "{}".').format(root))
         return root.__class__ == cls._meta.model
 
