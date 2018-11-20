@@ -170,7 +170,6 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
-        print('created type ', _type)
         if not _type:
             return
 
