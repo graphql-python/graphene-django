@@ -166,7 +166,7 @@ def convert_date_to_string(field, registry=None):
 
 @convert_django_field.register(RelationshipDefinition)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
-    model = field.definition['node_class']
+    model = registry.get_model_by_string(field._raw_class)
 
     def dynamic_type():
         _type = registry.get_type_for_model(model)
