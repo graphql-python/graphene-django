@@ -37,7 +37,7 @@ def get_reverse_fields(model, local_field_names):
 
 def maybe_queryset(value):
     if isinstance(value, NodeSet):
-        value = value.get_queryset()
+        value = value.filter()
     return value
 
 
