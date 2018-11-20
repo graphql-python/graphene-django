@@ -17,17 +17,16 @@ from neomodel import (
     ZeroOrOne,
     One,
     OneOrMore,
-    JsonArrayProperty,
 )
 
 from neomodel.relationship_manager import RelationshipDefinition
 
-#  try:
-#      # TimurMardanov fork branch. Supports contain 2D-xD arrays
-#      from neomodel import JsonArrayProperty # noqa
-#      jsonArrayProperty = JsonArrayProperty
-#  except:
-#      jsonArrayProperty = StringProperty
+try:
+    # TimurMardanov fork branch. Supports contain 2D-xD arrays
+    from neomodel import JsonArrayProperty # noqa
+    jsonArrayProperty = JsonArrayProperty
+except:
+    jsonArrayProperty = JSONProperty
 
 from graphene import (
     ID,
@@ -236,6 +235,6 @@ def convert_postgres_array_to_list(field, registry=None):
 
 
 @convert_django_field.register(JSONProperty)
-@convert_django_field.register(JsonArrayProperty)
+@convert_django_field.register(jsonArrayProperty)
 def convert_json_field_to_string(field, registry=None):
     return JSONString(description=field.help_text, required=field.required)
