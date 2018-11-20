@@ -177,7 +177,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
         required = define_null_parameter(manager)
-        return Field(_type, required=required)
+        return Field(_type, source='single', required=required)
 
     return Dynamic(dynamic_type)
 
