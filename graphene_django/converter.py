@@ -167,15 +167,13 @@ def convert_date_to_string(field, registry=None):
 @convert_django_field.register(RelationshipDefinition)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
     model = field._raw_class
-
+    print('field' , field)
+    print('model in convert', model)
     def dynamic_type():
         _type = registry.get_type_for_model(model)
+        print(_type)
         if not _type:
             return
-
-        # We do this for a bug in Django 1.8, where null attr
-        # is not available in the OneToOneRel instance
-
         required = define_null_parameter(manager)
         return Field(_type, required=required)
 
