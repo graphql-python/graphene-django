@@ -87,7 +87,7 @@ def convert_choice_name(name):
 
 def get_choices(choices):
     converted_names = []
-    for value, help_text in choices:
+    for value, help_text in choices.items():
         if isinstance(help_text, (tuple, list)):
             for choice in get_choices(help_text):
                 yield choice
@@ -105,7 +105,7 @@ def convert_django_field_with_choices(field, registry=None):
         converted = registry.get_converted_field(field)
         if converted:
             return converted
-    choices = getattr(field, "choices", None)
+    choices = dict(getattr(field, "choices", None))
     if choices:
         field_class = field.owner
         name = to_camel_case("{}_{}".format(field_class.__name__, field.name))
