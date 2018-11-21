@@ -19,7 +19,6 @@ class Registry(object):
             self._registry[cls._meta.model] = cls
 
     def get_type_for_model(self, model):
-        print('Registry', self._registry)
         return self._registry.get(model)
 
     def register_converted_field(self, field, converted):
