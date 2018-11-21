@@ -98,7 +98,7 @@ def custom_filterset_factory(model, filterset_base_class=FilterSet, **meta):
     meta.update({"model": model})
     meta_class = type(str("Meta"), (object,), meta)
     filterset = type(
-        str("%sFilterSet" % model._meta.object_name),
+        str("%sFilterSet" % model.__name__),
         (filterset_base_class, GrapheneFilterSetMixin),
         {"Meta": meta_class},
     )
