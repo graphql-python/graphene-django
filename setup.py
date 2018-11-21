@@ -13,8 +13,6 @@ with open("graphene_django/__init__.py", "rb") as f:
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
 neomodel_require = [
-    "git+git://github.com/MardanovTimur/neomodel.git@arch_neomodel#egg=neomodel",
-    "git+git://github.com/MardanovTimur/django-filter.git@neomodel#egg=django-filter",
 ]
 
 tests_require = [
