@@ -231,12 +231,18 @@ def convert_field_to_djangomodel(field, registry=None):
 
 
 @convert_django_field.register(ArrayProperty)
-def convert_postgres_array_to_list(field, registry=None):
-    # TODO
-    #  base_type = convert_django_field(field.child)
-    #  if not isinstance(base_type, (List, NonNull)):
-    #      base_type = type(base_type)
-    return List(description=field.help_text, required=field.required)
+def convert_array_to_list(field, registry=None):
+    base_property = field.base_property or StringProperty()
+    return List(description=field.help_text,
+                required=field.required,
+                of_type=convert_django_field(base_property))
+
+#  @singledispatch
+#  def define_base_property(base_property):
+#      raise Exception("This property not implemented yet")
+
+#  @convert_array_to_list.register()
+#  def check_base_property_integer
 
 
 @convert_django_field.register(JSONProperty)
