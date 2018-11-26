@@ -17,15 +17,27 @@ def convert_form_field(field):
         "to Graphene type" % (field, field.__class__)
     )
 
+from neomodel import (
+    AliasProperty,
+    ArrayProperty,
+    BooleanProperty,
+    DateProperty,
+    DateTimeProperty,
+    EmailProperty,
+    FloatProperty,
+    IntegerProperty,
+    JSONProperty,
+    RegexProperty,
+    StringProperty,
+    UniqueIdProperty,
+    ZeroOrMore,
+    ZeroOrOne,
+    One,
+    OneOrMore,
+)
 
-@convert_form_field.register(forms.fields.BaseTemporalField)
-@convert_form_field.register(forms.CharField)
-@convert_form_field.register(forms.EmailField)
-@convert_form_field.register(forms.SlugField)
-@convert_form_field.register(forms.URLField)
-@convert_form_field.register(forms.ChoiceField)
-@convert_form_field.register(forms.RegexField)
-@convert_form_field.register(forms.Field)
+@convert_django_field.register(StringProperty)
+@convert_django_field.register(RegexProperty)
 def convert_form_field_to_string(field):
     return String(description=field.help_text, required=field.required)
 
@@ -35,13 +47,14 @@ def convert_form_field_to_uuid(field):
     return UUID(description=field.help_text, required=field.required)
 
 
+@convert_django_field.register(IntegerProperty)
 @convert_form_field.register(forms.IntegerField)
 @convert_form_field.register(forms.NumberInput)
 def convert_form_field_to_int(field):
     return Int(description=field.help_text, required=field.required)
 
 
-@convert_form_field.register(forms.BooleanField)
+@convert_django_field.register(BooleanProperty)
 def convert_form_field_to_boolean(field):
     return Boolean(description=field.help_text, required=True)
 
