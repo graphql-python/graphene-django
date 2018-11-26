@@ -31,7 +31,7 @@ class DjangoListField(Field):
 
 class DjangoConnectionField(ConnectionField):
     def __init__(self, *args, **kwargs):
-        self.on = kwargs.pop("on", "nodes")
+        self.on = "nodes"
         self.max_limit = kwargs.pop(
             "max_limit", graphene_settings.RELAY_CONNECTION_MAX_LIMIT
         )
@@ -81,13 +81,7 @@ class DjangoConnectionField(ConnectionField):
         if iterable is None:
             iterable = default_manager
         iterable = maybe_queryset(iterable)
-        if isinstance(iterable, NodeSet):
-            if iterable is not default_manager:
-                default_queryset = maybe_queryset(default_manager)
-                iterable = cls.merge_querysets(default_queryset, iterable)
-            _len = iterable.count()
-        else:
-            _len = len(iterable)
+        _len = len(iterable)
         connection = connection_from_list_slice(
             iterable,
             args,
