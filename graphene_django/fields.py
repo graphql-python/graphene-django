@@ -3,6 +3,7 @@ from functools import partial
 from django.db.models.query import QuerySet
 
 from promise import Promise
+from neomodel import NodeSet
 
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
@@ -80,7 +81,7 @@ class DjangoConnectionField(ConnectionField):
         if iterable is None:
             iterable = default_manager
         iterable = maybe_queryset(iterable)
-        if isinstance(iterable, QuerySet):
+        if isinstance(iterable, NodeSet):
             if iterable is not default_manager:
                 default_queryset = maybe_queryset(default_manager)
                 iterable = cls.merge_querysets(default_queryset, iterable)

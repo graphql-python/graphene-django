@@ -54,6 +54,7 @@ class DjangoObjectType(ObjectType):
         only_fields=(),
         exclude_fields=(),
         filter_fields=None,
+        neomodel_filter_fields=None,
         connection=None,
         connection_class=None,
         use_connection=None,
@@ -106,6 +107,7 @@ class DjangoObjectType(ObjectType):
         _meta.filter_fields = filter_fields
         _meta.fields = django_fields
         _meta.connection = connection
+        _meta.neomodel_filter_fields = neomodel_filter_fields
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
