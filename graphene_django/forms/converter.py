@@ -36,8 +36,8 @@ from neomodel import (
     OneOrMore,
 )
 
-@convert_django_field.register(StringProperty)
-@convert_django_field.register(RegexProperty)
+@convert_form_field.register(StringProperty)
+@convert_form_field.register(RegexProperty)
 def convert_form_field_to_string(field):
     return String(description=field.help_text, required=field.required)
 
@@ -47,14 +47,14 @@ def convert_form_field_to_uuid(field):
     return UUID(description=field.help_text, required=field.required)
 
 
-@convert_django_field.register(IntegerProperty)
+@convert_form_field.register(IntegerProperty)
 @convert_form_field.register(forms.IntegerField)
 @convert_form_field.register(forms.NumberInput)
 def convert_form_field_to_int(field):
     return Int(description=field.help_text, required=field.required)
 
 
-@convert_django_field.register(BooleanProperty)
+@convert_form_field.register(BooleanProperty)
 def convert_form_field_to_boolean(field):
     return Boolean(description=field.help_text, required=True)
 
