@@ -31,7 +31,7 @@ class DjangoListField(Field):
 
 class DjangoConnectionField(ConnectionField):
     def __init__(self, *args, **kwargs):
-        self.on = kwargs.pop("on", False)
+        self.on = kwargs.pop("on", "nodes")
         self.max_limit = kwargs.pop(
             "max_limit", graphene_settings.RELAY_CONNECTION_MAX_LIMIT
         )
