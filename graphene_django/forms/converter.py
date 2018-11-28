@@ -39,24 +39,24 @@ from neomodel import (
 @convert_form_field.register(StringProperty)
 @convert_form_field.register(RegexProperty)
 def convert_form_field_to_string(field):
-    return String(description=field.help_text, required=field.required)
+    return String(description=field.help_text)
 
 
 @convert_form_field.register(forms.UUIDField)
 def convert_form_field_to_uuid(field):
-    return UUID(description=field.help_text, required=field.required)
+    return UUID(description=field.help_text)
 
 
 @convert_form_field.register(IntegerProperty)
 @convert_form_field.register(forms.IntegerField)
 @convert_form_field.register(forms.NumberInput)
 def convert_form_field_to_int(field):
-    return Int(description=field.help_text, required=field.required)
+    return Int(description=field.help_text)
 
 
 @convert_form_field.register(BooleanProperty)
 def convert_form_field_to_boolean(field):
-    return Boolean(description=field.help_text, required=True)
+    return Boolean(description=field.help_text)
 
 
 @convert_form_field.register(forms.NullBooleanField)
@@ -67,18 +67,18 @@ def convert_form_field_to_nullboolean(field):
 @convert_form_field.register(forms.DecimalField)
 @convert_form_field.register(forms.FloatField)
 def convert_form_field_to_float(field):
-    return Float(description=field.help_text, required=field.required)
+    return Float(description=field.help_text)
 
 
 @convert_form_field.register(forms.ModelMultipleChoiceField)
 @convert_form_field.register(GlobalIDMultipleChoiceField)
 def convert_form_field_to_list(field):
-    return List(ID, required=field.required)
+    return List(ID)
 
 
 @convert_form_field.register(forms.DateField)
 def convert_form_field_to_date(field):
-    return Date(description=field.help_text, required=field.required)
+    return Date(description=field.help_text)
 
 
 @convert_form_field.register(forms.DateTimeField)
