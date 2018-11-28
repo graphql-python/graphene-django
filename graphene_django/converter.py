@@ -231,6 +231,7 @@ def convert_field_to_djangomodel(field, registry=None):
 
 
 @convert_django_field.register(ArrayProperty)
+@convert_django_field.register(jsonArrayProperty)
 def convert_array_to_list(field, registry=None):
     base_property = field.base_property or StringProperty()
     return List(description=field.help_text,
@@ -246,6 +247,5 @@ def convert_array_to_list(field, registry=None):
 
 
 @convert_django_field.register(JSONProperty)
-@convert_django_field.register(jsonArrayProperty)
 def convert_json_field_to_string(field, registry=None):
     return JSONString(description=field.help_text, required=field.required)
