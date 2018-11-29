@@ -8,6 +8,14 @@ from neomodel import (
 
 # from graphene.utils import LazyList
 
+def is_parent_set(info):
+    if hasattr(info.parent_type._meta.graphene_type, 'know_parent_fields'):
+        options = info.parent_type.graphene_type._meta.know_parent_fields
+        assert isinstance(options, (list, tuple)), \
+            "know_parent_fields should be list or tuple"
+        return info.field_name in options
+    return False
+
 
 class LazyList(object):
     pass

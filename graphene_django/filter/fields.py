@@ -6,6 +6,8 @@ from ..fields import DjangoConnectionField
 from .utils import get_filterset_class, get_filtering_args_from_filterset, \
     make_qs
 
+from ..utils import is_parent_set
+
 
 class DjangoFilterConnectionField(DjangoConnectionField):
     def __init__(
@@ -109,11 +111,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         _parent = args.get('know_parent', False)
 
         if not _parent:
-            if hasattr(info.parent_type._meta, 'know_parent_fields'):
-                options = info.parent_type._meta.know_parent_fields
-                assert isinstance(options, (list, tuple)), \
-                    "know_parent_fields should be list or tuple"
-                _parent = info.field_name in options
+            _parent = is_parent_set(info)
 
         def new_resolver(root, info, **args):
             filters = dict(filter(lambda x: '__' in x[0], args.items()))

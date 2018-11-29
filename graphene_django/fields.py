@@ -10,7 +10,7 @@ from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import maybe_queryset
+from .utils import maybe_queryset, is_parent_set
 
 
 class DjangoListField(Field):
@@ -152,11 +152,7 @@ class DjangoConnectionField(ConnectionField):
         _parent = args.get('know_parent', False)
 
         if not _parent:
-            if hasattr(info.parent_type._meta, 'know_parent_fields'):
-                options = info.parent_type._meta.know_parent_fields
-                assert isinstance(options, (list, tuple)), \
-                    "know_parent_fields should be list or tuple"
-                _parent = info.field_name in options
+            _parent = is_parent_set(info)
 
         def new_resolver(root, info, **kwargs):
             qs = resolver(root, info, **kwargs)
