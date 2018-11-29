@@ -58,7 +58,7 @@ class DjangoObjectType(ObjectType):
         exclude_fields=(),
         filter_fields=None,
         neomodel_filter_fields=None,
-        know_parent_fields=None,
+        know_parent_fields=[],
         connection=None,
         connection_class=None,
         use_connection=None,
