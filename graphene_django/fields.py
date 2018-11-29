@@ -97,7 +97,7 @@ class DjangoConnectionField(ConnectionField):
         return connection
 
     @classmethod
-    def connection_resolver(
+    def connection_resolver_original(
         cls,
         resolver,
         connection,
@@ -136,6 +136,49 @@ class DjangoConnectionField(ConnectionField):
             return Promise.resolve(iterable).then(on_resolve)
 
         return on_resolve(iterable)
+
+    @classmethod
+    def connection_resolver(
+        cls,
+        resolver,
+        connection,
+        default_manager,
+        max_limit,
+        enforce_first_or_last,
+        root,
+        info,
+        **args
+    ):
+        _parent = args.get('know_parent', False)
+
+        if not _parent:
+            if hasattr(info.parent_type._meta, 'know_parent_fields'):
+                options = info.parent_type._meta.know_parent_fields
+                assert isinstance(options, (list, tuple)), \
+                    "know_parent_fields should be list or tuple"
+                _parent = info.field_name in options
+
+        def new_resolver(root, info, **kwargs):
+            qs = resolver(root, info, **kwargs)
+            if qs is None:
+                qs = default_manager.filter()
+            if _parent and root is not None:
+                instances = []
+                for instance in qs:
+                    setattr(instance, '_parent', root)
+                    instances.append(instance)
+                return instances
+            return qs
+
+        return cls.connection_resolver_original(
+            new_resolver,
+            connection,
+            default_manager,
+            max_limit,
+            enforce_first_or_last,
+            root,
+            info,
+            **args)
 
     def get_resolver(self, parent_resolver):
         return partial(

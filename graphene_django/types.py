@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from django.utils.functional import SimpleLazyObject
-from graphene import Field
+from graphene import Field, Boolean
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -13,6 +13,9 @@ from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_neomodel_
 from neomodel import (
     DoesNotExist,
 )
+
+
+KnowParent = dict(know_parent=Boolean(default_value=True))
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -55,6 +58,7 @@ class DjangoObjectType(ObjectType):
         exclude_fields=(),
         filter_fields=None,
         neomodel_filter_fields=None,
+        know_parent_fields=None,
         connection=None,
         connection_class=None,
         use_connection=None,
@@ -108,6 +112,7 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
         _meta.neomodel_filter_fields = neomodel_filter_fields
+        _meta.know_parent_fields = know_parent_fields
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options

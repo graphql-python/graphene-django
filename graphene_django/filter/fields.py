@@ -3,7 +3,8 @@ from functools import partial
 
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
-from .utils import get_filtering_args_from_filterset, get_filterset_class
+from .utils import get_filterset_class, get_filtering_args_from_filterset, \
+    make_qs
 
 
 class DjangoFilterConnectionField(DjangoConnectionField):
@@ -25,17 +26,14 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
-    def args(self):
-        return to_arguments(self._base_args or OrderedDict(), self.filtering_args)
-
-    @args.setter
-    def args(self, args):
-        self._base_args = args
-
-    @property
     def filterset_class(self):
         if not self._filterset_class:
-            fields = self._fields or self.node_type._meta.filter_fields
+            if hasattr(self.node_type._meta, 'neomodel_filter_fields'):
+                fields = self.node_type._meta.neomodel_filter_fields
+            elif hasattr(self, '_fields'):
+                fields = self._fields
+            else:
+                fields = []
             meta = dict(model=self.model, fields=fields)
             if self._extra_filter_meta:
                 meta.update(self._extra_filter_meta)
@@ -45,6 +43,14 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             )
 
         return self._filterset_class
+
+    @property
+    def args(self):
+        return to_arguments(self._base_args or OrderedDict(), self.filtering_args)
+
+    @args.setter
+    def args(self, args):
+        self._base_args = args
 
     @property
     def filtering_args(self):
@@ -74,38 +80,6 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         queryset.query.set_limits(low, high)
         return queryset
 
-    @classmethod
-    def connection_resolver(
-        cls,
-        resolver,
-        connection,
-        default_manager,
-        max_limit,
-        enforce_first_or_last,
-        filterset_class,
-        filtering_args,
-        root,
-        info,
-        **args
-    ):
-        filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
-        qs = filterset_class(
-            data=filter_kwargs,
-            queryset=default_manager.get_queryset(),
-            request=info.context,
-        ).qs
-
-        return super(DjangoFilterConnectionField, cls).connection_resolver(
-            resolver,
-            connection,
-            qs,
-            max_limit,
-            enforce_first_or_last,
-            root,
-            info,
-            **args
-        )
-
     def get_resolver(self, parent_resolver):
         return partial(
             self.connection_resolver,
@@ -117,3 +91,56 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self.filterset_class,
             self.filtering_args,
         )
+
+    @classmethod
+    def connection_resolver(cls,
+                            resolver,
+                            connection,
+                            default_manager,
+                            max_limit,
+                            enforce_first_or_last,
+                            filterset_class,
+                            filtering_args,
+                            root,
+                            info,
+                            **args):
+
+        order = args.get('order', None)
+        _parent = args.get('know_parent', False)
+
+        if not _parent:
+            if hasattr(info.parent_type._meta, 'know_parent_fields'):
+                options = info.parent_type._meta.know_parent_fields
+                assert isinstance(options, (list, tuple)), \
+                    "know_parent_fields should be list or tuple"
+                _parent = info.field_name in options
+
+        def new_resolver(root, info, **args):
+            filters = dict(filter(lambda x: '__' in x[0], args.items()))
+            qs = resolver(root, info, **args)
+            if qs is None:
+                qs = default_manager.filter()
+
+            if filters:
+                qs = qs.filter(make_qs(filters))
+
+            if order:
+                qs = qs.order_by(order)
+
+            if _parent and root is not None:
+                instances = []
+                for instance in qs:
+                    setattr(instance, '_parent', root)
+                    instances.append(instance)
+                return instances
+            return qs
+
+        return DjangoConnectionField.connection_resolver(
+            new_resolver,
+            connection,
+            default_manager,
+            max_limit,
+            enforce_first_or_last,
+            root,
+            info,
+            **args)
