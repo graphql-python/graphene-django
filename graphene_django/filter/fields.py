@@ -120,7 +120,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                 qs = default_manager.filter()
 
             if filters:
-                qs = qs.filter(make_qs(filters))
+                qs = qs.filter().filter(make_qs(filters))
 
             if order:
                 qs = qs.order_by(order)
