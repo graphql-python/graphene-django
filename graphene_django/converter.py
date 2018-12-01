@@ -203,7 +203,7 @@ def convert_field_to_list_or_connection(field, registry=None):
         if _type._meta.connection:
             # Use a DjangoFilterConnectionField if there are
             # defined filter_fields in the DjangoObjectType Meta
-            if _type._meta.filter_fields:
+            if _type._meta.neomodel_filter_fields:
                 from .filter.fields import DjangoFilterConnectionField # noqa
 
                 return DjangoFilterConnectionField(_type)

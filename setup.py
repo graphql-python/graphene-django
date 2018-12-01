@@ -13,6 +13,7 @@ with open("graphene_django/__init__.py", "rb") as f:
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
 neomodel_require = [
+    "neomodel==3.3.0",
 ]
 
 tests_require = [
@@ -23,13 +24,12 @@ tests_require = [
     "pytz",
     "django-filter<2;python_version<'3'",
     "pytest-django>=3.3.2",
-    *neomodel_require,
 ] + rest_framework_require
 
 setup(
     name="graphene-django",
     version=version,
-    description="Graphene Django integration",
+    description="Graphene Django-Neo4J(neomodel) integration",
     long_description=open("README.rst").read(),
     url="https://github.com/graphql-python/graphene-django",
     author="Syrus Akbary",
