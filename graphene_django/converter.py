@@ -23,9 +23,9 @@ from neomodel.relationship_manager import RelationshipDefinition
 
 try:
     # TimurMardanov fork branch. Supports contain 2D-xD arrays
-    from neomodel import JsonArrayProperty # noqa
+    from neomodel import JsonArrayProperty  # noqa
     jsonArrayProperty = JsonArrayProperty
-except:
+except BaseException:
     jsonArrayProperty = JSONProperty
 
 from graphene import (
@@ -65,10 +65,12 @@ def define_null_parameter(manager):
         "Don't know how to convert the Neomodel relationship field"
     )
 
+
 @define_null_parameter.register(REQUIRED_CARDINALITY[0])
 @define_null_parameter.register(REQUIRED_CARDINALITY[1])
 def return_required(field):
     return True
+
 
 @define_null_parameter.register(NOT_REQUIRED_CARDINALITY[0])
 @define_null_parameter.register(NOT_REQUIRED_CARDINALITY[1])
@@ -139,6 +141,7 @@ def convert_django_field(field, registry=None):
 def convert_field_to_string(field, registry=None):
     return String(description=field.help_text, required=field.required)
 
+
 @convert_django_field.register(IntegerProperty)
 def convert_field_to_int(field, registry=None):
     return Int(description=field.help_text, required=field.required)
@@ -168,6 +171,7 @@ def convert_date_to_string(field, registry=None):
 def convert_onetoone_field_to_djangomodel(field, registry=None):
     model = field._raw_class
     manager = field.build_manager(model, 'field')
+
     def dynamic_type():
         _type = registry.get_type_for_model(manager.definition['node_class'])
         if not _type:
@@ -176,56 +180,11 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if _type._meta.connection:
             # Use a DjangoFilterConnectionField if there are
             # defined filter_fields in the DjangoObjectType Meta
-            if _type._meta.filter_fields:
-                from .filter.fields import DjangoFilterConnectionField # noqa
-                return DjangoFilterConnectionField(_type)
-            return DjangoConnectionField(_type)
-        return DjangoListField(_type)
-        #  required = define_null_parameter(manager)
-        #  return Field(_type, source='single', required=required)
-
-    return Dynamic(dynamic_type)
-
-
-@convert_django_field.register(models.ManyToManyField)
-@convert_django_field.register(models.ManyToManyRel)
-@convert_django_field.register(models.ManyToOneRel)
-def convert_field_to_list_or_connection(field, registry=None):
-    model = field.related_model
-
-    def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        if not _type:
-            return
-
-        # If there is a connection, we should transform the field
-        # into a DjangoConnectionField
-        if _type._meta.connection:
-            # Use a DjangoFilterConnectionField if there are
-            # defined filter_fields in the DjangoObjectType Meta
             if _type._meta.neomodel_filter_fields:
-                from .filter.fields import DjangoFilterConnectionField # noqa
-
+                from .filter.fields import DjangoFilterConnectionField  # noqa
                 return DjangoFilterConnectionField(_type)
-
             return DjangoConnectionField(_type)
-
         return DjangoListField(_type)
-
-    return Dynamic(dynamic_type)
-
-
-@convert_django_field.register(models.OneToOneField)
-@convert_django_field.register(models.ForeignKey)
-def convert_field_to_djangomodel(field, registry=None):
-    model = field.related_model
-
-    def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        if not _type:
-            return
-
-        return Field(_type, description=field.help_text, required=not field.null)
 
     return Dynamic(dynamic_type)
 
