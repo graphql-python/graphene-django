@@ -950,7 +950,7 @@ def test_filter_filterset_based_on_mixin():
                 }
             }
         }
-    """
+        """
         % reporter_1.email
     )
 
@@ -966,6 +966,44 @@ def test_filter_filterset_based_on_mixin():
             ]
         }
     }
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_filter_with_union():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ("first_name",)
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        @classmethod
+        def resolve_all_reporters(cls, root, info, **kwargs):
+            ret = Reporter.objects.none() | Reporter.objects.filter(first_name="John")
+
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(firstName: "abc") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": []}}
 
     result = schema.execute(query)
 
