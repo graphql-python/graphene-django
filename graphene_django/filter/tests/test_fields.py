@@ -1,17 +1,18 @@
 from datetime import datetime
 
 import pytest
-
-from graphene import Field, ObjectType, Schema, Argument, Float, Boolean, String
-from graphene.relay import Node
-from graphene_django import DjangoObjectType
-from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
-from graphene_django.tests.models import Article, Pet, Reporter
-from graphene_django.utils import DJANGO_FILTER_INSTALLED
-
 # for annotation test
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
+from graphene import (Argument, Boolean, Field, Float, ObjectType, Schema,
+                      String)
+from graphene.relay import Node
+
+from graphene_django import DjangoObjectType
+from graphene_django.forms import (GlobalIDFormField,
+                                   GlobalIDMultipleChoiceField)
+from graphene_django.tests.models import Article, Pet, Reporter
+from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
 
@@ -692,6 +693,43 @@ def test_annotation_is_perserved():
         }
     """
     expected = {"allReporters": {"edges": [{"node": {"fullName": "John Doe"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+def test_filter_with_union():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ("first_name",)
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        @classmethod
+        def resolve_all_reporters(cls, root, info, **kwargs):
+            ret = Reporter.objects.none() | Reporter.objects.filter(first_name="John")
+
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(firstName: "abc") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": []}}
 
     result = schema.execute(query)
 

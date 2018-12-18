@@ -1,11 +1,10 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-
+from graphene.relay import ConnectionField, PageInfo
+from graphene.types import Field, List
 from promise import Promise
 
-from graphene.types import Field, List
-from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
@@ -103,39 +102,44 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(
-        cls,
-        resolver,
-        connection,
-        default_manager,
-        max_limit,
-        enforce_first_or_last,
-        root,
-        info,
-        **args
-    ):
-        first = args.get("first")
-        last = args.get("last")
+            cls,
+            resolver,
+            connection,
+            default_manager,
+            max_limit,
+            enforce_first_or_last,
+            root,
+            info,
+            **kwargs):
+        # pylint: disable=R0913,W0221
 
-        if enforce_first_or_last:
-            assert first or last, (
-                "You must provide a `first` or `last` value to properly paginate the `{}` connection."
-            ).format(info.field_name)
+        first = kwargs.get("first")
+        last = kwargs.get("last")
+        if not (first is None or first > 0):
+            raise ValueError(
+                "`first` argument must be positive, got `{first}`".format(**locals()))
+        if not (last is None or last > 0):
+            raise ValueError(
+                "`last` argument must be positive, got `{last}`".format(**locals()))
+        if enforce_first_or_last and not (first or last):
+            raise ValueError(
+                "You must provide a `first` or `last` value "
+                "to properly paginate the `{info.field_name}` connection.".format(**locals()))
 
-        if max_limit:
-            if first:
-                assert first <= max_limit, (
-                    "Requesting {} records on the `{}` connection exceeds the `first` limit of {} records."
-                ).format(first, info.field_name, max_limit)
-                args["first"] = min(first, max_limit)
+        if not max_limit:
+            pass
+        elif first is None and last is None:
+            kwargs['first'] = max_limit
+        else:
+            count = min(i for i in (first, last) if i)
+            if count > max_limit:
+                raise ValueError(("Requesting {count} records "
+                                  "on the `{info.field_name}` connection "
+                                  "exceeds the limit of {max_limit} records.").format(**locals()))
 
-            if last:
-                assert last <= max_limit, (
-                    "Requesting {} records on the `{}` connection exceeds the `last` limit of {} records."
-                ).format(last, info.field_name, max_limit)
-                args["last"] = min(last, max_limit)
-
-        iterable = resolver(root, info, **args)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        iterable = resolver(root, info, **kwargs)
+        on_resolve = partial(cls.resolve_connection,
+                             connection, default_manager, kwargs)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)

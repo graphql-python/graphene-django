@@ -1,21 +1,19 @@
 import datetime
 
+import graphene
 import pytest
 from django.db import models
+from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
+from graphene.relay import Node
 from py.test import raises
 
-from django.db.models import Q
-
-import graphene
-from graphene.relay import Node
-
-from ..utils import DJANGO_FILTER_INSTALLED
-from ..compat import MissingType, JSONField
+from ..compat import JSONField, MissingType
 from ..fields import DjangoConnectionField
-from ..types import DjangoObjectType
 from ..settings import graphene_settings
-from .models import Article, CNNReporter, Reporter, Film, FilmDetails
+from ..types import DjangoObjectType
+from ..utils import DJANGO_FILTER_INSTALLED
+from .models import Article, CNNReporter, Film, FilmDetails, Reporter
 
 pytestmark = pytest.mark.django_db
 
@@ -603,7 +601,7 @@ def test_should_error_if_first_is_greater_than_max():
     assert len(result.errors) == 1
     assert str(result.errors[0]) == (
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `first` limit of 100 records."
+        "exceeds the limit of 100 records."
     )
     assert result.data == expected
 
@@ -644,7 +642,7 @@ def test_should_error_if_last_is_greater_than_max():
     assert len(result.errors) == 1
     assert str(result.errors[0]) == (
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `last` limit of 100 records."
+        "exceeds the limit of 100 records."
     )
     assert result.data == expected
 
