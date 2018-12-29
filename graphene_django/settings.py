@@ -75,6 +75,14 @@ def import_from_string(val, setting_name):
             e.__class__.__name__,
             e,
         )
+        if "has no attribute 'name'" in str(e):
+            object_name = str(e).split("'")[1]
+            msg = "Could not import '%s' for Graphene setting '%s'. %s: %s must inherit from DjangoObjectType." % (
+                val,
+                setting_name,
+                e.__class__.__name__,
+                object_name,
+            )
         raise ImportError(msg)
 
 
