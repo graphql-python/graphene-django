@@ -137,4 +137,5 @@ def reload_graphene_settings(*args, **kwargs):
     if setting == "GRAPHENE":
         graphene_settings = GrapheneSettings(value, DEFAULTS, IMPORT_STRINGS)
 
+
 setting_changed.connect(reload_graphene_settings)
