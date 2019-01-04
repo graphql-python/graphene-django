@@ -10,7 +10,7 @@ class MyInstance(object):
         return "resolver method"
 
 
-class PermissionFieldTests(TestCase):
+class DjangoPermissionFieldTests(TestCase):
 
     def test_permission_field(self):
         MyType = object()
