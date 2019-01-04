@@ -5,6 +5,8 @@ from django.db.models.manager import Manager
 
 
 # from graphene.utils import LazyList
+from graphene.types.resolver import get_default_resolver
+from graphene.utils.get_unbound_function import get_unbound_function
 
 
 class LazyList(object):
@@ -81,3 +83,28 @@ def import_single_dispatch():
         )
 
     return singledispatch
+
+
+def has_permissions(viewer, permissions):
+    """
+    Verify that at least one permission is accomplished
+    :param viewer: Field's viewer
+    :param permissions: Field permissions
+    :return: True if viewer has permission. False otherwise.
+    """
+    if not permissions:
+        return True
+    return any([viewer.has_perm(perm) for perm in permissions])
+
+
+def resolve_bound_resolver(resolver, root, info, **args):
+    """
+    Resolve provided resolver
+    :param resolver: Explicit field resolver
+    :param root: Schema root
+    :param info: Schema info
+    :param args: Schema args
+    :return: Resolved field
+    """
+    resolver = get_unbound_function(resolver)
+    return resolver(root, info, **args)
