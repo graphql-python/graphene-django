@@ -638,15 +638,13 @@ def test_should_error_if_last_is_greater_than_max():
         }
     """
 
-    expected = {"allReporters": None}
-
     result = schema.execute(query)
     assert len(result.errors) == 1
     assert str(result.errors[0]) == (
         "Requesting 101 records on the `allReporters` connection "
         "exceeds the `last` limit of 100 records."
     )
-    assert result.data == expected
+    assert result.data == None
 
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 

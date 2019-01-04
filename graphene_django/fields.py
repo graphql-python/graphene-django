@@ -4,7 +4,7 @@ from django.db.models.query import QuerySet
 
 from promise import Promise
 
-from graphene.types import Field, List
+from graphene.types import Field, List, NonNull
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
@@ -41,8 +41,8 @@ class DjangoConnectionField(ConnectionField):
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
-    def type(self):
-        from .types import DjangoObjectType
+    def connection_type(self):
+        from graphene_django.types import DjangoObjectType
 
         _type = super(ConnectionField, self).type
         assert issubclass(
@@ -54,8 +54,14 @@ class DjangoConnectionField(ConnectionField):
         return _type._meta.connection
 
     @property
+    def type(self):
+        if self.enforce_first_or_last:
+            return self.connection_type
+        return NonNull(self.connection_type)
+
+    @property
     def node_type(self):
-        return self.type._meta.node
+        return self.connection_type._meta.node
 
     @property
     def model(self):
@@ -146,7 +152,7 @@ class DjangoConnectionField(ConnectionField):
         return partial(
             self.connection_resolver,
             parent_resolver,
-            self.type,
+            self.connection_type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last,
