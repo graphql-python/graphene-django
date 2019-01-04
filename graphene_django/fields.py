@@ -162,6 +162,10 @@ class DjangoPermissionField(Field):
         super(DjangoPermissionField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
 
+    def get_viewer(self, root, info, **args):
+        """Get viewer to verify permissions"""
+        return info.context.user
+
     def permission_resolver(self, parent_resolver, raise_exception, root, info, **args):
         """
         Middleware resolver to check viewer's permissions
@@ -173,7 +177,7 @@ class DjangoPermissionField(Field):
         :return: Resolved field. None if the viewer does not have permission to access the field.
         """
         # Get viewer from context
-        user = info.context.user
+        user = self.get_viewer(root, info, **args)
         if has_permissions(user, self.permissions):
             if parent_resolver:
                 # A resolver is provided in the class
