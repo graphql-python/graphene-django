@@ -13,6 +13,8 @@ from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 
+from graphql_relay import from_global_id
+
 from .converter import convert_form_field
 from .types import ErrorType
 
@@ -63,7 +65,8 @@ class BaseDjangoFormMutation(ClientIDMutation):
 
         pk = input.pop("id", None)
         if pk:
-            instance = cls._meta.model._default_manager.get(pk=pk)
+            _pk = from_global_id(pk)[1]
+            instance = cls._meta.model._default_manager.get(pk=_pk)
             kwargs["instance"] = instance
 
         return kwargs
