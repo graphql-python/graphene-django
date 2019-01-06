@@ -1,7 +1,8 @@
 from collections import OrderedDict
+from functools import partial
 
 from django.utils.functional import SimpleLazyObject
-from graphene import Field
+from graphene import Field, NonNull
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -159,7 +160,8 @@ class DjangoPermissionObjectType(DjangoObjectType):
 
     @classmethod
     def __init_subclass_with_meta__(cls, field_to_permission=None, permission_to_field=None, model=None, registry=None,
-                                    **options):   # pylint: disable=W0221
+                                    **options):
+        super(DjangoPermissionObjectType, cls).__init_subclass_with_meta__(model=model, registry=registry, **options)
 
         cls._field_permissions = field_to_permission if field_to_permission else {}
 
@@ -173,14 +175,11 @@ class DjangoPermissionObjectType(DjangoObjectType):
             if not hasattr(field_permissions, '__iter__'):
                 field_permissions = tuple(field_permissions)
 
-            setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
+            cls.set_auth_resolver(field_name, field_permissions, cls._meta.fields[field_name], resolver)
 
         if cls._field_permissions:
             cls._set_as_nullable(model, registry)
 
-        super(DjangoPermissionObjectType, cls).__init_subclass_with_meta__(model=model, registry=registry, **options)
-
-    # pylint: disable=W0212
     @classmethod
     def _set_as_nullable(cls, model, registry):
         """Set restricted fields as nullable"""
@@ -190,7 +189,7 @@ class DjangoPermissionObjectType(DjangoObjectType):
         )
         for name, field in django_fields.items():
             if isinstance(field._type, NonNull):
-                field._type = field._type._of_type   # pylint: disable=W0212
+                field._type = field._type._of_type
                 setattr(cls, name, field)
 
     @classmethod
@@ -212,12 +211,13 @@ class DjangoPermissionObjectType(DjangoObjectType):
         cls._field_permissions[field] = cls._field_permissions.get(field, tuple()) + permissions
 
     @classmethod
-    def set_auth_resolver(cls, name, permissions, resolver=None):
+    def set_auth_resolver(cls, name, permissions, field, resolver=None):
         """
         Set middleware resolver to handle field permissions
         :param name: Field name
         :param permissions: List of permissions
+        :param field: Meta's field
         :param resolver: Field resolver
         :return: Middleware resolver to check permissions
         """
-        return partial(auth_resolver, resolver, name, permissions, None, False)
+        field.resolver = partial(auth_resolver, field.resolver or resolver, name, permissions, None, False)
