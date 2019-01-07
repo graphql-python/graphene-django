@@ -175,7 +175,7 @@ class DjangoPermissionObjectType(DjangoObjectType):
             if not hasattr(field_permissions, '__iter__'):
                 field_permissions = tuple(field_permissions)
 
-            cls.set_auth_resolver(field_name, field_permissions, cls._meta.fields[field_name], resolver)
+            setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
 
         if cls._field_permissions:
             cls._set_as_nullable(model, registry)
