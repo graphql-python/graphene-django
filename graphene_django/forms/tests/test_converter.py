@@ -14,6 +14,7 @@ from graphene import (
     DateTime,
     Date,
     Time,
+    Enum,
 )
 
 from ..converter import convert_form_field
@@ -112,3 +113,9 @@ def test_should_manytoone_convert_connectionorlist():
     field = forms.ModelChoiceField(queryset=None)
     graphene_type = convert_form_field(field)
     assert isinstance(graphene_type, ID)
+
+
+def test_should_typed_choice_convert_enum():
+    field = forms.TypedChoiceField(choices=(('A', 'Choice A'), ('B', 'Choice B')))
+    graphene_type = convert_form_field(field, 'field')
+    assert isinstance(graphene_type, Enum)
