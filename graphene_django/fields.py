@@ -10,7 +10,7 @@ from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import maybe_queryset, has_permissions, resolve_bound_resolver
+from .utils import maybe_queryset, auth_resolver
 
 
 class DjangoListField(Field):
@@ -162,31 +162,6 @@ class DjangoPermissionField(Field):
         super(DjangoPermissionField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
 
-    def get_viewer(self, root, info, **args):
-        """Get viewer to verify permissions"""
-        return info.context.user
-
-    def permission_resolver(self, parent_resolver, raise_exception, root, info, **args):
-        """
-        Middleware resolver to check viewer's permissions
-        :param parent_resolver: Field resolver
-        :param raise_exception: If True a PermissionDenied is raised
-        :param root: Schema root
-        :param info: Schema info
-        :param args: Schema args
-        :return: Resolved field. None if the viewer does not have permission to access the field.
-        """
-        # Get viewer from context
-        user = self.get_viewer(root, info, **args)
-        if has_permissions(user, self.permissions):
-            if parent_resolver:
-                # A resolver is provided in the class
-                return resolve_bound_resolver(parent_resolver, root, info, **args)
-            # Get default resolver
-        elif raise_exception:
-            raise PermissionDenied()
-        return None
-
     def get_resolver(self, parent_resolver):
         """Intercept resolver to analyse permissions"""
-        return partial(self.permission_resolver, parent_resolver, True)
+        return partial(auth_resolver, self.resolver or parent_resolver, self.permissions, True)
