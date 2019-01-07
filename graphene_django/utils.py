@@ -1,5 +1,6 @@
 import inspect
 
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models.manager import Manager
 
@@ -107,3 +108,25 @@ def resolve_bound_resolver(resolver, root, info, **args):
     """
     resolver = get_unbound_function(resolver)
     return resolver(root, info, **args)
+
+
+def auth_resolver(parent_resolver, permissions, raise_exception, root, info, **args):
+    """
+    Middleware resolver to check viewer's permissions
+    :param parent_resolver: Field resolver
+    :param permissions: Field permissions
+    :param raise_exception: If True a PermissionDenied is raised
+    :param root: Schema root
+    :param info: Schema info
+    :param args: Schema args
+    :return: Resolved field. None if the viewer does not have permission to access the field.
+    """
+    # Get viewer from context
+    user = info.context.user
+    if has_permissions(user, permissions):
+        if parent_resolver:
+            # A resolver is provided in the class
+            return resolve_bound_resolver(parent_resolver, root, info, **args)
+    elif raise_exception:
+        raise PermissionDenied()
+    return None
