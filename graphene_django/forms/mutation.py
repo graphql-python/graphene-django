@@ -30,7 +30,11 @@ def fields_for_form(form, only_fields, exclude_fields):
         if is_not_in_only or is_excluded:
             continue
 
-        fields[name] = convert_form_field(field)
+        choices = getattr(field, 'choices', None)
+        if choices:
+            fields[name] = convert_form_field(field, field.label or name)
+        else:
+            fields[name] = convert_form_field(field)
     return fields
 
 

@@ -1,8 +1,10 @@
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
 
-from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time
+from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time, Enum
+from graphene.utils.str_converters import to_camel_case
 
+from graphene_django.converter import get_choices
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from ..utils import import_single_dispatch
 
@@ -82,3 +84,24 @@ def convert_form_field_to_time(field):
 @convert_form_field.register(GlobalIDFormField)
 def convert_form_field_to_id(field):
     return ID(required=field.required)
+
+
+@convert_form_field.register(forms.TypedChoiceField)
+def convert_form_to_enum(field, name):
+    choices = getattr(field, 'choices', None)
+    name = to_camel_case(name)
+    choices = list(get_choices(choices))
+    named_choices = [(c[0], c[1]) for c in choices]
+    named_choices_descriptions = {c[0]: c[2] for c in choices}
+
+    class EnumWithDescriptionsType(object):
+        """Enum type definition"""
+
+        @property
+        def description(self):
+            """Return field description"""
+
+            return named_choices_descriptions[self.name]
+
+    enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return enum(description=field.help_text, required=field.required)
