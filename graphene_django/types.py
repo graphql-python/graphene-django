@@ -9,7 +9,7 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
+from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model, auth_resolver
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -170,7 +170,7 @@ class DjangoPermissionObjectType(DjangoObjectType):
 
         for field_name, field_permissions in cls._field_permissions.items():
             attr = 'resolve_{}'.format(field_name)
-            resolver = getattr(cls, attr, None)
+            resolver = getattr(cls._meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
 
             if not hasattr(field_permissions, '__iter__'):
                 field_permissions = tuple(field_permissions)
@@ -188,7 +188,7 @@ class DjangoPermissionObjectType(DjangoObjectType):
             _as=Field,
         )
         for name, field in django_fields.items():
-            if isinstance(field._type, NonNull):
+            if hasattr(field, '_type') and isinstance(field._type, NonNull):
                 field._type = field._type._of_type
                 setattr(cls, name, field)
 
@@ -211,7 +211,7 @@ class DjangoPermissionObjectType(DjangoObjectType):
         cls._field_permissions[field] = cls._field_permissions.get(field, tuple()) + permissions
 
     @classmethod
-    def set_auth_resolver(cls, name, permissions, field, resolver=None):
+    def set_auth_resolver(cls, name, permissions, resolver=None):
         """
         Set middleware resolver to handle field permissions
         :param name: Field name
@@ -220,4 +220,4 @@ class DjangoPermissionObjectType(DjangoObjectType):
         :param resolver: Field resolver
         :return: Middleware resolver to check permissions
         """
-        field.resolver = partial(auth_resolver, field.resolver or resolver, name, permissions, None, False)
+        return partial(auth_resolver, resolver, permissions, name, None, False)

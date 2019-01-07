@@ -1,10 +1,10 @@
 from mock import patch
 
-from graphene import Interface, ObjectType, Schema, Connection, String
+from graphene import Interface, ObjectType, Schema, Connection, String, Field
 from graphene.relay import Node
 
 from .. import registry
-from ..types import DjangoObjectType, DjangoObjectTypeOptions
+from ..types import DjangoObjectType, DjangoObjectTypeOptions, DjangoPermissionObjectType
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -224,3 +224,101 @@ def test_django_objecttype_exclude_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
+
+
+def extra_field_resolver(root, info, **kwargs):
+    return 'extra field'
+
+
+class PermissionArticle(DjangoPermissionObjectType):
+    """Basic Type to test"""
+
+    class Meta(object):
+        """Meta Class"""
+        field_to_permission = {
+            'headline': ('content_type.permission1',),
+            'pub_date': ('content_type.permission2',)
+        }
+        permission_to_field = {
+            'content_type.permission3': ('headline', 'reporter', 'extra_field',)
+        }
+        model = ArticleModel
+
+    extra_field = Field(String, resolver=extra_field_resolver)
+
+    def resolve_headline(self, info, **kwargs):
+        return 'headline'
+
+
+def test_django_permissions():
+    expected = {
+        'headline': ('content_type.permission1', 'content_type.permission3'),
+        'pub_date': ('content_type.permission2',),
+        'reporter': ('content_type.permission3',),
+        'extra_field': ('content_type.permission3',),
+    }
+    assert PermissionArticle._field_permissions == expected
+
+
+def test_permission_resolver():
+    MyType = object()
+
+    class Viewer(object):
+        def has_perm(self, perm):
+            return perm == 'content_type.permission3'
+
+    class Info(object):
+        class Context(object):
+            user = Viewer()
+        context = Context()
+
+    resolved = PermissionArticle.resolve_headline(MyType, Info())
+    assert resolved == 'headline'
+
+
+def test_resolver_without_permission():
+    MyType = object()
+
+    class Viewer(object):
+        def has_perm(self, perm):
+            return False
+
+    class Info(object):
+        class Context(object):
+            user = Viewer()
+        context = Context()
+
+    resolved = PermissionArticle.resolve_headline(MyType, Info())
+    assert resolved is None
+
+
+def test_permission_resolver_to_field():
+    MyType = object()
+
+    class Viewer(object):
+        def has_perm(self, perm):
+            return perm == 'content_type.permission3'
+
+    class Info(object):
+        class Context(object):
+            user = Viewer()
+        context = Context()
+
+    resolved = PermissionArticle.resolve_extra_field(MyType, Info())
+    assert resolved == 'extra field'
+
+
+def test_resolver_to_field_without_permission():
+    MyType = object()
+
+    class Viewer(object):
+        def has_perm(self, perm):
+            return perm != 'content_type.permission3'
+
+    class Info(object):
+        class Context(object):
+            user = Viewer()
+        context = Context()
+
+    resolved = PermissionArticle.resolve_extra_field(MyType, Info())
+    assert resolved is None
