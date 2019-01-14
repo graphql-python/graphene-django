@@ -68,7 +68,8 @@ Let's get started with these models:
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
-        category = models.ForeignKey(Category, related_name='ingredients')
+        category = models.ForeignKey(
+            Category, related_name='ingredients', on_delete=models.CASCADE)
 
         def __str__(self):
             return self.name
@@ -80,8 +81,9 @@ Add ingredients as INSTALLED_APPS:
     INSTALLED_APPS = [
         ...
         # Install the ingredients app
-        'ingredients',
+        'cookbook.ingredients',
     ]
+
 
 Don't forget to create & run migrations:
 
@@ -110,6 +112,18 @@ following:
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
 create a login for yourself too (``./manage.py createsuperuser``).
+
+Register models with admin panel:
+
+.. code:: python
+
+    # cookbook/ingredients/admin.py
+    from django.contrib import admin
+    from cookbook.ingredients.models import Category, Ingredient
+
+    admin.site.register(Category)
+    admin.site.register(Ingredient)
+
 
 Hello GraphQL - Schema and Object Types
 ---------------------------------------
@@ -153,7 +167,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             model = Ingredient
 
 
-    class Query(graphene.AbstractType):
+    class Query(object):
         all_categories = graphene.List(CategoryType)
         all_ingredients = graphene.List(IngredientType)
 
@@ -165,9 +179,9 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             return Ingredient.objects.select_related('category').all()
 
 
-Note that the above ``Query`` class is marked as 'abstract'. This is
-because we will now create a project-level query which will combine all
-our app-level queries.
+Note that the above ``Query`` class is a mixin, inheriting from
+``object``. This is because we will now create a project-level query
+class which will combine all our app-level mixins.
 
 Create the parent project-level ``cookbook/schema.py``:
 
@@ -426,7 +440,7 @@ We can update our schema to support that, by adding new query for ``ingredient``
           model = Ingredient
 
 
-  class Query(graphene.AbstractType):
+  class Query(object):
       category = graphene.Field(CategoryType,
                                 id=graphene.Int(),
                                 name=graphene.String())
@@ -445,8 +459,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return Ingredient.objects.all()
 
       def resolve_category(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Category.objects.get(pk=id)
@@ -457,8 +471,8 @@ We can update our schema to support that, by adding new query for ``ingredient``
           return None
 
       def resolve_ingredient(self, info, **kwargs):
-          id = kargs.get('id')
-          name = kargs.get('name')
+          id = kwargs.get('id')
+          name = kwargs.get('name')
 
           if id is not None:
               return Ingredient.objects.get(pk=id)

@@ -10,7 +10,7 @@ app <https://github.com/graphql-python/graphene-django/tree/master/examples/cook
 A good idea is to check the following things first:
 
 * `Graphene Relay documentation <http://docs.graphene-python.org/en/latest/relay/>`__
-* `GraphQL Relay Specification <https://facebook.github.io/relay/docs/graphql-relay-specification.html>`__
+* `GraphQL Relay Specification <https://facebook.github.io/relay/docs/en/graphql-server-specification.html>`__
 
 Setup the Django project
 ------------------------
@@ -118,7 +118,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
 .. code:: python
 
     # cookbook/ingredients/schema.py
-    from graphene import relay, ObjectType, AbstractType
+    from graphene import relay, ObjectType
     from graphene_django import DjangoObjectType
     from graphene_django.filter import DjangoFilterConnectionField
 
@@ -147,7 +147,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             interfaces = (relay.Node, )
 
 
-    class Query(AbstractType):
+    class Query(object):
         category = relay.Node.Field(CategoryNode)
         all_categories = DjangoFilterConnectionField(CategoryNode)
 
