@@ -133,7 +133,7 @@ class DjangoObjectType(ObjectType):
             return True
         if not is_valid_neomodel_model(type(root)):
             raise Exception(('Received incompatible instance "{}".').format(root))
-        return root.__class__ == cls._meta.model
+        return isinstance(root.__class__, cls._meta.model)
 
     @classmethod
     def get_node(cls, info, id):
