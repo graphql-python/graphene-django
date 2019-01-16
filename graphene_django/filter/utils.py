@@ -14,11 +14,16 @@ def get_filterset_class(filterset_class, **meta):
 
 
 def make_qs(filters):
+    relationship_filters = {}
     for item in filters.items():
-        if '__equal' in item[0]:
+        if item[0].endswith('__equal'):
             filters.pop(item[0])
             filters[item[0].split("__")[0]] = item[1]
-    return reduce(lambda init, nx: init & Q(**{nx[0]: nx[1]}), filters.items(), Q())
+        elif item[0].endswith('__has'):
+            filters.pop(item[0])
+            relationship_filters[item[0].split("__")[0]] = item[1]
+    base_filters = reduce(lambda init, nx: init & Q(**{nx[0]: nx[1]}), filters.items(), Q())
+    return base_filters, relationship_filters
 
 
 def get_filtering_args_from_filterset(filterset_class, type):

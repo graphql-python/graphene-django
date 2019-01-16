@@ -113,6 +113,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         if not _parent:
             _parent = is_parent_set(info)
 
+        source_class = default_manager.source
+
         def new_resolver(root, info, **args):
 
             #filters
@@ -122,7 +124,20 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                 qs = default_manager.filter()
 
             if filters:
-                qs = qs.filter().filter(make_qs(filters))
+                base_filters, relationship_filters = make_qs(filters)
+                qs = qs.filter().filter(base_filters)
+
+                if relationship_filters:
+                    rels = {}
+                    for item in relationship_filters.items():
+                        rel_field = getattr(source_class, item[0], None)
+                        if rel_field is None:
+                            raise Exception('This relationship field not found '
+                                            'in source class')
+                        node_class = rel_field.build_manager(0, item[0]).definition['node_class']
+                        rels[item[0]] = node_class.nodes.get(uid=item[1])
+                    for item in rels.items():
+                        qs = qs.has(**{item[0]: item[1]})
 
             if order:
                 qs = qs.order_by(order)
