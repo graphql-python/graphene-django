@@ -121,7 +121,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             filters = dict(filter(lambda x: '__' in x[0], args.items()))
             qs = resolver(root, info, **args)
             if qs is None:
-                qs = default_manager.filter()
+                qs = source_class.nodes.filter()
 
             if filters:
                 base_filters, relationship_filters = make_qs(filters)
