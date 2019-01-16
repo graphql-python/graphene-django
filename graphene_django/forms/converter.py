@@ -35,6 +35,8 @@ from neomodel import (
     One,
     OneOrMore,
 )
+from neomodel.relationship_manager import RelationshipDefinition
+
 
 @convert_form_field.register(StringProperty)
 @convert_form_field.register(RegexProperty)
@@ -43,6 +45,7 @@ def convert_form_field_to_string(field):
 
 
 @convert_form_field.register(forms.UUIDField)
+@convert_form_field.register(RelationshipDefinition)
 def convert_form_field_to_uuid(field):
     return UUID(description=field.help_text)
 

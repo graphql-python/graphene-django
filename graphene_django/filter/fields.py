@@ -114,6 +114,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             _parent = is_parent_set(info)
 
         def new_resolver(root, info, **args):
+
+            #filters
             filters = dict(filter(lambda x: '__' in x[0], args.items()))
             qs = resolver(root, info, **args)
             if qs is None:
@@ -125,6 +127,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             if order:
                 qs = qs.order_by(order)
 
+            # set parent to child fields
+            # in ''_parent'' attribute
             if _parent and root is not None:
                 instances = []
                 for instance in qs:
