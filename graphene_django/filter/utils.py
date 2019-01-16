@@ -20,8 +20,9 @@ def make_qs(filters):
             filters.pop(item[0])
             filters[item[0].split("__")[0]] = item[1]
         elif item[0].endswith('__has'):
-            filters.pop(item[0])
             relationship_filters[item[0].split("__")[0]] = item[1]
+    for item in relationship_filters.items():
+        filters.pop(item[0]+'__has')
     base_filters = reduce(lambda init, nx: init & Q(**{nx[0]: nx[1]}), filters.items(), Q())
     return base_filters, relationship_filters
 
