@@ -28,21 +28,27 @@ def convert_serializer_field(field, is_input=True):
     graphql_type = get_graphene_type_from_serializer_field(field)
 
     args = []
-    kwargs = {
-        'description': field.help_text,
-        'required': is_input and field.required,
-    }
+    kwargs = {"description": field.help_text, "required": is_input and field.required}
 
     # if it is a tuple or a list it means that we are returning
     # the graphql type and the child type
     if isinstance(graphql_type, (list, tuple)):
-        kwargs['of_type'] = graphql_type[1]
+        kwargs["of_type"] = graphql_type[1]
         graphql_type = graphql_type[0]
 
     if isinstance(field, serializers.ModelSerializer):
         if is_input:
             graphql_type = convert_serializer_to_input_type(field.__class__)
         else:
+            global_registry = get_global_registry()
+            field_model = field.Meta.model
+            args = [global_registry.get_type_for_model(field_model)]
+    elif isinstance(field, serializers.ListSerializer):
+        field = field.child
+        if is_input:
+            kwargs["of_type"] = convert_serializer_to_input_type(field.__class__)
+        else:
+            del kwargs["of_type"]
             global_registry = get_global_registry()
             field_model = field.Meta.model
             args = [global_registry.get_type_for_model(field_model)]
@@ -59,9 +65,9 @@ def convert_serializer_to_input_type(serializer_class):
     }
 
     return type(
-        '{}Input'.format(serializer.__class__.__name__),
+        "{}Input".format(serializer.__class__.__name__),
         (graphene.InputObjectType,),
-        items
+        items,
     )
 
 
@@ -73,6 +79,12 @@ def convert_serializer_field_to_string(field):
 @get_graphene_type_from_serializer_field.register(serializers.ModelSerializer)
 def convert_serializer_to_field(field):
     return graphene.Field
+
+
+@get_graphene_type_from_serializer_field.register(serializers.ListSerializer)
+def convert_list_serializer_to_field(field):
+    child_type = get_graphene_type_from_serializer_field(field.child)
+    return (graphene.List, child_type)
 
 
 @get_graphene_type_from_serializer_field.register(serializers.IntegerField)

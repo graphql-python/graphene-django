@@ -16,7 +16,6 @@ class SQLQueryTriggered(Exception):
 
 
 class ThreadLocalState(local):
-
     def __init__(self):
         self.enabled = True
 
@@ -35,7 +34,7 @@ recording = state.recording  # export function
 
 
 def wrap_cursor(connection, panel):
-    if not hasattr(connection, '_graphene_cursor'):
+    if not hasattr(connection, "_graphene_cursor"):
         connection._graphene_cursor = connection.cursor
 
         def cursor():
@@ -46,7 +45,7 @@ def wrap_cursor(connection, panel):
 
 
 def unwrap_cursor(connection):
-    if hasattr(connection, '_graphene_cursor'):
+    if hasattr(connection, "_graphene_cursor"):
         previous_cursor = connection._graphene_cursor
         connection.cursor = previous_cursor
         del connection._graphene_cursor
@@ -87,15 +86,14 @@ class NormalCursorWrapper(object):
         if not params:
             return params
         if isinstance(params, dict):
-            return dict((key, self._quote_expr(value))
-                        for key, value in params.items())
+            return dict((key, self._quote_expr(value)) for key, value in params.items())
         return list(map(self._quote_expr, params))
 
     def _decode(self, param):
         try:
             return force_text(param, strings_only=True)
         except UnicodeDecodeError:
-            return '(encoded string)'
+            return "(encoded string)"
 
     def _record(self, method, sql, params):
         start_time = time()
@@ -103,45 +101,48 @@ class NormalCursorWrapper(object):
             return method(sql, params)
         finally:
             stop_time = time()
-            duration = (stop_time - start_time)
-            _params = ''
+            duration = stop_time - start_time
+            _params = ""
             try:
                 _params = json.dumps(list(map(self._decode, params)))
             except Exception:
                 pass  # object not JSON serializable
 
-            alias = getattr(self.db, 'alias', 'default')
+            alias = getattr(self.db, "alias", "default")
             conn = self.db.connection
-            vendor = getattr(conn, 'vendor', 'unknown')
+            vendor = getattr(conn, "vendor", "unknown")
 
             params = {
-                'vendor': vendor,
-                'alias': alias,
-                'sql': self.db.ops.last_executed_query(
-                    self.cursor, sql, self._quote_params(params)),
-                'duration': duration,
-                'raw_sql': sql,
-                'params': _params,
-                'start_time': start_time,
-                'stop_time': stop_time,
-                'is_slow': duration > 10,
-                'is_select': sql.lower().strip().startswith('select'),
+                "vendor": vendor,
+                "alias": alias,
+                "sql": self.db.ops.last_executed_query(
+                    self.cursor, sql, self._quote_params(params)
+                ),
+                "duration": duration,
+                "raw_sql": sql,
+                "params": _params,
+                "start_time": start_time,
+                "stop_time": stop_time,
+                "is_slow": duration > 10,
+                "is_select": sql.lower().strip().startswith("select"),
             }
 
-            if vendor == 'postgresql':
+            if vendor == "postgresql":
                 # If an erroneous query was ran on the connection, it might
                 # be in a state where checking isolation_level raises an
                 # exception.
                 try:
                     iso_level = conn.isolation_level
                 except conn.InternalError:
-                    iso_level = 'unknown'
-                params.update({
-                    'trans_id': self.logger.get_transaction_id(alias),
-                    'trans_status': conn.get_transaction_status(),
-                    'iso_level': iso_level,
-                    'encoding': conn.encoding,
-                })
+                    iso_level = "unknown"
+                params.update(
+                    {
+                        "trans_id": self.logger.get_transaction_id(alias),
+                        "trans_status": conn.get_transaction_status(),
+                        "iso_level": iso_level,
+                        "encoding": conn.encoding,
+                    }
+                )
 
             _sql = DjangoDebugSQL(**params)
             # We keep `sql` to maintain backwards compatibility
