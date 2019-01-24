@@ -149,10 +149,10 @@ class DjangoConnectionField(ConnectionField):
         info,
         **args
     ):
-        _parent = args.get('know_parent', False)
+        _parent = is_parent_set(info)
 
         if not _parent:
-            _parent = is_parent_set(info)
+            _parent = args.get('know_parent', False)
 
         def new_resolver(root, info, **kwargs):
             qs = resolver(root, info, **kwargs)

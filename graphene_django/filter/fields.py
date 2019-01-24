@@ -108,10 +108,10 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                             **args):
 
         order = args.get('order', None)
-        _parent = args.get('know_parent', False)
 
+        _parent = is_parent_set(info)
         if not _parent:
-            _parent = is_parent_set(info)
+            _parent = args.get('know_parent', False)
 
         source_class = default_manager.source
 
