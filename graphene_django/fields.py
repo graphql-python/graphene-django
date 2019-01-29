@@ -6,6 +6,7 @@ from promise import Promise
 from neomodel import NodeSet
 
 from graphene.types import Field, List
+from graphene.types.scalars import Boolean
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
@@ -39,6 +40,9 @@ class DjangoConnectionField(ConnectionField):
             "enforce_first_or_last",
             graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST,
         )
+        kwargs.setdefault('know_parent', Boolean(default_value=False,
+                                                 description='Know parent type in nodes?'
+                                                 ' \n Default = <False>'))
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property

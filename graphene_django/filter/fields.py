@@ -43,7 +43,6 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self._filterset_class = get_filterset_class(
                 self._provided_filterset_class, **meta
             )
-
         return self._filterset_class
 
     @property
@@ -116,8 +115,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         source_class = default_manager.source
 
         def new_resolver(root, info, **args):
-
-            #filters
+            # filters
             filters = dict(filter(lambda x: '__' in x[0], args.items()))
             qs = resolver(root, info, **args)
             if qs is None:
@@ -127,25 +125,29 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                 base_filters, relationship_filters = make_qs(filters)
                 qs = qs.filter().filter(base_filters)
 
+                # has filtering
                 if relationship_filters:
                     rels = {}
+                    # check that this field has relationship in model class
                     for item in relationship_filters.items():
                         rel_field = getattr(source_class, item[0], None)
                         if rel_field is None:
                             raise Exception('This relationship field not found '
-                                            'in source class')
-                        node_class = rel_field.build_manager(0, item[0]).definition['node_class']
-                        rels[item[0]] = node_class.nodes.get(uid=item[1])
+                                    'in source class: {class_}'.format(class_=source_class.__name__))
+                        # build definition of node_class - source_class( which
+                        # must filter by uid - node_class.nodes.get(uid=item[1]))
+                        node_class=rel_field.build_manager(0, item[0]).definition['node_class']
+                        rels[item[0]]=node_class.nodes.get(uid=item[1])
                     for item in rels.items():
-                        qs = qs.has(**{item[0]: item[1]})
+                        qs=qs.has(**{item[0]: item[1]})
 
             if order:
-                qs = qs.order_by(order)
+                qs=qs.order_by(order)
 
             # set parent to child fields
             # in ''_parent'' attribute
             if _parent and root is not None:
-                instances = []
+                instances=[]
                 for instance in qs:
                     setattr(instance, '_parent', root)
                     instances.append(instance)
