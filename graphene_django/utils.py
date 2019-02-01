@@ -67,7 +67,7 @@ def get_model_fields(model):
 
 
 def is_valid_neomodel_model(model):
-    return inspect.isclass(model) and issubclass(model, StructuredNode) or isinstance(model, dict)
+    return (inspect.isclass(model) and issubclass(model, StructuredNode)) or isinstance(model, dict)
 
 
 def import_single_dispatch():
