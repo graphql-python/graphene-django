@@ -17,6 +17,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         order_by=None,
         extra_filter_meta=None,
         filterset_class=None,
+        post_resolver=None,
         *args,
         **kwargs
     ):
@@ -25,6 +26,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._filterset_class = None
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
+        self._post_resolver = post_resolver
         super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
@@ -91,6 +93,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self.enforce_first_or_last,
             self.filterset_class,
             self.filtering_args,
+            self._post_resolver,
         )
 
     @classmethod
@@ -102,6 +105,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                             enforce_first_or_last,
                             filterset_class,
                             filtering_args,
+                            post_resolver,
                             root,
                             info,
                             **args):
@@ -140,6 +144,9 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                         rels[item[0]]=node_class.nodes.get(uid=item[1])
                     for item in rels.items():
                         qs=qs.has(**{item[0]: item[1]})
+
+            if post_resolver:
+                qs = post_resolver(qs, info, **args)
 
             if order:
                 qs=qs.order_by(order)
