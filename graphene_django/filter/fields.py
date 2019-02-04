@@ -76,17 +76,18 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @classmethod
     def connection_resolver(
-        cls,
-        resolver,
-        connection,
-        default_manager,
-        max_limit,
-        enforce_first_or_last,
-        filterset_class,
-        filtering_args,
-        root,
-        info,
-        **args
+            cls,
+            resolver,
+            connection,
+            node,
+            default_manager,
+            max_limit,
+            enforce_first_or_last,
+            filterset_class,
+            filtering_args,
+            root,
+            info,
+            **args
     ):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
         qs = filterset_class(
@@ -98,6 +99,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return super(DjangoFilterConnectionField, cls).connection_resolver(
             resolver,
             connection,
+            node,
             qs,
             max_limit,
             enforce_first_or_last,
@@ -111,6 +113,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self.connection_resolver,
             parent_resolver,
             self.type,
+            self.node_type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last,

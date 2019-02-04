@@ -111,6 +111,14 @@ class DjangoObjectType(ObjectType):
         if not skip_registry:
             registry.register(cls)
 
+    @classmethod
+    def refine_queryset(cls, qs, info, **kwargs):
+        return qs
+
+    @classmethod
+    def get_connection_parameters(cls):
+        return {}
+
     def resolve_id(self, info):
         return self.pk
 
@@ -130,6 +138,6 @@ class DjangoObjectType(ObjectType):
     @classmethod
     def get_node(cls, info, id):
         try:
-            return cls._meta.model.objects.get(pk=id)
+            return cls.refine_queryset(cls._meta.model.objects, info).get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
