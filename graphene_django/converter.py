@@ -139,12 +139,12 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(StringProperty)
 @convert_django_field.register(RegexProperty)
 def convert_field_to_string(field, registry=None):
-    return String(description=field.help_text, required=field.required)
+    return String(description=field.help_text)
 
 
 @convert_django_field.register(IntegerProperty)
 def convert_field_to_int(field, registry=None):
-    return Int(description=field.help_text, required=field.required)
+    return Int(description=field.help_text)
 
 
 @convert_django_field.register(BooleanProperty)
@@ -154,17 +154,17 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(FloatProperty)
 def convert_field_to_float(field, registry=None):
-    return Float(description=field.help_text, required=field.required)
+    return Float(description=field.help_text)
 
 
 @convert_django_field.register(DateTimeProperty)
 def convert_datetime_to_string(field, registry=None):
-    return DateTime(description=field.help_text, required=field.required)
+    return DateTime(description=field.help_text)
 
 
 @convert_django_field.register(DateProperty)
 def convert_date_to_string(field, registry=None):
-    return Date(description=field.help_text, required=field.required)
+    return Date(description=field.help_text)
 
 
 @convert_django_field.register(RelationshipDefinition)
@@ -193,7 +193,6 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 def convert_array_to_list(field, registry=None):
     base_property = field.base_property or StringProperty()
     return List(description=field.help_text,
-                required=field.required,
                 of_type=convert_django_field(base_property).__class__)
 
 #  @singledispatch
@@ -207,4 +206,4 @@ def convert_array_to_list(field, registry=None):
 @convert_django_field.register(JSONProperty)
 @convert_django_field.register(jsonArrayProperty)
 def convert_json_field_to_string(field, registry=None):
-    return JSONString(description=field.help_text, required=field.required)
+    return JSONString(description=field.help_text)
