@@ -6,7 +6,7 @@ from promise import Promise
 from neomodel import NodeSet
 
 from graphene.types import Field, List
-from graphene.types.scalars import Boolean
+from graphene.types.scalars import Boolean, Int
 from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
@@ -43,6 +43,7 @@ class DjangoConnectionField(ConnectionField):
         kwargs.setdefault('know_parent', Boolean(default_value=False,
                                                  description='Know parent type in nodes?'
                                                  ' \n Default = <False>'))
+        kwargs['first'] = Int(default_value=100)
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
