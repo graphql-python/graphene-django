@@ -156,6 +156,7 @@ class DjangoConnectionField(ConnectionField):
 
 class DjangoPermissionField(Field):
     """Class to manage permission for fields"""
+    AUTH_RESOLVER = auth_resolver
 
     def __init__(self, type, permissions, *args, **kwargs):
         """Get permissions to access a field"""
@@ -164,4 +165,4 @@ class DjangoPermissionField(Field):
 
     def get_resolver(self, parent_resolver):
         """Intercept resolver to analyse permissions"""
-        return partial(auth_resolver, self.resolver or parent_resolver, self.permissions, True)
+        return partial(self.AUTH_RESOLVER, self.resolver or parent_resolver, self.permissions, True)
