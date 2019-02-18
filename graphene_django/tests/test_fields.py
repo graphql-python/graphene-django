@@ -15,7 +15,7 @@ class DjangoPermissionFieldTests(TestCase):
     def test_permission_field(self):
         MyType = object()
         field = DjangoPermissionField(MyType, permissions=['perm1', 'perm2'], source='resolver')
-        resolver = field.get_resolver(field.resolver)
+        resolver = field.get_resolver(None)
 
         class Viewer(object):
             def has_perm(self, perm):
