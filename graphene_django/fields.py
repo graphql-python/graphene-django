@@ -1,7 +1,7 @@
 from functools import partial
 
-from django.core.exceptions import PermissionDenied
 from django.db.models.query import QuerySet
+from graphene.utils.get_unbound_function import get_unbound_function
 
 from promise import Promise
 
@@ -156,6 +156,7 @@ class DjangoConnectionField(ConnectionField):
 
 class DjangoPermissionField(Field):
     """Class to manage permission for fields"""
+    AUTH_RESOLVER = auth_resolver
 
     def __init__(self, type, permissions, *args, **kwargs):
         """Get permissions to access a field"""
@@ -164,4 +165,4 @@ class DjangoPermissionField(Field):
 
     def get_resolver(self, parent_resolver):
         """Intercept resolver to analyse permissions"""
-        return partial(auth_resolver, self.resolver or parent_resolver, self.permissions, None, None, True)
+        return partial(get_unbound_function(self.AUTH_RESOLVER), self.resolver or parent_resolver, self.permissions,None, None, True)
