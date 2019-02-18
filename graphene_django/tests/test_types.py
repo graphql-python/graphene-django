@@ -4,7 +4,7 @@ from graphene import Interface, ObjectType, Schema, Connection, String, Field
 from graphene.relay import Node
 
 from .. import registry
-from ..types import DjangoObjectType, DjangoObjectTypeOptions, DjangoPermissionObjectType
+from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -230,7 +230,7 @@ def extra_field_resolver(root, info, **kwargs):
     return 'extra field'
 
 
-class PermissionArticle(DjangoPermissionObjectType):
+class PermissionArticle(DjangoObjectType):
     """Basic Type to test"""
 
     class Meta(object):
@@ -257,7 +257,7 @@ def test_django_permissions():
         'reporter': ('content_type.permission3',),
         'extra_field': ('content_type.permission3',),
     }
-    assert PermissionArticle._field_permissions == expected
+    assert PermissionArticle._meta.field_permissions == expected
 
 
 def test_permission_resolver():

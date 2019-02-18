@@ -42,6 +42,22 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
 
 
 class DjangoObjectType(ObjectType):
+    """
+    DjangoObjectType inheritance to handle field authorization
+    Accepts field's permissions description as:
+
+    class Meta:
+
+        field_to_permission = {
+            'restricted_field': ('permission1', 'permission2')
+        }
+
+        permission_to_field = {
+            'permission': ('restricted_field_1', 'restricted_field_2')
+        }
+
+    At least one of the permissions must be accomplished in order to resolve the field.
+    """
     @classmethod
     def __init_subclass_with_meta__(
         cls,
@@ -55,6 +71,8 @@ class DjangoObjectType(ObjectType):
         connection_class=None,
         use_connection=None,
         interfaces=(),
+        field_to_permission=None,
+        permission_to_field=None,
         _meta=None,
         **options
     ):
@@ -109,8 +127,66 @@ class DjangoObjectType(ObjectType):
             _meta=_meta, interfaces=interfaces, **options
         )
 
+        permissions = field_to_permission if field_to_permission else {}
+
+        if permission_to_field:
+            permissions.update(cls.__get_permission_to_fields__(permission_to_field))
+
+        cls.field_permissions = permissions
+
+        for field_name, field_permissions in permissions.items():
+            attr = 'resolve_{}'.format(field_name)
+            resolver = getattr(_meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
+
+            if not hasattr(field_permissions, '__iter__'):
+                field_permissions = tuple(field_permissions)
+
+            setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
+
+        if permissions:
+            cls.__set_as_nullable__(model, registry)
+
         if not skip_registry:
             registry.register(cls)
+
+    @classmethod
+    def __set_as_nullable__(cls, model, registry):
+        """Set restricted fields as nullable"""
+        django_fields = yank_fields_from_attrs(
+            construct_fields(model, registry, cls.field_permissions.keys(), ()),
+            _as=Field,
+        )
+        for name, field in django_fields.items():
+            if hasattr(field, '_type') and isinstance(field._type, NonNull):
+                field._type = field._type._of_type
+                setattr(cls, name, field)
+
+    @classmethod
+    def __get_permission_to_fields__(cls, permission_to_field):
+        """
+        Accepts a dictionary like
+            {
+                permission: [fields]
+            }
+        :return: Mapping of fields to permissions
+        """
+        permissions = {}
+        for permission, fields in permission_to_field.items():
+            for field in fields:
+                permissions[field] = permissions.get(field, ()) + (permission,)
+        return permissions
+
+    @classmethod
+    def set_auth_resolver(cls, name, permissions, resolver=None):
+        """
+        Set middleware resolver to handle field permissions
+        :param name: Field name
+        :param permissions: List of permissions
+        :param field: Meta's field
+        :param resolver: Field resolver
+        :return: Middleware resolver to check permissions
+        """
+        return partial(auth_resolver, resolver, permissions, name, None, False)
 
     def resolve_id(self, info):
         return self.pk
@@ -134,90 +210,3 @@ class DjangoObjectType(ObjectType):
             return cls._meta.model.objects.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
-
-
-class DjangoPermissionObjectType(DjangoObjectType):
-    """
-    DjangoObjectType inheritance to handle field authorization
-    Accepts field's permissions description as:
-
-    class Meta:
-
-        field_to_permission = {
-            'restricted_field': ('permission1', 'permission2')
-        }
-
-        permission_to_field = {
-            'permission': ('restricted_field_1', 'restricted_field_2')
-        }
-
-    At least one of the permissions must be accomplished in order to resolve the field.
-    """
-
-    class Meta(object):
-        """Meta Class"""
-        abstract = True
-
-    @classmethod
-    def __init_subclass_with_meta__(cls, field_to_permission=None, permission_to_field=None, model=None, registry=None,
-                                    **options):
-        super(DjangoPermissionObjectType, cls).__init_subclass_with_meta__(model=model, registry=registry, **options)
-
-        cls._field_permissions = field_to_permission if field_to_permission else {}
-
-        if permission_to_field:
-            cls._get_permission_to_fields(permission_to_field)
-
-        for field_name, field_permissions in cls._field_permissions.items():
-            attr = 'resolve_{}'.format(field_name)
-            resolver = getattr(cls._meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
-
-            if not hasattr(field_permissions, '__iter__'):
-                field_permissions = tuple(field_permissions)
-
-            setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
-
-        if cls._field_permissions:
-            cls._set_as_nullable(model, registry)
-
-    @classmethod
-    def _set_as_nullable(cls, model, registry):
-        """Set restricted fields as nullable"""
-        django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, cls._field_permissions.keys(), ()),
-            _as=Field,
-        )
-        for name, field in django_fields.items():
-            if hasattr(field, '_type') and isinstance(field._type, NonNull):
-                field._type = field._type._of_type
-                setattr(cls, name, field)
-
-    @classmethod
-    def _get_permission_to_fields(cls, permission_to_field):
-        """
-        Accepts a dictionary like
-            {
-                permission: [fields]
-            }
-        :return: Mapping of fields to permissions
-        """
-        for permission, fields in permission_to_field.items():
-            for field in fields:
-                cls._set_permission_to_field(field, (permission,))
-
-    @classmethod
-    def _set_permission_to_field(cls, field, permissions):
-        """Add list permissions to field"""
-        cls._field_permissions[field] = cls._field_permissions.get(field, tuple()) + permissions
-
-    @classmethod
-    def set_auth_resolver(cls, name, permissions, resolver=None):
-        """
-        Set middleware resolver to handle field permissions
-        :param name: Field name
-        :param permissions: List of permissions
-        :param field: Meta's field
-        :param resolver: Field resolver
-        :return: Middleware resolver to check permissions
-        """
-        return partial(auth_resolver, resolver, permissions, name, None, False)
