@@ -257,7 +257,7 @@ def test_django_permissions():
         'reporter': ('content_type.permission3',),
         'extra_field': ('content_type.permission3',),
     }
-    assert PermissionArticle._meta.field_permissions == expected
+    assert PermissionArticle.field_permissions == expected
 
 
 def test_permission_resolver():

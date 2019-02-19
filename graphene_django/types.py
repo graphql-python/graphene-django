@@ -127,27 +127,34 @@ class DjangoObjectType(ObjectType):
             _meta=_meta, interfaces=interfaces, **options
         )
 
-        permissions = field_to_permission if field_to_permission else {}
+        if cls.field_permissions:
+            cls.__set_as_nullable__(cls._meta.model, cls._meta.registry)
 
+        if not skip_registry:
+            registry.register(cls)
+
+    @classmethod
+    def __set_permissions__(cls, field_to_permission, permission_to_field):
+        """Combines permissions from meta"""
+        permissions = field_to_permission if field_to_permission else {}
         if permission_to_field:
-            permissions.update(cls.__get_permission_to_fields__(permission_to_field))
+            perm_to_field = cls.__get_permission_to_fields__(permission_to_field)
+            for field, perms in perm_to_field.items():
+                if field in permissions:
+                    permissions[field] += perms
+                else:
+                    permissions[field] = perms
 
         cls.field_permissions = permissions
 
         for field_name, field_permissions in permissions.items():
             attr = 'resolve_{}'.format(field_name)
-            resolver = getattr(_meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
+            resolver = getattr(cls._meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
 
             if not hasattr(field_permissions, '__iter__'):
                 field_permissions = tuple(field_permissions)
 
             setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
-
-        if permissions:
-            cls.__set_as_nullable__(model, registry)
-
-        if not skip_registry:
-            registry.register(cls)
 
     @classmethod
     def __set_as_nullable__(cls, model, registry):
