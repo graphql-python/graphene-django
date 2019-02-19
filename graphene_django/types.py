@@ -127,6 +127,8 @@ class DjangoObjectType(ObjectType):
             _meta=_meta, interfaces=interfaces, **options
         )
 
+        cls.__set_permissions__(field_to_permission, permission_to_field)
+
         if cls.field_permissions:
             cls.__set_as_nullable__(cls._meta.model, cls._meta.registry)
 
