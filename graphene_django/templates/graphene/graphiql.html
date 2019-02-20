@@ -26,7 +26,7 @@ add "&raw" to the end of the URL within a browser.
   <script>
     // Parse the cookie value for a CSRF token
     var csrftoken;
-    var cookies = ('; ' + document.cookie).split('; csrftoken=');
+    var cookies = ('; ' + document.cookie).split('; {{ csrf_cookie }}=');
     if (cookies.length == 2)
       csrftoken = cookies.pop().split(';').shift();
 
@@ -66,7 +66,7 @@ add "&raw" to the end of the URL within a browser.
         'Content-Type': 'application/json'
       };
       if (csrftoken) {
-        headers['X-CSRFToken'] = csrftoken;
+        headers['{{csrf_header}}'] = csrftoken;
       }
       return fetch(fetchURL, {
         method: 'post',

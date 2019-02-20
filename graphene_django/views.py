@@ -3,16 +3,16 @@ import json
 import re
 
 import six
+from django.conf import settings
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
-from django.views.generic import View
 from django.views.decorators.csrf import ensure_csrf_cookie
-
+from django.views.generic import View
 from graphql import get_default_backend
-from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
+from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 
@@ -148,6 +148,8 @@ class GraphQLView(View):
                     variables=json.dumps(variables) or "",
                     operation_name=operation_name or "",
                     result=result or "",
+                    csrf_cookie=settings.CSRF_COOKIE_NAME,
+                    csrf_header=self.get_csrf_header_name(settings.CSRF_HEADER_NAME),
                 )
 
             return HttpResponse(
@@ -343,3 +345,11 @@ class GraphQLView(View):
         meta = request.META
         content_type = meta.get("CONTENT_TYPE", meta.get("HTTP_CONTENT_TYPE", ""))
         return content_type.split(";", 1)[0].lower()
+
+    @staticmethod
+    def get_csrf_header_name(django_csrf_header_name):
+        header_name = django_csrf_header_name
+        if header_name.startswith('HTTP_'):
+            header_name = header_name[5:]
+
+        return header_name.replace('_', '-')
