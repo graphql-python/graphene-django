@@ -27,6 +27,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
         self._post_resolver = post_resolver
+        self._custom_resolver = kwargs.pop('custom_resolver', False)
         super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
 
     @property
@@ -94,6 +95,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             self.filterset_class,
             self.filtering_args,
             self._post_resolver,
+            self._custom_resolver,
         )
 
     @classmethod
@@ -106,6 +108,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                             filterset_class,
                             filtering_args,
                             post_resolver,
+                            custom_resolver,
                             root,
                             info,
                             **args):
@@ -160,6 +163,9 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                     instances.append(instance)
                 return instances
             return qs
+
+        if custom_resolver:
+            new_resolver = resolver
 
         return DjangoConnectionField.connection_resolver(
             new_resolver,
