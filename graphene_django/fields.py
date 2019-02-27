@@ -151,4 +151,3 @@ class DjangoConnectionField(ConnectionField):
             self.max_limit,
             self.enforce_first_or_last,
         )
-
