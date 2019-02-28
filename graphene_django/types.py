@@ -33,7 +33,7 @@ def construct_fields(model, registry, only_fields, exclude_fields):
     return fields
 
 
-def get_auth_resolver(cls, name, permissions, resolver=None):
+def get_auth_resolver(name, permissions, resolver=None):
     """
     Get middleware resolver to handle field permissions
     :param name: Field name
