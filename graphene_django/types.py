@@ -134,15 +134,18 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
+        field_permissions = cls.__get_field_permissions__(field_to_permission, permission_to_field)
+        if field_permissions:
+            cls.__set_as_nullable__(model, registry)
+
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
 
-        cls.field_permissions = cls.__get_field_permissions__(field_to_permission, permission_to_field)
+        if field_permissions:
+            cls.__set_permissions_resolvers__(field_permissions)
 
-        if cls.field_permissions:
-            cls.__set_permissions_resolvers__(cls.field_permissions)
-            cls.__set_as_nullable__(cls._meta.model, cls._meta.registry)
+        cls.field_permissions = field_permissions
 
         if not skip_registry:
             registry.register(cls)
