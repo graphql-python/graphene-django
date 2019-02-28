@@ -136,7 +136,7 @@ class DjangoObjectType(ObjectType):
 
         field_permissions = cls.__get_field_permissions__(field_to_permission, permission_to_field)
         if field_permissions:
-            cls.__set_as_nullable__(model, registry)
+            cls.__set_as_nullable__(field_permissions, model, registry)
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -195,10 +195,10 @@ class DjangoObjectType(ObjectType):
             setattr(cls, attr, get_auth_resolver(field_name, field_permissions, resolver))
 
     @classmethod
-    def __set_as_nullable__(cls, model, registry):
+    def __set_as_nullable__(cls, field_permissions, model, registry):
         """Set restricted fields as nullable"""
         django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, cls.field_permissions.keys(), ()),
+            construct_fields(model, registry, field_permissions.keys(), ()),
             _as=Field,
         )
         for name, field in django_fields.items():
