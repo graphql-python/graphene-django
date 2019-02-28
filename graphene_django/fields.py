@@ -1,12 +1,12 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from django.utils.six import get_unbound_function
 
 from promise import Promise
 
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
+from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
@@ -154,15 +154,16 @@ class DjangoConnectionField(ConnectionField):
         )
 
 
-class DjangoPermissionField(Field):
+class DjangoField(Field):
     """Class to manage permission for fields"""
-    AUTH_RESOLVER = auth_resolver
 
-    def __init__(self, type, permissions, *args, **kwargs):
+    def __init__(self, type, permissions, permissions_resolver=auth_resolver, *args, **kwargs):
         """Get permissions to access a field"""
-        super(DjangoPermissionField, self).__init__(type, *args, **kwargs)
+        super(DjangoField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
+        self.permissions_resolver = permissions_resolver
 
     def get_resolver(self, parent_resolver):
         """Intercept resolver to analyse permissions"""
-        return partial(get_unbound_function(self.AUTH_RESOLVER), self.resolver or parent_resolver, self.permissions,None, None, True)
+        return partial(get_unbound_function(self.permissions_resolver), self.resolver or parent_resolver, self.permissions,
+                      None, None, True)
