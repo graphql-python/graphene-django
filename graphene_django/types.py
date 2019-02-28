@@ -33,6 +33,17 @@ def construct_fields(model, registry, only_fields, exclude_fields):
     return fields
 
 
+def get_auth_resolver(cls, name, permissions, resolver=None):
+    """
+    Get middleware resolver to handle field permissions
+    :param name: Field name
+    :param permissions: List of permissions
+    :param resolver: Field resolver
+    :return: Middleware resolver to check permissions
+    """
+    return partial(auth_resolver, resolver, permissions, name, None, False)
+
+
 class DjangoObjectTypeOptions(ObjectTypeOptions):
     model = None  # type: Model
     registry = None  # type: Registry
@@ -127,16 +138,17 @@ class DjangoObjectType(ObjectType):
             _meta=_meta, interfaces=interfaces, **options
         )
 
-        cls.__set_permissions__(field_to_permission, permission_to_field)
+        cls.field_permissions = cls.__get_field_permissions__(field_to_permission, permission_to_field)
 
         if cls.field_permissions:
+            cls.__set_permissions_resolvers__(cls.field_permissions)
             cls.__set_as_nullable__(cls._meta.model, cls._meta.registry)
 
         if not skip_registry:
             registry.register(cls)
 
     @classmethod
-    def __set_permissions__(cls, field_to_permission, permission_to_field):
+    def __get_field_permissions__(cls, field_to_permission, permission_to_field):
         """Combines permissions from meta"""
         permissions = field_to_permission if field_to_permission else {}
         if permission_to_field:
@@ -147,8 +159,29 @@ class DjangoObjectType(ObjectType):
                 else:
                     permissions[field] = perms
 
-        cls.field_permissions = permissions
+        return permissions
 
+    @classmethod
+    def __get_permission_to_fields__(cls, permission_to_field):
+        """
+        Accepts a dictionary like
+            {
+                permission: [fields]
+            }
+        :return: Mapping of fields to permissions like
+            {
+                field: [permissions]
+            }
+        """
+        permissions = {}
+        for permission, fields in permission_to_field.items():
+            for field in fields:
+                permissions[field] = permissions.get(field, ()) + (permission,)
+        return permissions
+
+    @classmethod
+    def __set_permissions_resolvers__(cls, permissions):
+        """Set permission resolvers"""
         for field_name, field_permissions in permissions.items():
             attr = 'resolve_{}'.format(field_name)
             resolver = getattr(cls._meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
@@ -156,7 +189,7 @@ class DjangoObjectType(ObjectType):
             if not hasattr(field_permissions, '__iter__'):
                 field_permissions = tuple(field_permissions)
 
-            setattr(cls, attr, cls.set_auth_resolver(field_name, field_permissions, resolver))
+            setattr(cls, attr, get_auth_resolver(field_name, field_permissions, resolver))
 
     @classmethod
     def __set_as_nullable__(cls, model, registry):
@@ -169,33 +202,6 @@ class DjangoObjectType(ObjectType):
             if hasattr(field, '_type') and isinstance(field._type, NonNull):
                 field._type = field._type._of_type
                 setattr(cls, name, field)
-
-    @classmethod
-    def __get_permission_to_fields__(cls, permission_to_field):
-        """
-        Accepts a dictionary like
-            {
-                permission: [fields]
-            }
-        :return: Mapping of fields to permissions
-        """
-        permissions = {}
-        for permission, fields in permission_to_field.items():
-            for field in fields:
-                permissions[field] = permissions.get(field, ()) + (permission,)
-        return permissions
-
-    @classmethod
-    def set_auth_resolver(cls, name, permissions, resolver=None):
-        """
-        Set middleware resolver to handle field permissions
-        :param name: Field name
-        :param permissions: List of permissions
-        :param field: Meta's field
-        :param resolver: Field resolver
-        :return: Middleware resolver to check permissions
-        """
-        return partial(auth_resolver, resolver, permissions, name, None, False)
 
     def resolve_id(self, info):
         return self.pk

@@ -131,7 +131,7 @@ def auth_resolver(parent_resolver, permissions, attname, default_value, raise_ex
             # A resolver is provided in the class
             return resolve_bound_resolver(parent_resolver, root, info, **args)
         # Get default resolver
-        return get_default_resolver(attname, default_value, root, info, **args)
+        return get_default_resolver()(attname, default_value, root, info, **args)
     elif raise_exception:
         raise PermissionDenied()
     return None
