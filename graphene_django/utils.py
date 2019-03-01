@@ -6,6 +6,7 @@ from django.db.models.manager import Manager
 
 
 # from graphene.utils import LazyList
+from graphene.types.resolver import get_default_resolver
 from graphene.utils.get_unbound_function import get_unbound_function
 
 
@@ -110,11 +111,13 @@ def resolve_bound_resolver(resolver, root, info, **args):
     return resolver(root, info, **args)
 
 
-def auth_resolver(parent_resolver, permissions, raise_exception, root, info, **args):
+def auth_resolver(parent_resolver, permissions, attname, default_value, raise_exception, root, info, **args):
     """
     Middleware resolver to check viewer's permissions
     :param parent_resolver: Field resolver
     :param permissions: Field permissions
+    :param attname: Field name
+    :param default_value: Default value to field if no resolver is provided
     :param raise_exception: If True a PermissionDenied is raised
     :param root: Schema root
     :param info: Schema info
@@ -130,6 +133,8 @@ def auth_resolver(parent_resolver, permissions, raise_exception, root, info, **a
         if parent_resolver:
             # A resolver is provided in the class
             return resolve_bound_resolver(parent_resolver, root, info, **args)
+        # Get default resolver
+        return get_default_resolver()(attname, default_value, root, info, **args)
     elif raise_exception:
         raise PermissionDenied()
     return None
