@@ -6,10 +6,11 @@ from promise import Promise
 
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
+from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import maybe_queryset
+from .utils import maybe_queryset, auth_resolver
 
 
 class DjangoListField(Field):
@@ -151,3 +152,20 @@ class DjangoConnectionField(ConnectionField):
             self.max_limit,
             self.enforce_first_or_last,
         )
+
+
+class PermissionField(Field):
+    """Class to manage permission for fields"""
+
+    def __init__(self, type, permissions=(), permissions_resolver=auth_resolver, *args, **kwargs):
+        """Get permissions to access a field"""
+        super(PermissionField, self).__init__(type, *args, **kwargs)
+        self.permissions = permissions
+        self.permissions_resolver = permissions_resolver
+
+    def get_resolver(self, parent_resolver):
+        """Intercept resolver to analyse permissions"""
+        parent_resolver = super(PermissionField, self).get_resolver(parent_resolver)
+        if self.permissions:
+            return partial(get_unbound_function(self.permissions_resolver), parent_resolver, self.permissions, True)
+        return parent_resolver
