@@ -86,22 +86,30 @@ def convert_form_field_to_id(field):
     return ID(required=field.required)
 
 
-@convert_form_field.register(forms.TypedChoiceField)
-def convert_form_to_enum(field, name):
+def convert_form_field_with_choices(name, field):
+    """
+    Helper method to convert a field to graphene Field type.
+    :param name: form field's name
+    :param field: form field to convert to
+    :return: graphene Field
+    """
     choices = getattr(field, 'choices', None)
-    name = to_camel_case(name)
-    choices = list(get_choices(choices))
-    named_choices = [(c[0], c[1]) for c in choices]
-    named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-    class EnumWithDescriptionsType(object):
-        """Enum type definition"""
+    if choices:
+        name = to_camel_case(field.label or name)
+        choices = list(get_choices(choices))
+        named_choices = [(c[0], c[1]) for c in choices]
+        named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-        @property
-        def description(self):
-            """Return field description"""
+        class EnumWithDescriptionsType(object):
+            """Enum type definition"""
 
-            return named_choices_descriptions[self.name]
+            @property
+            def description(self):
+                """Return field description"""
 
-    enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-    return enum(description=field.help_text, required=field.required)
+                return named_choices_descriptions[self.name]
+
+        enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+        return enum(description=field.help_text, required=field.required)  # pylint: disable=E1102
+    return convert_form_field(field)

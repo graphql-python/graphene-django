@@ -17,7 +17,7 @@ from graphene import (
     Enum,
 )
 
-from ..converter import convert_form_field
+from ..converter import convert_form_field, convert_form_field_with_choices
 
 
 def assert_conversion(django_field, graphene_field, *args):
@@ -116,6 +116,6 @@ def test_should_manytoone_convert_connectionorlist():
 
 
 def test_should_typed_choice_convert_enum():
-    field = forms.TypedChoiceField(choices=(('A', 'Choice A'), ('B', 'Choice B')))
-    graphene_type = convert_form_field(field, 'field')
+    field = forms.TypedChoiceField(choices=(('A', 'Choice A'), ('B', 'Choice B')), label='field')
+    graphene_type = convert_form_field_with_choices('field_name', field)
     assert isinstance(graphene_type, Enum)
