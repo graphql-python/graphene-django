@@ -1,10 +1,12 @@
 import inspect
 
+from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models.manager import Manager
 
 
 # from graphene.utils import LazyList
+from graphene.utils.get_unbound_function import get_unbound_function
 
 
 class LazyList(object):
@@ -81,3 +83,53 @@ def import_single_dispatch():
         )
 
     return singledispatch
+
+
+def has_permissions(viewer, permissions):
+    """
+    Verify that at least one permission is accomplished
+    :param viewer: Field's viewer
+    :param permissions: Field permissions
+    :return: True if viewer has permission. False otherwise.
+    """
+    if not permissions:
+        return True
+    return any([viewer.has_perm(perm) for perm in permissions])
+
+
+def resolve_bound_resolver(resolver, root, info, **args):
+    """
+    Resolve provided resolver
+    :param resolver: Explicit field resolver
+    :param root: Schema root
+    :param info: Schema info
+    :param args: Schema args
+    :return: Resolved field
+    """
+    resolver = get_unbound_function(resolver)
+    return resolver(root, info, **args)
+
+
+def auth_resolver(parent_resolver, permissions, raise_exception, root, info, **args):
+    """
+    Middleware resolver to check viewer's permissions
+    :param parent_resolver: Field resolver
+    :param permissions: Field permissions
+    :param raise_exception: If True a PermissionDenied is raised
+    :param root: Schema root
+    :param info: Schema info
+    :param args: Schema args
+    :return: Resolved field. None if the viewer does not have permission to access the field.
+    """
+    # Get viewer from context
+    if not hasattr(info.context, 'user'):
+        raise PermissionDenied()
+    user = info.context.user
+
+    if has_permissions(user, permissions):
+        if parent_resolver:
+            # A resolver is provided in the class
+            return resolve_bound_resolver(parent_resolver, root, info, **args)
+    elif raise_exception:
+        raise PermissionDenied()
+    return None
