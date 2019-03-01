@@ -103,7 +103,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls, form_class=None, only_fields=(), exclude_fields=(), **options
+        cls, form_class=None, mirror_input=False, only_fields=(), exclude_fields=(), **options
     ):
 
         if not form_class:
@@ -111,7 +111,10 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
         form = form_class()
         input_fields = fields_for_form(form, only_fields, exclude_fields)
-        output_fields = fields_for_form(form, only_fields, exclude_fields)
+        if mirror_input:
+            output_fields = fields_for_form(form, only_fields, exclude_fields)
+        else:
+            output_fields = {}
 
         _meta = DjangoFormMutationOptions(cls)
         _meta.form_class = form_class

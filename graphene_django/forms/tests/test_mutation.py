@@ -139,3 +139,36 @@ class ModelFormMutationTests(TestCase):
         self.assertEqual(result.errors[0].messages, ["This field is required."])
         self.assertIn("age", fields_w_error)
         self.assertEqual(result.errors[1].messages, ["This field is required."])
+
+
+class FormMutationTests(TestCase):
+    def test_default_meta_fields(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+        self.assertNotIn("text", MyMutation._meta.fields)
+
+    def test_mirror_meta_fields(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+                mirror_input = True
+
+        self.assertIn("text", MyMutation._meta.fields)
+
+    def test_default_input_meta_fields(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+
+        self.assertIn("client_mutation_id", MyMutation.Input._meta.fields)
+        self.assertIn("text", MyMutation.Input._meta.fields)
+
+    def test_exclude_fields_input_meta_fields(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+                exclude_fields = ['text']
+
+        self.assertNotIn("text", MyMutation.Input._meta.fields)
+        self.assertIn("client_mutation_id", MyMutation.Input._meta.fields)
