@@ -1,6 +1,6 @@
 from unittest import TestCase
 from django.core.exceptions import PermissionDenied
-from graphene_django.fields import DjangoField
+from graphene_django.fields import PermissionField
 
 
 class MyInstance(object):
@@ -10,11 +10,11 @@ class MyInstance(object):
         return "resolver method"
 
 
-class DjangoPermissionFieldTests(TestCase):
+class PermissionFieldTests(TestCase):
 
     def test_permission_field(self):
         MyType = object()
-        field = DjangoField(MyType, permissions=['perm1', 'perm2'], source='resolver')
+        field = PermissionField(MyType, permissions=['perm1', 'perm2'], source='resolver')
         resolver = field.get_resolver(None)
 
         class Viewer(object):
@@ -30,7 +30,7 @@ class DjangoPermissionFieldTests(TestCase):
 
     def test_permission_field_without_permission(self):
         MyType = object()
-        field = DjangoField(MyType, permissions=['perm1', 'perm2'], source='resolver')
+        field = PermissionField(MyType, permissions=['perm1', 'perm2'], source='resolver')
         resolver = field.get_resolver(field.resolver)
 
         class Viewer(object):
