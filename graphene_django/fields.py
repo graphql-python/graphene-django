@@ -154,12 +154,12 @@ class DjangoConnectionField(ConnectionField):
         )
 
 
-class DjangoField(Field):
+class PermissionField(Field):
     """Class to manage permission for fields"""
 
     def __init__(self, type, permissions, permissions_resolver=auth_resolver, *args, **kwargs):
         """Get permissions to access a field"""
-        super(DjangoField, self).__init__(type, *args, **kwargs)
+        super(PermissionField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
         self.permissions_resolver = permissions_resolver
 
