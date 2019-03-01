@@ -122,7 +122,10 @@ def auth_resolver(parent_resolver, permissions, raise_exception, root, info, **a
     :return: Resolved field. None if the viewer does not have permission to access the field.
     """
     # Get viewer from context
+    if not hasattr(info.context, 'user'):
+        raise PermissionDenied()
     user = info.context.user
+
     if has_permissions(user, permissions):
         if parent_resolver:
             # A resolver is provided in the class
