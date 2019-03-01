@@ -6,8 +6,8 @@ from django.db.models.manager import Manager
 
 
 # from graphene.utils import LazyList
-from django.utils.six import get_unbound_function
 from graphene.types.resolver import get_default_resolver
+from graphene.utils.get_unbound_function import get_unbound_function
 
 
 class LazyList(object):
