@@ -44,7 +44,9 @@ class DjangoConnectionField(ConnectionField):
 
     @property
     def args(self):
-        return to_arguments(self._base_args or OrderedDict(), self.node_type.get_connection_parameters())
+        args = OrderedDict(self._base_args)
+        args.update(self.node_type.get_connection_parameters())
+        return to_arguments(args)
 
     @args.setter
     def args(self, args):
