@@ -117,5 +117,5 @@ def test_should_manytoone_convert_connectionorlist():
 
 def test_should_typed_choice_convert_enum():
     field = forms.TypedChoiceField(choices=(('A', 'Choice A'), ('B', 'Choice B')), label='field')
-    graphene_type = convert_form_field_with_choices('field_name', field)
+    graphene_type = convert_form_field_with_choices(field, name='field_name')
     assert isinstance(graphene_type, Enum)
