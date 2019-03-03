@@ -86,7 +86,13 @@ def convert_form_field_to_id(field):
     return ID(required=field.required)
 
 
-def convert_form_field_with_choices(name, field):
+def get_form_name(form):
+    """Get form name"""
+    class_name = str(form.__class__).split('.')[-1]
+    return class_name[:-2]
+
+
+def convert_form_field_with_choices(field, name=None, form=None):
     """
     Helper method to convert a field to graphene Field type.
     :param name: form field's name
@@ -96,7 +102,11 @@ def convert_form_field_with_choices(name, field):
     choices = getattr(field, 'choices', None)
 
     if choices:
-        name = to_camel_case(field.label or name)
+        if form:
+            name = to_camel_case("{}_{}".format(get_form_name(form), field.label or name))
+        else:
+            name = field.label or name
+        name = to_camel_case(name.replace(' ', '_'))
         choices = list(get_choices(choices))
         named_choices = [(c[0], c[1]) for c in choices]
         named_choices_descriptions = {c[0]: c[2] for c in choices}
