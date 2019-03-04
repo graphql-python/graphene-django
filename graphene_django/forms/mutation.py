@@ -13,7 +13,7 @@ from graphene.types.mutation import MutationOptions
 from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.registry import get_global_registry
 
-from .converter import convert_form_field
+from .converter import convert_form_field_with_choices
 from .types import ErrorType
 
 
@@ -30,7 +30,7 @@ def fields_for_form(form, only_fields, exclude_fields):
         if is_not_in_only or is_excluded:
             continue
 
-        fields[name] = convert_form_field(field)
+        fields[name] = convert_form_field_with_choices(field, name=name, form=form)
     return fields
 
 
