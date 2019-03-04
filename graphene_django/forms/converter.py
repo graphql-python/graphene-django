@@ -97,12 +97,13 @@ def convert_form_field_with_choices(field, name=None, form=None):
     Helper method to convert a field to graphene Field type.
     :param name: form field's name
     :param field: form field to convert to
+    :param form: field's form
     :return: graphene Field
     """
     choices = getattr(field, 'choices', None)
 
     # If is a choice field, but not depends on models
-    if choices and not isinstance(form, (forms.ModelMultipleChoiceField, forms.ModelChoiceField)):
+    if choices and not isinstance(field, (forms.ModelMultipleChoiceField, forms.ModelChoiceField)):
         if form:
             name = to_camel_case("{}_{}".format(get_form_name(form), field.label or name))
         else:
