@@ -101,7 +101,8 @@ def convert_form_field_with_choices(field, name=None, form=None):
     """
     choices = getattr(field, 'choices', None)
 
-    if choices:
+    # If is a choice field, but not depends on models
+    if choices and not isinstance(form, (forms.ModelMultipleChoiceField, forms.ModelChoiceField)):
         if form:
             name = to_camel_case("{}_{}".format(get_form_name(form), field.label or name))
         else:
