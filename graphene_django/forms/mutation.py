@@ -11,6 +11,7 @@ from graphene.types.mutation import MutationOptions
 #     InputObjectType,
 # )
 from graphene.types.utils import yank_fields_from_attrs
+from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 
 from .converter import convert_form_field_with_choices
@@ -46,7 +47,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
             return cls.perform_mutate(form, info)
         else:
             errors = [
-                ErrorType(field=key, messages=value)
+                ErrorType(field=to_camel_case(key), messages=value)
                 for key, value in form.errors.items()
             ]
 

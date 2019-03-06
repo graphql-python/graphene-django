@@ -14,6 +14,7 @@ class PetForm(forms.ModelForm):
     class Meta:
         model = Pet
         fields = '__all__'
+    test_camel = forms.IntegerField(required=False)
 
 
 def test_needs_form_class():
@@ -127,18 +128,20 @@ class ModelFormMutationTests(TestCase):
             class Meta:
                 form_class = PetForm
 
-        result = PetMutation.mutate_and_get_payload(None, None)
+        result = PetMutation.mutate_and_get_payload(None, None, test_camel='text')
 
         # A pet was not created
         self.assertEqual(Pet.objects.count(), 0)
 
 
         fields_w_error = [e.field for e in result.errors]
-        self.assertEqual(len(result.errors), 2)
+        self.assertEqual(len(result.errors), 3)
+        self.assertIn("testCamel", fields_w_error)
+        self.assertEqual(result.errors[0].messages, ["Enter a whole number."])
         self.assertIn("name", fields_w_error)
-        self.assertEqual(result.errors[0].messages, ["This field is required."])
-        self.assertIn("age", fields_w_error)
         self.assertEqual(result.errors[1].messages, ["This field is required."])
+        self.assertIn("age", fields_w_error)
+        self.assertEqual(result.errors[2].messages, ["This field is required."])
 
 
 class FormMutationTests(TestCase):
