@@ -1,6 +1,5 @@
 # from django import forms
 from collections import OrderedDict
-from django.forms import ALL_FIELDS
 import graphene
 from graphene import Field, InputField
 from graphene.relay.mutation import ClientIDMutation
@@ -47,7 +46,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
             return cls.perform_mutate(form, info)
         else:
             errors = [
-                ErrorType(field=to_camel_case(key) if key != ALL_FIELDS else key, messages=value)
+                ErrorType(field=to_camel_case(key) if key != '__all__' else key, messages=value)
                 for key, value in form.errors.items()
             ]
 
