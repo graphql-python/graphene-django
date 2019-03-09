@@ -114,7 +114,7 @@ method to your ``DjangoObjectType``.
             interfaces = (relay.Node, )
 
         @classmethod
-        def get_node(cls, id, info):
+        def get_node(cls, info, id):
             try:
                 post = cls._meta.model.objects.get(id=id)
             except cls._meta.model.DoesNotExist:
