@@ -20,6 +20,7 @@ pip install "graphene-django>=2.0"
 ```python
 INSTALLED_APPS = (
     # ...
+    'django.contrib.staticfiles', # Required for GraphiQL
     'graphene_django',
 )
 
