@@ -26,27 +26,22 @@ except ImportError:
 # Copied shamelessly from Django REST Framework
 
 DEFAULTS = {
-    'SCHEMA': None,
-    'SCHEMA_OUTPUT': 'schema.json',
-    'SCHEMA_INDENT': None,
-    'MIDDLEWARE': (),
+    "SCHEMA": None,
+    "SCHEMA_OUTPUT": "schema.json",
+    "SCHEMA_INDENT": None,
+    "MIDDLEWARE": (),
     # Set to True if the connection fields must have
     # either the first or last argument
-    'RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST': False,
+    "RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST": False,
     # Max items returned in ConnectionFields / FilterConnectionFields
-    'RELAY_CONNECTION_MAX_LIMIT': 100,
+    "RELAY_CONNECTION_MAX_LIMIT": 100,
 }
 
 if settings.DEBUG:
-    DEFAULTS['MIDDLEWARE'] += (
-        'graphene_django.debug.DjangoDebugMiddleware',
-    )
+    DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
 
 # List of settings that may be in string import notation.
-IMPORT_STRINGS = (
-    'MIDDLEWARE',
-    'SCHEMA',
-)
+IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA")
 
 
 def perform_import(val, setting_name):
@@ -69,12 +64,17 @@ def import_from_string(val, setting_name):
     """
     try:
         # Nod to tastypie's use of importlib.
-        parts = val.split('.')
-        module_path, class_name = '.'.join(parts[:-1]), parts[-1]
+        parts = val.split(".")
+        module_path, class_name = ".".join(parts[:-1]), parts[-1]
         module = importlib.import_module(module_path)
         return getattr(module, class_name)
     except (ImportError, AttributeError) as e:
-        msg = "Could not import '%s' for Graphene setting '%s'. %s: %s." % (val, setting_name, e.__class__.__name__, e)
+        msg = "Could not import '%s' for Graphene setting '%s'. %s: %s." % (
+            val,
+            setting_name,
+            e.__class__.__name__,
+            e,
+        )
         raise ImportError(msg)
 
 
@@ -96,8 +96,8 @@ class GrapheneSettings(object):
 
     @property
     def user_settings(self):
-        if not hasattr(self, '_user_settings'):
-            self._user_settings = getattr(settings, 'GRAPHENE', {})
+        if not hasattr(self, "_user_settings"):
+            self._user_settings = getattr(settings, "GRAPHENE", {})
         return self._user_settings
 
     def __getattr__(self, attr):
@@ -125,8 +125,8 @@ graphene_settings = GrapheneSettings(None, DEFAULTS, IMPORT_STRINGS)
 
 def reload_graphene_settings(*args, **kwargs):
     global graphene_settings
-    setting, value = kwargs['setting'], kwargs['value']
-    if setting == 'GRAPHENE':
+    setting, value = kwargs["setting"], kwargs["value"]
+    if setting == "GRAPHENE":
         graphene_settings = GrapheneSettings(value, DEFAULTS, IMPORT_STRINGS)
 
 
