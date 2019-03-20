@@ -1,5 +1,7 @@
+import six
 from collections import OrderedDict
 
+from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 from graphene import Field
 from graphene.relay import Connection, Node
@@ -9,6 +11,10 @@ from graphene.types.utils import yank_fields_from_attrs
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
+
+
+if six.PY3:
+    from typing import Type
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
