@@ -138,6 +138,7 @@ type ArticleEdge {
 enum ArticleImportance {
   A_1
   A_2
+  EMPTY
 }
 
 enum ArticleLang {
@@ -179,6 +180,7 @@ enum ReporterAChoice {
 enum ReporterReporterType {
   A_1
   A_2
+  EMPTY
 }
 
 type RootQuery {

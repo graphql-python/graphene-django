@@ -196,6 +196,22 @@ def test_field_with_choices_collision():
     convert_django_field_with_choices(field)
 
 
+def test_field_with_blank():
+    field = models.CharField(
+        help_text="Language", choices=(("es", "Spanish"), ("en", "English")), blank=True
+    )
+
+    class TranslatedModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(field)
+    assert graphene_type._meta.enum.__members__["EMPTY"].value == ""
+    assert graphene_type._meta.enum.__members__["EMPTY"].description == ""
+
+
 def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
 
@@ -241,7 +257,7 @@ def test_should_manytoone_convert_connectionorlist():
         class Meta:
             model = Article
 
-    graphene_field = convert_django_field(Reporter.articles.rel, 
+    graphene_field = convert_django_field(Reporter.articles.rel,
                                           A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
