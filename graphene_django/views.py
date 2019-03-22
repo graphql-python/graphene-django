@@ -17,6 +17,7 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 
 from .settings import graphene_settings
+from .middleware import DirectivesMiddleware
 
 
 class HttpError(Exception):
@@ -84,6 +85,7 @@ class GraphQLView(View):
             middleware = graphene_settings.MIDDLEWARE
 
         self.schema = self.schema or schema
+        middleware = self.get_directive_middleware()
         if middleware is not None:
             self.middleware = list(instantiate_middleware(middleware))
         self.executor = executor
@@ -97,6 +99,11 @@ class GraphQLView(View):
             self.schema, GraphQLSchema
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
+
+
+    def get_directive_middleware(self, custom=True):
+        return [DirectivesMiddleware, ]
+
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
