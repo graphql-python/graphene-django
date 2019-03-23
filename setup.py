@@ -51,7 +51,7 @@ setup(
     packages=find_packages(exclude=["tests"]),
     install_requires=[
         "six>=1.10.0",
-        "graphene>=2.1.3,<3",
+        #  "graphene>=2.1.3,<3",
         "graphql-core>=2.1.0,<3",
         "Django>=1.11",
         "singledispatch>=3.4.0.3",
@@ -60,7 +60,12 @@ setup(
     ],
     dependency_links=[
         # TODO refactor this
-        "git+git://github.com/MardanovTimur/neomodel.git@arch_neomodel#egg=neomodel", # custom neomodel
+        # django-filter (filter by neomodel)
+        "git+git://github.com/MardanovTimur/django-filter.git@neomodel#egg=django-filter",
+        # graphene
+        "git+git://github.com/MardanovTimur/graphene.git@master#egg=graphene",
+        # custom neomodel
+        "git+git://github.com/MardanovTimur/neomodel.git@arch_neomodel#egg=neomodel",
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
