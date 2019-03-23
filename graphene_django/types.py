@@ -9,6 +9,7 @@ from graphene.types.utils import yank_fields_from_attrs
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_neomodel_model
+from .countable import CountableConnectionInitial as CountableConnection
 
 from neomodel import (
     DoesNotExist,
@@ -60,7 +61,7 @@ class DjangoObjectType(ObjectType):
         neomodel_filter_fields=None,
         know_parent_fields=[],
         connection=None,
-        connection_class=None,
+        connection_class=CountableConnection,
         use_connection=None,
         interfaces=(),
         _meta=None,

@@ -13,7 +13,7 @@ with open("graphene_django/__init__.py", "rb") as f:
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
 neomodel_require = [
-    #  "neomodel==3.3.0",
+    "neomodel==3.3.0",
 ]
 
 tests_require = [
@@ -56,7 +56,11 @@ setup(
         "Django>=1.11",
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
-        *neomodel_require,
+        "lazy-import==0.2.2",
+    ],
+    dependency_links=[
+        # TODO refactor this
+        "git+git://github.com/MardanovTimur/neomodel.git@arch_neomodel#egg=neomodel", # custom neomodel
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,

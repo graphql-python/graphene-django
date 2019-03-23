@@ -1,11 +1,14 @@
 import inspect
 
 from django.db import models
+from graphene.types.scalars import Int
 from neomodel import (
     NodeSet,
     StructuredNode,
 )
 
+
+pagination_params = dict(first=Int(default_value=100), last=Int())
 # from graphene.utils import LazyList
 
 def is_parent_set(info):
