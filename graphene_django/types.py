@@ -44,6 +44,7 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
     connection = None  # type: Type[Connection]
 
     filter_fields = ()
+    filterset_class = None
 
 
 class DjangoObjectType(ObjectType):
@@ -56,6 +57,7 @@ class DjangoObjectType(ObjectType):
         only_fields=(),
         exclude_fields=(),
         filter_fields=None,
+        filterset_class=None,
         connection=None,
         connection_class=None,
         use_connection=None,
@@ -74,9 +76,15 @@ class DjangoObjectType(ObjectType):
             "The attribute registry in {} needs to be an instance of "
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
-
-        if not DJANGO_FILTER_INSTALLED and filter_fields:
-            raise Exception("Can only set filter_fields if Django-Filter is installed")
+        
+        if filter_fields and filterset_class:
+            raise Exception("Can't set both filter_fields and filterset_class")
+        
+        if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
+            raise Exception((
+                "Can only set filter_fields or filterset_class if "
+                "Django-Filter is installed"
+            ))
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, only_fields, exclude_fields), _as=Field
@@ -107,6 +115,7 @@ class DjangoObjectType(ObjectType):
         _meta.model = model
         _meta.registry = registry
         _meta.filter_fields = filter_fields
+        _meta.filterset_class = filterset_class
         _meta.fields = django_fields
         _meta.connection = connection
 

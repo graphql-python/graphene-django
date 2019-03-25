@@ -227,6 +227,58 @@ def test_filter_filterset_information_on_meta_related():
     assert_not_orderable(articles_field)
 
 
+def test_filter_filterset_class_information_on_meta():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = ["first_name", "articles"]
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filterset_class = ReporterFilter
+
+    field = DjangoFilterConnectionField(ReporterFilterNode)
+    assert_arguments(field, "first_name", "articles")
+    assert_not_orderable(field)
+
+
+def test_filter_filterset_class_information_on_meta_related():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = ["first_name", "articles"]
+
+    class ArticleFilter(FilterSet):
+        class Meta:
+            model = Article
+            fields = ["headline", "reporter"]
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filterset_class = ReporterFilter
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filterset_class = ArticleFilter
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    schema = Schema(query=Query)
+    articles_field = ReporterFilterNode._meta.fields["articles"].get_type()
+    assert_arguments(articles_field, "headline", "reporter")
+    assert_not_orderable(articles_field)
+
+
 def test_filter_filterset_related_results():
     class ReporterFilterNode(DjangoObjectType):
         class Meta:

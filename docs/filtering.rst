@@ -100,7 +100,7 @@ features of ``django-filter``. This is done by transparently creating a
 ``filter_fields``.
 
 However, you may find this to be insufficient. In these cases you can
-create your own ``Filterset`` as follows:
+create your own ``FilterSet``. You can pass it directly as follows:
 
 .. code:: python
 
@@ -126,6 +126,33 @@ create your own ``Filterset`` as follows:
         # We specify our custom AnimalFilter using the filterset_class param
         all_animals = DjangoFilterConnectionField(AnimalNode,
                                                   filterset_class=AnimalFilter)
+
+You can also specify the ``FilterSet`` class using the ``filerset_class``
+parameter when defining your ``DjangoObjectType``, however, this can't be used
+in unison  with the ``filter_fields`` parameter:
+
+.. code:: python
+
+    class AnimalFilter(django_filters.FilterSet):
+        # Do case-insensitive lookups on 'name'
+        name = django_filters.CharFilter(lookup_expr=['iexact'])
+
+        class Meta:
+            # Assume you have an Animal model defined with the following fields
+            model = Animal
+            fields = ['name', 'genus', 'is_domesticated']
+
+
+    class AnimalNode(DjangoObjectType):
+        class Meta:
+            model = Animal
+            filterset_class = AnimalFilter
+            interfaces = (relay.Node, )
+
+
+    class Query(ObjectType):
+        animal = relay.Node.Field(AnimalNode)
+        all_animals = DjangoFilterConnectionField(AnimalNode)
 
 The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/master/guide/usage.html#request-based-filtering>`__
 in a ``django_filters.FilterSet`` instance. You can use this to customize your

@@ -181,8 +181,9 @@ def convert_field_to_list_or_connection(field, registry=None):
         # into a DjangoConnectionField
         if _type._meta.connection:
             # Use a DjangoFilterConnectionField if there are
-            # defined filter_fields in the DjangoObjectType Meta
-            if _type._meta.filter_fields:
+            # defined filter_fields or a filterset_class in the
+            # DjangoObjectType Meta
+            if _type._meta.filter_fields or _type._meta.filterset_class:
                 from .filter.fields import DjangoFilterConnectionField
 
                 return DjangoFilterConnectionField(_type)

@@ -35,14 +35,17 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     @property
     def filterset_class(self):
         if not self._filterset_class:
-            fields = self._fields or self.node_type._meta.filter_fields
-            meta = dict(model=self.model, fields=fields)
-            if self._extra_filter_meta:
-                meta.update(self._extra_filter_meta)
+            if not self.node_type._meta.filterset_class:
+                fields = self._fields or self.node_type._meta.filter_fields
+                meta = dict(model=self.model, fields=fields)
+                if self._extra_filter_meta:
+                    meta.update(self._extra_filter_meta)
 
-            self._filterset_class = get_filterset_class(
-                self._provided_filterset_class, **meta
-            )
+                self._filterset_class = get_filterset_class(
+                    self._provided_filterset_class, **meta
+                )
+            else:
+                self._filterset_class = self.node_type._meta.filterset_class
 
         return self._filterset_class
 
