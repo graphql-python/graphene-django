@@ -76,10 +76,10 @@ class DjangoObjectType(ObjectType):
             "The attribute registry in {} needs to be an instance of "
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
-        
+
         if filter_fields and filterset_class:
             raise Exception("Can't set both filter_fields and filterset_class")
-        
+
         if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
             raise Exception((
                 "Can only set filter_fields or filterset_class if "
