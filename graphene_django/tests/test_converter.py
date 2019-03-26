@@ -196,9 +196,9 @@ def test_field_with_choices_collision():
     convert_django_field_with_choices(field)
 
 
-def test_field_with_blank():
+def test_field_with_choices_and_default():
     field = models.CharField(
-        help_text="Language", choices=(("es", "Spanish"), ("en", "English")), blank=True
+        help_text="Language", choices=(("es", "Spanish"), ("en", "English")), default="nl"
     )
 
     class TranslatedModel(models.Model):
@@ -208,8 +208,24 @@ def test_field_with_blank():
             app_label = "test"
 
     graphene_type = convert_django_field_with_choices(field)
-    assert graphene_type._meta.enum.__members__["EMPTY"].value == ""
-    assert graphene_type._meta.enum.__members__["EMPTY"].description == ""
+    assert graphene_type._meta.enum.__members__["DEFAULT"].value == "nl"
+    assert graphene_type._meta.enum.__members__["DEFAULT"].description == "default value"
+
+
+def test_field_with_default_in_choices():
+    field = models.CharField(
+        help_text="Language", choices=(("es", "Spanish"), ("en", "English")), default="es"
+    )
+
+    class TranslatedModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(field)
+
+    assert "DEFAULT" not in graphene_type._meta.enum.__members__
 
 
 def test_should_float_convert_float():
