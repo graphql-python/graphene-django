@@ -950,13 +950,13 @@ def test_proxy_model_support():
     expected = {
         "allReporters": {
             "edges": [
-                {"node": {"id": base64.b64encode("ReporterType:{}".format(reporter.id))}},
-                {"node": {"id": base64.b64encode("ReporterType:{}".format(cnn_reporter.id))}},
+                {"node": {"id": base64.b64encode("ReporterType:{}".format(reporter.id).encode())}},
+                {"node": {"id": base64.b64encode("ReporterType:{}".format(cnn_reporter.id).encode())}},
             ]
         },
         "cnnReporters": {
             "edges": [
-                {"node": {"id": base64.b64encode("CNNReporterType:{}".format(cnn_reporter.id))}}
+                {"node": {"id": base64.b64encode("CNNReporterType:{}".format(cnn_reporter.id).encode())}}
             ]
         }
     }
