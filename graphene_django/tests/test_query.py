@@ -8,6 +8,7 @@ from py.test import raises
 
 from django.db.models import Q
 
+from graphql_relay import to_global_id
 import graphene
 from graphene.relay import Node
 
@@ -947,19 +948,16 @@ def test_proxy_model_support():
         }
     """
 
-    def str_to_node_id(val):
-        return base64.b64encode(val.encode()).decode()
-
     expected = {
         "allReporters": {
             "edges": [
-                {"node": {"id": str_to_node_id("ReporterType:{}".format(reporter.id))}},
-                {"node": {"id": str_to_node_id("ReporterType:{}".format(cnn_reporter.id))}},
+                {"node": {"id": to_global_id("ReporterType", reporter.id)}},
+                {"node": {"id": to_global_id("ReporterType", cnn_reporter.id)}},
             ]
         },
         "cnnReporters": {
             "edges": [
-                {"node": {"id": str_to_node_id("CNNReporterType:{}".format(cnn_reporter.id))}}
+                {"node": {"id": to_global_id("CNNReporterType", cnn_reporter.id)}}
             ]
         }
     }
