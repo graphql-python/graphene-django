@@ -947,16 +947,19 @@ def test_proxy_model_support():
         }
     """
 
+    def str_to_node_id(val):
+        return base64.b64encode(val.encode()).decode()
+
     expected = {
         "allReporters": {
             "edges": [
-                {"node": {"id": base64.b64encode("ReporterType:{}".format(reporter.id).encode())}},
-                {"node": {"id": base64.b64encode("ReporterType:{}".format(cnn_reporter.id).encode())}},
+                {"node": {"id": str_to_node_id("ReporterType:{}".format(reporter.id))}},
+                {"node": {"id": str_to_node_id("ReporterType:{}".format(cnn_reporter.id))}},
             ]
         },
         "cnnReporters": {
             "edges": [
-                {"node": {"id": base64.b64encode("CNNReporterType:{}".format(cnn_reporter.id).encode())}}
+                {"node": {"id": str_to_node_id("CNNReporterType:{}".format(cnn_reporter.id))}}
             ]
         }
     }
