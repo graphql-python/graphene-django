@@ -227,6 +227,21 @@ def test_filter_filterset_information_on_meta_related():
     assert_not_orderable(articles_field)
 
 
+def test_filter_filterset_class_filter_fields_exception():
+    with pytest.raises(Exception):
+        class ReporterFilter(FilterSet):
+            class Meta:
+                model = Reporter
+                fields = ["first_name", "articles"]
+
+        class ReporterFilterNode(DjangoObjectType):
+            class Meta:
+                model = Reporter
+                interfaces = (Node,)
+                filterset_class = ReporterFilter
+                filter_fields = ["first_name", "articles"]
+
+
 def test_filter_filterset_class_information_on_meta():
     class ReporterFilter(FilterSet):
         class Meta:
