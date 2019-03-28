@@ -1,7 +1,9 @@
 import graphene
 from graphene_django.types import DjangoObjectType
+from graphene_django.forms.mutation import DjangoFormMutation
 
 from .models import Category, Ingredient
+from .forms import CategoryForm, IngredientForm
 
 
 class CategoryType(DjangoObjectType):
@@ -49,3 +51,18 @@ class Query(object):
             return Ingredient.objects.get(name=name)
 
         return None
+
+
+class CategoryMutation(DjangoFormMutation):
+    class Meta:
+        form_class = CategoryForm
+
+
+class IngredientMutation(DjangoFormMutation):
+    class Meta:
+        form_class = IngredientForm
+
+
+class Mutation(object):
+    category = CategoryMutation.Field()
+    ingredient = IngredientMutation.Field()
