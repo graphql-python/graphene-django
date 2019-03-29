@@ -17,14 +17,14 @@ class GraphQLTestCase(TestCase):
 
     @classmethod
     def setUpClass(cls):
-        super().setUpClass()
+        super(GraphQLTestCase, cls).setUpClass()
 
         if not cls.GRAPHQL_SCHEMA:
             raise AttributeError('Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase.')
 
         cls._client = Client(cls.GRAPHQL_SCHEMA)
 
-    def query(self, query: str, op_name: str = None, input_data: dict = None):
+    def query(self, query, op_name=None, input_data=None):
         """
         Args:
             query (string)    - GraphQL query to run
@@ -47,18 +47,20 @@ class GraphQLTestCase(TestCase):
                                  content_type='application/json')
         return resp
 
-    def assertResponseNoErrors(self, resp: HttpResponse):
+    def assertResponseNoErrors(self, resp):
         """
         Assert that the call went through correctly. 200 means the syntax is ok, if there are no `errors`,
         the call was fine.
+        :resp HttpResponse: Response
         """
         content = json.loads(resp.content)
         self.assertEqual(resp.status_code, 200)
         self.assertNotIn('errors', list(content.keys()))
 
-    def assertResponseHasErrors(self, resp: HttpResponse):
+    def assertResponseHasErrors(self, resp):
         """
         Assert that the call was failing. Take care: Even with errors, GraphQL returns status 200!
+        :resp HttpResponse: Response
         """
         content = json.loads(resp.content)
         self.assertIn('errors', list(content.keys()))
