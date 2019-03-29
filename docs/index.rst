@@ -14,3 +14,4 @@ Contents:
    rest-framework
    form-mutations
    introspection
+   testing
