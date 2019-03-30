@@ -1,6 +1,7 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
+from graphene import NonNull
 
 from promise import Promise
 
@@ -45,17 +46,31 @@ class DjangoConnectionField(ConnectionField):
         from .types import DjangoObjectType
 
         _type = super(ConnectionField, self).type
+        non_null = False
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+            non_null = True
         assert issubclass(
             _type, DjangoObjectType
         ), "DjangoConnectionField only accepts DjangoObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
-        return _type._meta.connection
+        connection_type = _type._meta.connection
+        if non_null:
+            return NonNull(connection_type)
+        return connection_type
+
+    @property
+    def connection_type(self):
+        type = self.type
+        if isinstance(type, NonNull):
+            return type.of_type
+        return type
 
     @property
     def node_type(self):
-        return self.type._meta.node
+        return self.connection_type._meta.node
 
     @property
     def model(self):
@@ -103,15 +118,15 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(
-        cls,
-        resolver,
-        connection,
-        default_manager,
-        max_limit,
-        enforce_first_or_last,
-        root,
-        info,
-        **args
+            cls,
+            resolver,
+            connection,
+            default_manager,
+            max_limit,
+            enforce_first_or_last,
+            root,
+            info,
+            **args
     ):
         first = args.get("first")
         last = args.get("last")
@@ -146,7 +161,7 @@ class DjangoConnectionField(ConnectionField):
         return partial(
             self.connection_resolver,
             parent_resolver,
-            self.type,
+            self.connection_type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last,
