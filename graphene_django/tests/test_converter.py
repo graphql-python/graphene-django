@@ -83,7 +83,7 @@ def test_should_image_convert_string():
     assert_conversion(models.ImageField, graphene.String)
 
 
-def test_should_url_convert_string():
+def test_should_file_path_field_convert_string():
     assert_conversion(models.FilePathField, graphene.String)
 
 
@@ -91,7 +91,7 @@ def test_should_auto_convert_id():
     assert_conversion(models.AutoField, graphene.ID, primary_key=True)
 
 
-def test_should_auto_convert_id():
+def test_should_uuid_convert_id():
     assert_conversion(models.UUIDField, graphene.UUID)
 
 
