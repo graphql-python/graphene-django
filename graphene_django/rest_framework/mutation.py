@@ -9,7 +9,7 @@ from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
 
 from .serializer_converter import convert_serializer_field
-from .types import ErrorType
+from ..types import ErrorType
 
 
 class SerializerMutationOptions(MutationOptions):
