@@ -255,7 +255,7 @@ def test_should_manytomany_convert_connectionorlist_connection():
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, ConnectionField)
-    assert dynamic_field.type == A._meta.connection
+    assert dynamic_field.type.of_type == A._meta.connection
 
 
 def test_should_manytoone_convert_connectionorlist():
