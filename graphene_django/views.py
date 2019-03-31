@@ -85,9 +85,9 @@ class GraphQLView(View):
             middleware = graphene_settings.MIDDLEWARE
 
         self.schema = self.schema or schema
-        middleware = self.get_directive_middleware()
+        middleware += self.get_directive_middleware()
         if middleware is not None:
-            self.middleware = list(instantiate_middleware(middleware))
+            self.middleware = instantiate_middleware(middleware)
         self.executor = executor
         self.root_value = root_value
         self.pretty = self.pretty or pretty
