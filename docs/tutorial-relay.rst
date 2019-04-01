@@ -158,7 +158,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
 The filtering functionality is provided by
 `django-filter <https://django-filter.readthedocs.org>`__. See the
 `usage
-documentation <https://django-filter.readthedocs.org/en/latest/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.org/en/latest/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``. While optional, this
 tutorial makes use of this functionality so you will need to install
 ``django-filter`` for this tutorial to work:

@@ -68,6 +68,10 @@ class DjangoConnectionField(ConnectionField):
             return self.model._default_manager
 
     @classmethod
+    def resolve_queryset(cls, connection, queryset, info, args):
+        return connection._meta.node.get_queryset(queryset, info)
+
+    @classmethod
     def merge_querysets(cls, default_queryset, queryset):
         if default_queryset.query.distinct and not queryset.query.distinct:
             queryset = queryset.distinct()
@@ -135,7 +139,8 @@ class DjangoConnectionField(ConnectionField):
                 args["last"] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        queryset = cls.resolve_queryset(connection, default_manager, info, args)
+        on_resolve = partial(cls.resolve_connection, connection, queryset, args)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)

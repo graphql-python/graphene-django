@@ -965,3 +965,47 @@ def test_proxy_model_support():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    
+
+def test_should_resolve_get_queryset_connectionfields():
+    reporter_1 = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    reporter_2 = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset.filter(reporter_type=2)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {"allReporters": {"edges": [{"node": {"id": "UmVwb3J0ZXJUeXBlOjI="}}]}}
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected

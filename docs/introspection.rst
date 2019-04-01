@@ -11,7 +11,7 @@ data to ``schema.json`` that is compatible with babel-relay-plugin.
 Usage
 -----
 
-Include ``graphene_django`` to ``INSTALLED_APPS`` in you project
+Include ``graphene_django`` to ``INSTALLED_APPS`` in your project
 settings:
 
 .. code:: python
@@ -28,6 +28,8 @@ the command:
 It dumps your full introspection schema to ``schema.json`` inside your
 project root directory. Point ``babel-relay-plugin`` to this file and
 you're ready to use Relay with Graphene GraphQL implementation.
+
+The schema file is sorted to create a reproducible canonical representation.
 
 Advanced Usage
 --------------

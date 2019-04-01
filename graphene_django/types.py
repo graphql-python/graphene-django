@@ -3,6 +3,7 @@ from collections import OrderedDict
 
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
+import graphene
 from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
@@ -138,8 +139,18 @@ class DjangoObjectType(ObjectType):
         return model == cls._meta.model
 
     @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset
+
+    @classmethod
     def get_node(cls, info, id):
+        queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
-            return cls._meta.model.objects.get(pk=id)
+            return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+
+class ErrorType(ObjectType):
+    field = graphene.String(required=True)
+    messages = graphene.List(graphene.NonNull(graphene.String), required=True)
