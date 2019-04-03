@@ -66,6 +66,10 @@ def test_should_choice_convert_string():
     assert_conversion(forms.ChoiceField, String)
 
 
+def test_should_multiple_choice_convert_list():
+    assert_conversion(forms.MultipleChoiceField, List)
+
+
 def test_should_base_field_convert_string():
     assert_conversion(forms.Field, String)
 
