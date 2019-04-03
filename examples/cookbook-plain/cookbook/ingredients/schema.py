@@ -1,7 +1,7 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 
-from cookbook.ingredients.models import Category, Ingredient
+from .models import Category, Ingredient
 
 
 class CategoryType(DjangoObjectType):
@@ -25,17 +25,14 @@ class Query(object):
                                 name=graphene.String())
     all_ingredients = graphene.List(IngredientType)
 
-    def resolve_all_categories(self, args, context, info):
+    def resolve_all_categories(self, context):
         return Category.objects.all()
 
-    def resolve_all_ingredients(self, args, context, info):
+    def resolve_all_ingredients(self, context):
         # We can easily optimize query count in the resolve method
         return Ingredient.objects.select_related('category').all()
 
-    def resolve_category(self, args, context, info):
-        id = args.get('id')
-        name = args.get('name')
-
+    def resolve_category(self, context, id=None, name=None):
         if id is not None:
             return Category.objects.get(pk=id)
 
@@ -44,10 +41,7 @@ class Query(object):
 
         return None
 
-    def resolve_ingredient(self, args, context, info):
-        id = args.get('id')
-        name = args.get('name')
-
+    def resolve_ingredient(self, context, id=None, name=None):
         if id is not None:
             return Ingredient.objects.get(pk=id)
 

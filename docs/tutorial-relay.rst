@@ -147,7 +147,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             interfaces = (relay.Node, )
 
 
-    class Query(object):
+    class Query(graphene.ObjectType):
         category = relay.Node.Field(CategoryNode)
         all_categories = DjangoFilterConnectionField(CategoryNode)
 
@@ -158,7 +158,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
 The filtering functionality is provided by
 `django-filter <https://django-filter.readthedocs.org>`__. See the
 `usage
-documentation <https://django-filter.readthedocs.org/en/latest/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.org/en/latest/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``. While optional, this
 tutorial makes use of this functionality so you will need to install
 ``django-filter`` for this tutorial to work:
@@ -345,3 +345,10 @@ Or you can get only 'meat' ingredients containing the letter 'e':
         }
       }
     }
+
+
+
+Final Steps
+^^^^^^^^^^^
+
+We have created a GraphQL endpoint that will work with Relay, but for Relay to work it needs access to a (non python) schema. Instructions to export the schema can be found on the `Introspection Schema <http://docs.graphene-python.org/projects/django/en/latest/introspection/>`__ part of this guide.
