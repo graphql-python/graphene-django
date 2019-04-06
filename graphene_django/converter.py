@@ -29,7 +29,7 @@ singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):
-    name = to_const(force_text(name))
+    name = force_text(name)
     try:
         assert_valid_name(name)
     except AssertionError:
