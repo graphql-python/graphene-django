@@ -1,13 +1,11 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-
-from promise import Promise
-
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from promise import Promise
 
 from .settings import graphene_settings
 from .utils import maybe_queryset, auth_resolver
@@ -170,3 +168,27 @@ class DjangoField(Field):
             return partial(get_unbound_function(self.permissions_resolver), parent_resolver, self.permissions, None,
                            None, True)
         return parent_resolver
+
+
+class DataLoaderField(DjangoField):
+    """Class to manage access to dataloader when resolve the field"""
+
+    def __init__(self, data_loader, source_loader, type, *args, **kwargs):
+        """
+        Initialization of dataloader to resolve field
+        :param data_loader: dataloader to resolve field
+        :param source_loader:  field to obtain the key for dataloading
+        :param kwargs: Extra arguments
+        """
+        self.data_loader = data_loader
+        self.source_loader = source_loader
+
+        super(DataLoaderField, self).__init__(type, *args, **kwargs)
+
+        # If no resolver is explicitly provided, use dataloader
+        self.resolver = self.resolver or self.resolver_data_loader
+
+    def resolver_data_loader(self, root, info, *args):
+        """Resolve field through dataloader"""
+        source_loader = getattr(root, self.source_loader)
+        return self.data_loader.load(source_loader)
