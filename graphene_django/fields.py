@@ -188,7 +188,10 @@ class DataLoaderField(DjangoField):
         # If no resolver is explicitly provided, use dataloader
         self.resolver = self.resolver or self.resolver_data_loader
 
-    def resolver_data_loader(self, root, info, *args):
+    def resolver_data_loader(self, root, info, *args, **kwargs):
         """Resolve field through dataloader"""
-        source_loader = getattr(root, self.source_loader)
+        if root:
+            source_loader = getattr(root, self.source_loader)
+        else:
+            source_loader = kwargs.get(self.source_loader)
         return self.data_loader.load(source_loader)
