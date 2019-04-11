@@ -9,6 +9,11 @@ from promise import Promise
 class MyInstance(object):
     value = "value"
     key = 1
+    keys = [1, 2, 3]
+
+    class InnerClass(object):
+        key = 2
+        keys = [4, 5, 6]
 
     def resolver(self):
         return "resolver method"
@@ -61,6 +66,34 @@ class DataLoaderFieldTests(TestCase):
         instance = MyInstance()
 
         self.assertEqual(resolver(instance, None).get(), instance.key)
+
+    def test_dataloaderfield_many(self):
+        MyType = object()
+        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='keys', type=MyType, load_many=True)
+
+        resolver = data_loader_field.get_resolver(None)
+        instance = MyInstance()
+
+        self.assertEqual(resolver(instance, None).get(), instance.keys)
+
+    def test_dataloaderfield_inner_prop(self):
+        MyType = object()
+        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='InnerClass.key', type=MyType)
+
+        resolver = data_loader_field.get_resolver(None)
+        instance = MyInstance()
+
+        self.assertEqual(resolver(instance, None).get(), instance.InnerClass.key)
+
+    def test_dataloaderfield_many_inner_prop(self):
+        MyType = object()
+        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='InnerClass.keys', type=MyType,
+                                            load_many=True)
+
+        resolver = data_loader_field.get_resolver(None)
+        instance = MyInstance()
+
+        self.assertEqual(resolver(instance, None).get(), instance.InnerClass.keys)
 
     def test_dataloaderfield_permissions(self):
         MyType = object()

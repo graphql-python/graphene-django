@@ -171,17 +171,19 @@ class DjangoField(Field):
 
 
 class DataLoaderField(DjangoField):
-    """Class to manage access to dataloader when resolve the field"""
+    """Class to manage access to data-loader when resolve the field"""
 
-    def __init__(self, data_loader, source_loader, type, *args, **kwargs):
+    def __init__(self, type, data_loader, source_loader, load_many=False, *args, **kwargs):
         """
-        Initialization of dataloader to resolve field
-        :param data_loader: dataloader to resolve field
-        :param source_loader:  field to obtain the key for dataloading
+        Initialization of data-loader to resolve field
+        :param data_loader: data-loader to resolve field
+        :param source_loader:  field to obtain the key for data-loading
+        :param load_many: Whether the resolver should try tu obtain one element or multiple elements
         :param kwargs: Extra arguments
         """
         self.data_loader = data_loader
         self.source_loader = source_loader
+        self.load_many = load_many
 
         super(DataLoaderField, self).__init__(type, *args, **kwargs)
 
@@ -191,7 +193,10 @@ class DataLoaderField(DjangoField):
     def resolver_data_loader(self, root, info, *args, **kwargs):
         """Resolve field through dataloader"""
         if root:
-            source_loader = getattr(root, self.source_loader)
+            source_loader = reduce(lambda x, y: getattr(x, y), self.source_loader.split('.'), root)
         else:
             source_loader = kwargs.get(self.source_loader)
+
+        if self.load_many:
+            return self.data_loader.load_many(source_loader)
         return self.data_loader.load(source_loader)
