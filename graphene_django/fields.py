@@ -199,4 +199,6 @@ class DataLoaderField(DjangoField):
 
         if self.load_many:
             return self.data_loader.load_many(source_loader)
-        return self.data_loader.load(source_loader)
+        if source_loader:
+            return self.data_loader.load(source_loader)
+        return None
