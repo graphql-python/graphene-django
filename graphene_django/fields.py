@@ -1,13 +1,11 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-
-from promise import Promise
-
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from promise import Promise
 
 from .settings import graphene_settings
 from .utils import maybe_queryset, auth_resolver
@@ -170,3 +168,37 @@ class DjangoField(Field):
             return partial(get_unbound_function(self.permissions_resolver), parent_resolver, self.permissions, None,
                            None, True)
         return parent_resolver
+
+
+class DataLoaderField(DjangoField):
+    """Class to manage access to data-loader when resolve the field"""
+
+    def __init__(self, type, data_loader, source_loader, load_many=False, *args, **kwargs):
+        """
+        Initialization of data-loader to resolve field
+        :param data_loader: data-loader to resolve field
+        :param source_loader:  field to obtain the key for data-loading
+        :param load_many: Whether the resolver should try tu obtain one element or multiple elements
+        :param kwargs: Extra arguments
+        """
+        self.data_loader = data_loader
+        self.source_loader = source_loader
+        self.load_many = load_many
+
+        super(DataLoaderField, self).__init__(type, *args, **kwargs)
+
+        # If no resolver is explicitly provided, use dataloader
+        self.resolver = self.resolver or self.resolver_data_loader
+
+    def resolver_data_loader(self, root, info, *args, **kwargs):
+        """Resolve field through dataloader"""
+        if root:
+            source_loader = reduce(lambda x, y: getattr(x, y), self.source_loader.split('.'), root)
+        else:
+            source_loader = kwargs.get(self.source_loader)
+
+        if self.load_many:
+            return self.data_loader.load_many(source_loader)
+        if source_loader:
+            return self.data_loader.load(source_loader)
+        return None
