@@ -158,7 +158,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             # set parent to child fields
             # in ''_parent'' attribute
             if _parent and root is not None:
-                return map(lambda instance: set_parent(instance, root), qs)
+                return list(map(lambda instance: set_parent(instance, root), qs))
             return qs
 
         if custom_resolver:

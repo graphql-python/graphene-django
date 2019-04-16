@@ -164,7 +164,7 @@ class DjangoConnectionField(ConnectionField):
             if qs is None:
                 qs = default_manager.filter()
             if _parent and root is not None:
-                return map(lambda instance: set_parent(instance, root), qs)
+                return list(map(lambda instance: set_parent(instance, root), qs))
             return qs
 
         return cls.connection_resolver_original(
