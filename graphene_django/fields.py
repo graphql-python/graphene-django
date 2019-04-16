@@ -11,7 +11,7 @@ from graphene.relay import ConnectionField, PageInfo
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 
 from .settings import graphene_settings
-from .utils import maybe_queryset, is_parent_set
+from .utils import maybe_queryset, is_parent_set, set_parent
 
 
 class DjangoListField(Field):
@@ -164,11 +164,7 @@ class DjangoConnectionField(ConnectionField):
             if qs is None:
                 qs = default_manager.filter()
             if _parent and root is not None:
-                instances = []
-                for instance in qs:
-                    setattr(instance, '_parent', root)
-                    instances.append(instance)
-                return instances
+                return map(lambda instance: set_parent(instance, root), qs)
             return qs
 
         return cls.connection_resolver_original(

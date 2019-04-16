@@ -6,7 +6,7 @@ from ..fields import DjangoConnectionField
 from .utils import get_filterset_class, get_filtering_args_from_filterset, \
     make_qs
 
-from ..utils import is_parent_set
+from ..utils import is_parent_set, set_parent
 
 
 class DjangoFilterConnectionField(DjangoConnectionField):
@@ -116,6 +116,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         order = args.get('order', None)
 
         _parent = is_parent_set(info)
+
         if not _parent:
             _parent = args.get('know_parent', False)
 
@@ -157,11 +158,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             # set parent to child fields
             # in ''_parent'' attribute
             if _parent and root is not None:
-                instances=[]
-                for instance in qs:
-                    setattr(instance, '_parent', root)
-                    instances.append(instance)
-                return instances
+                return map(lambda instance: set_parent(instance, root), qs)
             return qs
 
         if custom_resolver:
