@@ -1,4 +1,4 @@
-Graphene and Django Tutorial using Relay
+Relay tutorial
 ========================================
 
 Graphene has a number of additional features that are designed to make
@@ -244,7 +244,7 @@ aforementioned GraphiQL we specify that on the params with ``graphiql=True``.
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
     ]
 
 
@@ -262,7 +262,7 @@ as explained above, we can do so here using:
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 

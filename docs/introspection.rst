@@ -5,8 +5,8 @@ Relay uses `Babel Relay
 Plugin <https://facebook.github.io/relay/docs/guides-babel-plugin.html>`__
 that requires you to provide your GraphQL schema data.
 
-Graphene comes with a management command for Django to dump your schema
-data to ``schema.json`` that is compatible with babel-relay-plugin.
+Graphene comes with a Django management command to dump your schema
+data to ``schema.json`` which is compatible with babel-relay-plugin.
 
 Usage
 -----
