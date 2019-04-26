@@ -105,17 +105,7 @@ To learn more check out the following `examples <examples/>`__:
 Contributing
 ------------
 
-After cloning this repo, ensure dependencies are installed by running:
-
-.. code:: sh
-
-    pip install -e ".[test]"
-
-After developing, the full test suite can be evaluated by running:
-
-.. code:: sh
-
-    py.test graphene_django --cov=graphene_django # Use -v -s for verbose mode
+See `CONTRIBUTING.md <CONTRIBUTING.md>`__.
 
 Documentation
 ~~~~~~~~~~~~~
