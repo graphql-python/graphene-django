@@ -30,3 +30,20 @@ After developing, the full test suite can be evaluated by running:
 ```sh
 make tests
 ```
+
+## Documentation
+
+The [documentation](http://docs.graphene-python.org/projects/django/en/latest/) is generated using the excellent [Sphinx](http://www.sphinx-doc.org/) and a custom theme.
+
+The documentation dependencies are installed by running:
+
+```sh
+cd docs
+pip install -r requirements.txt
+```
+
+Then to produce a HTML version of the documentation:
+
+```sh
+make html
+```
