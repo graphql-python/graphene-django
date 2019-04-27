@@ -43,6 +43,8 @@ DjangoModelFormMutation
             model = Pet
 
     class PetMutation(DjangoModelFormMutation):
+        pet = Field(PetType)
+
         class Meta:
             form_class = PetForm
 
