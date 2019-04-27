@@ -25,8 +25,7 @@ def get_reverse_fields(model, local_field_names):
         if name in local_field_names:
             continue
 
-        # Django =>1.9 uses 'rel', django <1.9 uses 'related'
-        related = getattr(attr, "rel", None) or getattr(attr, "related", None)
+        related = getattr(attr, "rel", None)
         if isinstance(related, models.ManyToOneRel):
             yield (name, related)
         elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
