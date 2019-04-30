@@ -114,3 +114,4 @@ See `CONTRIBUTING.md <CONTRIBUTING.md>`__.
    :target: https://badge.fury.io/py/graphene-django
 .. |Coverage Status| image:: https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github
    :target: https://coveralls.io/github/graphql-python/graphene-django?branch=master
+   
