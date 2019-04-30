@@ -64,7 +64,7 @@ class Command(CommandArguments):
 
         indent = options.get("indent")
         schema_dict = {"data": schema.introspect()}
-        if out == '-':
+        if out == "-":
             self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
         else:
             self.save_file(out, schema_dict, indent)

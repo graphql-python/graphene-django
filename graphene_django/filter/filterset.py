@@ -45,8 +45,7 @@ class GrapheneFilterSetMixin(BaseFilterSet):
 
     FILTER_DEFAULTS = dict(
         itertools.chain(
-            FILTER_FOR_DBFIELD_DEFAULTS.items(),
-            GRAPHENE_FILTER_SET_OVERRIDES.items()
+            FILTER_FOR_DBFIELD_DEFAULTS.items(), GRAPHENE_FILTER_SET_OVERRIDES.items()
         )
     )
 
@@ -59,7 +58,6 @@ if VERSION[0] < 2:
     from django.utils.text import capfirst
 
     class GrapheneFilterSetMixinPython2(GrapheneFilterSetMixin):
-
         @classmethod
         def filter_for_reverse_field(cls, f, name):
             """Handles retrieving filters for reverse relationships

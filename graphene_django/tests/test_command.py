@@ -10,14 +10,18 @@ def test_generate_file_on_call_graphql_schema(savefile_mock, settings):
     assert "Successfully dumped GraphQL schema to schema.json" in out.getvalue()
 
 
-@patch('json.dump')
+@patch("json.dump")
 def test_files_are_canonical(dump_mock):
     open_mock = mock_open()
-    with patch('graphene_django.management.commands.graphql_schema.open', open_mock):
-        management.call_command('graphql_schema', schema='')
+    with patch("graphene_django.management.commands.graphql_schema.open", open_mock):
+        management.call_command("graphql_schema", schema="")
 
     open_mock.assert_called_once()
 
     dump_mock.assert_called_once()
-    assert dump_mock.call_args[1]["sort_keys"], "json.mock() should be used to sort the output"
-    assert dump_mock.call_args[1]["indent"] > 0, "output should be pretty-printed by default"
+    assert dump_mock.call_args[1][
+        "sort_keys"
+    ], "json.mock() should be used to sort the output"
+    assert (
+        dump_mock.call_args[1]["indent"] > 0
+    ), "output should be pretty-printed by default"

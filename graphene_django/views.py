@@ -126,8 +126,7 @@ class GraphQLView(View):
 
             if show_graphiql:
                 return self.render_graphiql(
-                    request,
-                    graphiql_version=self.graphiql_version,
+                    request, graphiql_version=self.graphiql_version
                 )
 
             if self.batch:
