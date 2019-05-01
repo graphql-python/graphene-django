@@ -118,15 +118,15 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(
-            cls,
-            resolver,
-            connection,
-            default_manager,
-            max_limit,
-            enforce_first_or_last,
-            root,
-            info,
-            **args
+        cls,
+        resolver,
+        connection,
+        default_manager,
+        max_limit,
+        enforce_first_or_last,
+        root,
+        info,
+        **args
     ):
         first = args.get("first")
         last = args.get("last")
