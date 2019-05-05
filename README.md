@@ -96,4 +96,4 @@ To learn more check out the following [examples](examples/):
 
 ## Contributing
 
-See [CONTRIBUTING.md](contributing.md)
+See [CONTRIBUTING.md](CONTRIBUTING.md)

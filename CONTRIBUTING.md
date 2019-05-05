@@ -31,6 +31,19 @@ After developing, the full test suite can be evaluated by running:
 make tests
 ```
 
+## Opening Pull Requests
+
+Please fork the project and open a pull request against the master branch.
+
+This will trigger a series of test and lint checks.
+
+We advise that you format and run lint locally before doing this to save time:
+
+```sh
+make format
+make lint
+```
+
 ## Documentation
 
 The [documentation](http://docs.graphene-python.org/projects/django/en/latest/) is generated using the excellent [Sphinx](http://www.sphinx-doc.org/) and a custom theme.
