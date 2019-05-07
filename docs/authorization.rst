@@ -155,7 +155,7 @@ To restrict users from accessing the GraphQL API page the standard Django LoginR
 
 .. code:: python
     #views.py
-    
+
     from django.contrib.auth.mixins import LoginRequiredMixin
     from graphene_django.views import GraphQLView
 
@@ -171,9 +171,9 @@ For Django 1.9 and below:
 
     urlpatterns = [
       # some other urls
-      url(r'^graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+      url(r'^graphql$', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
-    
+
 For Django 2.0 and above:
 
 .. code:: python

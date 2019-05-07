@@ -34,6 +34,7 @@ And in your ``settings.py``:
 .. code:: python
 
     GRAPHENE = {
+        ...
         'MIDDLEWARE': [
             'graphene_django.debug.DjangoDebugMiddleware',
         ]

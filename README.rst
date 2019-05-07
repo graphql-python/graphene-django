@@ -10,8 +10,14 @@ to learn how to upgrade to Graphene ``2.0``.
 A `Django <https://www.djangoproject.com/>`__ integration for
 `Graphene <http://graphene-python.org/>`__.
 
-Installation
-------------
+
+Documentation
+-------------
+
+`Visit the documentation to get started! <https://docs.graphene-python.org/projects/django/en/latest/>`__
+
+Quickstart
+----------
 
 For installing graphene, just run this command in your shell
 
@@ -46,7 +52,7 @@ serve the queries.
 
     urlpatterns = [
         # ...
-        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
     ]
 
 Examples
