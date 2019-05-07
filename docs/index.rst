@@ -29,6 +29,6 @@ For more advanced use, check out the Relay tutorial.
    filtering
    authorization
    debug
-   rest-framework
    introspection
    testing
+   settings
