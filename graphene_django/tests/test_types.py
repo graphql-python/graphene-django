@@ -242,4 +242,6 @@ def test_custom_django_choices_enum():
     assert graphene_enum._meta.description(graphene_enum.FOO) == "foo"
 
     # As a Django choices option
-    assert MyChoicesEnum.choices() == [("FOO", "foo"), ("BAR", "bar")]
+    resulting_choices = MyChoicesEnum.choices()
+    for result in (("FOO", "foo"), ("BAR", "bar")):
+        assert result in resulting_choices

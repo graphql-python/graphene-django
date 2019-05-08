@@ -114,8 +114,5 @@ class MyCustomChoices(DjangoChoicesEnum):
 
 class FilmWithChoices(models.Model):
     genre = models.CharField(
-        max_length=2,
-        help_text="Genre",
-        choices=MyCustomChoices.choices(),
-        default=MyCustomChoices.choices()[0][0],
+        max_length=2, help_text="Genre", choices=MyCustomChoices.choices(), default="DO"
     )

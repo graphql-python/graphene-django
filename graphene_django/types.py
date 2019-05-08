@@ -180,7 +180,7 @@ class DjangoChoicesEnum(object):
         class Model(models.model)
             some_field = CharField(choices=ChoicesType.choices())
         """
-        return [(k, v) for k, v in cls.__dict__.items() if not k.startswith("__")]
+        return tuple((k, v) for k, v in cls.__dict__.items() if not k.startswith("__"))
 
     @classmethod
     def as_enum(cls):

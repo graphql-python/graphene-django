@@ -1072,7 +1072,7 @@ def test_using_django_choices_enum():
         def resolve_films(self, info, **args):
             return Film.objects.all()
 
-    f = FilmWithChoices.objects.create()
+    f = FilmWithChoices.objects.create(genre="DO")
 
     query = """
         query NodeFilteringQuery {
@@ -1104,7 +1104,8 @@ def test_using_django_choices_enum():
     result = schema.execute(query)
     assert not result.errors
     enum_values = result.data["__type"]["enumValues"]
-    assert enum_values == [
-        {"name": "DO", "description": "Documentary"},
+    for result in [
         {"name": "OT", "description": "Other"},
-    ]
+        {"name": "DO", "description": "Documentary"},
+    ]:
+        assert result in enum_values
