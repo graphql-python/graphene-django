@@ -4,13 +4,6 @@ from django.db import models
 from django.db.models.manager import Manager
 
 
-# from graphene.utils import LazyList
-
-
-class LazyList(object):
-    pass
-
-
 try:
     import django_filters  # noqa
 
