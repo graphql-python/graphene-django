@@ -26,6 +26,7 @@ For more advanced use, check out the Relay tutorial.
    schema
    queries
    mutations
+   types
    filtering
    authorization
    debug

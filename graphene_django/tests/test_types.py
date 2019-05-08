@@ -2,9 +2,10 @@ from mock import patch
 
 from graphene import Interface, ObjectType, Schema, Connection, String
 from graphene.relay import Node
+from graphene.types.enum import Enum, EnumMeta, EnumOptions
 
 from .. import registry
-from ..types import DjangoObjectType, DjangoObjectTypeOptions
+from ..types import DjangoObjectType, DjangoObjectTypeOptions, DjangoChoicesEnum
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -224,3 +225,21 @@ def test_django_objecttype_exclude_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
+
+
+def test_custom_django_choices_enum():
+    class MyChoicesEnum(DjangoChoicesEnum):
+        FOO = "foo"
+        BAR = "bar"
+
+    # As a Graphene enum
+    graphene_enum = MyChoicesEnum.as_enum()
+    assert isinstance(graphene_enum, EnumMeta)
+    assert isinstance(graphene_enum._meta, EnumOptions)
+    assert graphene_enum.FOO.value == "foo"
+    assert graphene_enum.FOO.name == "FOO"
+    assert graphene_enum._meta.name == "MyChoicesEnum"
+    assert graphene_enum._meta.description(graphene_enum.FOO) == "foo"
+
+    # As a Django choices option
+    assert MyChoicesEnum.choices() == [("FOO", "foo"), ("BAR", "bar")]

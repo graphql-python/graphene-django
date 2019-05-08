@@ -14,8 +14,17 @@ from ..utils import DJANGO_FILTER_INSTALLED
 from ..compat import MissingType, JSONField
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
+from ..registry import reset_global_registry
 from ..settings import graphene_settings
-from .models import Article, CNNReporter, Reporter, Film, FilmDetails
+from .models import (
+    Article,
+    CNNReporter,
+    Reporter,
+    Film,
+    FilmWithChoices,
+    MyCustomChoices,
+    FilmDetails,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -145,9 +154,6 @@ def test_should_query_postgres_fields():
 
 
 def test_should_node():
-    # reset_global_registry()
-    # Node._meta.registry = get_global_registry()
-
     class ReporterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -412,9 +418,6 @@ def test_should_query_node_filtering_with_distinct_queryset():
 
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
-
-        # def resolve_all_reporters_with_berlin_films(self, args, context, info):
-        #    return Reporter.objects.filter(Q(films__film__location__contains="Berlin") | Q(a_choice=1))
 
         def resolve_films(self, info, **args):
             return Film.objects.filter(
@@ -1051,3 +1054,57 @@ def test_should_resolve_get_queryset_connectionfields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_using_django_choices_enum():
+    reset_global_registry()
+
+    class FilmWithChoicesType(DjangoObjectType):
+        class Meta:
+            model = FilmWithChoices
+            interfaces = (Node,)
+
+        genre = MyCustomChoices.as_enum()
+
+    class Query(graphene.ObjectType):
+        films_with_choices = DjangoConnectionField(FilmWithChoicesType)
+
+        def resolve_films(self, info, **args):
+            return Film.objects.all()
+
+    f = FilmWithChoices.objects.create()
+
+    query = """
+        query NodeFilteringQuery {
+            filmsWithChoices {
+                edges {
+                    node {
+                        genre
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["filmsWithChoices"]["edges"][0]["node"]["genre"] == "DO"
+
+    query = """
+        query getEnumType {
+        __type(name: "FilmWithChoicesGenre" ) {
+            name
+            enumValues {
+                name
+                description
+                }
+            }
+        }
+    """
+    result = schema.execute(query)
+    assert not result.errors
+    enum_values = result.data["__type"]["enumValues"]
+    assert enum_values == [
+        {"name": "DO", "description": "Documentary"},
+        {"name": "OT", "description": "Other"},
+    ]

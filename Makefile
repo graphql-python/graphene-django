@@ -2,7 +2,7 @@ dev-setup:
 	pip install -e ".[dev]"
 
 tests:
-	py.test graphene_django --cov=graphene_django -vv
+	py.test graphene_django --cov=graphene_django -vv -x
 
 format:
 	black graphene_django

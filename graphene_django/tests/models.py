@@ -1,5 +1,7 @@
 from __future__ import absolute_import
 
+from ..types import DjangoChoicesEnum
+
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -103,3 +105,17 @@ class Article(models.Model):
 
     class Meta:
         ordering = ("headline",)
+
+
+class MyCustomChoices(DjangoChoicesEnum):
+    DO = "Documentary"
+    OT = "Other"
+
+
+class FilmWithChoices(models.Model):
+    genre = models.CharField(
+        max_length=2,
+        help_text="Genre",
+        choices=MyCustomChoices.choices(),
+        default=MyCustomChoices.choices()[0][0],
+    )

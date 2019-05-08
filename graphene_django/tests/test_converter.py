@@ -10,10 +10,10 @@ from graphene.types.json import JSONString
 
 from ..compat import JSONField, ArrayField, HStoreField, RangeField, MissingType
 from ..converter import convert_django_field, convert_django_field_with_choices
+from ..settings import graphene_settings
 from ..registry import Registry
 from ..types import DjangoObjectType
 from .models import Article, Film, FilmDetails, Reporter
-
 
 # from graphene.core.types.custom_scalars import DateTime, Time, JSONString
 
@@ -128,10 +128,12 @@ def test_should_nullboolean_convert_boolean():
     assert_conversion(models.NullBooleanField, graphene.Boolean)
 
 
-def test_field_with_choices_convert_enum():
-    field = models.CharField(
-        help_text="Language", choices=(("es", "Spanish"), ("en", "English"))
-    )
+@pytest.mark.parametrize(
+    "choices",
+    ((("es", "Spanish"), ("en", "English")), [("es", "Spanish"), ("en", "English")]),
+)
+def test_field_with_choices_convert_enum(choices):
+    field = models.CharField(help_text="Language", choices=choices)
 
     class TranslatedModel(models.Model):
         language = field

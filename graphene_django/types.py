@@ -1,6 +1,8 @@
 import six
 from collections import OrderedDict
 
+from enum import Enum
+
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 import graphene
@@ -150,3 +152,49 @@ class DjangoObjectType(ObjectType):
 class ErrorType(ObjectType):
     field = graphene.String(required=True)
     messages = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+
+def get_attr_fields_name_from_class(enum):
+    """
+    Used to get field names from a class like below:
+    class ExampleEnum:
+        FOO = 'FOO VALUE'
+        BAR = 'BAR VALUE'
+    it will return ['FOO', 'BAR']
+    """
+    return [x for x in enum.__dict__ if not x.startswith("__")]
+
+
+class DjangoChoicesEnum(object):
+    @classmethod
+    def choices(cls):
+        """
+        Used to convert the this class into django CharField choices.
+        Example:
+
+        # enums.py:
+        ChoicesType:
+            TEST = 'test'
+
+        # models.py:
+        class Model(models.model)
+            some_field = CharField(choices=ChoicesType.choices())
+        """
+        return [(k, v) for k, v in cls.__dict__.items() if not k.startswith("__")]
+
+    @classmethod
+    def as_enum(cls):
+        """
+        Gets a Python class that looks like enum e.g.
+            class TestEnum:
+                FOO = 'BAR'
+                FOO2 = 'BAR2'
+        and returns a Graphene enum representing the Python enum
+        """
+        props = get_attr_fields_name_from_class(cls)
+        new_enum = Enum(cls.__name__, ((prop, getattr(cls, prop)) for prop in props))
+
+        def get_description(value):
+            return getattr(cls, value.name, None) if value else None
+
+        return graphene.Enum.from_enum(new_enum, description=get_description)
