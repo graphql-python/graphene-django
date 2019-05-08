@@ -6,6 +6,8 @@ This page documents specific features of Types related to Graphene-Django.
 DjangoChoicesEnum
 -----------------
 
+*Introduced in graphene-django 2.3*
+
 ``DjangoChoicesEnum`` is a helper class that lets you keep Graphene style enums
 and ``models.Field.choices`` in sync. Some Django fields accept a ``choices`` list like this:
 
