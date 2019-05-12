@@ -30,7 +30,7 @@ Full example
 
     class Query:
         questions = graphene.List(QuestionType)
-        question = graphene.Field(Question, question_id=graphene.String())
+        question = graphene.Field(QuestionType, question_id=graphene.String())
 
         def resolve_questions(self, info, **kwargs):
             # Querying a list
@@ -254,7 +254,7 @@ Full example
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            interaces = (relay.Node,)
+            interfaces = (relay.Node,)
 
 
     class QuestionConnection(relay.Connection):
