@@ -266,5 +266,11 @@ Full example
         question = graphene.Field(QuestionType)
         questions = relay.ConnectionField(QuestionConnection)
 
+        def resolve_question(root, info, **kwargs):
+            return Question
+
+        def resolve_questions(root, info, **kwargs):
+            return Question.objects.all()
+
 See the `Relay documentation <https://docs.graphene-python.org/en/latest/relay/nodes/>`__ on
 the core graphene pages for more information on customing the Relay experience.
