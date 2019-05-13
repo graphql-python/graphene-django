@@ -263,11 +263,7 @@ Full example
 
 
     class Query:
-        question = graphene.Field(QuestionType)
         questions = relay.ConnectionField(QuestionConnection)
-
-        def resolve_question(root, info, **kwargs):
-            return Question
 
         def resolve_questions(root, info, **kwargs):
             return Question.objects.all()
