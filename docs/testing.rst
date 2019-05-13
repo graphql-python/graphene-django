@@ -9,7 +9,7 @@ Usage:
 
     import json
 
-    from graphene_django.tests.base_test import GraphQLTestCase
+    from graphene_django.utils.testing import GraphQLTestCase
     from my_project.config.schema import schema
 
     class MyFancyTestCase(GraphQLTestCase):
