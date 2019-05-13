@@ -30,16 +30,16 @@ Add ``graphene_django`` to the ``INSTALLED_APPS`` in the ``settings.py`` file of
     ]
 
 
-We need to add a graphql URL to the ``urls.py`` of your Django project:
+We need to add a ``graphql`` URL to the ``urls.py`` of your Django project:
 
 .. code:: python
 
-    from django.conf.urls import url
+    from django.urls import path
     from graphene_django.views import GraphQLView
 
     urlpatterns = [
         # ...
-        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
+        path("graphql", GraphQLView.as_view(graphiql=True)),
     ]
 
 (Change ``graphiql=True`` to ``graphiql=False`` if you do not want to use the GraphiQL API browser.)
