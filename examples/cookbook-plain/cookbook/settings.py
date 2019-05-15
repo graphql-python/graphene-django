@@ -56,6 +56,7 @@ MIDDLEWARE = [
 
 GRAPHENE = {
     'SCHEMA': 'cookbook.schema.schema',
+    'SCHEMA_INDENT': 2,
     'MIDDLEWARE': (
         'graphene_django.debug.DjangoDebugMiddleware',
     )
@@ -130,8 +131,3 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
 STATIC_URL = '/static/'
-
-GRAPHENE = {
-    'SCHEMA': 'cookbook.schema.schema',
-    'SCHEMA_INDENT': 2,
-}
