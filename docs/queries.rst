@@ -30,7 +30,7 @@ Full example
 
     class Query:
         questions = graphene.List(QuestionType)
-        question = graphene.Field(Question, question_id=graphene.String())
+        question = graphene.Field(QuestionType, question_id=graphene.String())
 
         def resolve_questions(self, info, **kwargs):
             # Querying a list
@@ -243,6 +243,8 @@ There is one additional import and a single line of code needed to adopt this:
 
 Full example
 ~~~~~~~~~~~~
+See the `Relay documentation <https://docs.graphene-python.org/en/latest/relay/nodes/>`__ on
+the core graphene pages for more information on customizing the Relay experience.
 
 .. code:: python
 
@@ -254,7 +256,7 @@ Full example
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            interaces = (relay.Node,)
+            interfaces = (relay.Node,)
 
 
     class QuestionConnection(relay.Connection):
@@ -263,8 +265,68 @@ Full example
 
 
     class Query:
-        question = graphene.Field(QuestionType)
         questions = relay.ConnectionField(QuestionConnection)
 
-See the `Relay documentation <https://docs.graphene-python.org/en/latest/relay/nodes/>`__ on
-the core graphene pages for more information on customing the Relay experience.
+        def resolve_questions(root, info, **kwargs):
+            return Question.objects.all()
+
+
+You can now execute queries like:
+
+
+.. code:: python
+
+    {
+        questions (first: 2, after: "YXJyYXljb25uZWN0aW9uOjEwNQ==") {
+            pageInfo {
+            startCursor
+            endCursor
+            hasNextPage
+            hasPreviousPage
+            }
+            edges {
+            cursor
+            node {
+                id
+                question_text
+            }
+            }
+        }
+    }
+
+Which returns:
+
+.. code:: python
+
+    {
+        "data": {
+            "questions": {
+            "pageInfo": {
+                "startCursor": "YXJyYXljb25uZWN0aW9uOjEwNg==",
+                "endCursor": "YXJyYXljb25uZWN0aW9uOjEwNw==",
+                "hasNextPage": true,
+                "hasPreviousPage": false
+            },
+            "edges": [
+                {
+                "cursor": "YXJyYXljb25uZWN0aW9uOjEwNg==",
+                "node": {
+                    "id": "UGxhY2VUeXBlOjEwNw==",
+                    "question_text": "How did we get here?"
+                }
+                },
+                {
+                "cursor": "YXJyYXljb25uZWN0aW9uOjEwNw==",
+                "node": {
+                    "id": "UGxhY2VUeXBlOjEwOA==",
+                    "name": "Where are we?"
+                }
+                }
+            ]
+            }
+        }
+    }
+
+Note that relay implements :code:`pagination` capabilities automatically, adding a :code:`pageInfo` element, and including :code:`cursor` on nodes. These elements are included in the above example for illustration.
+
+To learn more about Pagination in general, take a look at `Pagination <https://graphql.org/learn/pagination/>`__  on the GraphQL community site.
