@@ -10,8 +10,6 @@ with open("graphene_django/__init__.py", "rb") as f:
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
 
-rest_framework_require = ["djangorestframework>=3.6.3"]
-
 neomodel_require = [
     "neomodel==3.3.0",
 ]
@@ -24,26 +22,21 @@ tests_require = [
     "pytz",
     "django-filter<2;python_version<'3'",
     "pytest-django>=3.3.2",
-] + rest_framework_require
+]
 
 setup(
-    name="graphene-django",
+    name="graphene-neo4j",
     version=version,
-    description="Graphene Django-Neo4J(neomodel) integration",
+    description="Graphene Django-Neo4J (neomodel) integration",
     long_description=open("README.rst").read(),
-    url="https://github.com/graphql-python/graphene-django",
-    author="Syrus Akbary",
-    author_email="me@syrusakbary.com",
+    url="https://github.com/MardanovTimur/graphene-neo4j",
+    author="Syrus Akbary; Mardanov Timur",
+    author_email="timurmardanov97@gmail.com",
     license="MIT",
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
@@ -57,6 +50,7 @@ setup(
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
         "lazy-import==0.2.2",
+        "neomodel-next>=3.3.0",
     ],
     dependency_links=[
         # TODO refactor this
@@ -64,14 +58,10 @@ setup(
         "git+git://github.com/MardanovTimur/django-filter.git@neomodel#egg=django-filter",
         # graphene
         "git+git://github.com/MardanovTimur/graphene.git@master#egg=graphene",
-        # custom neomodel
-        "git+git://github.com/MardanovTimur/neomodel.git@arch_neomodel#egg=neomodel",
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
-    rest_framework_require=rest_framework_require,
-    neomodel_require=neomodel_require,
-    extras_require={"test": tests_require, "rest_framework": rest_framework_require},
+    extras_require={"test": tests_require},
     include_package_data=True,
     zip_safe=False,
     platforms="any",

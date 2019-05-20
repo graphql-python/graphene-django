@@ -1,7 +1,5 @@
 from functools import partial
 
-from django.db.models.query import QuerySet
-
 from promise import Promise
 from neomodel import NodeSet
 

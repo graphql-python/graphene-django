@@ -1,4 +1,3 @@
-from django.db import models
 from django.utils.encoding import force_text
 from neomodel import (
     AliasProperty,
@@ -194,13 +193,6 @@ def convert_array_to_list(field, registry=None):
     base_property = field.base_property or StringProperty()
     return List(description=field.help_text,
                 of_type=convert_django_field(base_property).__class__)
-
-#  @singledispatch
-#  def define_base_property(base_property):
-#      raise Exception("This property not implemented yet")
-
-#  @convert_array_to_list.register()
-#  def check_base_property_integer
 
 
 @convert_django_field.register(JSONProperty)
