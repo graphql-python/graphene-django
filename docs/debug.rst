@@ -15,7 +15,7 @@ For use the Django Debug plugin in Graphene:
 
 * Add ``graphene_django.debug.DjangoDebugMiddleware`` into ``MIDDLEWARE`` in the ``GRAPHENE`` settings.
 
-* Add the ``debug`` field into the schema root ``Query`` with the value ``graphene.Field(DjangoDebug, name='__debug')``.
+* Add the ``debug`` field into the schema root ``Query`` with the value ``graphene.Field(DjangoDebug, name='_debug')``.
 
 
 .. code:: python
@@ -24,7 +24,7 @@ For use the Django Debug plugin in Graphene:
 
     class Query(graphene.ObjectType):
         # ...
-        debug = graphene.Field(DjangoDebug, name='__debug')
+        debug = graphene.Field(DjangoDebug, name='_debug')
 
     schema = graphene.Schema(query=Query)
 
@@ -59,11 +59,11 @@ the GraphQL request, like:
         }
       }
       # Here is the debug field that will output the SQL queries
-      __debug {
+      _debug {
         sql {
           rawSql
         }
       }
     }
 
-Note that the ``__debug`` field must be the last field in your query.
+Note that the ``_debug`` field must be the last field in your query.
