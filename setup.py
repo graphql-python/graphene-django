@@ -11,7 +11,7 @@ with open("graphene_django/__init__.py", "rb") as f:
     )
 
 neomodel_require = [
-    "neomodel==3.3.0",
+    "neomodel-next==3.3.0",
 ]
 
 tests_require = [
