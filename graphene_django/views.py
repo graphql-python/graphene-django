@@ -53,6 +53,7 @@ def instantiate_middleware(middlewares):
 class GraphQLView(View):
     graphiql_version = "0.13.0"
     graphiql_template = "graphene/graphiql.html"
+    react_version = "16.8.6"
 
     schema = None
     graphiql = False
@@ -126,7 +127,9 @@ class GraphQLView(View):
 
             if show_graphiql:
                 return self.render_graphiql(
-                    request, graphiql_version=self.graphiql_version
+                    request,
+                    graphiql_version=self.graphiql_version,
+                    react_version=self.react_version,
                 )
 
             if self.batch:
