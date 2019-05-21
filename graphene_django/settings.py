@@ -37,13 +37,15 @@ DEFAULTS = {
     "RELAY_CONNECTION_MAX_LIMIT": 100,
 }
 
+try:
+    if settings.DEBUG:
+        DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
+except Exception:
+    if not settings.configured:
+        # configure the settings
+        settings.configure()
 
-if not settings.configured:
-    # configure the settings
-    settings.configure()
 
-if settings.DEBUG:
-    DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
 
 # List of settings that may be in string import notation.
 IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA")
