@@ -37,13 +37,19 @@ DEFAULTS = {
     "RELAY_CONNECTION_MAX_LIMIT": 100,
 }
 
-try:
+
+def init_midleware():
     if settings.DEBUG:
         DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
+
+
+try:
+    init_midleware()
 except Exception:
     if not settings.configured:
-        # configure the settings
         settings.configure()
+finally:
+    init_midleware()
 
 
 
