@@ -57,18 +57,25 @@ def convert_serializer_field(field, is_input=True):
 
 
 def convert_serializer_to_input_type(serializer_class):
+    cached_type = convert_serializer_to_input_type.cache.get(serializer_class.__name__, None)
+    if cached_type:
+        return cached_type
     serializer = serializer_class()
 
     items = {
         name: convert_serializer_field(field)
         for name, field in serializer.fields.items()
     }
-
-    return type(
+    ret_type = type(
         "{}Input".format(serializer.__class__.__name__),
         (graphene.InputObjectType,),
         items,
     )
+    convert_serializer_to_input_type.cache[serializer_class.__name__] = ret_type
+    return ret_type
+
+
+convert_serializer_to_input_type.cache = {}
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)
