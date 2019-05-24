@@ -1,19 +1,21 @@
 language: python
-sudo: false
+sudo: required
+dist: xenial
 python:
 - 2.7
 - 3.4
 - 3.5
 - 3.6
+- 3.7
 install:
 - |
   if [ "$TEST_TYPE" = build ]; then
     pip install -e .[test]
-    pip install psycopg2 # Required for Django postgres fields testing
+    pip install psycopg2==2.8.2 # Required for Django postgres fields testing
     pip install django==$DJANGO_VERSION
     python setup.py develop
   elif [ "$TEST_TYPE" = lint ]; then
-    pip install flake8
+    pip install flake8==3.7.7
   fi
 script:
 - |
@@ -45,9 +47,15 @@ matrix:
     env: TEST_TYPE=build DJANGO_VERSION=2.1
   - python: '3.6'
     env: TEST_TYPE=build DJANGO_VERSION=2.1
+  - python: '3.6'
+    env: TEST_TYPE=build DJANGO_VERSION=2.2
+  - python: '3.7'
+    env: TEST_TYPE=build DJANGO_VERSION=2.2
   - python: '2.7'
     env: TEST_TYPE=lint
   - python: '3.6'
+    env: TEST_TYPE=lint
+  - python: '3.7'
     env: TEST_TYPE=lint
 deploy:
   provider: pypi

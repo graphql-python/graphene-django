@@ -1,12 +1,9 @@
-Introduction tutorial - Graphene and Django
+Basic Tutorial
 ===========================================
 
-Graphene has a number of additional features that are designed to make
-working with Django *really simple*.
-
-Our primary focus here is to give a good understanding of how to connect models from Django ORM to graphene object types.
-
-A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__ documentation first.
+Graphene Django has a number of additional features that are designed to make
+working with Django easy. Our primary focus in this tutorial is to give a good
+understanding of how to connect models from Django ORM to graphene object types.
 
 Set up the Django project
 -------------------------
@@ -91,7 +88,7 @@ Don't forget to create & run migrations:
 
     python manage.py makemigrations
     python manage.py migrate
-    
+
 
 Load some test data
 ^^^^^^^^^^^^^^^^^^^
@@ -108,7 +105,7 @@ following:
     $ python ./manage.py loaddata ingredients
 
     Installed 6 object(s) from 1 fixture(s)
-    
+
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
 create a login for yourself too (``./manage.py createsuperuser``).
@@ -255,7 +252,7 @@ aforementioned GraphiQL we specify that on the parameters with ``graphiql=True``
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
     ]
 
 
@@ -273,7 +270,7 @@ as explained above, we can do so here using:
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 
@@ -487,7 +484,7 @@ Now, with the code in place, we can query for single objects.
 For example, lets query ``category``:
 
 
-.. code:: 
+.. code::
 
     query {
       category(id: 1) {
@@ -536,3 +533,6 @@ Summary
 As you can see, GraphQL is very powerful but there are a lot of repetitions in our example. We can do a lot of improvements by adding layers of abstraction on top of ``graphene-django``.
 
 If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the **relay tutorial.**
+
+A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__
+documentation but it is not essential to understand and use Graphene-Django in your project.
