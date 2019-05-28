@@ -12,10 +12,12 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 For installing graphene, just run this command in your shell
 
 ```bash
-pip install "graphene-django>=2.0"
+pip install "graphene-neo4j>=2.0"
 ```
 
 ### Settings
+
+Use basic graphene_django package in INSTALLED_APPS
 
 ```python
 INSTALLED_APPS = (
@@ -44,14 +46,14 @@ urlpatterns = [
 
 ## Examples
 
-Here is a simple Django model:
+Here is a simple neomodel model:
 
 ```python
-from django.db import models
+from neomodel import *
 
-class UserModel(models.Model):
-    name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
+class UserModel(StructuredNode):
+    name = StringProperty(required=True)
+    age = IntegerProperty()
 ```
 
 To create a GraphQL schema for it you simply have to write the following:
@@ -62,16 +64,53 @@ import graphene
 
 class User(DjangoObjectType):
     class Meta:
+        # pass yours model here, the fields are define automatically
         model = UserModel
 
 class Query(graphene.ObjectType):
     users = graphene.List(User)
 
     def resolve_users(self, info):
-        return UserModel.objects.all()
+        return UserModel.nodes.all()
 
 schema = graphene.Schema(query=Query)
 ```
+
+
+### Relay schema
+
+```python
+import graphene
+from graphene_django import DjangoObjectType
+from graphene_django.filter.fields import DjangoFilterConnectionField
+
+class UserType(DjangoObjectType):
+    class Meta:
+        # pass yours model here, the fields are define automatically
+        model = UserModel
+
+        # definition of filter settings
+        # key - the <field_name>
+        # value - the list of search instructions
+        neomodel_filter_fields = {
+            'name': ['icontains', 'contains', 'exact'],
+            'age': ['lte', 'gte', 'gt'],
+        }
+
+        interfaces = (
+            graphene.relay.Node,
+        )
+
+class Query(graphene.ObjectType):
+    """ The types resolves automatically
+    """
+    user = graphene.relay.Node.Field(UserType)
+    users = DjangoFilterConnectionField(UserType)
+
+
+schema = graphene.Schema(query=Query)
+```
+
 
 Then you can simply query the schema:
 
@@ -79,8 +118,8 @@ Then you can simply query the schema:
 query = '''
     query {
       users {
-        name,
-        lastName
+        name
+        age
       }
     }
 '''
@@ -91,22 +130,6 @@ To learn more check out the following [examples](examples/):
 
 * **Schema with Filtering**: [Cookbook example](examples/cookbook)
 * **Relay Schema**: [Starwars Relay example](examples/starwars)
-
-
-## Contributing
-
-After cloning this repo, ensure dependencies are installed by running:
-
-```sh
-pip install -e ".[test]"
-```
-
-After developing, the full test suite can be evaluated by running:
-
-```sh
-py.test graphene_django --cov=graphene_django # Use -v -s for verbose mode
-```
-
 
 ### Documentation
 
