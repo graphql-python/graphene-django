@@ -150,7 +150,6 @@ class DjangoObjectType(ObjectType):
 
     @classmethod
     def get_node(cls, info, id):
-        queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
             return cls._meta.model.nodes.get(uid=id)
         except DoesNotExist:
