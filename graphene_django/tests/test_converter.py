@@ -83,7 +83,7 @@ def test_should_image_convert_string():
     assert_conversion(models.ImageField, graphene.String)
 
 
-def test_should_url_convert_string():
+def test_should_file_path_field_convert_string():
     assert_conversion(models.FilePathField, graphene.String)
 
 
@@ -91,7 +91,7 @@ def test_should_auto_convert_id():
     assert_conversion(models.AutoField, graphene.ID, primary_key=True)
 
 
-def test_should_auto_convert_id():
+def test_should_uuid_convert_id():
     assert_conversion(models.UUIDField, graphene.UUID)
 
 
@@ -241,8 +241,7 @@ def test_should_manytoone_convert_connectionorlist():
         class Meta:
             model = Article
 
-    graphene_field = convert_django_field(Reporter.articles.rel, 
-                                          A._meta.registry)
+    graphene_field = convert_django_field(Reporter.articles.rel, A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
@@ -255,8 +254,7 @@ def test_should_onetoone_reverse_convert_model():
         class Meta:
             model = FilmDetails
 
-    graphene_field = convert_django_field(Film.details.related,
-                                          A._meta.registry)
+    graphene_field = convert_django_field(Film.details.related, A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)

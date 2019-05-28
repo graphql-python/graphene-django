@@ -24,6 +24,12 @@ tests_require = [
     "pytest-django>=3.3.2",
 ]
 
+
+dev_requires = [
+    "black==19.3b0",
+    "flake8==3.7.7",
+] + tests_require
+
 setup(
     name="graphene-neo4j",
     version=version,

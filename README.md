@@ -7,7 +7,11 @@ Please read [UPGRADE-v2.0.md](https://github.com/graphql-python/graphene/blob/ma
 
 A [Django](https://www.djangoproject.com/) integration for [Graphene](http://graphene-python.org/).
 
-## Installation
+## Documentation
+
+[Visit the documentation to get started!](https://docs.graphene-python.org/projects/django/en/latest/)
+
+## Quickstart
 
 For installing graphene, just run this command in your shell
 
@@ -22,6 +26,7 @@ Use basic graphene_django package in INSTALLED_APPS
 ```python
 INSTALLED_APPS = (
     # ...
+    'django.contrib.staticfiles', # Required for GraphiQL
     'graphene_django',
 )
 
@@ -40,7 +45,7 @@ from graphene_django.views import GraphQLView
 
 urlpatterns = [
     # ...
-    url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+    url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
 ]
 ```
 
@@ -130,20 +135,3 @@ To learn more check out the following [examples](examples/):
 
 * **Schema with Filtering**: [Cookbook example](examples/cookbook)
 * **Relay Schema**: [Starwars Relay example](examples/starwars)
-
-### Documentation
-
-The [documentation](http://docs.graphene-python.org/projects/django/en/latest/) is generated using the excellent [Sphinx](http://www.sphinx-doc.org/) and a custom theme.
-
-The documentation dependencies are installed by running:
-
-```sh
-cd docs
-pip install -r requirements.txt
-```
-
-Then to produce a HTML version of the documentation:
-
-```sh
-make html
-```

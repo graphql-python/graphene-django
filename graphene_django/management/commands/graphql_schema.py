@@ -39,7 +39,7 @@ class Command(CommandArguments):
 
     def save_file(self, out, schema_dict, indent):
         with open(out, "w") as outfile:
-            json.dump(schema_dict, outfile, indent=indent)
+            json.dump(schema_dict, outfile, indent=indent, sort_keys=True)
 
     def handle(self, *args, **options):
         options_schema = options.get("schema")
@@ -64,8 +64,8 @@ class Command(CommandArguments):
 
         indent = options.get("indent")
         schema_dict = {"data": schema.introspect()}
-        if out == '-':
-            self.stdout.write(json.dumps(schema_dict, indent=indent))
+        if out == "-":
+            self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
         else:
             self.save_file(out, schema_dict, indent)
 
