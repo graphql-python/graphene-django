@@ -1,20 +1,76 @@
 from functools import singledispatch
 from typing import Union, Callable, Optional, Type
+from types import GeneratorType
+from functools import wraps, single_dispatch
 
 from django.utils.translation import ugettext as _
 from graphene import String, List, ID, ObjectType, Field
 from graphene.types.mountedtype import MountedType
 from graphene.types.unmountedtype import UnmountedType
 from graphene_django.types import DjangoObjectType
-from neomodel.core import StructuredNode
+from neomodel import (
+    StructuredNode,
+    NodeSet,
+)
 
-from graphene_ql.decorators import paginate
 
 from .lib import (
     GrapheneQLEdgeException,
     know_parent,
     pagination,
 )
+
+
+@singledispatch
+def paginate_instance(qs, kwargs):
+    """ Paginate difference of type qs.
+    If list or tuple just primitive slicing
+    If <NodeSet>
+    """
+    raise NotImplementedError("Type {} not implemented yet.".format(type(qs)))
+
+
+def paginate(resolver):
+    """ Paginator for resolver functions
+    Input types:
+        list, tuple, NodeSet
+    """
+    @wraps(resolver)
+    def wrapper(root, info, **kwargs):
+        qs = resolver(root, info, **kwargs)
+        qs = paginate_instance(qs, kwargs)
+        return qs
+    return wrapper
+
+
+@paginate_instance.register(NodeSet)
+def paginate_nodeset(qs, kwargs):
+    # Warning. Type of pagination is lazy
+    if 'first' in kwargs and 'last' in kwargs:
+        qs = qs.set_skip(kwargs['first'] - kwargs['last'])
+        qs = qs.set_limit(kwargs['last'])
+    elif 'last' in kwargs:
+        count = len(qs)
+        qs = qs.set_skip(count - kwargs['last'])
+        qs = qs.set_limit(kwargs['last'])
+    elif 'first' in kwargs:
+        qs = qs.set_limit(kwargs['first'])
+    return qs
+
+
+@paginate_instance.register(list)
+@paginate_instance.register(tuple)
+@paginate_instance.register(GeneratorType)
+def paginate_list(qs, kwargs):
+    if 'first' in kwargs and 'last' in kwargs:
+        qs = qs[:kwargs['first']]
+        qs = qs[kwargs['last']:]
+    elif 'first' in kwargs:
+        qs = qs[:kwargs['first']]
+    elif 'last' in kwargs:
+        qs = qs[-kwargs['last']:]
+    return qs
+
 
 
 def EdgeNode(*args, **kwargs):
