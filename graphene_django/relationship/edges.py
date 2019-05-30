@@ -1,7 +1,7 @@
 from functools import singledispatch
 from typing import Union, Callable, Optional, Type
 from types import GeneratorType
-from functools import wraps, single_dispatch
+from functools import wraps, singledispatch
 
 from django.utils.translation import ugettext as _
 from graphene import String, List, ID, ObjectType, Field
