@@ -1,4 +1,4 @@
-from functools import partial
+from functools import partial, reduce
 
 from django.db.models.query import QuerySet
 
