@@ -136,8 +136,8 @@ type ArticleEdge {
 }
 
 enum ArticleImportance {
-  A_1
-  A_2
+  VERY_IMPORTANT
+  NOT_AS_IMPORTANT
 }
 
 enum ArticleLang {
@@ -172,13 +172,13 @@ type Reporter {
 }
 
 enum ReporterAChoice {
-  A_1
-  A_2
+  THIS
+  THAT
 }
 
 enum ReporterReporterType {
-  A_1
-  A_2
+  REGULAR
+  CNN_REPORTER
 }
 
 type RootQuery {

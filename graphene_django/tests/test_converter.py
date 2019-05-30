@@ -177,6 +177,25 @@ def test_field_with_choices_gettext():
     convert_django_field_with_choices(field)
 
 
+def test_field_with_integer_choices():
+    field = models.IntegerField(
+        help_text="Language", choices=((1, "Spanish"), (2, "English"))
+    )
+
+    class TranslatedChoicesModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(field)
+    #assert False, str(graphene_type._meta.enum.__members__)
+    assert graphene_type._meta.enum.__members__["SPANISH"].value == 1
+    assert graphene_type._meta.enum.__members__["SPANISH"].description == "Spanish"
+    assert graphene_type._meta.enum.__members__["ENGLISH"].value == 2
+    assert graphene_type._meta.enum.__members__["ENGLISH"].description == "English"
+
+
 def test_field_with_choices_collision():
     field = models.CharField(
         help_text="Timezone",
