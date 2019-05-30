@@ -57,13 +57,8 @@ setup(
         "promise>=2.1",
         "lazy-import==0.2.2",
         "neomodel-next>=3.3.0",
-    ],
-    dependency_links=[
-        # TODO refactor this
-        # django-filter (filter by neomodel)
-        "git+git://github.com/MardanovTimur/django-filter.git@neomodel#egg=django-filter",
-        # graphene
-        "git+git://github.com/MardanovTimur/graphene.git@master#egg=graphene",
+        "django-filter @https://github.com/MardanovTimur/django-filter/archive/neomodel.zip",
+        "graphene @https://github.com/MardanovTimur/graphene/archive/master.zip",
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
