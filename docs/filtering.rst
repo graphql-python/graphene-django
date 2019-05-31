@@ -136,7 +136,7 @@ pre-filter animals owned by the authenticated user (set in ``context.user``).
 
     class AnimalFilter(django_filters.FilterSet):
         # Do case-insensitive lookups on 'name'
-        name = django_filters.CharFilter(lookup_type='iexact')
+        name = django_filters.CharFilter(lookup_type=['iexact'])
 
         class Meta:
             model = Animal
@@ -146,3 +146,49 @@ pre-filter animals owned by the authenticated user (set in ``context.user``).
         def qs(self):
             # The query context can be found in self.request.
             return super(AnimalFilter, self).qs.filter(owner=self.request.user)
+
+
+Ordering
+--------
+
+You can use ``OrderFilter`` to define how you want your returned results to be ordered.
+
+Extend the tuple of fields if you want to order by more than one field.
+
+.. code:: python
+
+    from django_filters import FilterSet, OrderingFilter
+
+    class UserFilter(FilterSet):
+        class Meta:
+            model = UserModel
+
+        order_by = OrderingFilter(
+            fields=(
+                ('created_at', 'created_at'),
+            )
+        )
+
+    class Group(DjangoObjectType):
+      users = DjangoFilterConnectionField(Ticket, filterset_class=UserFilter)
+
+      class Meta:
+          name = 'Group'
+          model = GroupModel
+          interfaces = (relay.Node,)
+
+      def resolve_users(self, info, **kwargs):
+        return UserFilter(kwargs).qs
+
+
+with this set up, you can now order the users under group:
+
+.. code::
+
+    query {
+      group(id: "xxx") {
+        users(orderBy: "-created_at") {
+          xxx
+        }
+      }
+    }

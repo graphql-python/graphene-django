@@ -241,8 +241,7 @@ def test_should_manytoone_convert_connectionorlist():
         class Meta:
             model = Article
 
-    graphene_field = convert_django_field(Reporter.articles.rel, 
-                                          A._meta.registry)
+    graphene_field = convert_django_field(Reporter.articles.rel, A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
@@ -255,8 +254,7 @@ def test_should_onetoone_reverse_convert_model():
         class Meta:
             model = FilmDetails
 
-    graphene_field = convert_django_field(Film.details.related,
-                                          A._meta.registry)
+    graphene_field = convert_django_field(Film.details.related, A._meta.registry)
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)

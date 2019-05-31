@@ -3,9 +3,7 @@ from graphene import Boolean, Float, ObjectType, String
 
 class DjangoDebugSQL(ObjectType):
     class Meta:
-        description = (
-            "Represents a single database query made to a Django managed DB."
-        )
+        description = "Represents a single database query made to a Django managed DB."
 
     vendor = String(
         required=True,
@@ -14,37 +12,26 @@ class DjangoDebugSQL(ObjectType):
         ),
     )
     alias = String(
-        required=True,
-        description="The Django database alias (e.g. 'default').",
+        required=True, description="The Django database alias (e.g. 'default')."
     )
     sql = String(description="The actual SQL sent to this database.")
     duration = Float(
-        required=True,
-        description="Duration of this database query in seconds.",
+        required=True, description="Duration of this database query in seconds."
     )
     raw_sql = String(
-        required=True,
-        description="The raw SQL of this query, without params.",
+        required=True, description="The raw SQL of this query, without params."
     )
     params = String(
-        required=True,
-        description="JSON encoded database query parameters.",
+        required=True, description="JSON encoded database query parameters."
     )
-    start_time = Float(
-        required=True,
-        description="Start time of this database query.",
-    )
-    stop_time = Float(
-        required=True,
-        description="Stop time of this database query.",
-    )
+    start_time = Float(required=True, description="Start time of this database query.")
+    stop_time = Float(required=True, description="Stop time of this database query.")
     is_slow = Boolean(
         required=True,
         description="Whether this database query took more than 10 seconds.",
     )
     is_select = Boolean(
-        required=True,
-        description="Whether this database query was a SELECT.",
+        required=True, description="Whether this database query was a SELECT."
     )
 
     # Postgres
