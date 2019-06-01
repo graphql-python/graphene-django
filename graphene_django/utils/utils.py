@@ -12,6 +12,14 @@ except ImportError:
     DJANGO_FILTER_INSTALLED = False
 
 
+try:
+    import django_elasticsearch_dsl  # noqa
+
+    DJANGO_ELASTICSEARCH_DSL_INSTALLED = True
+except ImportError:
+    DJANGO_ELASTICSEARCH_DSL_INSTALLED = False
+
+
 def get_reverse_fields(model, local_field_names):
     for name, attr in model.__dict__.items():
         # Don't duplicate any local fields
