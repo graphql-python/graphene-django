@@ -1,15 +1,13 @@
 """Filters to ElasticSearch"""
 from collections import OrderedDict
-from django_filters import CharFilter
 from elasticsearch_dsl import Q
+from graphene import String
 
 
 class StringFilterES(object):  # pylint: disable=R0902
     """String Fields specific to ElasticSearch."""
 
     default_expr = 'contain'
-    filter_class = CharFilter
-
     variants = {
         "contain": lambda name, value: Q('match',
                                          **{name: {
@@ -27,6 +25,7 @@ class StringFilterES(object):  # pylint: disable=R0902
         """
         assert name or attr, "At least the field name or the field attr should be passed"
         self.field_name = name or attr.replace('.', '_')
+        self.argument = String().Argument()
         self.fields = self.generate_fields()
 
     def generate_fields(self):
@@ -40,6 +39,6 @@ class StringFilterES(object):  # pylint: disable=R0902
         for variant in self.variants:
             variant_name = self.field_name if variant in ["default", self.default_expr] \
                 else "%s_%s" % (self.field_name, variant)
-            fields[variant_name] = self.filter_class(field_name=variant_name)
+            fields[variant_name] = self.argument
 
         return fields

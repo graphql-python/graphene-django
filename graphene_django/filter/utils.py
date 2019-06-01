@@ -1,4 +1,5 @@
 import six
+from graphene import Argument
 
 from .filterset import custom_filterset_factory, setup_filterset
 
@@ -12,8 +13,13 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
     args = {}
     for name, filter_field in six.iteritems(filterset_class.base_filters):
-        field_type = convert_form_field(filter_field.field).Argument()
-        field_type.description = filter_field.label
+
+        if not isinstance(filter_field, Argument):
+            field_type = convert_form_field(filter_field.field).Argument()
+            field_type.description = filter_field.label
+        else:
+            field_type = filter_field
+
         args[name] = field_type
 
     return args
