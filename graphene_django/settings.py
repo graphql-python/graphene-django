@@ -28,7 +28,7 @@ except ImportError:
 DEFAULTS = {
     "SCHEMA": None,
     "SCHEMA_OUTPUT": "schema.json",
-    "SCHEMA_INDENT": None,
+    "SCHEMA_INDENT": 2,
     "MIDDLEWARE": (),
     # Set to True if the connection fields must have
     # either the first or last argument

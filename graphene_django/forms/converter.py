@@ -43,7 +43,7 @@ def convert_form_field_to_int(field):
 
 @convert_form_field.register(forms.BooleanField)
 def convert_form_field_to_boolean(field):
-    return Boolean(description=field.help_text, required=True)
+    return Boolean(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.NullBooleanField)

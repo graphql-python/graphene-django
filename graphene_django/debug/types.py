@@ -7,7 +7,4 @@ class DjangoDebug(ObjectType):
     class Meta:
         description = "Debugging information for the current query."
 
-    sql = List(
-        DjangoDebugSQL,
-        description="Executed SQL queries for this API query.",
-    )
+    sql = List(DjangoDebugSQL, description="Executed SQL queries for this API query.")
