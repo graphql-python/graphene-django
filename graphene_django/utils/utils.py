@@ -13,7 +13,7 @@ except ImportError:
 
 
 try:
-    import django_elasticsearch_dsl  # noqa
+    import elasticsearch_dsl  # noqa
 
     DJANGO_ELASTICSEARCH_DSL_INSTALLED = True
 except ImportError:
