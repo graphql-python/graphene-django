@@ -1,5 +1,7 @@
 """Filters to ElasticSearch"""
 from collections import OrderedDict
+
+import six
 from elasticsearch_dsl import Q
 from graphene import String
 
@@ -18,13 +20,15 @@ class StringFilterES(object):  # pylint: disable=R0902
         "term": lambda name, value: Q('term', **{name: value}),
     }
 
-    def __init__(self, name=None, attr=None):
+    def __init__(self, name=None, attr=None, lookup_expressions=None, default_expr=None):
         """
         :param name: Name of the field. This is the name that will be exported.
         :param attr: Path to the index attr that will be used as filter.
         """
         assert name or attr, "At least the field name or the field attr should be passed"
         self.field_name = name or attr.replace('.', '_')
+        self.default_expr = default_expr or self.default_expr
+        self.lookup_expressions = lookup_expressions
         self.argument = String().Argument()
         self.fields = self.generate_fields()
 
@@ -36,9 +40,16 @@ class StringFilterES(object):  # pylint: disable=R0902
             expressions combinations.
         """
         fields = OrderedDict()
-        for variant in self.variants:
-            variant_name = self.field_name if variant in ["default", self.default_expr] \
-                else "%s_%s" % (self.field_name, variant)
+        if self.lookup_expressions:
+
+            for variant in self.lookup_expressions:
+                if variant in self.variants:
+                    variant_name = self.field_name if variant in ["default", self.default_expr] \
+                        else "%s_%s" % (self.field_name, variant)
+                    fields[variant_name] = self
+
+        else:
+            variant_name = self.field_name
             fields[variant_name] = self
 
         return fields
@@ -50,7 +61,7 @@ class StringFilterES(object):  # pylint: disable=R0902
         """
         queries = []
 
-        for argument, value in arguments.iteritems():
+        for argument, value in six.iteritems(arguments):
             if argument in self.fields:
 
                 if argument == self.field_name:

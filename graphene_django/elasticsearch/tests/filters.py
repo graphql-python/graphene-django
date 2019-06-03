@@ -16,19 +16,49 @@ class ArticleDocument(DocType):
     class Meta(object):
         """Metaclass config"""
         model = Article
+        fields = [
+            'headline',
+        ]
 
 
-class ArticleFilterES(FilterSetES):
+class ArticleFilterESAsField(FilterSetES):
     """Article Filter for ES"""
     class Meta(object):
         """Metaclass data"""
         index = ArticleDocument
+        includes = []
 
     headline = filters.StringFilterES(attr='headline')
 
 
+class ArticleFilterESInMeta(FilterSetES):
+    """Article Filter for ES"""
+    class Meta(object):
+        """Metaclass data"""
+        index = ArticleDocument
+        includes = ['headline']
+
+
+class ArticleFilterESInMetaDict(FilterSetES):
+    """Article Filter for ES"""
+    class Meta(object):
+        """Metaclass data"""
+        index = ArticleDocument
+        includes = {
+            'headline': {
+                'lookup_expressions': ['term', 'contains']
+            }
+        }
+
+
 class ESFilterQuery(ObjectType):
     """A query for ES fields"""
-    articles = DjangoESFilterConnectionField(
-        ArticleNode, filterset_class=ArticleFilterES
+    articles_as_field = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterESAsField
+    )
+    articles_in_meta = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterESInMeta
+    )
+    articles_in_meta_dict = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterESInMetaDict
     )
