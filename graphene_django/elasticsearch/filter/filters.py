@@ -39,6 +39,30 @@ class StringFilterES(object):  # pylint: disable=R0902
         for variant in self.variants:
             variant_name = self.field_name if variant in ["default", self.default_expr] \
                 else "%s_%s" % (self.field_name, variant)
-            fields[variant_name] = self.argument
+            fields[variant_name] = self
 
         return fields
+
+    def get_q(self, arguments):
+        """
+        :param arguments: parameters of the query.
+        :return: Returns a elasticsearch_dsl.Q query object.
+        """
+        queries = []
+
+        for argument, value in arguments.iteritems():
+            if argument in self.fields:
+
+                if argument == self.field_name:
+                    suffix_expr = self.default_expr or 'default'
+                else:
+                    argument_split = argument.split("_")
+                    suffix_expr = argument_split[len(argument_split) - 1]
+
+                if suffix_expr in self.variants:
+                    query = self.variants.get(suffix_expr, None)
+
+                    if query:
+                        queries.extend([query(self.field_name, value)])
+
+        return Q("bool", must=queries[0]) if len(queries) == 1 else Q("bool", must={"bool": {"should": queries}})
