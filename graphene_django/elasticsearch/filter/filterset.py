@@ -92,7 +92,7 @@ class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
         """
         query_base = Q("bool")
         for name, filter_es in six.iteritems(self.declared_filters):
-            query_filter = filter_es.get_q(self.data)
+            query_filter = filter_es.get_q(self.data) if len(self.data) else None
             if query_filter is not None:
                 query_base += query_filter
         return query_base
