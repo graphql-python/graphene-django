@@ -43,13 +43,11 @@ def init_midleware():
         DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
 
 
-try:
-    init_midleware()
-except Exception:
-    if not settings.configured:
-        settings.configure()
-finally:
-    init_midleware()
+#  try:
+#      init_midleware()
+#  except Exception:
+#      if not settings.configured:
+#          settings.configure()
 
 
 
