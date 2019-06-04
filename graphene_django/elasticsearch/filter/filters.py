@@ -29,7 +29,7 @@ class StringFilterES(object):  # pylint: disable=R0902
         self.field_name = name or attr.replace('.', '_')
         self.default_expr = default_expr or self.default_expr
         self.lookup_expressions = lookup_expressions
-        self.argument = String().Argument()
+        self.argument = String()
         self.fields = self.generate_fields()
 
     def generate_fields(self):
@@ -54,8 +54,9 @@ class StringFilterES(object):  # pylint: disable=R0902
 
         return fields
 
-    def get_q(self, arguments):
+    def generate_es_query(self, arguments):
         """
+        Generating a query based on the arguments passed to graphene field
         :param arguments: parameters of the query.
         :return: Returns a elasticsearch_dsl.Q query object.
         """
@@ -77,3 +78,10 @@ class StringFilterES(object):  # pylint: disable=R0902
                         queries.extend([query(self.field_name, value)])
 
         return Q("bool", must=queries[0]) if len(queries) == 1 else Q("bool", must={"bool": {"should": queries}})
+
+    def Argument(self):
+        """
+        Defining graphene Argument type for this filter
+        :return: A Argument type
+        """
+        return self.argument.Argument()

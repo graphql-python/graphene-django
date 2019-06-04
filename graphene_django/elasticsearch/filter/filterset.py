@@ -2,8 +2,10 @@
 import copy
 from collections import OrderedDict
 from elasticsearch_dsl import Q
-from django_elasticsearch_dsl import ObjectField, StringField, TextField
+from graphene import Enum, InputObjectType, Field
+from django_elasticsearch_dsl import StringField, TextField
 from django.utils import six
+
 from django_filters.utils import try_dbfield
 from django_filters.filterset import BaseFilterSet
 
@@ -14,6 +16,19 @@ FILTER_FOR_ESFIELD_DEFAULTS = {
     StringField: {'filter_class': StringFilterES},
     TextField: {'filter_class': StringFilterES},
 }
+
+
+class OrderEnum(Enum):
+    """Order enum to desc-asc"""
+    asc = 'asc'
+    desc = 'desc'
+
+    @property
+    def description(self):
+        """Description to order enum"""
+        if self == OrderEnum.asc:
+            return 'Ascendant order'
+        return 'Descendant order'
 
 
 class FilterSetESOptions(object):
@@ -71,13 +86,33 @@ class FilterSetESOptions(object):
                     index = UserIndex
                     excludes = ['username', 'last_login']
 
+        It is necessary to provide includes or excludes. You cant provide a excludes empty to generate all fields
+
+        You can also pass sort_by to Meta to allow field be ordered
+
+        Example:
+             class UserFilter(FilterSetES):
+                class Meta:
+                    index = UserIndex
+                    excludes = []
+                    order_by = ['username', 'last_login']
+
             or
 
-        It is necessary to provide includes or excludes. You cant provide a excludes empty to generate all fields
+            class UserFilter(FilterSetES):
+                class Meta:
+                    index = UserIndex
+                    excludes = []
+                    order_by = {
+                            'username': user.name
+                            'last_login': last_login
+                            }
+
         """
         self.index = getattr(options, 'index', None)
         self.includes = getattr(options, 'includes', None)
         self.excludes = getattr(options, 'excludes', None)
+        self.order_by = getattr(options, 'order_by', None)
 
         if self.index is None:
             raise ValueError('You need provide a Index in Meta.')
@@ -101,11 +136,21 @@ class FilterSetESMetaclass(type):
         if issubclass(new_class, BaseFilterSet):
             new_class._meta = FilterSetESOptions(getattr(new_class, 'Meta', None))
             base_filters = OrderedDict()
+
             for name, filter_field in six.iteritems(declared_filters):
                 base_filters.update(filter_field.fields)
 
             meta_filters = mcs.get_meta_filters(new_class._meta)
-            base_filters.update(OrderedDict(meta_filters))
+            base_filters.update(meta_filters)
+
+            sort_fields = {}
+
+            if new_class._meta.order_by is not None:
+                sort_fields = mcs.generate_sort_field(new_class._meta.order_by)
+                sort_type = mcs.create_sort_enum(name, sort_fields)
+                base_filters['sort'] = sort_type()
+
+            new_class.sort_fields = sort_fields
             new_class.base_filters = base_filters
 
         return new_class
@@ -142,13 +187,11 @@ class FilterSetESMetaclass(type):
         """
         index_fields = mcs.get_index_fields(meta)
 
-        meta_filters = []
+        meta_filters = OrderedDict()
         for name, index_field, data in index_fields:
 
-            if isinstance(index_field, ObjectField):
-                meta_filters.extend((name, mcs.get_filter_object(name, index_field, data)))
-            else:
-                meta_filters.append((name, mcs.get_filter_exp(name, index_field, data)))
+            filter_class = mcs.get_filter_exp(name, index_field, data)
+            meta_filters.update(filter_class.fields)
 
         return meta_filters
 
@@ -201,13 +244,14 @@ class FilterSetESMetaclass(type):
         kwargs = copy.deepcopy(extra)
 
         # Get lookup_expr from configuration
-        if data and 'lookup_exprs' in data:
-            if 'lookup_exprs' in kwargs:
-                kwargs['lookup_exprs'] = set(kwargs['lookup_exprs']).intersection(set(data['lookup_exprs']))
+        if data and 'lookup_expressions' in data:
+            if 'lookup_expressions' in kwargs:
+                kwargs['lookup_expressions'] = set(kwargs['lookup_expressions'])\
+                    .intersection(set(data['lookup_expressions']))
             else:
-                kwargs['lookup_exprs'] = set(data['lookup_exprs'])
-        elif 'lookup_exprs' in kwargs:
-            kwargs['lookup_exprs'] = set(kwargs['lookup_exprs'])
+                kwargs['lookup_expressions'] = set(data['lookup_expressions'])
+        elif 'lookup_expressions' in kwargs:
+            kwargs['lookup_expressions'] = set(kwargs['lookup_expressions'])
 
         kwargs['name'], kwargs['attr'] = mcs.get_name(name, root, data)
         return filter_class(**kwargs)
@@ -222,6 +266,49 @@ class FilterSetESMetaclass(type):
         if not attr:
             attr = '{root}.{name}'.format(root=root, name=name) if root else name
         return field_name, attr
+
+    @staticmethod
+    def create_sort_enum(name, sort_fields):
+        """
+        Create enum to sort by fields.
+        As graphene is typed, it is necessary generate a Enum by Field
+        to have inside, the document fields allowed to be ordered
+        """
+
+        sort_enum_name = "{}SortFields".format(name)
+        sort_descriptions = {field: "Sort by {field}".format(field=field) for field in
+                             sort_fields.keys()}
+        sort_fields = [(field, field) for field in sort_fields.keys()]
+
+        class EnumWithDescriptionsType(object):
+            """Set description to enum fields"""
+
+            @property
+            def description(self):
+                """Description to EnumSort"""
+                return sort_descriptions[self.name]
+
+        enum = Enum(sort_enum_name, sort_fields, type=EnumWithDescriptionsType)
+
+        class SortType(InputObjectType):
+            """Sort Type"""
+            order = Field(OrderEnum)
+            field = Field(enum, required=True)
+
+        sort_name = "{}Sort".format(name)
+        sort_type = type(sort_name, (SortType,), {})
+        return sort_type
+
+    @staticmethod
+    def generate_sort_field(order_by):
+        """To normalize the sort field data"""
+        if not order_by:
+            sort_fields = {}
+        elif isinstance(order_by, dict):
+            sort_fields = order_by.copy()
+        else:
+            sort_fields = {field: field for field in order_by}
+        return sort_fields
 
 
 class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
@@ -240,19 +327,34 @@ class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
     @property
     def qs(self):
         """Returning ES queryset as QS"""
-        query_base = self.generate_q()
+        query_base = self.generate_es_query()
         self.es_query.apply_query("query", query_base)
         self.es_query.apply_query("source", ["id"])
+
+        if 'sort' in self.data:
+            sort_data = self.data['sort'].copy()
+            field_name = self.sort_fields[sort_data.pop('field')]
+            self.es_query.apply_query("sort", {field_name: sort_data})
+
         return self.es_query
 
-    def generate_q(self):
+    def generate_es_query(self):
         """
         Generate a query for each filter.
         :return: Generates a super query with bool as root, and combines all sub-queries from each argument.
         """
         query_base = Q("bool")
-        for name, filter_es in six.iteritems(self.base_filters):
-            query_filter = filter_es.get_q(self.data) if len(self.data) else None
-            if query_filter is not None:
-                query_base += query_filter
+        # if the query have data
+        if len(self.data):
+            # for each field passed to the query
+            for name in self.data:
+                filter_es = self.base_filters.get(name)
+                # If a target filter is en FilterEs
+                if isinstance(filter_es, StringFilterES):
+                    # It is generated a query or response None if the filter don't have data
+                    query_filter = filter_es.generate_es_query(self.data)
+
+                    if query_filter is not None:
+                        query_base += query_filter
+
         return query_base

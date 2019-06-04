@@ -27,8 +27,9 @@ class ArticleFilterESAsField(FilterSetES):
         """Metaclass data"""
         index = ArticleDocument
         includes = []
+        order_by = ['id']
 
-    headline = filters.StringFilterES(attr='headline')
+    headline = filters.StringFilterES(attr='headline', lookup_expressions=['term', 'contain'])
 
 
 class ArticleFilterESInMeta(FilterSetES):
@@ -46,7 +47,7 @@ class ArticleFilterESInMetaDict(FilterSetES):
         index = ArticleDocument
         includes = {
             'headline': {
-                'lookup_expressions': ['term', 'contains']
+                'lookup_expressions': ['term', 'contain']
             }
         }
 

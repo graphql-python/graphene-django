@@ -41,7 +41,7 @@ def fake_data():
     return a1, a2
 
 
-def filter_generation(field, query_str, spected_arguments):
+def filter_generation(field, query_str, expected_arguments, method_to_mock="query"):
     a1, a2 = fake_data()
 
     query = """
@@ -64,14 +64,14 @@ def filter_generation(field, query_str, spected_arguments):
 
     with mock.patch('django_elasticsearch_dsl.search.Search.count', mock_count),\
          mock.patch('django_elasticsearch_dsl.search.Search.__getitem__', mock_slice),\
-         mock.patch('elasticsearch_dsl.Search.query', mock_query):
+         mock.patch("elasticsearch_dsl.Search.%s" % method_to_mock, mock_query):
 
         schema = Schema(query=ESFilterQuery)
         result = schema.execute(query)
 
         assert not result.errors
 
-        mock_query.assert_called_with(filters.StringFilterES(attr='headline').get_q(spected_arguments))
+        mock_query.assert_called_with(expected_arguments)
 
         assert len(result.data[field]["edges"]) == 2
         assert result.data[field]["edges"][0]["node"]["headline"] == "a1"
@@ -79,12 +79,33 @@ def filter_generation(field, query_str, spected_arguments):
 
 
 def test_filter_as_field():
-    filter_generation("articlesAsField", "headline: \"A text\"", {"headline": "A text"})
+    filter_generation(
+        "articlesAsField",
+        "headline: \"A text\"",
+        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+    )
+
+
+def test_filter_as_field_order_by():
+    filter_generation(
+        "articlesAsField",
+        "headline: \"A text\", sort:{order:desc, field:id}",
+        {'id': {'order': 'desc'}},
+        "sort"
+    )
 
 
 def test_filter_in_meta():
-    filter_generation("articlesInMeta", "headline: \"A text\"", {"headline": "A text"})
+    filter_generation(
+        "articlesInMeta",
+        "headline: \"A text\"",
+        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+    )
 
 
 def test_filter_in_meta_dict():
-    filter_generation("articlesInMetaDict", "headline: \"A text\"", {"headline": "A text"})
+    filter_generation(
+        "articlesInMetaDict",
+        "headline: \"A text\"",
+        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+    )

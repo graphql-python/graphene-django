@@ -18,7 +18,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             field_type = convert_form_field(filter_field.field).Argument()
             field_type.description = filter_field.label
         else:
-            field_type = filter_field.argument
+            field_type = filter_field.Argument()
 
         args[name] = field_type
 
