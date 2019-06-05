@@ -215,6 +215,24 @@ def test_field_with_choices_collision():
     convert_django_field_with_choices(field)
 
 
+def test_field_with_choices_underscore():
+    field = models.CharField(
+        choices=(
+            ("__amount__", "Amount"),
+            ("__percentage__", "Percentage"),
+        ),
+    )
+
+    class UnderscoreChoicesModel(models.Model):
+        ourfield = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(field)
+    assert len(graphene_type._meta.enum.__members__) == 2
+
+
 def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
 
