@@ -31,6 +31,8 @@ singledispatch = import_single_dispatch()
 def convert_choice_name(name):
     name = force_text(name).encode('utf8').decode('ascii', 'ignore')
     name = to_const(name)
+    if name.startswith('_'):
+        name = "A%s" % name
     try:
         assert_valid_name(name)
     except AssertionError:
