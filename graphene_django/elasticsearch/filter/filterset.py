@@ -2,19 +2,40 @@
 import copy
 from collections import OrderedDict
 from elasticsearch_dsl import Q
-from graphene import Enum, InputObjectType, Field
-from django_elasticsearch_dsl import StringField, TextField
+from graphene import Enum, InputObjectType, Field, Int, Float
+from django_elasticsearch_dsl import StringField, TextField, BooleanField, IntegerField, FloatField, LongField, \
+    ShortField, DoubleField, DateField, KeywordField
 from django.utils import six
 
 from django_filters.utils import try_dbfield
 from django_filters.filterset import BaseFilterSet
 
-from .filters import StringFilterES
+from .filters import StringFilterES, FilterES, BoolFilterES, NumberFilterES
 
 # Basic conversion from ES fields to FilterES fields
 FILTER_FOR_ESFIELD_DEFAULTS = {
     StringField: {'filter_class': StringFilterES},
     TextField: {'filter_class': StringFilterES},
+    BooleanField: {'filter_class': BoolFilterES},
+    IntegerField: {'filter_class': NumberFilterES},
+    FloatField: {'filter_class': NumberFilterES,
+                 'extra': {
+                     'argument': Int()
+                 }},
+    LongField: {'filter_class': NumberFilterES,
+                'extra': {
+                    'argument': Int()
+                }},
+    ShortField: {'filter_class': NumberFilterES,
+                 'extra': {
+                     'argument': Int()
+                 }},
+    DoubleField: {'filter_class': NumberFilterES,
+                  'extra': {
+                      'argument': Float()
+                  }},
+    DateField: {'filter_class': StringFilterES},
+    KeywordField: {'filter_class': StringFilterES},
 }
 
 
@@ -54,9 +75,12 @@ class FilterSetESOptions(object):
                 class Meta:
                     index = UserIndex
                     includes = {
-                            'username': ['term']
-                            'last_login': ['lte', 'gte]
-                            }
+                        'username': {
+                            'field_name': 'graphene_field',
+                            'field_name_es': 'elasticsearch_field',
+                            'lookup_expressions': ['term', 'contains']
+                        }
+                    }
 
         The list syntax will create an filter with a behavior by default,
         for each field included in includes. The dictionary syntax will
@@ -68,11 +92,12 @@ class FilterSetESOptions(object):
 
          Example:
             class UserFilter(FilterSetES):
-                username = StringFieldES('username', core_type='text', expr=['partial'])
+                username = StringFieldES(field_name='username', lookup_expressions=['contains'])
                 class Meta:
                     index = UserIndex
                     includes = {
-                            'username': ['term', 'word']
+                            'username': {
+                                'lookup_expressions': ['term', 'contains']
                             }
 
         A query with username as a parameter, will match those words with the
@@ -127,7 +152,7 @@ class FilterSetESMetaclass(type):
 
     def __new__(mcs, name, bases, attrs):
         """Get filters declared explicitly in the class"""
-
+        # get declared as field
         declared_filters = mcs.get_declared_filters(bases, attrs)
         attrs['declared_filters'] = declared_filters
 
@@ -135,16 +160,20 @@ class FilterSetESMetaclass(type):
 
         if issubclass(new_class, BaseFilterSet):
             new_class._meta = FilterSetESOptions(getattr(new_class, 'Meta', None))
-            base_filters = OrderedDict()
 
+            # get declared as meta
+            meta_filters = mcs.get_meta_filters(new_class._meta)
+
+            declared_filters.update(meta_filters)
+            new_class.filters_es = declared_filters
+
+            # recollecting registered graphene fields
+            base_filters = OrderedDict()
             for name, filter_field in six.iteritems(declared_filters):
                 base_filters.update(filter_field.fields)
 
-            meta_filters = mcs.get_meta_filters(new_class._meta)
-            base_filters.update(meta_filters)
-
+            # adding sort field
             sort_fields = {}
-
             if new_class._meta.order_by is not None:
                 sort_fields = mcs.generate_sort_field(new_class._meta.order_by)
                 sort_type = mcs.create_sort_enum(name, sort_fields)
@@ -166,9 +195,9 @@ class FilterSetESMetaclass(type):
 
         # List of filters declared in the class as static fields.
         filters = [
-            (filter_name, attrs.pop(filter_name))
+            (obj.field_name, attrs.pop(filter_name))
             for filter_name, obj in list(attrs.items())
-            if isinstance(obj, StringFilterES)
+            if isinstance(obj, FilterES)
         ]
 
         # Merge declared filters from base classes
@@ -191,7 +220,7 @@ class FilterSetESMetaclass(type):
         for name, index_field, data in index_fields:
 
             filter_class = mcs.get_filter_exp(name, index_field, data)
-            meta_filters.update(filter_class.fields)
+            meta_filters.update({name: filter_class})
 
         return meta_filters
 
@@ -229,7 +258,6 @@ class FilterSetESMetaclass(type):
                 # This inner field is not filterable
                 continue
             inner_data = data[inner_name] if data else None
-
             index_fields.append(mcs.get_filter_exp(inner_name, inner_field, inner_data, root=name))
 
         return index_fields
@@ -245,27 +273,23 @@ class FilterSetESMetaclass(type):
 
         # Get lookup_expr from configuration
         if data and 'lookup_expressions' in data:
-            if 'lookup_expressions' in kwargs:
-                kwargs['lookup_expressions'] = set(kwargs['lookup_expressions'])\
-                    .intersection(set(data['lookup_expressions']))
-            else:
-                kwargs['lookup_expressions'] = set(data['lookup_expressions'])
+            kwargs['lookup_expressions'] = set(data['lookup_expressions'])
         elif 'lookup_expressions' in kwargs:
             kwargs['lookup_expressions'] = set(kwargs['lookup_expressions'])
 
-        kwargs['name'], kwargs['attr'] = mcs.get_name(name, root, data)
+        kwargs['field_name'], kwargs['field_name_es'] = mcs.get_name(name, root, data)
         return filter_class(**kwargs)
 
     @staticmethod
     def get_name(name, root, data):
         """Get names of the field and the path to resolve it"""
-        field_name = data.get('name', None) if data else None
-        attr = data.get('attr', None) if data else None
+        field_name = data.get('field_name', None) if data else None
+        field_name_es = data.get('field_name_es', None) if data else None
         if not field_name:
             field_name = '{root}_{name}'.format(root=root, name=name) if root else name
-        if not attr:
-            attr = '{root}.{name}'.format(root=root, name=name) if root else name
-        return field_name, attr
+        if not field_name_es:
+            field_name_es = '{root}.{name}'.format(root=root, name=name) if root else name
+        return field_name, field_name_es
 
     @staticmethod
     def create_sort_enum(name, sort_fields):
@@ -347,12 +371,11 @@ class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
         # if the query have data
         if len(self.data):
             # for each field passed to the query
-            for name in self.data:
-                filter_es = self.base_filters.get(name)
+            for name, filter in six.iteritems(self.filters_es):
                 # If a target filter is en FilterEs
-                if isinstance(filter_es, StringFilterES):
+                if isinstance(filter, FilterES):
                     # It is generated a query or response None if the filter don't have data
-                    query_filter = filter_es.generate_es_query(self.data)
+                    query_filter = filter.generate_es_query(self.data)
 
                     if query_filter is not None:
                         query_base += query_filter

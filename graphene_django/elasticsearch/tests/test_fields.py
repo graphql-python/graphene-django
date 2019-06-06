@@ -78,11 +78,19 @@ def filter_generation(field, query_str, expected_arguments, method_to_mock="quer
         assert result.data[field]["edges"][1]["node"]["headline"] == "a2"
 
 
-def test_filter_as_field():
+def test_filter_string():
     filter_generation(
         "articlesAsField",
         "headline: \"A text\"",
-        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+        filters.StringFilterES(field_name='headline').generate_es_query({"headline": "A text"}),
+    )
+
+
+def test_filter_string_date():
+    filter_generation(
+        "articlesAsField",
+        "headline: \"A text\"",
+        filters.StringFilterES(field_name='headline').generate_es_query({"headline": "A text"}),
     )
 
 
@@ -99,7 +107,7 @@ def test_filter_in_meta():
     filter_generation(
         "articlesInMeta",
         "headline: \"A text\"",
-        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+        filters.StringFilterES(field_name='headline').generate_es_query({"headline": "A text"}),
     )
 
 
@@ -107,5 +115,16 @@ def test_filter_in_meta_dict():
     filter_generation(
         "articlesInMetaDict",
         "headline: \"A text\"",
-        filters.StringFilterES(attr='headline').generate_es_query({"headline": "A text"}),
+        filters.StringFilterES(field_name='headline').generate_es_query({"headline": "A text"}),
+    )
+
+
+def test_filter_in_multi_field():
+    filter_generation(
+        "articlesInMultiField",
+        "contain: \"A text\"",
+        filters.StringFilterES(
+            field_name='contain',
+            field_name_es=['headline', 'lang'],
+        ).generate_es_query({"contain": "A text"}),
     )

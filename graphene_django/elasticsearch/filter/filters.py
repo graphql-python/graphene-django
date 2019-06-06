@@ -1,58 +1,47 @@
 """Filters to ElasticSearch"""
-from collections import OrderedDict
-
-import six
-from elasticsearch_dsl import Q
-from graphene import String
+from graphene import String, Boolean, Int
+from graphene_django.elasticsearch.filter.processors import PROCESSORS
 
 
-class StringFilterES(object):  # pylint: disable=R0902
-    """String Fields specific to ElasticSearch."""
+class FilterES(object):
+    """Fields specific to ElasticSearch."""
+    default_processor = 'term'
+    default_argument = String()
 
-    default_expr = 'contain'
-    variants = {
-        "contain": lambda name, value: Q('match',
-                                         **{name: {
-                                             "query": value,
-                                             "fuzziness": "auto"
-                                         }}),
-
-        "term": lambda name, value: Q('term', **{name: value}),
-    }
-
-    def __init__(self, name=None, attr=None, lookup_expressions=None, default_expr=None):
+    def __init__(self, field_name, field_name_es=None, lookup_expressions=None,
+                 default_processor=None, argument=None):
         """
         :param name: Name of the field. This is the name that will be exported.
         :param attr: Path to the index attr that will be used as filter.
         """
-        assert name or attr, "At least the field name or the field attr should be passed"
-        self.field_name = name or attr.replace('.', '_')
-        self.default_expr = default_expr or self.default_expr
+        self.field_name = field_name
+
+        if isinstance(field_name_es, list):
+            self.field_name_es = field_name_es
+        else:
+            self.field_name_es = [field_name_es or field_name]
+
+        self.default_filter_processor = default_processor or self.default_processor
+
         self.lookup_expressions = lookup_expressions
-        self.argument = String()
-        self.fields = self.generate_fields()
 
-    def generate_fields(self):
-        """
-        All FilterSet objects should specify its fields for the introspection.
-
-        :return: A mapping of field to Filter type of field with all the suffix
-            expressions combinations.
-        """
-        fields = OrderedDict()
+        self.processor = None
         if self.lookup_expressions:
-
             for variant in self.lookup_expressions:
-                if variant in self.variants:
-                    variant_name = self.field_name if variant in ["default", self.default_expr] \
-                        else "%s_%s" % (self.field_name, variant)
-                    fields[variant_name] = self
+                if variant in PROCESSORS:
+                    self.processor = self.build_processor(variant)
+                else:
+                    raise ValueError('We do not have processor: %s.' % variant)
 
         else:
-            variant_name = self.field_name
-            fields[variant_name] = self
+            self.processor = self.build_processor(self.default_processor)
 
-        return fields
+        self.fields = self.processor.generate_field()
+        self.argument = argument or self.default_argument
+
+    def build_processor(self, variant):
+        processor_class = PROCESSORS[variant]
+        return processor_class(self, self.processor)
 
     def generate_es_query(self, arguments):
         """
@@ -60,24 +49,7 @@ class StringFilterES(object):  # pylint: disable=R0902
         :param arguments: parameters of the query.
         :return: Returns a elasticsearch_dsl.Q query object.
         """
-        queries = []
-
-        for argument, value in six.iteritems(arguments):
-            if argument in self.fields:
-
-                if argument == self.field_name:
-                    suffix_expr = self.default_expr or 'default'
-                else:
-                    argument_split = argument.split("_")
-                    suffix_expr = argument_split[len(argument_split) - 1]
-
-                if suffix_expr in self.variants:
-                    query = self.variants.get(suffix_expr, None)
-
-                    if query:
-                        queries.extend([query(self.field_name, value)])
-
-        return Q("bool", must=queries[0]) if len(queries) == 1 else Q("bool", must={"bool": {"should": queries}})
+        return self.processor.generate_es_query(arguments)
 
     def Argument(self):
         """
@@ -85,3 +57,18 @@ class StringFilterES(object):  # pylint: disable=R0902
         :return: A Argument type
         """
         return self.argument.Argument()
+
+
+class StringFilterES(FilterES):
+    """String Fields specific to ElasticSearch."""
+    default_processor = 'contains'
+
+
+class BoolFilterES(FilterES):
+    """Boolean filter to ES"""
+    default_argument = Boolean()
+
+
+class NumberFilterES(FilterES):
+    """Filter to an numeric value to ES"""
+    default_argument = Int()

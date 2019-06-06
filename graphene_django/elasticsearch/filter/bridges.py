@@ -6,10 +6,6 @@ class QuerysetBridge(object):
         """Taking as search, the ES search resolved by DjangoESFilterConnectionField"""
         self.search = search
 
-    def get_queryset(self):
-        """Returning self as Queryset to be the bridge"""
-        return self
-
     def apply_query(self, method, *args, **kwargs):
         """Helper method to apply mutation to ES Query"""
         if hasattr(self.search, method):
@@ -23,3 +19,15 @@ class QuerysetBridge(object):
         """Applying slice to ES and generating a QS from that"""
         _slice = self.search.__getitem__(k)
         return _slice.to_queryset()
+
+
+class ManagerBridge(object):
+    """Bridge to Queryset through ES query"""
+
+    def __init__(self, search_manager):
+        """Taking as search, the ES search resolved by DjangoESFilterConnectionField"""
+        self.search_manager = search_manager
+
+    def get_queryset(self):
+        """Returning self as Queryset to be the bridge"""
+        return QuerysetBridge(search=self.search_manager())

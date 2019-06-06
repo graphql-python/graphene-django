@@ -1,6 +1,6 @@
 from elasticsearch_dsl.query import Query
 
-from graphene_django.elasticsearch.filter.bridges import QuerysetBridge
+from graphene_django.elasticsearch.filter.bridges import ManagerBridge
 from graphene_django.filter import DjangoFilterConnectionField
 
 
@@ -19,11 +19,14 @@ class DjangoESFilterConnectionField(DjangoFilterConnectionField):
         filterset_class = kwargs.get('filterset_class', None)
         if filterset_class is None:
             raise ValueError('You should provide a FilterSetES as filterset_class argument.')
+
         super(DjangoESFilterConnectionField, self).__init__(object_type, *args, **kwargs)
 
+        self.manager = ManagerBridge(search_manager=self.filterset_class._meta.index.search)
+
     def get_manager(self):
-        """Returning a QuerysetBridge to replace the direct use over the QS"""
-        return QuerysetBridge(search=self.filterset_class._meta.index.search())
+        """Returning a ManagerBridge to replace the direct use over the Model manager"""
+        return self.manager
 
     def merge_querysets(cls, default_queryset, queryset):
         """Merge ES queries"""

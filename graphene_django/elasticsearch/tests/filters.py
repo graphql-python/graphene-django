@@ -29,7 +29,7 @@ class ArticleFilterESAsField(FilterSetES):
         includes = []
         order_by = ['id']
 
-    headline = filters.StringFilterES(attr='headline', lookup_expressions=['term', 'contain'])
+    headline = filters.StringFilterES(field_name='headline', lookup_expressions=['term', 'contains'])
 
 
 class ArticleFilterESInMeta(FilterSetES):
@@ -47,9 +47,23 @@ class ArticleFilterESInMetaDict(FilterSetES):
         index = ArticleDocument
         includes = {
             'headline': {
-                'lookup_expressions': ['term', 'contain']
+                'lookup_expressions': ['term', 'contains']
             }
         }
+
+
+class ArticleFilterMultiField(FilterSetES):
+    """Article Filter for ES"""
+    class Meta(object):
+        """Metaclass data"""
+        index = ArticleDocument
+        includes = []
+
+    headline = filters.StringFilterES(
+        field_name='contain',
+        field_name_es=['headline', 'lang'],
+        lookup_expressions=['contains']
+    )
 
 
 class ESFilterQuery(ObjectType):
@@ -62,4 +76,7 @@ class ESFilterQuery(ObjectType):
     )
     articles_in_meta_dict = DjangoESFilterConnectionField(
         ArticleNode, filterset_class=ArticleFilterESInMetaDict
+    )
+    articles_in_multi_field = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterMultiField
     )
