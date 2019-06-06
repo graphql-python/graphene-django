@@ -35,6 +35,8 @@ Advanced Usage
 The ``--indent`` option can be used to specify the number of indentation spaces to
 be used in the output. Defaults to `None` which displays all data on a single line.
 
+The ``--watch`` option can be used to run ``./manage.py graphql_schema`` in watch mode, where it will automatically output a new schema every time there are file changes in your project
+
 To simplify the command to ``./manage.py graphql_schema``, you can
 specify the parameters in your settings.py:
 
