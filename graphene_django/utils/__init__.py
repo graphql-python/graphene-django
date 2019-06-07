@@ -7,6 +7,7 @@ from .utils import (
     import_single_dispatch,
     is_parent_set,
     pagination_params,
+    set_parent,
 )
 from .testing import GraphQLTestCase
 
