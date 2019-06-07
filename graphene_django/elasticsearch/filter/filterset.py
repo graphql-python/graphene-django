@@ -20,7 +20,7 @@ FILTER_FOR_ESFIELD_DEFAULTS = {
     IntegerField: {'filter_class': NumberFilterES},
     FloatField: {'filter_class': NumberFilterES,
                  'extra': {
-                     'argument': Int()
+                     'argument': Float()
                  }},
     LongField: {'filter_class': NumberFilterES,
                 'extra': {
@@ -32,7 +32,7 @@ FILTER_FOR_ESFIELD_DEFAULTS = {
                  }},
     DoubleField: {'filter_class': NumberFilterES,
                   'extra': {
-                      'argument': Float()
+                      'argument': Int()
                   }},
     DateField: {'filter_class': StringFilterES},
     KeywordField: {'filter_class': StringFilterES},
@@ -169,7 +169,7 @@ class FilterSetESMetaclass(type):
 
             # recollecting registered graphene fields
             base_filters = OrderedDict()
-            for name, filter_field in six.iteritems(declared_filters):
+            for filter_name, filter_field in six.iteritems(declared_filters):
                 base_filters.update(filter_field.fields)
 
             # adding sort field
@@ -212,13 +212,13 @@ class FilterSetESMetaclass(type):
     def get_meta_filters(mcs, meta):
         """
         Get filters from Meta configuration
+        :param meta: A FilterSetESOptions instance with meta options
         :return: Field extracted from index and from the FilterSetES.
         """
         index_fields = mcs.get_index_fields(meta)
 
         meta_filters = OrderedDict()
         for name, index_field, data in index_fields:
-
             filter_class = mcs.get_filter_exp(name, index_field, data)
             meta_filters.update({name: filter_class})
 
@@ -228,6 +228,7 @@ class FilterSetESMetaclass(type):
     def get_index_fields(mcs, meta):
         """
         Get fields from index that appears in the meta class configuration of the filter_set
+        :param meta: A FilterSetESOptions instance with meta options
         :return: Tuple of (name, field, lookup_expr) describing name of the field, ES class of the field and lookup_expr
         """
         index_fields = meta.index._doc_type._fields()
@@ -247,7 +248,12 @@ class FilterSetESMetaclass(type):
 
     @classmethod
     def get_filter_object(mcs, name, field, data):
-        """Get filters from ObjectField"""
+        """
+        Get filters from ObjectField
+        :param name: name of the field
+        :param field: ES index field
+        :param data: lookup_expr
+        """
         index_fields = []
 
         properties = field._doc_class._doc_type.mapping.properties._params.get('properties', {})
@@ -264,7 +270,13 @@ class FilterSetESMetaclass(type):
 
     @classmethod
     def get_filter_exp(mcs, name, field, data=None, root=None):
-        """Initialize filter"""
+        """
+        Initialize filter
+        :param name: name of the field
+        :param field: ES index field
+        :param data: lookup_expr
+        :param root: root name
+        """
         field_data = try_dbfield(FILTER_FOR_ESFIELD_DEFAULTS.get, field.__class__) or {}
         filter_class = field_data.get('filter_class')
 
@@ -274,15 +286,18 @@ class FilterSetESMetaclass(type):
         # Get lookup_expr from configuration
         if data and 'lookup_expressions' in data:
             kwargs['lookup_expressions'] = set(data['lookup_expressions'])
-        elif 'lookup_expressions' in kwargs:
-            kwargs['lookup_expressions'] = set(kwargs['lookup_expressions'])
 
         kwargs['field_name'], kwargs['field_name_es'] = mcs.get_name(name, root, data)
         return filter_class(**kwargs)
 
     @staticmethod
     def get_name(name, root, data):
-        """Get names of the field and the path to resolve it"""
+        """
+        Get names of the field and the path to resolve it
+        :param name: name of the field
+        :param data: lookup_expr
+        :param root: root name
+        """
         field_name = data.get('field_name', None) if data else None
         field_name_es = data.get('field_name_es', None) if data else None
         if not field_name:
@@ -297,6 +312,8 @@ class FilterSetESMetaclass(type):
         Create enum to sort by fields.
         As graphene is typed, it is necessary generate a Enum by Field
         to have inside, the document fields allowed to be ordered
+        :param name: name of the field
+        :param sort_fields: Field allowed to be ordered
         """
 
         sort_enum_name = "{}SortFields".format(name)
@@ -325,10 +342,11 @@ class FilterSetESMetaclass(type):
 
     @staticmethod
     def generate_sort_field(order_by):
-        """To normalize the sort field data"""
-        if not order_by:
-            sort_fields = {}
-        elif isinstance(order_by, dict):
+        """
+        To normalize the sort field data
+        :param order_by: Sort data
+        """
+        if isinstance(order_by, dict):
             sort_fields = order_by.copy()
         else:
             sort_fields = {field: field for field in order_by}

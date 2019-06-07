@@ -1,5 +1,5 @@
 
-class QuerysetBridge(object):
+class QuerysetProxy(object):
     """Bridge to Queryset through ES query"""
 
     def __init__(self, search):
@@ -21,7 +21,7 @@ class QuerysetBridge(object):
         return _slice.to_queryset()
 
 
-class ManagerBridge(object):
+class ManagerProxy(object):
     """Bridge to Queryset through ES query"""
 
     def __init__(self, search_manager):
@@ -30,4 +30,4 @@ class ManagerBridge(object):
 
     def get_queryset(self):
         """Returning self as Queryset to be the bridge"""
-        return QuerysetBridge(search=self.search_manager())
+        return QuerysetProxy(search=self.search_manager())

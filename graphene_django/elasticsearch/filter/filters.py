@@ -11,8 +11,11 @@ class FilterES(object):
     def __init__(self, field_name, field_name_es=None, lookup_expressions=None,
                  default_processor=None, argument=None):
         """
-        :param name: Name of the field. This is the name that will be exported.
-        :param attr: Path to the index attr that will be used as filter.
+        :param field_name: Name of the field. This is the name that will be exported.
+        :param field_name_es: Path to the index attr that will be used as filter.
+        :param lookup_expressions: List of processor.
+        :param default_processor: Processor by default used when lookup_expressions in empty.
+        :param argument: Gaphene type base for this field.
         """
         self.field_name = field_name
 
@@ -36,10 +39,15 @@ class FilterES(object):
         else:
             self.processor = self.build_processor(self.default_processor)
 
-        self.fields = self.processor.generate_field()
         self.argument = argument or self.default_argument
+        self.fields = self.processor.generate_field()
 
     def build_processor(self, variant):
+        """
+        Create a new processor based on the name
+        :param variant: Processor name
+        :return: Returns a Processor instance
+        """
         processor_class = PROCESSORS[variant]
         return processor_class(self, self.processor)
 
@@ -50,13 +58,6 @@ class FilterES(object):
         :return: Returns a elasticsearch_dsl.Q query object.
         """
         return self.processor.generate_es_query(arguments)
-
-    def Argument(self):
-        """
-        Defining graphene Argument type for this filter
-        :return: A Argument type
-        """
-        return self.argument.Argument()
 
 
 class StringFilterES(FilterES):

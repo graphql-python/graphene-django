@@ -17,7 +17,12 @@ class ArticleDocument(DocType):
         """Metaclass config"""
         model = Article
         fields = [
+            'id',
             'headline',
+            'pub_date',
+            'pub_date_time',
+            'lang',
+            'importance',
         ]
 
 
@@ -37,7 +42,8 @@ class ArticleFilterESInMeta(FilterSetES):
     class Meta(object):
         """Metaclass data"""
         index = ArticleDocument
-        includes = ['headline']
+        includes = ['id', 'headline']
+        order_by = {'id': 'es_id'}
 
 
 class ArticleFilterESInMetaDict(FilterSetES):
@@ -47,7 +53,17 @@ class ArticleFilterESInMetaDict(FilterSetES):
         index = ArticleDocument
         includes = {
             'headline': {
-                'lookup_expressions': ['term', 'contains']
+                'lookup_expressions': [
+                    'term',
+                    'contains',
+                    'regex',
+                    'phrase',
+                    'prefix',
+                    'in',
+                    'exits',
+                    'lte',
+                    'gte',
+                ]
             }
         }
 
@@ -66,6 +82,22 @@ class ArticleFilterMultiField(FilterSetES):
     )
 
 
+class ArticleFilterGenerateAll(FilterSetES):
+    """Article Filter for ES"""
+    class Meta(object):
+        """Metaclass data"""
+        index = ArticleDocument
+        excludes = []
+
+
+class ArticleFilterExcludes(FilterSetES):
+    """Article Filter for ES"""
+    class Meta(object):
+        """Metaclass data"""
+        index = ArticleDocument
+        excludes = ['headline']
+
+
 class ESFilterQuery(ObjectType):
     """A query for ES fields"""
     articles_as_field = DjangoESFilterConnectionField(
@@ -79,4 +111,10 @@ class ESFilterQuery(ObjectType):
     )
     articles_in_multi_field = DjangoESFilterConnectionField(
         ArticleNode, filterset_class=ArticleFilterMultiField
+    )
+    articles_in_generate_all = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterGenerateAll
+    )
+    articles_in_excludes = DjangoESFilterConnectionField(
+        ArticleNode, filterset_class=ArticleFilterExcludes
     )

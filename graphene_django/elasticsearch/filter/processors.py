@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from elasticsearch_dsl import Q
-from graphene import List
+from graphene import List, Boolean
 
 
 class Processor(object):
@@ -10,8 +10,8 @@ class Processor(object):
     def __init__(self, filter_es, parent_processor=None):
         """
         Abstract processor to generate graphene field and ES query to lookups
-        :type filter_es: graphene_django.elasticsearch.filter.filterset.FilterES
-        :type parent_processor: graphene_django.elasticsearch.filter.filterset.Processor
+        :param filter_es: A FilterES target
+        :param parent_processor: Next Processor to the generate field chain
         """
         self.filter_es = filter_es
         self.parent_processor = parent_processor
@@ -30,10 +30,14 @@ class Processor(object):
             return self_field
 
     def get_type(self):
+        """Define the argument for graphene field"""
         return self.filter_es.argument
 
     def generate_es_query(self, data):
-
+        """
+        Define the argument for graphene field
+        :param data: Data passed to field in the query
+        """
         if self.variant_name in data:
             value = data.get(self.variant_name)
             self_query = self._build_query(value)
@@ -49,11 +53,19 @@ class Processor(object):
             return self_query
 
     def _build_field(self):
+        """
+        Specific detail about field creation to be overwrite if necessary.
+        :return: A field
+        """
         variant_name = self.variant_name
 
-        return OrderedDict({variant_name: self.filter_es})
+        return OrderedDict({variant_name: self.get_type()})
 
     def _get_variant_name(self):
+        """
+        Make a variant based on filter name and processor suffix
+        :return: A variant name
+        """
         if self.suffix_expr == self.filter_es.default_filter_processor:
             variant_name = self.filter_es.field_name
 
@@ -63,6 +75,11 @@ class Processor(object):
         return variant_name
 
     def _build_query(self, value):
+        """
+        Make a query based on specific processor query
+        :param value: Value passed to this processor
+        :return: A elasticsearch Query
+        """
         result = len(self.filter_es.field_name_es)
 
         if result > 1:
@@ -73,18 +90,32 @@ class Processor(object):
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Specific detail about query creation to be overwrite if necessary.
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('term', **{name: value})
 
 
 class TermProcessor(Processor):
+    """Have a same behavior of parent this is only with semantic proposal"""
     pass
 
 
 class ContainsProcessor(Processor):
+    """fuzzy search"""
     suffix_expr = 'contains'
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('match',
                  **{name: {
                      "query": value,
@@ -93,18 +124,32 @@ class ContainsProcessor(Processor):
 
 
 class RegexProcessor(Processor):
+    """Search based on regular expressions"""
     suffix_expr = 'regex'
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('wildcard', **{name: value})
 
 
 class PhraseProcessor(Processor):
+    """Search by the union of many terms"""
     suffix_expr = 'phrase'
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('match_phrase',
                  **{name: {
                      "query": value
@@ -112,10 +157,17 @@ class PhraseProcessor(Processor):
 
 
 class PrefixProcessor(Processor):
+    """Search by the prefix of the terms"""
     suffix_expr = 'prefix'
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('match_phrase_prefix',
                  **{name: {
                      "query": value
@@ -123,36 +175,72 @@ class PrefixProcessor(Processor):
 
 
 class InProcessor(Processor):
+    """Search by many value for a field"""
     suffix_expr = 'in'
 
+    @staticmethod
+    def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
+        return Q('terms', **{name: value})
+
     def get_type(self):
+        """Change base argument by a list of base argument"""
         return List(self.filter_es.argument.Argument().type)
 
 
 class ExitsProcessor(Processor):
+    """Search by if the field is in the document"""
     suffix_expr = 'exits'
 
     @staticmethod
     def _get_query(name, value):
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
         return Q('bool', **{
             'must' if value else 'must_not': {'exists': {'field': name}}
         })
 
+    def get_type(self):
+        return Boolean()
+
 
 class LteProcessor(Processor):
+    """Search by range less than"""
     suffix_expr = 'lte'
 
     @staticmethod
     def _get_query(name, value):
-        return Q("bool", must={'range': {name: {'lte': value}}})
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
+        return Q('range', **{name: {'lte': value}})
 
 
 class GteProcessor(Processor):
+    """Search by range greater than"""
     suffix_expr = 'gte'
 
     @staticmethod
     def _get_query(name, value):
-        return Q("bool", must={'range': {name: {'gte': value}}})
+        """
+        Overwrite query creation
+        :param name: elasticsearch document field name
+        :param value: Value passed to this processor
+        :return:  A elasticsearch Query
+        """
+        return Q("range", **{name: {'gte': value}})
 
 
 PROCESSORS = {
@@ -162,6 +250,7 @@ PROCESSORS = {
     "phrase": PhraseProcessor,
     "prefix": PrefixProcessor,
     "in": InProcessor,
+    "exits": ExitsProcessor,
     "lte": LteProcessor,
     "gte": GteProcessor,
 }
