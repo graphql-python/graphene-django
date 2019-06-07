@@ -178,16 +178,16 @@ def list_resolver(node_type, edge_node) -> Callable:
         rel_data = []
         relation_field = getattr(root, edge_node.target_field)
 
+        # know_parent == None or False, return all relationships
         if not kwargs.get('know_parent'):
-            for rel_node in relation_field.filter():
-                rel_data.append(relation_field.relationship(rel_node))
+            return relation_field.all_relationships()
         else:
             if not hasattr(root, '_parent'):
                 raise EdgeNodeClass.parent_type_exception
             else:
-                rel_data = relation_field.filter_relationships(root._parent)
+                rel_data = relation_field.all_relationships(root._parent)
         if kwargs.get('id'):
-            rel_data = relation_field.filter_relationships(
+            rel_data = relation_field.all_relationships(
                 edge_node.target_model.nodes.get(uid=kwargs['id']))
         return rel_data
 
@@ -203,16 +203,17 @@ def field_resolver(node_type, edge_node) -> Callable:
         relation_field = getattr(root, edge_node.target_field)
 
         if not kwargs.get('know_parent'):
-            data = relation_field.filter().first_or_none()
+            rels = relation_field.all_relationships()
+            if rels:
+                return rels[0]
+            return None
         else:
             if not hasattr(root, '_parent'):
                 raise EdgeNodeClass.parent_type_exception
             else:
                 data = relation_field.relationship(root._parent)
-
         if kwargs.get('id'):
             data = relation_field.relationship(
                 edge_node.target_model.nodes.get(uid=kwargs['id']))
         return data
-
     return default_resolver

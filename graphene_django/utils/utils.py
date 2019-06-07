@@ -1,4 +1,4 @@
-import inspect
+import inspect, re
 
 from django.db import models
 from graphene.types.scalars import Int
@@ -11,13 +11,23 @@ from neomodel import (
 pagination_params = dict(first=Int(default_value=100), last=Int())
 # from graphene.utils import LazyList
 
+def convert(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
 def is_parent_set(info):
     if hasattr(info.parent_type.graphene_type._meta, 'know_parent_fields'):
         options = info.parent_type.graphene_type._meta.know_parent_fields
+        field_name = convert(info.field_name)
         assert isinstance(options, (list, tuple)), \
             "know_parent_fields should be list or tuple"
-        return info.field_name in options
+        return field_name in options
     return False
+
+
+def set_parent(item, root):
+    setattr(item, '_parent', root)
+    return item
 
 
 class LazyList(object):
