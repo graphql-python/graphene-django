@@ -1,7 +1,7 @@
 from graphene import ObjectType
-from django_elasticsearch_dsl import DocType, Index
+from django_elasticsearch_dsl import DocType, Index, fields
 
-from graphene_django.tests.models import Article
+from graphene_django.tests.models import Article, Reporter
 from graphene_django.filter.tests.test_fields import ArticleNode
 from graphene_django.elasticsearch.filter import filters
 from graphene_django.elasticsearch.filter.fields import DjangoESFilterConnectionField
@@ -24,6 +24,13 @@ class ArticleDocument(DocType):
             'lang',
             'importance',
         ]
+        related_models = (Reporter,)
+
+    reporter = fields.ObjectField(properties={
+        'id': fields.IntegerField(),
+        'first_name': fields.KeywordField(),
+        'email': fields.KeywordField(),
+    })
 
 
 class ArticleFilterESAsField(FilterSetES):
@@ -64,7 +71,8 @@ class ArticleFilterESInMetaDict(FilterSetES):
                     'lte',
                     'gte',
                 ]
-            }
+            },
+            'reporter': {},
         }
 
 

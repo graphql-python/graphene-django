@@ -4,7 +4,7 @@ from collections import OrderedDict
 from elasticsearch_dsl import Q
 from graphene import Enum, InputObjectType, Field, Int, Float
 from django_elasticsearch_dsl import StringField, TextField, BooleanField, IntegerField, FloatField, LongField, \
-    ShortField, DoubleField, DateField, KeywordField
+    ShortField, DoubleField, DateField, KeywordField, ObjectField
 from django.utils import six
 
 from django_filters.utils import try_dbfield
@@ -18,22 +18,10 @@ FILTER_FOR_ESFIELD_DEFAULTS = {
     TextField: {'filter_class': StringFilterES},
     BooleanField: {'filter_class': BoolFilterES},
     IntegerField: {'filter_class': NumberFilterES},
-    FloatField: {'filter_class': NumberFilterES,
-                 'extra': {
-                     'argument': Float()
-                 }},
-    LongField: {'filter_class': NumberFilterES,
-                'extra': {
-                    'argument': Int()
-                }},
-    ShortField: {'filter_class': NumberFilterES,
-                 'extra': {
-                     'argument': Int()
-                 }},
-    DoubleField: {'filter_class': NumberFilterES,
-                  'extra': {
-                      'argument': Int()
-                  }},
+    FloatField: {'filter_class': NumberFilterES, 'argument': Float()},
+    LongField: {'filter_class': NumberFilterES, 'argument': Int()},
+    ShortField: {'filter_class': NumberFilterES, 'argument': Int()},
+    DoubleField: {'filter_class': NumberFilterES, 'argument': Int()},
     DateField: {'filter_class': StringFilterES},
     KeywordField: {'filter_class': StringFilterES},
 }
@@ -219,8 +207,12 @@ class FilterSetESMetaclass(type):
 
         meta_filters = OrderedDict()
         for name, index_field, data in index_fields:
-            filter_class = mcs.get_filter_exp(name, index_field, data)
-            meta_filters.update({name: filter_class})
+            if isinstance(index_field, ObjectField):
+                filters_class = mcs.get_filter_object(name, index_field, data)
+                meta_filters.update(filters_class)
+            else:
+                filter_class = mcs.get_filter_exp(name, index_field, data)
+                meta_filters.update({name: filter_class})
 
         return meta_filters
 
@@ -254,7 +246,7 @@ class FilterSetESMetaclass(type):
         :param field: ES index field
         :param data: lookup_expr
         """
-        index_fields = []
+        index_fields = OrderedDict()
 
         properties = field._doc_class._doc_type.mapping.properties._params.get('properties', {})
 
@@ -263,8 +255,11 @@ class FilterSetESMetaclass(type):
             if data and inner_name not in data:
                 # This inner field is not filterable
                 continue
+
             inner_data = data[inner_name] if data else None
-            index_fields.append(mcs.get_filter_exp(inner_name, inner_field, inner_data, root=name))
+
+            filter_exp = mcs.get_filter_exp(inner_name, inner_field, inner_data, root=name)
+            index_fields.update({inner_name: filter_exp})
 
         return index_fields
 
@@ -280,14 +275,10 @@ class FilterSetESMetaclass(type):
         field_data = try_dbfield(FILTER_FOR_ESFIELD_DEFAULTS.get, field.__class__) or {}
         filter_class = field_data.get('filter_class')
 
-        extra = field_data.get('extra', {})
-        kwargs = copy.deepcopy(extra)
-
-        # Get lookup_expr from configuration
-        if data and 'lookup_expressions' in data:
-            kwargs['lookup_expressions'] = set(data['lookup_expressions'])
+        kwargs = copy.deepcopy(data) if data is not None else {}
 
         kwargs['field_name'], kwargs['field_name_es'] = mcs.get_name(name, root, data)
+
         return filter_class(**kwargs)
 
     @staticmethod

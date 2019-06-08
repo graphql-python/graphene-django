@@ -136,6 +136,14 @@ def test_filter_in_meta_dict():
     )
 
 
+def test_filter_in_meta_dict_foreign():
+    filter_generation(
+        "articlesInMetaDict",
+        "reporterEamail: \"A mail\"",
+        Bool(must=[Match(reporter__email={'query': 'A mail', 'fuzziness': 'auto'})]),
+    )
+
+
 def test_filter_in_multi_field():
     filter_generation(
         "articlesInMultiField",
