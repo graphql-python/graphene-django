@@ -51,13 +51,12 @@ class FilterES(object):
         processor_class = PROCESSORS[variant]
         return processor_class(self, self.processor)
 
-    def generate_es_query(self, arguments):
+    def attach_processor(self, observer):
         """
         Generating a query based on the arguments passed to graphene field
-        :param arguments: parameters of the query.
-        :return: Returns a elasticsearch_dsl.Q query object.
+        :param observer: observer to attach the processors.
         """
-        return self.processor.generate_es_query(arguments)
+        return self.processor.to_attach(observer)
 
 
 class StringFilterES(FilterES):

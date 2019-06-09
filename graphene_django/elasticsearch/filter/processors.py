@@ -33,24 +33,15 @@ class Processor(object):
         """Define the argument for graphene field"""
         return self.filter_es.argument
 
-    def generate_es_query(self, data):
+    def to_attach(self, observer):
         """
-        Define the argument for graphene field
-        :param data: Data passed to field in the query
+        Add this processor to FieldResolverObservable
+        :param observer: observer to attach the processors.
         """
-        if self.variant_name in data:
-            value = data.get(self.variant_name)
-            self_query = self._build_query(value)
-        else:
-            self_query = Q("bool")
+        observer.attach(self.variant_name, self)
 
         if self.parent_processor is not None:
-            parent_query = self.parent_processor.generate_es_query(data)
-            parent_query += self_query
-            return parent_query
-
-        else:
-            return self_query
+            self.parent_processor.to_attach(observer)
 
     def _build_field(self):
         """
@@ -74,7 +65,7 @@ class Processor(object):
 
         return variant_name
 
-    def _build_query(self, value):
+    def build_query(self, value):
         """
         Make a query based on specific processor query
         :param value: Value passed to this processor

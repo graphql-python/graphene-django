@@ -10,6 +10,7 @@ from django.utils import six
 from django_filters.utils import try_dbfield
 from django_filters.filterset import BaseFilterSet
 
+from graphene_django.elasticsearch.filter.observable import FieldResolverObservable
 from .filters import StringFilterES, FilterES, BoolFilterES, NumberFilterES
 
 # Basic conversion from ES fields to FilterES fields
@@ -153,12 +154,13 @@ class FilterSetESMetaclass(type):
             meta_filters = mcs.get_meta_filters(new_class._meta)
 
             declared_filters.update(meta_filters)
-            new_class.filters_es = declared_filters
 
-            # recollecting registered graphene fields
+            # recollecting registered graphene fields and attaching to observable
             base_filters = OrderedDict()
+            observable = FieldResolverObservable()
             for filter_name, filter_field in six.iteritems(declared_filters):
                 base_filters.update(filter_field.fields)
+                filter_field.attach_processor(observable)
 
             # adding sort field
             sort_fields = {}
@@ -169,6 +171,7 @@ class FilterSetESMetaclass(type):
 
             new_class.sort_fields = sort_fields
             new_class.base_filters = base_filters
+            new_class.observable = observable
 
         return new_class
 
@@ -380,13 +383,13 @@ class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
         # if the query have data
         if len(self.data):
             # for each field passed to the query
-            for name, filter in six.iteritems(self.filters_es):
-                # If a target filter is en FilterEs
-                if isinstance(filter, FilterES):
-                    # It is generated a query or response None if the filter don't have data
-                    query_filter = filter.generate_es_query(self.data)
+            for name, value in six.iteritems(self.data):
+                # ignore sort field
+                if name == "sort":
+                    continue
 
-                    if query_filter is not None:
-                        query_base += query_filter
+                # dispatch observable resolve
+                resolve = self.observable.resolve(name, value)
+                query_base += resolve
 
         return query_base
