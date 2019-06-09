@@ -96,6 +96,29 @@ schema is simple.
 
     result = schema.execute(query, context_value=request)
 
+
+Global Filtering
+----------------
+
+If you are using ``DjangoObjectType`` you can define a custom `get_queryset`.
+
+.. code:: python
+
+    from graphene import relay
+    from graphene_django.types import DjangoObjectType
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            if info.context.user.is_anonymous:
+                return queryset.filter(published=True)
+            return queryset
+
+
 Filtering ID-based Node Access
 ------------------------------
 
@@ -114,7 +137,7 @@ method to your ``DjangoObjectType``.
             interfaces = (relay.Node, )
 
         @classmethod
-        def get_node(cls, id, info):
+        def get_node(cls, info, id):
             try:
                 post = cls._meta.model.objects.get(id=id)
             except cls._meta.model.DoesNotExist:
@@ -132,7 +155,7 @@ To restrict users from accessing the GraphQL API page the standard Django LoginR
 
 .. code:: python
     #views.py
-    
+
     from django.contrib.auth.mixins import LoginRequiredMixin
     from graphene_django.views import GraphQLView
 
@@ -148,9 +171,9 @@ For Django 1.9 and below:
 
     urlpatterns = [
       # some other urls
-      url(r'^graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+      url(r'^graphql$', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
-    
+
 For Django 2.0 and above:
 
 .. code:: python

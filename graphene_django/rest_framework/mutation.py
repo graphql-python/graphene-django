@@ -9,7 +9,7 @@ from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
 
 from .serializer_converter import convert_serializer_field
-from .types import ErrorType
+from ..types import ErrorType
 
 
 class SerializerMutationOptions(MutationOptions):
@@ -27,6 +27,8 @@ def fields_for_serializer(serializer, only_fields, exclude_fields, is_input=Fals
             name
             in exclude_fields  # or
             # name in already_created_fields
+        ) or (
+            field.write_only and not is_input  # don't show write_only fields in Query
         )
 
         if is_not_in_only or is_excluded:
@@ -138,6 +140,7 @@ class SerializerMutation(ClientIDMutation):
 
         kwargs = {}
         for f, field in serializer.fields.items():
-            kwargs[f] = field.get_attribute(obj)
+            if not field.write_only:
+                kwargs[f] = field.get_attribute(obj)
 
         return cls(errors=None, **kwargs)

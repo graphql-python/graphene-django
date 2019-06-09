@@ -1,6 +1,7 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
+from graphene import NonNull
 
 from promise import Promise
 
@@ -45,17 +46,31 @@ class DjangoConnectionField(ConnectionField):
         from .types import DjangoObjectType
 
         _type = super(ConnectionField, self).type
+        non_null = False
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+            non_null = True
         assert issubclass(
             _type, DjangoObjectType
         ), "DjangoConnectionField only accepts DjangoObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
-        return _type._meta.connection
+        connection_type = _type._meta.connection
+        if non_null:
+            return NonNull(connection_type)
+        return connection_type
+
+    @property
+    def connection_type(self):
+        type = self.type
+        if isinstance(type, NonNull):
+            return type.of_type
+        return type
 
     @property
     def node_type(self):
-        return self.type._meta.node
+        return self.connection_type._meta.node
 
     @property
     def model(self):
@@ -66,6 +81,10 @@ class DjangoConnectionField(ConnectionField):
             return getattr(self.model, self.on)
         else:
             return self.model._default_manager
+
+    @classmethod
+    def resolve_queryset(cls, connection, queryset, info, args):
+        return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
     def merge_querysets(cls, default_queryset, queryset):
@@ -135,7 +154,8 @@ class DjangoConnectionField(ConnectionField):
                 args["last"] = min(last, max_limit)
 
         iterable = resolver(root, info, **args)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        queryset = cls.resolve_queryset(connection, default_manager, info, args)
+        on_resolve = partial(cls.resolve_connection, connection, queryset, args)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
@@ -146,7 +166,7 @@ class DjangoConnectionField(ConnectionField):
         return partial(
             self.connection_resolver,
             parent_resolver,
-            self.type,
+            self.connection_type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last,

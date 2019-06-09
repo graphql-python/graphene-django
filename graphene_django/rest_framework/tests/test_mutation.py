@@ -7,7 +7,7 @@ from py.test import mark
 from rest_framework import serializers
 
 from ...types import DjangoObjectType
-from ..models import MyFakeModel
+from ..models import MyFakeModel, MyFakeModelWithPassword
 from ..mutation import SerializerMutation
 
 
@@ -84,6 +84,47 @@ def test_exclude_fields():
     assert "errors" in MyMutation._meta.fields
     assert "cool_name" in MyMutation.Input._meta.fields
     assert "created" not in MyMutation.Input._meta.fields
+
+
+@mark.django_db
+def test_write_only_field():
+    class WriteOnlyFieldModelSerializer(serializers.ModelSerializer):
+        password = serializers.CharField(write_only=True)
+
+        class Meta:
+            model = MyFakeModelWithPassword
+            fields = ["cool_name", "password"]
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = WriteOnlyFieldModelSerializer
+
+    result = MyMutation.mutate_and_get_payload(
+        None, mock_info(), **{"cool_name": "New Narf", "password": "admin"}
+    )
+
+    assert hasattr(result, "cool_name")
+    assert not hasattr(result, "password"), "'password' is write_only field and shouldn't be visible"
+
+
+@mark.django_db
+def test_write_only_field_using_extra_kwargs():
+    class WriteOnlyFieldModelSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = MyFakeModelWithPassword
+            fields = ["cool_name", "password"]
+            extra_kwargs = {"password": {"write_only": True}}
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = WriteOnlyFieldModelSerializer
+
+    result = MyMutation.mutate_and_get_payload(
+        None, mock_info(), **{"cool_name": "New Narf", "password": "admin"}
+    )
+
+    assert hasattr(result, "cool_name")
+    assert not hasattr(result, "password"), "'password' is write_only field and shouldn't be visible"
 
 
 def test_nested_model():
