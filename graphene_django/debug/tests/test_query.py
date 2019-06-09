@@ -50,9 +50,7 @@ def test_should_query_field():
     """
     expected = {
         "reporter": {"lastName": "ABA"},
-        "_debug": {
-            "sql": [{"rawSql": str(Reporter.objects.order_by("pk")[:1].query)}]
-        },
+        "_debug": {"sql": [{"rawSql": str(Reporter.objects.order_by("pk")[:1].query)}]},
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(

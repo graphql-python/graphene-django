@@ -18,7 +18,8 @@ def get_reverse_fields(model, local_field_names):
         if name in local_field_names:
             continue
 
-        related = getattr(attr, "rel", None)
+        # "rel" for FK and M2M relations and "related" for O2O Relations
+        related = getattr(attr, "rel", None) or getattr(attr, "related", None)
         if isinstance(related, models.ManyToOneRel):
             yield (name, related)
         elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
