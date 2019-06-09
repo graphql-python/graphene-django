@@ -226,6 +226,62 @@ def test_should_node():
     assert result.data == expected
 
 
+def test_should_query_onetoone_fields():
+    film = Film(id=1)
+    film_details = FilmDetails(id=1, film=film)
+
+    class FilmNode(DjangoObjectType):
+        class Meta:
+            model = Film
+            interfaces = (Node,)
+
+    class FilmDetailsNode(DjangoObjectType):
+        class Meta:
+            model = FilmDetails
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        film = graphene.Field(FilmNode)
+        film_details = graphene.Field(FilmDetailsNode)
+
+        def resolve_film(root, info):
+            return film
+
+        def resolve_film_details(root, info):
+            return film_details
+
+    query = """
+        query FilmQuery {
+          filmDetails {
+            id
+            film {
+              id
+            }
+          }
+          film {
+            id
+            details {
+              id
+            }
+          }
+        }
+    """
+    expected = {
+        "filmDetails": {
+            "id": "RmlsbURldGFpbHNOb2RlOjE=",
+            "film": {"id": "RmlsbU5vZGU6MQ=="},
+        },
+        "film": {
+            "id": "RmlsbU5vZGU6MQ==",
+            "details": {"id": "RmlsbURldGFpbHNOb2RlOjE="},
+        },
+    }
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_should_query_connectionfields():
     class ReporterType(DjangoObjectType):
         class Meta:
