@@ -131,7 +131,11 @@ class DjangoObjectType(ObjectType):
         if not is_valid_django_model(type(root)):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
-        model = root._meta.model._meta.concrete_model
+        if cls._meta.model._meta.proxy:
+            model = root._meta.model
+        else:
+            model = root._meta.model._meta.concrete_model
+
         return model == cls._meta.model
 
     @classmethod
