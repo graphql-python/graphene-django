@@ -3,7 +3,7 @@ class FieldResolverObservable(object):
 
     def __init__(self):
         """A new Observable by filterset"""
-        super(FieldResolverObservable).__init__()
+        super(FieldResolverObservable, self).__init__()
         self._fields = {}
 
     def attach(self, field, processor):

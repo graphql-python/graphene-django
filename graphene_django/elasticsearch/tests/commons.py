@@ -45,7 +45,7 @@ def generate_query(field, query_str):
     return query
 
 
-def filter_generation(field, query_str, expected_arguments, method_to_mock="query"):
+def filter_generation(field, query_str, verify_arguments, method_to_mock="query"):
     a1, a2 = fake_data()
 
     query = generate_query(field, query_str)
@@ -72,7 +72,7 @@ def filter_generation(field, query_str, expected_arguments, method_to_mock="quer
 
         assert not result.errors
 
-        mock_query.assert_called_with(expected_arguments)
+        verify_arguments(mock_query)
 
         assert len(result.data[field]["edges"]) == 2
         assert result.data[field]["edges"][0]["node"]["headline"] == "a1"

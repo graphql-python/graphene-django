@@ -32,7 +32,7 @@ def test_processor_term():
     filter_generation(
         "articlesInMetaDict",
         'headlineTerm: "A text"',
-        Bool(must=[Term(headline="A text")]),
+        lambda mock: mock.assert_called_with(Bool(must=[Term(headline="A text")])),
     )
 
 
@@ -40,7 +40,7 @@ def test_processor_regex():
     filter_generation(
         "articlesInMetaDict",
         'headlineRegex: "A text"',
-        Bool(must=[Wildcard(headline="A text")]),
+        lambda mock: mock.assert_called_with(Bool(must=[Wildcard(headline="A text")])),
     )
 
 
@@ -48,7 +48,7 @@ def test_processor_phrase():
     filter_generation(
         "articlesInMetaDict",
         'headlinePhrase: "A text"',
-        Bool(must=[MatchPhrase(headline={"query": "A text"})]),
+        lambda mock: mock.assert_called_with(Bool(must=[MatchPhrase(headline={"query": "A text"})])),
     )
 
 
@@ -56,7 +56,7 @@ def test_processor_prefix():
     filter_generation(
         "articlesInMetaDict",
         'headlinePrefix: "A text"',
-        Bool(must=[MatchPhrasePrefix(headline={"query": "A text"})]),
+        lambda mock: mock.assert_called_with(Bool(must=[MatchPhrasePrefix(headline={"query": "A text"})])),
     )
 
 
@@ -64,7 +64,7 @@ def test_processor_in():
     filter_generation(
         "articlesInMetaDict",
         'headlineIn: ["A text 1", "A text 2"]',
-        Bool(must=[Terms(headline=["A text 1", "A text 2"])]),
+        lambda mock: mock.assert_called_with(Bool(must=[Terms(headline=["A text 1", "A text 2"])])),
     )
 
 
@@ -72,7 +72,7 @@ def test_processor_exits():
     filter_generation(
         "articlesInMetaDict",
         "headlineExits: true",
-        Bool(must=[Bool(must=[Exists(field="headline")])]),
+        lambda mock: mock.assert_called_with(Bool(must=[Bool(must=[Exists(field="headline")])])),
     )
 
 
@@ -80,7 +80,7 @@ def test_processor_lte():
     filter_generation(
         "articlesInMetaDict",
         'headlineLte: "A text"',
-        Bool(must=Range(headline={"lte": "A text"})),
+        lambda mock: mock.assert_called_with(Bool(must=Range(headline={"lte": "A text"}))),
     )
 
 
@@ -88,5 +88,5 @@ def test_processor_gte():
     filter_generation(
         "articlesInMetaDict",
         'headlineGte: "A text"',
-        Bool(must=Range(headline={"gte": "A text"})),
+        lambda mock: mock.assert_called_with(Bool(must=Range(headline={"gte": "A text"}))),
     )
