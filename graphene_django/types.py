@@ -82,10 +82,12 @@ class DjangoObjectType(ObjectType):
             raise Exception("Can't set both filter_fields and filterset_class")
 
         if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
-            raise Exception((
-                "Can only set filter_fields or filterset_class if "
-                "Django-Filter is installed"
-            ))
+            raise Exception(
+                (
+                    "Can only set filter_fields or filterset_class if "
+                    "Django-Filter is installed"
+                )
+            )
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, only_fields, exclude_fields), _as=Field

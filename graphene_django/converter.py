@@ -177,7 +177,11 @@ def convert_field_to_list_or_connection(field, registry=None):
         if not _type:
             return
 
-        description = field.help_text if isinstance(field, models.ManyToManyField) else field.field.help_text
+        description = (
+            field.help_text
+            if isinstance(field, models.ManyToManyField)
+            else field.field.help_text
+        )
 
         # If there is a connection, we should transform the field
         # into a DjangoConnectionField
