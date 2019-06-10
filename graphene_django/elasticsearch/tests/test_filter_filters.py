@@ -28,7 +28,9 @@ def test_filter_string():
     filter_generation(
         "articlesAsField",
         'headline: "A text"',
-        lambda mock: mock.assert_called_with(Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])),
+        lambda mock: mock.assert_called_with(
+            Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])
+        ),
     )
 
 
@@ -36,7 +38,9 @@ def test_filter_string_date():
     filter_generation(
         "articlesAsField",
         'headline: "A text"',
-        lambda mock: mock.assert_called_with(Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])),
+        lambda mock: mock.assert_called_with(
+            Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])
+        ),
     )
 
 
@@ -62,7 +66,9 @@ def test_filter_in_meta():
     filter_generation(
         "articlesInMeta",
         'headline: "A text"',
-        lambda mock: mock.assert_called_with(Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])),
+        lambda mock: mock.assert_called_with(
+            Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])
+        ),
     )
 
 
@@ -70,7 +76,9 @@ def test_filter_in_meta_dict():
     filter_generation(
         "articlesInMetaDict",
         'headline: "A text"',
-        lambda mock: mock.assert_called_with(Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])),
+        lambda mock: mock.assert_called_with(
+            Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"})])
+        ),
     )
 
 
@@ -78,7 +86,9 @@ def test_filter_in_meta_dict_foreign():
     filter_generation(
         "articlesInMetaDict",
         'reporterEmail: "A mail"',
-        lambda mock: mock.assert_called_with(Bool(must=[Match(reporter__email={"query": "A mail", "fuzziness": "auto"})])),
+        lambda mock: mock.assert_called_with(
+            Bool(must=[Match(reporter__email={"query": "A mail", "fuzziness": "auto"})])
+        ),
     )
 
 
@@ -86,16 +96,18 @@ def test_filter_in_multi_field():
     filter_generation(
         "articlesInMultiField",
         'contain: "A text"',
-        lambda mock: mock.assert_called_with(Bool(
-            must=[
-                Bool(
-                    should=[
-                        Match(headline={"query": "A text", "fuzziness": "auto"}),
-                        Match(lang={"query": "A text", "fuzziness": "auto"}),
-                    ]
-                )
-            ]
-        )),
+        lambda mock: mock.assert_called_with(
+            Bool(
+                must=[
+                    Bool(
+                        should=[
+                            Match(headline={"query": "A text", "fuzziness": "auto"}),
+                            Match(lang={"query": "A text", "fuzziness": "auto"}),
+                        ]
+                    )
+                ]
+            )
+        ),
     )
 
 
@@ -107,10 +119,15 @@ def compare_must_array(must, other_must):
 
 
 def test_filter_generating_all():
-    spected_query = Bool(must=[Match(headline={"query": "A text", "fuzziness": "auto"}),
-                   Match(pub_date={"query": "0000-00-00", "fuzziness": "auto"}),
-                   Match(pub_date_time={"query": "00:00:00", "fuzziness": "auto"}),
-                   Match(lang={"query": "es", "fuzziness": "auto"}), Term(importance=1), ])
+    spected_query = Bool(
+        must=[
+            Match(headline={"query": "A text", "fuzziness": "auto"}),
+            Match(pub_date={"query": "0000-00-00", "fuzziness": "auto"}),
+            Match(pub_date_time={"query": "00:00:00", "fuzziness": "auto"}),
+            Match(lang={"query": "es", "fuzziness": "auto"}),
+            Term(importance=1),
+        ]
+    )
 
     filter_generation(
         "articlesInGenerateAll",
