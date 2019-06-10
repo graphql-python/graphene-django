@@ -234,14 +234,31 @@ class GteProcessor(Processor):
         return Q("range", **{name: {'gte': value}})
 
 
-PROCESSORS = {
-    "contains": ContainsProcessor,
-    "term": TermProcessor,
-    "regex": RegexProcessor,
-    "phrase": PhraseProcessor,
-    "prefix": PrefixProcessor,
-    "in": InProcessor,
-    "exits": ExitsProcessor,
-    "lte": LteProcessor,
-    "gte": GteProcessor,
-}
+class ProcessorFactory(object):
+    processors = {
+        "contains": ContainsProcessor,
+        "term": TermProcessor,
+        "regex": RegexProcessor,
+        "phrase": PhraseProcessor,
+        "prefix": PrefixProcessor,
+        "in": InProcessor,
+        "exits": ExitsProcessor,
+        "lte": LteProcessor,
+        "gte": GteProcessor,
+    }
+
+    @classmethod
+    def make_processor(cls, variant, filter_es, parent_processor):
+        """
+        Create a new processor based on the name
+        :param variant: Processor name
+        :param filter_es: Target filter
+        :param parent_processor: Parent in the chain
+        :return: Returns a Processor instance
+        """
+        if variant in cls.processors:
+            processor_class = cls.processors[variant]
+            return processor_class(filter_es, parent_processor)
+
+        else:
+            raise ValueError('We do not have processor: %s.' % variant)

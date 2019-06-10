@@ -1,6 +1,6 @@
 """Filters to ElasticSearch"""
 from graphene import String, Boolean, Int
-from graphene_django.elasticsearch.filter.processors import PROCESSORS
+from graphene_django.elasticsearch.filter.processors import ProcessorFactory
 
 
 class FilterES(object):
@@ -31,25 +31,13 @@ class FilterES(object):
         self.processor = None
         if self.lookup_expressions:
             for variant in self.lookup_expressions:
-                if variant in PROCESSORS:
-                    self.processor = self.build_processor(variant)
-                else:
-                    raise ValueError('We do not have processor: %s.' % variant)
+                self.processor = ProcessorFactory.make_processor(variant, self, self.processor)
 
         else:
-            self.processor = self.build_processor(self.default_processor)
+            self.processor = ProcessorFactory.make_processor(self.default_processor, self, self.processor)
 
         self.argument = argument or self.default_argument
         self.fields = self.processor.generate_field()
-
-    def build_processor(self, variant):
-        """
-        Create a new processor based on the name
-        :param variant: Processor name
-        :return: Returns a Processor instance
-        """
-        processor_class = PROCESSORS[variant]
-        return processor_class(self, self.processor)
 
     def attach_processor(self, observer):
         """
