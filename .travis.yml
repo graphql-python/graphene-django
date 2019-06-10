@@ -3,7 +3,7 @@ cache: pip
 dist: xenial
 
 install:
-  - pip install tox tox-travis coveralls
+  - pip install tox tox-travis
 
 script: 
   - tox
