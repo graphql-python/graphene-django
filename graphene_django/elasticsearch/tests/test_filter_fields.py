@@ -5,7 +5,10 @@ from graphene_django.elasticsearch.filter.fields import DjangoESFilterConnection
 from graphene_django.elasticsearch.filter.filterset import FilterSetES
 from graphene_django.filter.tests.test_fields import ArticleNode
 from graphene_django.elasticsearch.tests.filters import ArticleDocument
-from graphene_django.utils import DJANGO_FILTER_INSTALLED, DJANGO_ELASTICSEARCH_DSL_INSTALLED
+from graphene_django.utils import (
+    DJANGO_FILTER_INSTALLED,
+    DJANGO_ELASTICSEARCH_DSL_INSTALLED,
+)
 
 pytestmark = []
 
@@ -25,12 +28,9 @@ def test_filter_bad_processor():
 
         class Meta(object):
             """Metaclass data"""
+
             index = ArticleDocument
-            includes = {
-                'headline': {
-                    'lookup_expressions': ['bad_processor']
-                }
-            }
+            includes = {"headline": {"lookup_expressions": ["bad_processor"]}}
 
     with raises(ValueError) as error_info:
         DjangoESFilterConnectionField(
@@ -42,33 +42,28 @@ def test_filter_bad_processor():
 
 def test_filter_field_without_filterset_class():
     with raises(ValueError) as error_info:
-        DjangoESFilterConnectionField(
-            ArticleNode
-        )
+        DjangoESFilterConnectionField(ArticleNode)
 
     assert "filterset_class" in str(error_info.value)
 
 
 def test_filter_field_with_fields():
     with raises(ValueError) as error_info:
-        DjangoESFilterConnectionField(
-            ArticleNode, fields=['headline']
-        )
+        DjangoESFilterConnectionField(ArticleNode, fields=["headline"])
 
     assert "fields" in str(error_info.value)
 
 
 def test_filter_field_with_order_by():
     with raises(ValueError) as error_info:
-        DjangoESFilterConnectionField(
-            ArticleNode, order_by=['headline']
-        )
+        DjangoESFilterConnectionField(ArticleNode, order_by=["headline"])
 
     assert "order_by" in str(error_info.value)
 
 
 def test_filter_filterset_without_index():
     with raises(ValueError) as error_info:
+
         class ArticleFilterBadProcessor(FilterSetES):
             """Article Filter for ES"""
 
@@ -84,11 +79,13 @@ def test_filter_filterset_without_index():
 
 def test_filter_filterset_without_xcludes():
     with raises(ValueError) as error_info:
+
         class ArticleFilterBadProcessor(FilterSetES):
             """Article Filter for ES"""
 
             class Meta(object):
                 """Metaclass data"""
+
                 index = ArticleDocument
 
         DjangoESFilterConnectionField(

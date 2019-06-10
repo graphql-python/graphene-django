@@ -5,11 +5,18 @@ from graphene_django.elasticsearch.filter.processors import ProcessorFactory
 
 class FilterES(object):
     """Fields specific to ElasticSearch."""
-    default_processor = 'term'
+
+    default_processor = "term"
     default_argument = String()
 
-    def __init__(self, field_name, field_name_es=None, lookup_expressions=None,
-                 default_processor=None, argument=None):
+    def __init__(
+        self,
+        field_name,
+        field_name_es=None,
+        lookup_expressions=None,
+        default_processor=None,
+        argument=None,
+    ):
         """
         :param field_name: Name of the field. This is the name that will be exported.
         :param field_name_es: Path to the index attr that will be used as filter.
@@ -31,10 +38,14 @@ class FilterES(object):
         self.processor = None
         if self.lookup_expressions:
             for variant in self.lookup_expressions:
-                self.processor = ProcessorFactory.make_processor(variant, self, self.processor)
+                self.processor = ProcessorFactory.make_processor(
+                    variant, self, self.processor
+                )
 
         else:
-            self.processor = ProcessorFactory.make_processor(self.default_processor, self, self.processor)
+            self.processor = ProcessorFactory.make_processor(
+                self.default_processor, self, self.processor
+            )
 
         self.argument = argument or self.default_argument
         self.fields = self.processor.generate_field()
@@ -49,14 +60,17 @@ class FilterES(object):
 
 class StringFilterES(FilterES):
     """String Fields specific to ElasticSearch."""
-    default_processor = 'contains'
+
+    default_processor = "contains"
 
 
 class BoolFilterES(FilterES):
     """Boolean filter to ES"""
+
     default_argument = Boolean()
 
 
 class NumberFilterES(FilterES):
     """Filter to an numeric value to ES"""
+
     default_argument = Int()

@@ -3,8 +3,19 @@ import copy
 from collections import OrderedDict
 from elasticsearch_dsl import Q
 from graphene import Enum, InputObjectType, Field, Int, Float
-from django_elasticsearch_dsl import StringField, TextField, BooleanField, IntegerField, FloatField, LongField, \
-    ShortField, DoubleField, DateField, KeywordField, ObjectField
+from django_elasticsearch_dsl import (
+    StringField,
+    TextField,
+    BooleanField,
+    IntegerField,
+    FloatField,
+    LongField,
+    ShortField,
+    DoubleField,
+    DateField,
+    KeywordField,
+    ObjectField,
+)
 from django.utils import six
 
 from django_filters.utils import try_dbfield
@@ -15,34 +26,36 @@ from .filters import StringFilterES, FilterES, BoolFilterES, NumberFilterES
 
 # Basic conversion from ES fields to FilterES fields
 FILTER_FOR_ESFIELD_DEFAULTS = {
-    StringField: {'filter_class': StringFilterES},
-    TextField: {'filter_class': StringFilterES},
-    BooleanField: {'filter_class': BoolFilterES},
-    IntegerField: {'filter_class': NumberFilterES},
-    FloatField: {'filter_class': NumberFilterES, 'argument': Float()},
-    LongField: {'filter_class': NumberFilterES, 'argument': Int()},
-    ShortField: {'filter_class': NumberFilterES, 'argument': Int()},
-    DoubleField: {'filter_class': NumberFilterES, 'argument': Int()},
-    DateField: {'filter_class': StringFilterES},
-    KeywordField: {'filter_class': StringFilterES},
+    StringField: {"filter_class": StringFilterES},
+    TextField: {"filter_class": StringFilterES},
+    BooleanField: {"filter_class": BoolFilterES},
+    IntegerField: {"filter_class": NumberFilterES},
+    FloatField: {"filter_class": NumberFilterES, "argument": Float()},
+    LongField: {"filter_class": NumberFilterES, "argument": Int()},
+    ShortField: {"filter_class": NumberFilterES, "argument": Int()},
+    DoubleField: {"filter_class": NumberFilterES, "argument": Int()},
+    DateField: {"filter_class": StringFilterES},
+    KeywordField: {"filter_class": StringFilterES},
 }
 
 
 class OrderEnum(Enum):
     """Order enum to desc-asc"""
-    asc = 'asc'
-    desc = 'desc'
+
+    asc = "asc"
+    desc = "desc"
 
     @property
     def description(self):
         """Description to order enum"""
         if self == OrderEnum.asc:
-            return 'Ascendant order'
-        return 'Descendant order'
+            return "Ascendant order"
+        return "Descendant order"
 
 
 class FilterSetESOptions(object):
     """Basic FilterSetES options to Metadata"""
+
     def __init__(self, options=None):
         """
         The field option is combined with the index to automatically generate
@@ -123,15 +136,15 @@ class FilterSetESOptions(object):
                             }
 
         """
-        self.index = getattr(options, 'index', None)
-        self.includes = getattr(options, 'includes', None)
-        self.excludes = getattr(options, 'excludes', None)
-        self.order_by = getattr(options, 'order_by', None)
+        self.index = getattr(options, "index", None)
+        self.includes = getattr(options, "includes", None)
+        self.excludes = getattr(options, "excludes", None)
+        self.order_by = getattr(options, "order_by", None)
 
         if self.index is None:
-            raise ValueError('You need provide a Index in Meta.')
+            raise ValueError("You need provide a Index in Meta.")
         if self.excludes is None and self.includes is None:
-            raise ValueError('You need provide includes or excludes field in Meta.')
+            raise ValueError("You need provide includes or excludes field in Meta.")
 
         self.model = self.index._doc_type.model if self.index else None
 
@@ -143,12 +156,12 @@ class FilterSetESMetaclass(type):
         """Get filters declared explicitly in the class"""
         # get declared as field
         declared_filters = mcs.get_declared_filters(bases, attrs)
-        attrs['declared_filters'] = declared_filters
+        attrs["declared_filters"] = declared_filters
 
         new_class = super(FilterSetESMetaclass, mcs).__new__(mcs, name, bases, attrs)
 
         if issubclass(new_class, BaseFilterSet):
-            new_class._meta = FilterSetESOptions(getattr(new_class, 'Meta', None))
+            new_class._meta = FilterSetESOptions(getattr(new_class, "Meta", None))
 
             # get declared as meta
             meta_filters = mcs.get_meta_filters(new_class._meta)
@@ -167,7 +180,7 @@ class FilterSetESMetaclass(type):
             if new_class._meta.order_by is not None:
                 sort_fields = mcs.generate_sort_field(new_class._meta.order_by)
                 sort_type = mcs.create_sort_enum(name, sort_fields)
-                base_filters['sort'] = sort_type()
+                base_filters["sort"] = sort_type()
 
             new_class.sort_fields = sort_fields
             new_class.base_filters = base_filters
@@ -193,9 +206,12 @@ class FilterSetESMetaclass(type):
 
         # Merge declared filters from base classes
         for base in reversed(bases):
-            if hasattr(base, 'declared_filters'):
-                filters = [(name, field) for name, field in base.declared_filters.items() if name not in attrs] \
-                          + filters
+            if hasattr(base, "declared_filters"):
+                filters = [
+                    (name, field)
+                    for name, field in base.declared_filters.items()
+                    if name not in attrs
+                ] + filters
 
         return OrderedDict(filters)
 
@@ -232,13 +248,19 @@ class FilterSetESMetaclass(type):
 
         if isinstance(meta_includes, dict):
             # The lookup_expr are defined in Meta
-            filter_fields = [(name, index_fields[name], data) for name, data in meta_includes.items()]
+            filter_fields = [
+                (name, index_fields[name], data) for name, data in meta_includes.items()
+            ]
         elif meta_includes is not None:
             # The lookup_expr are not defined
             filter_fields = [(name, index_fields[name], None) for name in meta_includes]
         else:
             # No `includes` are declared in meta, so all not `excludes` fields from index will be converted to filters
-            filter_fields = [(name, field, None) for name, field in index_fields.items() if name not in meta_excludes]
+            filter_fields = [
+                (name, field, None)
+                for name, field in index_fields.items()
+                if name not in meta_excludes
+            ]
         return filter_fields
 
     @classmethod
@@ -251,7 +273,9 @@ class FilterSetESMetaclass(type):
         """
         index_fields = OrderedDict()
 
-        properties = field._doc_class._doc_type.mapping.properties._params.get('properties', {})
+        properties = field._doc_class._doc_type.mapping.properties._params.get(
+            "properties", {}
+        )
 
         for inner_name, inner_field in properties.items():
 
@@ -261,7 +285,9 @@ class FilterSetESMetaclass(type):
 
             inner_data = data[inner_name] if data else None
 
-            filter_exp = mcs.get_filter_exp(inner_name, inner_field, inner_data, root=name)
+            filter_exp = mcs.get_filter_exp(
+                inner_name, inner_field, inner_data, root=name
+            )
             index_fields.update({inner_name: filter_exp})
 
         return index_fields
@@ -276,11 +302,11 @@ class FilterSetESMetaclass(type):
         :param root: root name
         """
         field_data = try_dbfield(FILTER_FOR_ESFIELD_DEFAULTS.get, field.__class__) or {}
-        filter_class = field_data.get('filter_class')
+        filter_class = field_data.get("filter_class")
 
         kwargs = copy.deepcopy(data) if data is not None else {}
 
-        kwargs['field_name'], kwargs['field_name_es'] = mcs.get_name(name, root, data)
+        kwargs["field_name"], kwargs["field_name_es"] = mcs.get_name(name, root, data)
 
         return filter_class(**kwargs)
 
@@ -292,12 +318,14 @@ class FilterSetESMetaclass(type):
         :param data: lookup_expr
         :param root: root name
         """
-        field_name = data.get('field_name', None) if data else None
-        field_name_es = data.get('field_name_es', None) if data else None
+        field_name = data.get("field_name", None) if data else None
+        field_name_es = data.get("field_name_es", None) if data else None
         if not field_name:
-            field_name = '{root}_{name}'.format(root=root, name=name) if root else name
+            field_name = "{root}_{name}".format(root=root, name=name) if root else name
         if not field_name_es:
-            field_name_es = '{root}.{name}'.format(root=root, name=name) if root else name
+            field_name_es = (
+                "{root}.{name}".format(root=root, name=name) if root else name
+            )
         return field_name, field_name_es
 
     @staticmethod
@@ -311,8 +339,9 @@ class FilterSetESMetaclass(type):
         """
 
         sort_enum_name = "{}SortFields".format(name)
-        sort_descriptions = {field: "Sort by {field}".format(field=field) for field in
-                             sort_fields.keys()}
+        sort_descriptions = {
+            field: "Sort by {field}".format(field=field) for field in sort_fields.keys()
+        }
         sort_fields = [(field, field) for field in sort_fields.keys()]
 
         class EnumWithDescriptionsType(object):
@@ -327,6 +356,7 @@ class FilterSetESMetaclass(type):
 
         class SortType(InputObjectType):
             """Sort Type"""
+
             order = Field(OrderEnum)
             field = Field(enum, required=True)
 
@@ -349,6 +379,7 @@ class FilterSetESMetaclass(type):
 
 class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
     """FilterSet specific for ElasticSearch."""
+
     def __init__(self, data, queryset, request):
         """
         Receiving params necessaries to resolved the data
@@ -367,9 +398,9 @@ class FilterSetES(six.with_metaclass(FilterSetESMetaclass, object)):
         self.es_query.apply_query("query", query_base)
         self.es_query.apply_query("source", ["id"])
 
-        if 'sort' in self.data:
-            sort_data = self.data['sort'].copy()
-            field_name = self.sort_fields[sort_data.pop('field')]
+        if "sort" in self.data:
+            sort_data = self.data["sort"].copy()
+            field_name = self.sort_fields[sort_data.pop("field")]
             self.es_query.apply_query("sort", {field_name: sort_data})
 
         return self.es_query

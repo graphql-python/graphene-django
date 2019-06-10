@@ -1,4 +1,3 @@
-
 class QuerysetProxy(object):
     """Bridge to Queryset through ES query"""
 

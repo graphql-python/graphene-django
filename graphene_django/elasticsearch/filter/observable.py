@@ -1,4 +1,3 @@
-
 class FieldResolverObservable(object):
     """Observable to attach processor by field and resolve it with the field value"""
 

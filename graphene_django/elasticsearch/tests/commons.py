@@ -38,7 +38,10 @@ def generate_query(field, query_str):
             }
         }
     }
-    """ % (field, query_str)
+    """ % (
+        field,
+        query_str,
+    )
     return query
 
 
@@ -48,14 +51,22 @@ def filter_generation(field, query_str, expected_arguments, method_to_mock="quer
     query = generate_query(field, query_str)
 
     mock_count = mock.Mock(return_value=3)
-    mock_slice = mock.Mock(return_value=mock.Mock(to_queryset=mock.Mock(
-        return_value=Article.objects.filter(pk__in=[a1.id, a2.id])
-    )))
+    mock_slice = mock.Mock(
+        return_value=mock.Mock(
+            to_queryset=mock.Mock(
+                return_value=Article.objects.filter(pk__in=[a1.id, a2.id])
+            )
+        )
+    )
     mock_query = mock.Mock(return_value=ArticleDocument.search())
 
-    with mock.patch('django_elasticsearch_dsl.search.Search.count', mock_count), \
-         mock.patch('django_elasticsearch_dsl.search.Search.__getitem__', mock_slice), \
-         mock.patch("elasticsearch_dsl.Search.%s" % method_to_mock, mock_query):
+    with mock.patch(
+        "django_elasticsearch_dsl.search.Search.count", mock_count
+    ), mock.patch(
+        "django_elasticsearch_dsl.search.Search.__getitem__", mock_slice
+    ), mock.patch(
+        "elasticsearch_dsl.Search.%s" % method_to_mock, mock_query
+    ):
         schema = Schema(query=ESFilterQuery)
         result = schema.execute(query)
 

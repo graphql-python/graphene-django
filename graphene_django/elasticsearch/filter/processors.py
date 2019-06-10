@@ -5,7 +5,7 @@ from graphene import List, Boolean
 
 
 class Processor(object):
-    suffix_expr = 'term'
+    suffix_expr = "term"
 
     def __init__(self, filter_es, parent_processor=None):
         """
@@ -74,7 +74,9 @@ class Processor(object):
         result = len(self.filter_es.field_name_es)
 
         if result > 1:
-            queries = [self._get_query(name, value) for name in self.filter_es.field_name_es]
+            queries = [
+                self._get_query(name, value) for name in self.filter_es.field_name_es
+            ]
             return Q("bool", must={"bool": {"should": queries}})
 
         return Q("bool", must=self._get_query(self.filter_es.field_name_es[0], value))
@@ -87,17 +89,19 @@ class Processor(object):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('term', **{name: value})
+        return Q("term", **{name: value})
 
 
 class TermProcessor(Processor):
     """Have a same behavior of parent this is only with semantic proposal"""
+
     pass
 
 
 class ContainsProcessor(Processor):
     """fuzzy search"""
-    suffix_expr = 'contains'
+
+    suffix_expr = "contains"
 
     @staticmethod
     def _get_query(name, value):
@@ -107,16 +111,13 @@ class ContainsProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('match',
-                 **{name: {
-                     "query": value,
-                     "fuzziness": "auto"
-                 }})
+        return Q("match", **{name: {"query": value, "fuzziness": "auto"}})
 
 
 class RegexProcessor(Processor):
     """Search based on regular expressions"""
-    suffix_expr = 'regex'
+
+    suffix_expr = "regex"
 
     @staticmethod
     def _get_query(name, value):
@@ -126,12 +127,13 @@ class RegexProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('wildcard', **{name: value})
+        return Q("wildcard", **{name: value})
 
 
 class PhraseProcessor(Processor):
     """Search by the union of many terms"""
-    suffix_expr = 'phrase'
+
+    suffix_expr = "phrase"
 
     @staticmethod
     def _get_query(name, value):
@@ -141,15 +143,13 @@ class PhraseProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('match_phrase',
-                 **{name: {
-                     "query": value
-                 }})
+        return Q("match_phrase", **{name: {"query": value}})
 
 
 class PrefixProcessor(Processor):
     """Search by the prefix of the terms"""
-    suffix_expr = 'prefix'
+
+    suffix_expr = "prefix"
 
     @staticmethod
     def _get_query(name, value):
@@ -159,15 +159,13 @@ class PrefixProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('match_phrase_prefix',
-                 **{name: {
-                     "query": value
-                 }})
+        return Q("match_phrase_prefix", **{name: {"query": value}})
 
 
 class InProcessor(Processor):
     """Search by many value for a field"""
-    suffix_expr = 'in'
+
+    suffix_expr = "in"
 
     @staticmethod
     def _get_query(name, value):
@@ -177,7 +175,7 @@ class InProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('terms', **{name: value})
+        return Q("terms", **{name: value})
 
     def get_type(self):
         """Change base argument by a list of base argument"""
@@ -186,7 +184,8 @@ class InProcessor(Processor):
 
 class ExitsProcessor(Processor):
     """Search by if the field is in the document"""
-    suffix_expr = 'exits'
+
+    suffix_expr = "exits"
 
     @staticmethod
     def _get_query(name, value):
@@ -196,9 +195,9 @@ class ExitsProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('bool', **{
-            'must' if value else 'must_not': {'exists': {'field': name}}
-        })
+        return Q(
+            "bool", **{"must" if value else "must_not": {"exists": {"field": name}}}
+        )
 
     def get_type(self):
         return Boolean()
@@ -206,7 +205,8 @@ class ExitsProcessor(Processor):
 
 class LteProcessor(Processor):
     """Search by range less than"""
-    suffix_expr = 'lte'
+
+    suffix_expr = "lte"
 
     @staticmethod
     def _get_query(name, value):
@@ -216,12 +216,13 @@ class LteProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q('range', **{name: {'lte': value}})
+        return Q("range", **{name: {"lte": value}})
 
 
 class GteProcessor(Processor):
     """Search by range greater than"""
-    suffix_expr = 'gte'
+
+    suffix_expr = "gte"
 
     @staticmethod
     def _get_query(name, value):
@@ -231,7 +232,7 @@ class GteProcessor(Processor):
         :param value: Value passed to this processor
         :return:  A elasticsearch Query
         """
-        return Q("range", **{name: {'gte': value}})
+        return Q("range", **{name: {"gte": value}})
 
 
 class ProcessorFactory(object):
@@ -261,4 +262,4 @@ class ProcessorFactory(object):
             return processor_class(filter_es, parent_processor)
 
         else:
-            raise ValueError('We do not have processor: %s.' % variant)
+            raise ValueError("We do not have processor: %s." % variant)
