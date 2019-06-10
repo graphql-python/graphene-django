@@ -1,5 +1,6 @@
 language: python
 cache: pip
+dist: xenial
 
 install:
   - pip install tox tox-travis coveralls
