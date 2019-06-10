@@ -1,7 +1,9 @@
 import importlib
 import json
+import functools
 
 from django.core.management.base import BaseCommand, CommandError
+from django.utils import autoreload
 
 from graphene_django.settings import graphene_settings
 
@@ -32,6 +34,14 @@ class CommandArguments(BaseCommand):
             help="Output file indent (default: None)",
         )
 
+        parser.add_argument(
+            "--watch",
+            dest="watch",
+            default=False,
+            action="store_true",
+            help="Updates the schema on file changes (default: False)",
+        )
+
 
 class Command(CommandArguments):
     help = "Dump Graphene schema JSON to file"
@@ -40,6 +50,18 @@ class Command(CommandArguments):
     def save_file(self, out, schema_dict, indent):
         with open(out, "w") as outfile:
             json.dump(schema_dict, outfile, indent=indent, sort_keys=True)
+
+    def get_schema(self, schema, out, indent):
+        schema_dict = {"data": schema.introspect()}
+        if out == "-":
+            self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
+        else:
+            self.save_file(out, schema_dict, indent)
+
+            style = getattr(self, "style", None)
+            success = getattr(style, "SUCCESS", lambda x: x)
+
+            self.stdout.write(success("Successfully dumped GraphQL schema to %s" % out))
 
     def handle(self, *args, **options):
         options_schema = options.get("schema")
@@ -63,13 +85,10 @@ class Command(CommandArguments):
             )
 
         indent = options.get("indent")
-        schema_dict = {"data": schema.introspect()}
-        if out == "-":
-            self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
+        watch = options.get("watch")
+        if watch:
+            autoreload.run_with_reloader(
+                functools.partial(self.get_schema, schema, out, indent)
+            )
         else:
-            self.save_file(out, schema_dict, indent)
-
-            style = getattr(self, "style", None)
-            success = getattr(style, "SUCCESS", lambda x: x)
-
-            self.stdout.write(success("Successfully dumped GraphQL schema to %s" % out))
+            self.get_schema(schema, out, indent)

@@ -66,6 +66,11 @@ class Reporter(models.Model):
             self.__class__ = CNNReporter
 
 
+class CNNReporterManager(models.Manager):
+    def get_queryset(self):
+        return super(CNNReporterManager, self).get_queryset().filter(reporter_type=2)
+
+
 class CNNReporter(Reporter):
     """
     This class is a proxy model for Reporter, used for testing
@@ -74,6 +79,8 @@ class CNNReporter(Reporter):
 
     class Meta:
         proxy = True
+
+    objects = CNNReporterManager()
 
 
 class Article(models.Model):

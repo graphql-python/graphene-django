@@ -180,19 +180,22 @@ def convert_field_to_list_or_connection(field, registry=None):
         if not _type:
             return
 
+        description = field.help_text if isinstance(field, models.ManyToManyField) else field.field.help_text
+
         # If there is a connection, we should transform the field
         # into a DjangoConnectionField
         if _type._meta.connection:
             # Use a DjangoFilterConnectionField if there are
-            # defined filter_fields in the DjangoObjectType Meta
-            if _type._meta.filter_fields:
+            # defined filter_fields or a filterset_class in the
+            # DjangoObjectType Meta
+            if _type._meta.filter_fields or _type._meta.filterset_class:
                 from .filter.fields import DjangoFilterConnectionField
 
-                return DjangoFilterConnectionField(_type)
+                return DjangoFilterConnectionField(_type, description=description)
 
-            return DjangoConnectionField(_type)
+            return DjangoConnectionField(_type, description=description)
 
-        return DjangoListField(_type)
+        return DjangoListField(_type, description=description)
 
     return Dynamic(dynamic_type)
 
