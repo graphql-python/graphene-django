@@ -212,6 +212,10 @@ def test_field_with_choices_underscore():
 
     graphene_type = convert_django_field_with_choices(field)
     assert len(graphene_type._meta.enum.__members__) == 2
+    assert graphene_type._meta.enum.__members__["A__AMOUNT__"].value == "__amount__"
+    assert graphene_type._meta.enum.__members__["A__AMOUNT__"].description == "Amount"
+    assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].value == "__percentage__"
+    assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].description == "Percentage"
 
 
 def test_should_float_convert_float():
