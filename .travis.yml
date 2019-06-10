@@ -50,7 +50,7 @@ matrix:
       env: DJANGO=master
 
     - python: 3.7
-      env: TOXENV=black,flake8
+      env: TOXENV=flake8
 
   allow_failures:
     - env: DJANGO=master
