@@ -22,7 +22,7 @@ class GraphQLTestCase(TestCase):
                 "Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase."
             )
 
-        cls._client = Client(cls.GRAPHQL_SCHEMA)
+        cls._client = Client()
 
     def query(self, query, op_name=None, input_data=None):
         """

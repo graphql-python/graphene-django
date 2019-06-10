@@ -199,7 +199,9 @@ You can use relay with mutations. A Relay mutation must inherit from
 
 .. code:: python
 
-    import graphene import relay, DjangoObjectType
+    import graphene 
+    from graphene import relay
+    from graphene_django import DjangoObjectType
     from graphql_relay import from_global_id
 
     from .queries import QuestionType
@@ -214,7 +216,7 @@ You can use relay with mutations. A Relay mutation must inherit from
 
         @classmethod
         def mutate_and_get_payload(cls, root, info, text, id):
-            question = Question.objects.get(pk=from_global_id(id))
+            question = Question.objects.get(pk=from_global_id(id)[1])
             question.text = text
             question.save()
             return QuestionMutation(question=question)
