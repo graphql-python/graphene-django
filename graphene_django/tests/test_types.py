@@ -172,9 +172,9 @@ type Reporter {
 }
 
 enum ReporterAChoice {
-  A_1_THIS
-  A_2_THAT
-  A__AMOUNT__
+  A_1
+  A_2
+  A_3
 }
 
 enum ReporterReporterType {
