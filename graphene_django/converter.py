@@ -36,10 +36,18 @@ def _is_dunder(name):
             name[-3:-2] != '_')
 
 
+def _is_sunder(name):
+    """Returns True if a _sunder_ name, False otherwise."""
+    return (len(name) > 2 and
+            name[0] == name[-1] == '_' and
+            name[1:2] != '_' and
+            name[-2:-1] != '_')
+
+
 def convert_choice_name(name):
     name = force_text(name).encode('utf8').decode('ascii', 'ignore')
     name = to_const(name)
-    if _is_dunder(name):
+    if _is_sunder(name) or _is_dunder(name):
         name = "A%s" % name
     try:
         assert_valid_name(name)

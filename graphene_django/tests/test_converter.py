@@ -199,8 +199,10 @@ def test_field_with_choices_collision():
 def test_field_with_choices_underscore():
     field = models.CharField(
         choices=(
-            ("_amount__", "Amount"),
+            ("_amount_", "Amount"),
             ("__percentage__", "Percentage"),
+            ("_not_sunder__", "Not Single Underscore"),
+            ("__not_dunder", "Not Double Underscore"),
         ),
     )
 
@@ -211,12 +213,11 @@ def test_field_with_choices_underscore():
             app_label = "test"
 
     graphene_type = convert_django_field_with_choices(field)
-    assert len(graphene_type._meta.enum.__members__) == 2
-    assert graphene_type._meta.enum.__members__["_AMOUNT__"].value == "_amount__"
-    assert graphene_type._meta.enum.__members__["_AMOUNT__"].description == "Amount"
-    assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].value == "__percentage__"
-    assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].description == "Percentage"
-
+    assert len(graphene_type._meta.enum.__members__) == 4
+    assert "A_AMOUNT_" in graphene_type._meta.enum.__members__
+    assert "A__PERCENTAGE__" in graphene_type._meta.enum.__members__
+    assert "_NOT_SUNDER__" in graphene_type._meta.enum.__members__
+    assert "__NOT_DUNDER" in graphene_type._meta.enum.__members__
 
 def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
