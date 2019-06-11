@@ -229,6 +229,7 @@ def test_filter_filterset_information_on_meta_related():
 
 def test_filter_filterset_class_filter_fields_exception():
     with pytest.raises(Exception):
+
         class ReporterFilter(FilterSet):
             class Meta:
                 model = Reporter

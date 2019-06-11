@@ -1015,13 +1015,13 @@ def test_proxy_model_support():
             "edges": [
                 {"node": {"id": to_global_id("CNNReporterType", cnn_reporter.id)}}
             ]
-        }
+        },
     }
 
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
-    
+
 
 def test_should_resolve_get_queryset_connectionfields():
     reporter_1 = Reporter.objects.create(

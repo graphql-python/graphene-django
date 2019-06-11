@@ -8,7 +8,7 @@ pytestmark = pytest.mark.django_db
 
 def test_correct_fetch_first_ship_rebels():
     initialize()
-    query = '''
+    query = """
     query RebelsShipsQuery {
       rebels {
         name,
@@ -24,22 +24,12 @@ def test_correct_fetch_first_ship_rebels():
         }
       }
     }
-    '''
+    """
     expected = {
-        'rebels': {
-            'name': 'Alliance to Restore the Republic',
-            'hero': {
-                'name': 'Human'
-            },
-            'ships': {
-                'edges': [
-                    {
-                        'node': {
-                            'name': 'X-Wing'
-                        }
-                    }
-                ]
-            }
+        "rebels": {
+            "name": "Alliance to Restore the Republic",
+            "hero": {"name": "Human"},
+            "ships": {"edges": [{"node": {"name": "X-Wing"}}]},
         }
     }
     result = schema.execute(query)
@@ -49,7 +39,7 @@ def test_correct_fetch_first_ship_rebels():
 
 def test_correct_list_characters():
     initialize()
-    query = '''
+    query = """
     query RebelsShipsQuery {
       node(id: "U2hpcDox") {
         ... on Ship {
@@ -60,15 +50,8 @@ def test_correct_list_characters():
         }
       }
     }
-    '''
-    expected = {
-        'node': {
-            'name': 'X-Wing',
-            'characters': [{
-                'name': 'Human'
-            }],
-        }
-    }
+    """
+    expected = {"node": {"name": "X-Wing", "characters": [{"name": "Human"}]}}
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected

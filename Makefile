@@ -5,7 +5,7 @@ tests:
 	py.test graphene_django --cov=graphene_django -vv
 
 format:
-	black graphene_django
+	black --exclude "/migrations/" graphene_django examples
 
 lint:
-	flake8 graphene_django
+	flake8 graphene_django examples

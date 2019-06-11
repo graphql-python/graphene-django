@@ -10,12 +10,15 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, related_name='amounts')
-    ingredient = models.ForeignKey(Ingredient, related_name='used_by')
+    recipe = models.ForeignKey(Recipe, related_name="amounts")
+    ingredient = models.ForeignKey(Ingredient, related_name="used_by")
     amount = models.FloatField()
-    unit = models.CharField(max_length=20, choices=(
-        ('unit', 'Units'),
-        ('kg', 'Kilograms'),
-        ('l', 'Litres'),
-        ('st', 'Shots'),
-    ))
+    unit = models.CharField(
+        max_length=20,
+        choices=(
+            ("unit", "Units"),
+            ("kg", "Kilograms"),
+            ("l", "Litres"),
+            ("st", "Shots"),
+        ),
+    )

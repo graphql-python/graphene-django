@@ -104,7 +104,9 @@ def test_write_only_field():
     )
 
     assert hasattr(result, "cool_name")
-    assert not hasattr(result, "password"), "'password' is write_only field and shouldn't be visible"
+    assert not hasattr(
+        result, "password"
+    ), "'password' is write_only field and shouldn't be visible"
 
 
 @mark.django_db
@@ -124,7 +126,9 @@ def test_write_only_field_using_extra_kwargs():
     )
 
     assert hasattr(result, "cool_name")
-    assert not hasattr(result, "password"), "'password' is write_only field and shouldn't be visible"
+    assert not hasattr(
+        result, "password"
+    ), "'password' is write_only field and shouldn't be visible"
 
 
 def test_nested_model():
