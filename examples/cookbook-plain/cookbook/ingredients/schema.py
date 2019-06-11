@@ -15,14 +15,12 @@ class IngredientType(DjangoObjectType):
 
 
 class Query(object):
-    category = graphene.Field(CategoryType,
-                              id=graphene.Int(),
-                              name=graphene.String())
+    category = graphene.Field(CategoryType, id=graphene.Int(), name=graphene.String())
     all_categories = graphene.List(CategoryType)
 
-    ingredient = graphene.Field(IngredientType,
-                                id=graphene.Int(),
-                                name=graphene.String())
+    ingredient = graphene.Field(
+        IngredientType, id=graphene.Int(), name=graphene.String()
+    )
     all_ingredients = graphene.List(IngredientType)
 
     def resolve_all_categories(self, context):
@@ -30,7 +28,7 @@ class Query(object):
 
     def resolve_all_ingredients(self, context):
         # We can easily optimize query count in the resolve method
-        return Ingredient.objects.select_related('category').all()
+        return Ingredient.objects.select_related("category").all()
 
     def resolve_category(self, context, id=None, name=None):
         if id is not None:

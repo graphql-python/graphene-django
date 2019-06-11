@@ -15,13 +15,10 @@ class RecipeIngredientType(DjangoObjectType):
 
 
 class Query(object):
-    recipe = graphene.Field(RecipeType,
-                            id=graphene.Int(),
-                            title=graphene.String())
+    recipe = graphene.Field(RecipeType, id=graphene.Int(), title=graphene.String())
     all_recipes = graphene.List(RecipeType)
 
-    recipeingredient = graphene.Field(RecipeIngredientType,
-                                      id=graphene.Int())
+    recipeingredient = graphene.Field(RecipeIngredientType, id=graphene.Int())
     all_recipeingredients = graphene.List(RecipeIngredientType)
 
     def resolve_recipe(self, context, id=None, title=None):
@@ -43,5 +40,5 @@ class Query(object):
         return Recipe.objects.all()
 
     def resolve_all_recipeingredients(self, context):
-        related = ['recipe', 'ingredient']
+        related = ["recipe", "ingredient"]
         return RecipeIngredient.objects.select_related(*related).all()
