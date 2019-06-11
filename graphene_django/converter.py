@@ -28,10 +28,18 @@ from .utils import import_single_dispatch
 singledispatch = import_single_dispatch()
 
 
+def _is_dunder(name):
+    """Returns True if a __dunder__ name, False otherwise."""
+    return (len(name) > 4 and
+            name[:2] == name[-2:] == '__' and
+            name[2:3] != '_' and
+            name[-3:-2] != '_')
+
+
 def convert_choice_name(name):
     name = force_text(name).encode('utf8').decode('ascii', 'ignore')
     name = to_const(name)
-    if name.startswith('_'):
+    if _is_dunder(name):
         name = "A%s" % name
     try:
         assert_valid_name(name)

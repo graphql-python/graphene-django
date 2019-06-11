@@ -199,7 +199,7 @@ def test_field_with_choices_collision():
 def test_field_with_choices_underscore():
     field = models.CharField(
         choices=(
-            ("__amount__", "Amount"),
+            ("_amount__", "Amount"),
             ("__percentage__", "Percentage"),
         ),
     )
@@ -212,8 +212,8 @@ def test_field_with_choices_underscore():
 
     graphene_type = convert_django_field_with_choices(field)
     assert len(graphene_type._meta.enum.__members__) == 2
-    assert graphene_type._meta.enum.__members__["A__AMOUNT__"].value == "__amount__"
-    assert graphene_type._meta.enum.__members__["A__AMOUNT__"].description == "Amount"
+    assert graphene_type._meta.enum.__members__["_AMOUNT__"].value == "_amount__"
+    assert graphene_type._meta.enum.__members__["_AMOUNT__"].description == "Amount"
     assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].value == "__percentage__"
     assert graphene_type._meta.enum.__members__["A__PERCENTAGE__"].description == "Percentage"
 
