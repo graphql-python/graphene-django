@@ -2,7 +2,9 @@ from django import forms
 from django.test import TestCase
 from py.test import raises
 
-from graphene_django.tests.models import Pet, Film, FilmDetails
+from graphene_django.tests.models import Film, FilmDetails, Pet
+
+from ...settings import graphene_settings
 from ..mutation import DjangoFormMutation, DjangoModelFormMutation
 
 
@@ -39,6 +41,22 @@ def test_has_input_fields():
             form_class = MyForm
 
     assert "text" in MyMutation.Input._meta.fields
+
+
+def test_mutation_error_camelcased():
+    class ExtraPetForm(PetForm):
+        test_field = forms.CharField(required=True)
+
+    class PetMutation(DjangoModelFormMutation):
+        class Meta:
+            form_class = ExtraPetForm
+
+    result = PetMutation.mutate_and_get_payload(None, None)
+    assert {f.field for f in result.errors} == {"name", "age", "test_field"}
+    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = True
+    result = PetMutation.mutate_and_get_payload(None, None)
+    assert {f.field for f in result.errors} == {"name", "age", "testField"}
+    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = False
 
 
 class ModelFormMutationTests(TestCase):
