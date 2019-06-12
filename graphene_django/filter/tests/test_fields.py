@@ -987,7 +987,6 @@ def test_filter_with_union():
         def resolve_all_reporters(cls, root, info, **kwargs):
             ret = Reporter.objects.none() | Reporter.objects.filter(first_name="John")
 
-
     Reporter.objects.create(first_name="John", last_name="Doe")
 
     schema = Schema(query=Query)

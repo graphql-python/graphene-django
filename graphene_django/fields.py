@@ -160,14 +160,19 @@ class DjangoConnectionField(ConnectionField):
         last = kwargs.get("last")
         if first is not None and first <= 0:
             raise ValueError(
-                "`first` argument must be positive, got `{first}`".format(first=first))
+                "`first` argument must be positive, got `{first}`".format(first=first)
+            )
         if last is not None and last <= 0:
             raise ValueError(
-                "`last` argument must be positive, got `{last}`".format(last=last))
+                "`last` argument must be positive, got `{last}`".format(last=last)
+            )
         if enforce_first_or_last and not (first or last):
             raise ValueError(
                 "You must provide a `first` or `last` value "
-                "to properly paginate the `{info.field_name}` connection.".format(info=info))
+                "to properly paginate the `{info.field_name}` connection.".format(
+                    info=info
+                )
+            )
 
         if max_limit:
             if first is None and last is None:
