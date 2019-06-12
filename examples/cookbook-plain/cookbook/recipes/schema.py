@@ -1,7 +1,7 @@
 import graphene
 from graphene_django.types import DjangoObjectType
 
-from cookbook.recipes.models import Recipe, RecipeIngredient
+from .models import Recipe, RecipeIngredient
 
 
 class RecipeType(DjangoObjectType):
@@ -15,19 +15,13 @@ class RecipeIngredientType(DjangoObjectType):
 
 
 class Query(object):
-    recipe = graphene.Field(RecipeType,
-                            id=graphene.Int(),
-                            title=graphene.String())
+    recipe = graphene.Field(RecipeType, id=graphene.Int(), title=graphene.String())
     all_recipes = graphene.List(RecipeType)
 
-    recipeingredient = graphene.Field(RecipeIngredientType,
-                                      id=graphene.Int())
+    recipeingredient = graphene.Field(RecipeIngredientType, id=graphene.Int())
     all_recipeingredients = graphene.List(RecipeIngredientType)
 
-    def resolve_recipe(self, args, context, info):
-        id = args.get('id')
-        title = args.get('title')
-
+    def resolve_recipe(self, context, id=None, title=None):
         if id is not None:
             return Recipe.objects.get(pk=id)
 
@@ -36,17 +30,15 @@ class Query(object):
 
         return None
 
-    def resolve_recipeingredient(self, args, context, info):
-        id = args.get('id')
-
+    def resolve_recipeingredient(self, context, id=None):
         if id is not None:
             return RecipeIngredient.objects.get(pk=id)
 
         return None
 
-    def resolve_all_recipes(self, args, context, info):
+    def resolve_all_recipes(self, context):
         return Recipe.objects.all()
 
-    def resolve_all_recipeingredients(self, args, context, info):
-        related = ['recipe', 'ingredient']
+    def resolve_all_recipeingredients(self, context):
+        related = ["recipe", "ingredient"]
         return RecipeIngredient.objects.select_related(*related).all()

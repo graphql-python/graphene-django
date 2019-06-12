@@ -9,7 +9,7 @@ pytestmark = pytest.mark.django_db
 def test_mutations():
     initialize()
 
-    query = '''
+    query = """
     mutation MyMutation {
       introduceShip(input:{clientMutationId:"abc", shipName: "Peter", factionId: "1"}) {
         ship {
@@ -29,49 +29,23 @@ def test_mutations():
         }
       }
     }
-    '''
+    """
     expected = {
-        'introduceShip': {
-            'ship': {
-                'id': 'U2hpcDo5',
-                'name': 'Peter'
-            },
-            'faction': {
-                'name': 'Alliance to Restore the Republic',
-                'ships': {
-                    'edges': [{
-                        'node': {
-                            'id': 'U2hpcDox',
-                            'name': 'X-Wing'
-                        }
-                    }, {
-                        'node': {
-                            'id': 'U2hpcDoy',
-                            'name': 'Y-Wing'
-                        }
-                    }, {
-                        'node': {
-                            'id': 'U2hpcDoz',
-                            'name': 'A-Wing'
-                        }
-                    }, {
-                        'node': {
-                            'id': 'U2hpcDo0',
-                            'name': 'Millenium Falcon'
-                        }
-                    }, {
-                        'node': {
-                            'id': 'U2hpcDo1',
-                            'name': 'Home One'
-                        }
-                    }, {
-                        'node': {
-                            'id': 'U2hpcDo5',
-                            'name': 'Peter'
-                        }
-                    }]
+        "introduceShip": {
+            "ship": {"id": "U2hpcDo5", "name": "Peter"},
+            "faction": {
+                "name": "Alliance to Restore the Republic",
+                "ships": {
+                    "edges": [
+                        {"node": {"id": "U2hpcDox", "name": "X-Wing"}},
+                        {"node": {"id": "U2hpcDoy", "name": "Y-Wing"}},
+                        {"node": {"id": "U2hpcDoz", "name": "A-Wing"}},
+                        {"node": {"id": "U2hpcDo0", "name": "Millenium Falcon"}},
+                        {"node": {"id": "U2hpcDo1", "name": "Home One"}},
+                        {"node": {"id": "U2hpcDo5", "name": "Peter"}},
+                    ]
                 },
-            }
+            },
         }
     }
     result = schema.execute(query)

@@ -1,6 +1,9 @@
+import six
 from collections import OrderedDict
 
+from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
+import graphene
 from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
@@ -9,6 +12,10 @@ from graphene.types.utils import yank_fields_from_attrs
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
+
+
+if six.PY3:
+    from typing import Type
 
 
 def construct_fields(model, registry, only_fields, exclude_fields):
@@ -38,6 +45,7 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
     connection = None  # type: Type[Connection]
 
     filter_fields = ()
+    filterset_class = None
 
 
 class DjangoObjectType(ObjectType):
@@ -50,6 +58,7 @@ class DjangoObjectType(ObjectType):
         only_fields=(),
         exclude_fields=(),
         filter_fields=None,
+        filterset_class=None,
         connection=None,
         connection_class=None,
         use_connection=None,
@@ -69,8 +78,16 @@ class DjangoObjectType(ObjectType):
             'Registry, received "{}".'
         ).format(cls.__name__, registry)
 
-        if not DJANGO_FILTER_INSTALLED and filter_fields:
-            raise Exception("Can only set filter_fields if Django-Filter is installed")
+        if filter_fields and filterset_class:
+            raise Exception("Can't set both filter_fields and filterset_class")
+
+        if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
+            raise Exception(
+                (
+                    "Can only set filter_fields or filterset_class if "
+                    "Django-Filter is installed"
+                )
+            )
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, only_fields, exclude_fields), _as=Field
@@ -101,6 +118,7 @@ class DjangoObjectType(ObjectType):
         _meta.model = model
         _meta.registry = registry
         _meta.filter_fields = filter_fields
+        _meta.filterset_class = filterset_class
         _meta.fields = django_fields
         _meta.connection = connection
 
@@ -124,12 +142,26 @@ class DjangoObjectType(ObjectType):
         if not is_valid_django_model(type(root)):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
-        model = root._meta.model._meta.concrete_model
+        if cls._meta.model._meta.proxy:
+            model = root._meta.model
+        else:
+            model = root._meta.model._meta.concrete_model
+
         return model == cls._meta.model
 
     @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset
+
+    @classmethod
     def get_node(cls, info, id):
+        queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
-            return cls._meta.model.objects.get(pk=id)
+            return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+
+class ErrorType(ObjectType):
+    field = graphene.String(required=True)
+    messages = graphene.List(graphene.NonNull(graphene.String), required=True)

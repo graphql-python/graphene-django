@@ -31,7 +31,7 @@ def test_should_query_field():
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
-        debug = graphene.Field(DjangoDebug, name="__debug")
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
         def resolve_reporter(self, info, **args):
             return Reporter.objects.first()
@@ -41,7 +41,7 @@ def test_should_query_field():
           reporter {
             lastName
           }
-          __debug {
+          _debug {
             sql {
               rawSql
             }
@@ -50,9 +50,7 @@ def test_should_query_field():
     """
     expected = {
         "reporter": {"lastName": "ABA"},
-        "__debug": {
-            "sql": [{"rawSql": str(Reporter.objects.order_by("pk")[:1].query)}]
-        },
+        "_debug": {"sql": [{"rawSql": str(Reporter.objects.order_by("pk")[:1].query)}]},
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(
@@ -75,7 +73,7 @@ def test_should_query_list():
 
     class Query(graphene.ObjectType):
         all_reporters = graphene.List(ReporterType)
-        debug = graphene.Field(DjangoDebug, name="__debug")
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
@@ -85,7 +83,7 @@ def test_should_query_list():
           allReporters {
             lastName
           }
-          __debug {
+          _debug {
             sql {
               rawSql
             }
@@ -94,7 +92,7 @@ def test_should_query_list():
     """
     expected = {
         "allReporters": [{"lastName": "ABA"}, {"lastName": "Griffin"}],
-        "__debug": {"sql": [{"rawSql": str(Reporter.objects.all().query)}]},
+        "_debug": {"sql": [{"rawSql": str(Reporter.objects.all().query)}]},
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(
@@ -117,7 +115,7 @@ def test_should_query_connection():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
-        debug = graphene.Field(DjangoDebug, name="__debug")
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
@@ -131,7 +129,7 @@ def test_should_query_connection():
               }
             }
           }
-          __debug {
+          _debug {
             sql {
               rawSql
             }
@@ -145,9 +143,9 @@ def test_should_query_connection():
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
-    assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
+    assert "COUNT" in result.data["_debug"]["sql"][0]["rawSql"]
     query = str(Reporter.objects.all()[:1].query)
-    assert result.data["__debug"]["sql"][1]["rawSql"] == query
+    assert result.data["_debug"]["sql"][1]["rawSql"] == query
 
 
 def test_should_query_connectionfilter():
@@ -166,7 +164,7 @@ def test_should_query_connectionfilter():
     class Query(graphene.ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterType, fields=["last_name"])
         s = graphene.String(resolver=lambda *_: "S")
-        debug = graphene.Field(DjangoDebug, name="__debug")
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.all()
@@ -180,7 +178,7 @@ def test_should_query_connectionfilter():
               }
             }
           }
-          __debug {
+          _debug {
             sql {
               rawSql
             }
@@ -194,6 +192,6 @@ def test_should_query_connectionfilter():
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
-    assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
+    assert "COUNT" in result.data["_debug"]["sql"][0]["rawSql"]
     query = str(Reporter.objects.all()[:1].query)
-    assert result.data["__debug"]["sql"][1]["rawSql"] == query
+    assert result.data["_debug"]["sql"][1]["rawSql"] == query
