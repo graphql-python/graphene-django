@@ -7,14 +7,12 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('ingredients', '0001_initial'),
-    ]
+    dependencies = [("ingredients", "0001_initial")]
 
     operations = [
         migrations.AlterField(
-            model_name='ingredient',
-            name='notes',
+            model_name="ingredient",
+            name="notes",
             field=models.TextField(blank=True, null=True),
-        ),
+        )
     ]

@@ -805,6 +805,7 @@ def test_should_error_if_negative_last():
     assert str(result.errors[0]) == "`last` argument must be positive, got `-100`"
     assert result.data == expected
 
+
 def test_max_limit_is_zero():
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 0
 
@@ -841,6 +842,7 @@ def test_max_limit_is_zero():
 
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
+
 def test_max_limit_is_none():
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = None
 
@@ -876,6 +878,7 @@ def test_max_limit_is_none():
     assert result.data == expected
 
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
+
 
 def test_should_query_promise_connectionfields():
     from promise import Promise

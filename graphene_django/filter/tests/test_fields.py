@@ -2,13 +2,11 @@ from datetime import datetime
 
 import pytest
 
-from graphene import (Argument, Boolean, Field, Float, ObjectType, Schema,
-                      String)
+from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
 from graphene.relay import Node
 
 from graphene_django import DjangoObjectType
-from graphene_django.forms import (GlobalIDFormField,
-                                   GlobalIDMultipleChoiceField)
+from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
@@ -769,6 +767,7 @@ def test_annotation_is_perserved():
     assert not result.errors
     assert result.data == expected
 
+
 def test_filter_with_union():
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -782,7 +781,6 @@ def test_filter_with_union():
         @classmethod
         def resolve_all_reporters(cls, root, info, **kwargs):
             ret = Reporter.objects.none() | Reporter.objects.filter(first_name="John")
-
 
     Reporter.objects.create(first_name="John", last_name="Doe")
 

@@ -122,15 +122,16 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(
-            cls,
-            resolver,
-            connection,
-            default_manager,
-            max_limit,
-            enforce_first_or_last,
-            root,
-            info,
-            **kwargs):
+        cls,
+        resolver,
+        connection,
+        default_manager,
+        max_limit,
+        enforce_first_or_last,
+        root,
+        info,
+        **kwargs
+    ):
 
         # By current `connection_from_list_slice` implementation,
         # `last` means last N items in the selection,
@@ -140,26 +141,34 @@ class DjangoConnectionField(ConnectionField):
         last = kwargs.get("last")
         if first is not None and first <= 0:
             raise ValueError(
-                "`first` argument must be positive, got `{first}`".format(first=first))
+                "`first` argument must be positive, got `{first}`".format(first=first)
+            )
         if last is not None and last <= 0:
             raise ValueError(
-                "`last` argument must be positive, got `{last}`".format(last=last))
+                "`last` argument must be positive, got `{last}`".format(last=last)
+            )
         if enforce_first_or_last and not (first or last):
             raise ValueError(
                 "You must provide a `first` or `last` value "
-                "to properly paginate the `{info.field_name}` connection.".format(info=info))
+                "to properly paginate the `{info.field_name}` connection.".format(
+                    info=info
+                )
+            )
 
         if not max_limit:
             pass
         elif first is None and last is None:
-            kwargs['first'] = max_limit
+            kwargs["first"] = max_limit
         else:
             count = min(i for i in (first, last) if i)
             if count > max_limit:
-                raise ValueError(("Requesting {count} records "
-                                  "on the `{info.field_name}` connection "
-                                  "exceeds the limit of {max_limit} records.").format(
-                                      count=count, info=info, max_limit=max_limit))
+                raise ValueError(
+                    (
+                        "Requesting {count} records "
+                        "on the `{info.field_name}` connection "
+                        "exceeds the limit of {max_limit} records."
+                    ).format(count=count, info=info, max_limit=max_limit)
+                )
 
         iterable = resolver(root, info, **kwargs)
         queryset = cls.resolve_queryset(connection, default_manager, info, kwargs)
