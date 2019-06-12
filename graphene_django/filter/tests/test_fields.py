@@ -1,9 +1,7 @@
 from datetime import datetime
 
 import pytest
-# for annotation test
-from django.db.models import TextField, Value
-from django.db.models.functions import Concat
+
 from graphene import (Argument, Boolean, Field, Float, ObjectType, Schema,
                       String)
 from graphene.relay import Node
@@ -13,6 +11,10 @@ from graphene_django.forms import (GlobalIDFormField,
                                    GlobalIDMultipleChoiceField)
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
+
+# for annotation test
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 
 pytestmark = []
 
