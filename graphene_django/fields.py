@@ -131,20 +131,23 @@ class DjangoConnectionField(ConnectionField):
             root,
             info,
             **kwargs):
-        # pylint: disable=R0913,W0221
+
+        # By current `connection_from_list_slice` implementation,
+        # `last` means last N items in the selection,
+        # and when use `last` with `first`,  `last` means last N items in first N items.
 
         first = kwargs.get("first")
         last = kwargs.get("last")
-        if not (first is None or first > 0):
+        if first is not None and first <= 0:
             raise ValueError(
-                "`first` argument must be positive, got `{first}`".format(**locals()))
-        if not (last is None or last > 0):
+                "`first` argument must be positive, got `{first}`".format(first=first))
+        if last is not None and last <= 0:
             raise ValueError(
-                "`last` argument must be positive, got `{last}`".format(**locals()))
+                "`last` argument must be positive, got `{last}`".format(last=last))
         if enforce_first_or_last and not (first or last):
             raise ValueError(
                 "You must provide a `first` or `last` value "
-                "to properly paginate the `{info.field_name}` connection.".format(**locals()))
+                "to properly paginate the `{info.field_name}` connection.".format(info=info))
 
         if not max_limit:
             pass
@@ -155,7 +158,8 @@ class DjangoConnectionField(ConnectionField):
             if count > max_limit:
                 raise ValueError(("Requesting {count} records "
                                   "on the `{info.field_name}` connection "
-                                  "exceeds the limit of {max_limit} records.").format(**locals()))
+                                  "exceeds the limit of {max_limit} records.").format(
+                                      count=count, info=info, max_limit=max_limit))
 
         iterable = resolver(root, info, **kwargs)
         queryset = cls.resolve_queryset(connection, default_manager, info, kwargs)
