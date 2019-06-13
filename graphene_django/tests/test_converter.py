@@ -208,8 +208,7 @@ def test_field_with_choices_convert_enum_false():
             app_label = "test"
 
     graphene_type = convert_django_field_with_choices(
-        field,
-        convert_choices_to_enum=False
+        field, convert_choices_to_enum=False
     )
     assert isinstance(graphene_type, graphene.String)
 

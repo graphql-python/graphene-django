@@ -230,13 +230,15 @@ def test_django_objecttype_exclude_fields():
     assert "email" not in fields
 
 
-class TestDjangoObjectType():
+class TestDjangoObjectType:
     @pytest.fixture
     def PetModel(self):
         class PetModel(models.Model):
-            kind = models.CharField(choices=(('cat', 'Cat'), ('dog', 'Dog')))
-            cuteness = models.IntegerField(choices=(
-                (1, 'Kind of cute'), (2, 'Pretty cute'), (3, 'OMG SO CUTE!!!')))
+            kind = models.CharField(choices=(("cat", "Cat"), ("dog", "Dog")))
+            cuteness = models.IntegerField(
+                choices=((1, "Kind of cute"), (2, "Pretty cute"), (3, "OMG SO CUTE!!!"))
+            )
+
         return PetModel
 
     def test_django_objecttype_convert_choices_enum_false(self, PetModel):
@@ -250,7 +252,8 @@ class TestDjangoObjectType():
 
         schema = Schema(query=Query)
 
-        assert str(schema) == dedent("""\
+        assert str(schema) == dedent(
+            """\
         schema {
           query: Query
         }
@@ -264,20 +267,22 @@ class TestDjangoObjectType():
         type Query {
           pet: Pet
         }
-        """)
+        """
+        )
 
     def test_django_objecttype_convert_choices_enum_list(self, PetModel):
         class Pet(DjangoObjectType):
             class Meta:
                 model = PetModel
-                convert_choices_to_enum = ['kind']
+                convert_choices_to_enum = ["kind"]
 
         class Query(ObjectType):
             pet = Field(Pet)
 
         schema = Schema(query=Query)
 
-        assert str(schema) == dedent("""\
+        assert str(schema) == dedent(
+            """\
         schema {
           query: Query
         }
@@ -296,4 +301,5 @@ class TestDjangoObjectType():
         type Query {
           pet: Pet
         }
-        """)
+        """
+        )

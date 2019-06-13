@@ -52,7 +52,9 @@ def get_choices(choices):
             yield name, value, description
 
 
-def convert_django_field_with_choices(field, registry=None, convert_choices_to_enum=True):
+def convert_django_field_with_choices(
+    field, registry=None, convert_choices_to_enum=True
+):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
