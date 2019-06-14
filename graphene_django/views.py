@@ -105,7 +105,7 @@ class GraphQLView(View):
 
 
     def get_directive_middleware(self, custom=True):
-        return [DirectivesMiddleware, ]
+        return []
 
 
     # noinspection PyUnusedLocal
