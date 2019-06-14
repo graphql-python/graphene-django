@@ -30,7 +30,7 @@ Default: ``None``
 
 
 ``SCHEMA_OUTPUT``
-----------
+-----------------
 
 The name of the file where the GraphQL schema output will go.
 
@@ -44,7 +44,7 @@ Default: ``schema.json``
 
 
 ``SCHEMA_INDENT``
-----------
+-----------------
 
 The indentation level of the schema output.
 
@@ -58,7 +58,7 @@ Default: ``2``
 
 
 ``MIDDLEWARE``
-----------
+--------------
 
 A tuple of middleware that will be executed for each GraphQL query.
 
@@ -76,7 +76,7 @@ Default: ``()``
 
 
 ``RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST``
-----------
+------------------------------------------
 
 Enforces relay queries to have the ``first`` or ``last`` argument.
 
@@ -90,7 +90,7 @@ Default: ``False``
 
 
 ``RELAY_CONNECTION_MAX_LIMIT``
-----------
+------------------------------
 
 The maximum size of objects that can be requested through a relay connection.
 
