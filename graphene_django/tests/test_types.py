@@ -1,3 +1,4 @@
+from collections import OrderedDict, defaultdict
 from textwrap import dedent
 
 import pytest
@@ -239,7 +240,11 @@ class TestDjangoObjectType:
                 choices=((1, "Kind of cute"), (2, "Pretty cute"), (3, "OMG SO CUTE!!!"))
             )
 
-        return PetModel
+        yield PetModel
+
+        # Clear Django model cache so we don't get warnings when creating the
+        # model multiple times
+        PetModel._meta.apps.all_models = defaultdict(OrderedDict)
 
     def test_django_objecttype_convert_choices_enum_false(self, PetModel):
         class Pet(DjangoObjectType):
