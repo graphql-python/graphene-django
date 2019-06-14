@@ -95,8 +95,10 @@ You can completely overwrite a field, or add new fields, to a ``DjangoObjectType
 Choices to Enum conversion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-By default Graphene-Django will convert any Django fields that have ``choices``
-into a GraphQL enum type.
+By default Graphene-Django will convert any Django fields that have `choices`_
+defined into a GraphQL enum type.
+
+.. _choices: https://docs.djangoproject.com/en/2.2/ref/models/fields/#choices
 
 For example the following ``Model`` and ``DjangoObjectType``:
 
