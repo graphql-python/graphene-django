@@ -153,6 +153,9 @@ automatically converted into enums:
          model = PetModel
          convert_choices_to_enum = ['kind']
 
+**Note:** Setting ``convert_choices_to_enum`` to an empty list is the same as
+setting it to `False`.
+
 
 Related models
 --------------

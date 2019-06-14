@@ -303,3 +303,32 @@ class TestDjangoObjectType:
         }
         """
         )
+
+    def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = []
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: String!
+          cuteness: Int!
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
