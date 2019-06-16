@@ -21,7 +21,26 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
-from .compat import ArrayField, HStoreField, JSONField, RangeField
+from .compat import (
+    ArrayField,
+    HStoreField,
+    JSONField,
+    RangeField,
+    DateTimeRangeField,
+    DateRangeField,
+    IntegerRangeField,
+    BigIntegerRangeField,
+    FloatRangeField,
+    DecimalRangeField
+)
+
+from .range_types import (
+    DateRangeType,
+    DateTimeRangeType,
+    IntRangeType,
+    FloatRangeType
+)
+
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
 
@@ -236,3 +255,21 @@ def convert_posgres_range_to_string(field, registry=None):
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
     return List(inner_type, description=field.help_text, required=not field.null)
+
+@convert_django_field.register(DateTimeRangeField)
+def convert_posgres_datetime_range_to_datetime(field, registry=None):
+    return Field(DateTimeRangeType, description=field.help_text, required=not field.null)
+
+@convert_django_field.register(DateRangeField)
+def convert_posgres_date_range_to_date(field, registry=None):
+    return Field(DateRangeType, description=field.help_text, required=not field.null)
+
+@convert_django_field.register(IntegerRangeField)
+@convert_django_field.register(BigIntegerRangeField)
+def convert_posgres_int_range_to_int(field, registry=None):
+    return Field(IntRangeType, description=field.help_text, required=not field.null)
+
+@convert_django_field.register(FloatRangeField)
+@convert_django_field.register(DecimalRangeField)
+def convert_posgres_float_range_to_float(field, registry=None):
+    return Field(FloatRangeType, description=field.help_text, required=not field.null)

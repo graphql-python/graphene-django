@@ -165,3 +165,4 @@ class DjangoObjectType(ObjectType):
 class ErrorType(ObjectType):
     field = graphene.String(required=True)
     messages = graphene.List(graphene.NonNull(graphene.String), required=True)
+

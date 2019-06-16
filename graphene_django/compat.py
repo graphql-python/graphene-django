@@ -10,6 +10,12 @@ try:
         HStoreField,
         JSONField,
         RangeField,
+        DateTimeRangeField,
+        DateRangeField,
+        IntegerRangeField,
+        BigIntegerRangeField,
+        FloatRangeField,
+        DecimalRangeField
     )
 except ImportError:
     ArrayField, HStoreField, JSONField, RangeField = (MissingType,) * 4
