@@ -18,4 +18,6 @@ try:
         DecimalRangeField
     )
 except ImportError:
-    ArrayField, HStoreField, JSONField, RangeField = (MissingType,) * 4
+    ArrayField, HStoreField, JSONField, RangeField, \
+    DateTimeRangeField, DateRangeField, IntegerRangeField, \
+    BigIntegerRangeField, FloatRangeField, DecimalRangeField = (MissingType,) * 10
