@@ -92,6 +92,71 @@ You can completely overwrite a field, or add new fields, to a ``DjangoObjectType
             return 'hello!'
 
 
+Choices to Enum conversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default Graphene-Django will convert any Django fields that have `choices`_
+defined into a GraphQL enum type.
+
+.. _choices: https://docs.djangoproject.com/en/2.2/ref/models/fields/#choices
+
+For example the following ``Model`` and ``DjangoObjectType``:
+
+.. code:: python
+
+   class PetModel(models.Model):
+      kind = models.CharField(max_length=100, choices=(('cat', 'Cat'), ('dog', 'Dog')))
+
+   class Pet(DjangoObjectType):
+      class Meta:
+         model = PetModel
+
+Results in the following GraphQL schema definition:
+
+.. code::
+
+   type Pet {
+     id: ID!
+     kind: PetModelKind!
+   }
+
+   enum PetModelKind {
+     CAT
+     DOG
+   }
+
+You can disable this automatic conversion by setting
+``convert_choices_to_enum`` attribute to ``False`` on the ``DjangoObjectType``
+``Meta`` class.
+
+.. code:: python
+
+   class Pet(DjangoObjectType):
+      class Meta:
+         model = PetModel
+         convert_choices_to_enum = False
+
+.. code::
+
+   type Pet {
+     id: ID!
+     kind: String!
+   }
+
+You can also set ``convert_choices_to_enum`` to a list of fields that should be
+automatically converted into enums:
+
+.. code:: python
+
+   class Pet(DjangoObjectType):
+      class Meta:
+         model = PetModel
+         convert_choices_to_enum = ['kind']
+
+**Note:** Setting ``convert_choices_to_enum = []`` is the same as setting it to
+``False``.
+
+
 Related models
 --------------
 

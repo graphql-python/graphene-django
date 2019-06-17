@@ -48,11 +48,19 @@ help:
 clean:
 	rm -rf $(BUILDDIR)/*
 
+.PHONY: install ## to install all documentation related requirements
+install:
+	pip install -r requirements.txt
+
 .PHONY: html
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	@echo
 	@echo "Build finished. The HTML pages are in $(BUILDDIR)/html."
+
+.PHONY: livehtml ## to build and serve live-reloading documentation
+livehtml:
+	sphinx-autobuild -b html --watch ../graphene_django $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
 .PHONY: dirhtml
 dirhtml:

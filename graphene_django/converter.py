@@ -71,13 +71,15 @@ def get_choices(choices):
             yield name, value, description
 
 
-def convert_django_field_with_choices(field, registry=None):
+def convert_django_field_with_choices(
+    field, registry=None, convert_choices_to_enum=True
+):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
     choices = getattr(field, "choices", None)
-    if choices:
+    if choices and convert_choices_to_enum:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         choices = list(get_choices(choices))
@@ -196,7 +198,11 @@ def convert_field_to_list_or_connection(field, registry=None):
         if not _type:
             return
 
-        description = field.help_text if isinstance(field, models.ManyToManyField) else field.field.help_text
+        description = (
+            field.help_text
+            if isinstance(field, models.ManyToManyField)
+            else field.field.help_text
+        )
 
         # If there is a connection, we should transform the field
         # into a DjangoConnectionField

@@ -41,10 +41,9 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                 meta.update(self._extra_filter_meta)
 
             filterset_class = self._provided_filterset_class or (
-                self.node_type._meta.filterset_class)
-            self._filterset_class = get_filterset_class(
-                filterset_class, **meta
+                self.node_type._meta.filterset_class
             )
+            self._filterset_class = get_filterset_class(filterset_class, **meta)
 
         return self._filterset_class
 
