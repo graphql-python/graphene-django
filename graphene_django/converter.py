@@ -52,13 +52,15 @@ def get_choices(choices):
             yield name, value, description
 
 
-def convert_django_field_with_choices(field, registry=None):
+def convert_django_field_with_choices(
+    field, registry=None, convert_choices_to_enum=True
+):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
     choices = getattr(field, "choices", None)
-    if choices:
+    if choices and convert_choices_to_enum:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         choices = list(get_choices(choices))

@@ -196,6 +196,23 @@ def test_field_with_choices_collision():
     convert_django_field_with_choices(field)
 
 
+def test_field_with_choices_convert_enum_false():
+    field = models.CharField(
+        help_text="Language", choices=(("es", "Spanish"), ("en", "English"))
+    )
+
+    class TranslatedModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(
+        field, convert_choices_to_enum=False
+    )
+    assert isinstance(graphene_type, graphene.String)
+
+
 def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
 

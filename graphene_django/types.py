@@ -18,7 +18,9 @@ if six.PY3:
     from typing import Type
 
 
-def construct_fields(model, registry, only_fields, exclude_fields):
+def construct_fields(
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum
+):
     _model_fields = get_model_fields(model)
 
     fields = OrderedDict()
@@ -33,7 +35,18 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # in there. Or when we exclude this field in exclude_fields.
             # Or when there is no back reference.
             continue
-        converted = convert_django_field_with_choices(field, registry)
+
+        _convert_choices_to_enum = convert_choices_to_enum
+        if not isinstance(_convert_choices_to_enum, bool):
+            # then `convert_choices_to_enum` is a list of field names to convert
+            if name in _convert_choices_to_enum:
+                _convert_choices_to_enum = True
+            else:
+                _convert_choices_to_enum = False
+
+        converted = convert_django_field_with_choices(
+            field, registry, convert_choices_to_enum=_convert_choices_to_enum
+        )
         fields[name] = converted
 
     return fields
@@ -63,6 +76,7 @@ class DjangoObjectType(ObjectType):
         connection_class=None,
         use_connection=None,
         interfaces=(),
+        convert_choices_to_enum=True,
         _meta=None,
         **options
     ):
@@ -90,7 +104,10 @@ class DjangoObjectType(ObjectType):
             )
 
         django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, only_fields, exclude_fields), _as=Field
+            construct_fields(
+                model, registry, only_fields, exclude_fields, convert_choices_to_enum
+            ),
+            _as=Field,
         )
 
         if use_connection is None and interfaces:
