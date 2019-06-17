@@ -30,22 +30,26 @@ singledispatch = import_single_dispatch()
 
 def _is_dunder(name):
     """Returns True if a __dunder__ name, False otherwise."""
-    return (len(name) > 4 and
-            name[:2] == name[-2:] == '__' and
-            name[2:3] != '_' and
-            name[-3:-2] != '_')
+    return (
+        len(name) > 4
+        and name[:2] == name[-2:] == "__"
+        and name[2:3] != "_"
+        and name[-3:-2] != "_"
+    )
 
 
 def _is_sunder(name):
     """Returns True if a _sunder_ name, False otherwise."""
-    return (len(name) > 2 and
-            name[0] == name[-1] == '_' and
-            name[1:2] != '_' and
-            name[-2:-1] != '_')
+    return (
+        len(name) > 2
+        and name[0] == name[-1] == "_"
+        and name[1:2] != "_"
+        and name[-2:-1] != "_"
+    )
 
 
 def convert_choice_name(name):
-    name = force_text(name).encode('utf8').decode('ascii', 'ignore')
+    name = force_text(name).encode("utf8").decode("ascii", "ignore")
     name = to_const(name)
     if _is_sunder(name) or _is_dunder(name):
         name = "A%s" % name
