@@ -25,10 +25,7 @@ tests_require = [
 ] + rest_framework_require
 
 
-dev_requires = [
-    "black==19.3b0",
-    "flake8==3.7.7",
-] + tests_require
+dev_requires = ["black==19.3b0", "flake8==3.7.7"] + tests_require
 
 setup(
     name="graphene-django",
@@ -64,7 +61,11 @@ setup(
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
     rest_framework_require=rest_framework_require,
-    extras_require={"test": tests_require, "rest_framework": rest_framework_require, "dev": dev_requires},
+    extras_require={
+        "test": tests_require,
+        "rest_framework": rest_framework_require,
+        "dev": dev_requires,
+    },
     include_package_data=True,
     zip_safe=False,
     platforms="any",
