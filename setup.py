@@ -25,7 +25,12 @@ tests_require = [
 ] + rest_framework_require
 
 
-dev_requires = ["black==19.3b0", "flake8==3.7.7"] + tests_require
+dev_requires = [
+    "black==19.3b0",
+    "flake8==3.7.7",
+    "flake8-black==0.1.0",
+    "flake8-bugbear==19.3.0",
+] + tests_require
 
 setup(
     name="graphene-django",
