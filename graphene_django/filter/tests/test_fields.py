@@ -183,7 +183,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context_value=context())
+    result = schema.execute(query, context=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
@@ -462,15 +462,15 @@ def test_filter_filterset_related_results_with_filter():
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
 
-    r1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="A test user", last_name="Last Name", email="test1@test.com"
     )
-    r2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Other test user",
         last_name="Other Last Name",
         email="test2@test.com",
     )
-    r3 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Random", last_name="RandomLast", email="random@test.com"
     )
 
@@ -638,7 +638,7 @@ def test_should_query_filter_node_double_limit_raises():
     Reporter.objects.create(
         first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
     )
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -684,7 +684,7 @@ def test_order_by_is_perserved():
             return reporters
 
     Reporter.objects.create(first_name="b")
-    r = Reporter.objects.create(first_name="a")
+    Reporter.objects.create(first_name="a")
 
     schema = Schema(query=Query)
     query = """
