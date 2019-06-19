@@ -10,8 +10,10 @@ class Recipe(models.Model):
 
 
 class RecipeIngredient(models.Model):
-    recipe = models.ForeignKey(Recipe, related_name="amounts")
-    ingredient = models.ForeignKey(Ingredient, related_name="used_by")
+    recipe = models.ForeignKey(Recipe, related_name="amounts", on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(
+        Ingredient, related_name="used_by", on_delete=models.CASCADE
+    )
     amount = models.FloatField()
     unit = models.CharField(
         max_length=20,
