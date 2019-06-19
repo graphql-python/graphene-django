@@ -321,12 +321,14 @@ def test_filter_filterset_related_results():
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r1,
+        editor=r1,
     )
     Article.objects.create(
         headline="a2",
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r2,
+        editor=r2,
     )
 
     query = """
@@ -450,7 +452,7 @@ def test_global_id_multiple_field_explicit_reverse():
     assert multiple_filter.field_class == GlobalIDMultipleChoiceField
 
 
-def test_filter_filterset_related_results():
+def test_filter_filterset_related_results_with_filter():
     class ReporterFilterNode(DjangoObjectType):
         class Meta:
             model = Reporter
