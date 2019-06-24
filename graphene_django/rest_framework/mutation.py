@@ -52,7 +52,7 @@ class SerializerMutation(ClientIDMutation):
         lookup_field=None,
         serializer_class=None,
         model_class=None,
-        model_operations=["create", "update"],
+        model_operations=("create", "update"),
         only_fields=(),
         exclude_fields=(),
         **options

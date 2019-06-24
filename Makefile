@@ -14,7 +14,7 @@ test: tests  # Alias test -> tests
 
 .PHONY: format
 format:
-	black --exclude "/migrations/" graphene_django examples
+	black --exclude "/migrations/" graphene_django examples setup.py
 
 .PHONY: lint
 lint:
