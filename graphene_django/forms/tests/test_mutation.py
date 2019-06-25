@@ -53,10 +53,10 @@ def test_mutation_error_camelcased():
 
     result = PetMutation.mutate_and_get_payload(None, None)
     assert {f.field for f in result.errors} == {"name", "age", "test_field"}
-    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = True
+    graphene_settings.CAMELCASE_ERRORS = True
     result = PetMutation.mutate_and_get_payload(None, None)
     assert {f.field for f in result.errors} == {"name", "age", "testField"}
-    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = False
+    graphene_settings.CAMELCASE_ERRORS = False
 
 
 class ModelFormMutationTests(TestCase):
