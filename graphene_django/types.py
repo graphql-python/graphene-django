@@ -111,17 +111,32 @@ class DjangoObjectType(ObjectType):
                 )
             )
 
+        assert not (fields and exclude), (
+            "Cannot set both 'fields' and 'exclude' options on "
+            "DjangoObjectType {class_name}.".format(class_name=cls.__name__)
+        )
+
         # Alias only_fields -> fields
         if only_fields and fields:
             raise Exception("Can't set both only_fields and fields")
         if only_fields:
             fields = only_fields
+        if fields and not isinstance(fields, (list, tuple)):
+            raise TypeError(
+                'The `fields` option must be a list or tuple or "__all__". '
+                "Got %s." % type(fields).__name__
+            )
 
         # Alias exclude_fields -> exclude
         if exclude_fields and exclude:
             raise Exception("Can't set both exclude_fields and exclude")
         if exclude_fields:
             exclude = exclude_fields
+        if exclude and not isinstance(exclude, (list, tuple)):
+            raise TypeError(
+                "The `exclude` option must be a list or tuple. Got %s."
+                % type(exclude).__name__
+            )
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, fields, exclude, convert_choices_to_enum),

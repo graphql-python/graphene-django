@@ -275,6 +275,34 @@ def test_django_objecttype_exclude_fields_and_exclude():
                 exclude_fields = ["email"]
 
 
+@with_local_registry
+def test_django_objecttype_exclude_and_only():
+    with pytest.raises(AssertionError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                fields = ["id"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_exclude_type_checking():
+    with pytest.raises(TypeError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = "foo"
+
+    with pytest.raises(TypeError):
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = "foo"
+
+
 class TestDjangoObjectType:
     @pytest.fixture
     def PetModel(self):
