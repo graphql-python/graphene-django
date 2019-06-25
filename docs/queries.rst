@@ -63,6 +63,17 @@ Show **only** these fields on the model:
             model = Question
             fields = ('id', 'question_text')
 
+You can also set the ``fields`` attribute to the special value ``'__all__'`` to indicate that all fields in the model should be used.
+
+For example:
+
+.. code:: python
+
+    class QuestionType(DjangoObjectType):
+        class Meta:
+            model = Question
+            fields = '__all__'
+
 
 ``exclude``
 ~~~~~~~~~~~
