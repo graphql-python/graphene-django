@@ -271,7 +271,6 @@ def test_should_manytoone_convert_connectionorlist():
     assert isinstance(dynamic_field.type, NonNull)
     assert isinstance(dynamic_field.type.of_type, graphene.List)
     assert isinstance(dynamic_field.type.of_type.of_type, NonNull)
-    assert isinstance(dynamic_field.type.of_type.of_type, NonNull)
     assert dynamic_field.type.of_type.of_type.of_type == A
 
 
