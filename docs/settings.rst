@@ -116,3 +116,27 @@ Default: ``False``
    GRAPHENE = {
       'CAMELCASE_ERRORS': False,
    }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'test_field',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]
+
+.. code:: python
+
+   GRAPHENE = {
+      'CAMELCASE_ERRORS': True,
+   }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'testField',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]
