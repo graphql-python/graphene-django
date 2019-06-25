@@ -3,13 +3,13 @@ from collections import OrderedDict
 from django.shortcuts import get_object_or_404
 
 import graphene
+from graphene.relay.mutation import ClientIDMutation
 from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
-from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
 
-from .serializer_converter import convert_serializer_field
 from ..types import ErrorType
+from .serializer_converter import convert_serializer_field
 
 
 class SerializerMutationOptions(MutationOptions):
@@ -127,10 +127,7 @@ class SerializerMutation(ClientIDMutation):
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
         else:
-            errors = [
-                ErrorType(field=key, messages=value)
-                for key, value in serializer.errors.items()
-            ]
+            errors = ErrorType.from_errors(serializer.errors)
 
             return cls(errors=errors)
 

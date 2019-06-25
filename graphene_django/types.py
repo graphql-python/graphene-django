@@ -1,8 +1,9 @@
-import six
 from collections import OrderedDict
 
+import six
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
+
 import graphene
 from graphene import Field
 from graphene.relay import Connection, Node
@@ -11,8 +12,13 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
-
+from .settings import graphene_settings
+from .utils import (
+    DJANGO_FILTER_INSTALLED,
+    camelize,
+    get_model_fields,
+    is_valid_django_model,
+)
 
 if six.PY3:
     from typing import Type
@@ -182,3 +188,12 @@ class DjangoObjectType(ObjectType):
 class ErrorType(ObjectType):
     field = graphene.String(required=True)
     messages = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+    @classmethod
+    def from_errors(cls, errors):
+        data = (
+            camelize(errors)
+            if graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS
+            else errors
+        )
+        return [ErrorType(field=key, messages=value) for key, value in data.items()]

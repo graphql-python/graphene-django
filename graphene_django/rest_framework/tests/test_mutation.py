@@ -1,11 +1,12 @@
 import datetime
 
-from graphene import Field, ResolveInfo
-from graphene.types.inputobjecttype import InputObjectType
-from py.test import raises
-from py.test import mark
+from py.test import mark, raises
 from rest_framework import serializers
 
+from graphene import Field, ResolveInfo
+from graphene.types.inputobjecttype import InputObjectType
+
+from ...settings import graphene_settings
 from ...types import DjangoObjectType
 from ..models import MyFakeModel, MyFakeModelWithPassword
 from ..mutation import SerializerMutation
@@ -211,6 +212,13 @@ def test_model_mutate_and_get_payload_error():
     # missing required fields
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
     assert len(result.errors) > 0
+
+
+def test_mutation_error_camelcased():
+    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = True
+    result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
+    assert result.errors[0].field == "coolName"
+    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = False
 
 
 def test_invalid_serializer_operations():
