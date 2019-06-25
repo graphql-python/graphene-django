@@ -198,7 +198,11 @@ def convert_field_to_list_or_connection(field, registry=None):
 
             return DjangoConnectionField(_type, description=description)
 
-        return DjangoListField(_type, description=description)
+        return DjangoListField(
+            _type,
+            required=True,  # A Set is always returned, never None.
+            description=description,
+        )
 
     return Dynamic(dynamic_type)
 

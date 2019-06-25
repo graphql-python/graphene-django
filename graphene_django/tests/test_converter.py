@@ -1,6 +1,7 @@
 import pytest
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
+from graphene import NonNull
 from py.test import raises
 
 import graphene
@@ -234,8 +235,12 @@ def test_should_manytomany_convert_connectionorlist_list():
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
-    assert isinstance(dynamic_field.type, graphene.List)
-    assert dynamic_field.type.of_type == A
+    # A NonNull List of NonNull A ([A!]!)
+    # https://github.com/graphql-python/graphene-django/issues/448
+    assert isinstance(dynamic_field.type, NonNull)
+    assert isinstance(dynamic_field.type.of_type, graphene.List)
+    assert isinstance(dynamic_field.type.of_type.of_type, NonNull)
+    assert dynamic_field.type.of_type.of_type.of_type == A
 
 
 def test_should_manytomany_convert_connectionorlist_connection():
@@ -262,8 +267,11 @@ def test_should_manytoone_convert_connectionorlist():
     assert isinstance(graphene_field, graphene.Dynamic)
     dynamic_field = graphene_field.get_type()
     assert isinstance(dynamic_field, graphene.Field)
-    assert isinstance(dynamic_field.type, graphene.List)
-    assert dynamic_field.type.of_type == A
+    # a NonNull List of NonNull A ([A!]!)
+    assert isinstance(dynamic_field.type, NonNull)
+    assert isinstance(dynamic_field.type.of_type, graphene.List)
+    assert isinstance(dynamic_field.type.of_type.of_type, NonNull)
+    assert dynamic_field.type.of_type.of_type.of_type == A
 
 
 def test_should_onetoone_reverse_convert_model():
