@@ -192,4 +192,4 @@ class ErrorType(ObjectType):
     @classmethod
     def from_errors(cls, errors):
         data = camelize(errors) if graphene_settings.CAMELCASE_ERRORS else errors
-        return [ErrorType(field=key, messages=value) for key, value in data.items()]
+        return [cls(field=key, messages=value) for key, value in data.items()]
