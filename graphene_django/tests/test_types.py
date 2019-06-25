@@ -243,6 +243,27 @@ def test_django_objecttype_only_fields_and_fields():
 
 
 @with_local_registry
+def test_django_objecttype_all_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = "__all__"
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == [
+        "id",
+        "first_name",
+        "last_name",
+        "email",
+        "pets",
+        "a_choice",
+        "reporter_type",
+        "films",
+        "articles",
+    ]
+
+
+@with_local_registry
 def test_django_objecttype_exclude_fields():
     class Reporter(DjangoObjectType):
         class Meta:

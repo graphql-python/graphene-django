@@ -24,6 +24,9 @@ if six.PY3:
     from typing import Type
 
 
+ALL_FIELDS = "__all__"
+
+
 def construct_fields(
     model, registry, only_fields, exclude_fields, convert_choices_to_enum
 ):
@@ -121,11 +124,14 @@ class DjangoObjectType(ObjectType):
             raise Exception("Can't set both only_fields and fields")
         if only_fields:
             fields = only_fields
-        if fields and not isinstance(fields, (list, tuple)):
+        if fields and fields != ALL_FIELDS and not isinstance(fields, (list, tuple)):
             raise TypeError(
                 'The `fields` option must be a list or tuple or "__all__". '
                 "Got %s." % type(fields).__name__
             )
+
+        if fields == ALL_FIELDS:
+            fields = None
 
         # Alias exclude_fields -> exclude
         if exclude_fields and exclude:
