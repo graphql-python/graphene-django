@@ -74,8 +74,10 @@ class DjangoObjectType(ObjectType):
         model=None,
         registry=None,
         skip_registry=False,
-        only_fields=(),
-        exclude_fields=(),
+        only_fields=(),  # deprecated in favour of `fields`
+        fields=(),
+        exclude_fields=(),  # deprecated in favour of `exclude`
+        exclude=(),
         filter_fields=None,
         filterset_class=None,
         connection=None,
@@ -109,10 +111,20 @@ class DjangoObjectType(ObjectType):
                 )
             )
 
+        # Alias only_fields -> fields
+        if only_fields and fields:
+            raise Exception("Can't set both only_fields and fields")
+        if only_fields:
+            fields = only_fields
+
+        # Alias exclude_fields -> exclude
+        if exclude_fields and exclude:
+            raise Exception("Can't set both exclude_fields and exclude")
+        if exclude_fields:
+            exclude = exclude_fields
+
         django_fields = yank_fields_from_attrs(
-            construct_fields(
-                model, registry, only_fields, exclude_fields, convert_choices_to_enum
-            ),
+            construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
             _as=Field,
         )
 

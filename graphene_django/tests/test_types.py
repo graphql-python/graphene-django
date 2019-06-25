@@ -221,14 +221,58 @@ def test_django_objecttype_only_fields():
 
 
 @with_local_registry
+def test_django_objecttype_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = ("id", "email", "films")
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_only_fields_and_fields():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
+                fields = ("id", "email", "films")
+
+
+@with_local_registry
 def test_django_objecttype_exclude_fields():
     class Reporter(DjangoObjectType):
         class Meta:
             model = ReporterModel
-            exclude_fields = "email"
+            exclude_fields = ["email"]
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
+
+
+@with_local_registry
+def test_django_objecttype_exclude():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            exclude = ["email"]
+
+    fields = list(Reporter._meta.fields.keys())
+    assert "email" not in fields
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_and_exclude():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                exclude_fields = ["email"]
 
 
 class TestDjangoObjectType:
