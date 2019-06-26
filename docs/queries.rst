@@ -85,7 +85,7 @@ Show all fields **except** those in ``exclude``:
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            exclude = ('question_text', )
+            exclude = ('question_text',)
 
 
 Customising fields
@@ -99,7 +99,7 @@ You can completely overwrite a field, or add new fields, to a ``DjangoObjectType
 
         class Meta:
             model = Question
-            exclude_fields = ('question_text')
+            fields = ('id', 'question_text')
 
         extra_field = graphene.String()
 
