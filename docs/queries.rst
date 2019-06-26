@@ -85,7 +85,7 @@ Show all fields **except** those in ``exclude``:
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            exclude = ('question_text')
+            exclude = ('question_text', )
 
 
 Customising fields
