@@ -1065,3 +1065,54 @@ def test_should_resolve_get_queryset_connectionfields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_preserve_prefetch_related(django_assert_num_queries):
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (graphene.relay.Node,)
+
+    class FilmType(DjangoObjectType):
+        reporters = DjangoConnectionField(ReporterType)
+
+        class Meta:
+            model = Film
+            interfaces = (graphene.relay.Node,)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        def resolve_films(root, info):
+            qs = Film.objects.prefetch_related("reporters")
+            return qs
+
+    r1 = Reporter.objects.create(first_name="Dave", last_name="Smith")
+    r2 = Reporter.objects.create(first_name="Jane", last_name="Doe")
+
+    f1 = Film.objects.create()
+    f1.reporters.set([r1, r2])
+    f2 = Film.objects.create()
+    f2.reporters.set([r2])
+
+    query = """
+        query {
+            films {
+                edges {
+                    node {
+                        reporters {
+                            edges {
+                                node {
+                                    firstName
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    with django_assert_num_queries(3) as captured:
+        result = schema.execute(query)
+    assert not result.errors
