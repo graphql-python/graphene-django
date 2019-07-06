@@ -24,7 +24,7 @@ class GraphQLTestCase(TestCase):
 
         cls._client = Client()
 
-    def query(self, query, op_name=None, input_data=None):
+    def query(self, query, op_name=None, input_data=None, variables=None):
         """
         Args:
             query (string)    - GraphQL query to run
@@ -40,8 +40,13 @@ class GraphQLTestCase(TestCase):
         body = {"query": query}
         if op_name:
             body["operation_name"] = op_name
+        if variables:
+            body["variables"] = variables
         if input_data:
-            body["variables"] = {"input": input_data}
+            if variables in body and isinstance(body, dict):
+                body["variables"]["input"] = input_data
+            else:
+                body["variables"] = {"input": input_data}
 
         resp = self._client.post(
             self.GRAPHQL_URL, json.dumps(body), content_type="application/json"
