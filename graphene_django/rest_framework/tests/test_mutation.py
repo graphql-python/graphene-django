@@ -215,10 +215,10 @@ def test_model_mutate_and_get_payload_error():
 
 
 def test_mutation_error_camelcased():
-    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = True
+    graphene_settings.CAMELCASE_ERRORS = True
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
     assert result.errors[0].field == "coolName"
-    graphene_settings.DJANGO_GRAPHENE_CAMELCASE_ERRORS = False
+    graphene_settings.CAMELCASE_ERRORS = False
 
 
 def test_invalid_serializer_operations():

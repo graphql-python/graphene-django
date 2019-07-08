@@ -101,3 +101,42 @@ Default: ``100``
     GRAPHENE = {
         'RELAY_CONNECTION_MAX_LIMIT': 100,
     }
+
+
+``CAMELCASE_ERRORS``
+------------------------------------
+
+When set to ``True`` field names in the ``errors`` object will be camel case.
+By default they will be snake case.
+
+Default: ``False``
+
+.. code:: python
+
+   GRAPHENE = {
+      'CAMELCASE_ERRORS': False,
+   }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'test_field',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]
+
+.. code:: python
+
+   GRAPHENE = {
+      'CAMELCASE_ERRORS': True,
+   }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'testField',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]
