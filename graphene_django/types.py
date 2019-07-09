@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 
 import six
@@ -123,6 +124,11 @@ class DjangoObjectType(ObjectType):
         if only_fields and fields:
             raise Exception("Can't set both only_fields and fields")
         if only_fields:
+            warnings.warn(
+                "Defining `only_fields` is deprecated in favour of `fields`.",
+                PendingDeprecationWarning,
+                stacklevel=2,
+            )
             fields = only_fields
         if fields and fields != ALL_FIELDS and not isinstance(fields, (list, tuple)):
             raise TypeError(
@@ -137,6 +143,11 @@ class DjangoObjectType(ObjectType):
         if exclude_fields and exclude:
             raise Exception("Can't set both exclude_fields and exclude")
         if exclude_fields:
+            warnings.warn(
+                "Defining `exclude_fields` is deprecated in favour of `exclude`.",
+                PendingDeprecationWarning,
+                stacklevel=2,
+            )
             exclude = exclude_fields
         if exclude and not isinstance(exclude, (list, tuple)):
             raise TypeError(
