@@ -774,7 +774,7 @@ def test_integer_field_filter_type():
             model = Pet
             interfaces = (Node,)
             filter_fields = {"age": ["exact"]}
-            only_fields = ["age"]
+            fields = ("age",)
 
     class Query(ObjectType):
         pets = DjangoFilterConnectionField(PetType)

@@ -211,10 +211,12 @@ def with_local_registry(func):
 
 @with_local_registry
 def test_django_objecttype_only_fields():
-    class Reporter(DjangoObjectType):
-        class Meta:
-            model = ReporterModel
-            only_fields = ("id", "email", "films")
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
@@ -255,10 +257,12 @@ def test_django_objecttype_all_fields():
 
 @with_local_registry
 def test_django_objecttype_exclude_fields():
-    class Reporter(DjangoObjectType):
-        class Meta:
-            model = ReporterModel
-            exclude_fields = ["email"]
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude_fields = ["email"]
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
