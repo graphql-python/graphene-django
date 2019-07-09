@@ -18,8 +18,12 @@ class MyFakeChildModel(models.Model):
 class MyFakeParentModel(models.Model):
     name = models.CharField(max_length=50)
     created = models.DateTimeField(auto_now_add=True)
-    child1 = models.OneToOneField(MyFakeChildModel, related_name='parent1', on_delete=models.CASCADE)
-    child2 = models.OneToOneField(MyFakeChildModel, related_name='parent2', on_delete=models.CASCADE)
+    child1 = models.OneToOneField(
+        MyFakeChildModel, related_name="parent1", on_delete=models.CASCADE
+    )
+    child2 = models.OneToOneField(
+        MyFakeChildModel, related_name="parent2", on_delete=models.CASCADE
+    )
 
 
 class ParentType(DjangoObjectType):
