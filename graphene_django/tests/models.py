@@ -4,7 +4,13 @@ from __future__ import absolute_import
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
-CHOICES = ((1, u"1: this漢"), (2, _(u"2: that漢")), (u"_3漢", "__amount__"))
+CHOICES = (
+    (1, u"this"),
+    ("2", _(u"that")),
+    (u"_3漢", "nonascii"),
+    ("__dunder__", "dunder"),
+    ("_sunder_", "sunder"),
+)
 
 
 class Pet(models.Model):

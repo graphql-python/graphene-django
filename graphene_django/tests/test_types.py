@@ -180,6 +180,8 @@ enum ReporterAChoice {
   A_1
   A_2
   _3
+  A__DUNDER__
+  A_SUNDER_
 }
 
 enum ReporterReporterType {
