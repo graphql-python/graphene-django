@@ -57,7 +57,9 @@ def convert_serializer_field(field, is_input=True):
 
 
 def convert_serializer_to_input_type(serializer_class):
-    cached_type = convert_serializer_to_input_type.cache.get(serializer_class.__name__, None)
+    cached_type = convert_serializer_to_input_type.cache.get(
+        serializer_class.__name__, None
+    )
     if cached_type:
         return cached_type
     serializer = serializer_class()

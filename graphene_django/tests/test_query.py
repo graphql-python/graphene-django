@@ -28,7 +28,7 @@ def test_should_query_only_fields():
         class ReporterType(DjangoObjectType):
             class Meta:
                 model = Reporter
-                only_fields = ("articles",)
+                fields = ("articles",)
 
         schema = graphene.Schema(query=ReporterType)
         query = """
@@ -44,7 +44,7 @@ def test_should_query_simplelazy_objects():
     class ReporterType(DjangoObjectType):
         class Meta:
             model = Reporter
-            only_fields = ("id",)
+            fields = ("id",)
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -289,7 +289,7 @@ def test_should_query_connectionfields():
         class Meta:
             model = Reporter
             interfaces = (Node,)
-            only_fields = ("articles",)
+            fields = ("articles",)
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -329,7 +329,7 @@ def test_should_keep_annotations():
         class Meta:
             model = Reporter
             interfaces = (Node,)
-            only_fields = ("articles",)
+            fields = ("articles",)
 
     class ArticleType(DjangoObjectType):
         class Meta:

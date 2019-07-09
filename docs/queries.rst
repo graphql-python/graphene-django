@@ -41,14 +41,18 @@ Full example
             return Question.objects.get(pk=question_id)
 
 
-Fields
-------
+Specifying which fields to include
+----------------------------------
 
 By default, ``DjangoObjectType`` will present all fields on a Model through GraphQL.
-If you don't want to do this you can change this by setting either ``only_fields`` and ``exclude_fields``.
+If you only want a subset of fields to be present, you can do so using
+``fields`` or ``exclude``. It is strongly recommended that you explicitly set
+all fields that should be exposed using the fields attribute.
+This will make it less likely to result in unintentionally exposing data when
+your models change.
 
-only_fields
-~~~~~~~~~~~
+``fields``
+~~~~~~~~~~
 
 Show **only** these fields on the model:
 
@@ -57,24 +61,35 @@ Show **only** these fields on the model:
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            only_fields = ('question_text')
+            fields = ('id', 'question_text')
 
+You can also set the ``fields`` attribute to the special value ``'__all__'`` to indicate that all fields in the model should be used.
 
-exclude_fields
-~~~~~~~~~~~~~~
-
-Show all fields **except** those in ``exclude_fields``:
+For example:
 
 .. code:: python
 
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            exclude_fields = ('question_text')
+            fields = '__all__'
 
 
-Customised fields
-~~~~~~~~~~~~~~~~~
+``exclude``
+~~~~~~~~~~~
+
+Show all fields **except** those in ``exclude``:
+
+.. code:: python
+
+    class QuestionType(DjangoObjectType):
+        class Meta:
+            model = Question
+            exclude = ('question_text',)
+
+
+Customising fields
+------------------
 
 You can completely overwrite a field, or add new fields, to a ``DjangoObjectType`` using a Resolver:
 
@@ -84,7 +99,7 @@ You can completely overwrite a field, or add new fields, to a ``DjangoObjectType
 
         class Meta:
             model = Question
-            exclude_fields = ('question_text')
+            fields = ('id', 'question_text')
 
         extra_field = graphene.String()
 
@@ -178,7 +193,7 @@ When ``Question`` is published as a ``DjangoObjectType`` and you want to add ``C
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            only_fields = ('category',)
+            fields = ('category',)
 
 Then all query-able related models must be defined as DjangoObjectType subclass,
 or they will fail to show if you are trying to query those relation fields. You only
