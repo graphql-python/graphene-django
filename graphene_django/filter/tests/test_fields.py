@@ -818,3 +818,38 @@ def test_integer_field_filter_type():
         }
     """
     )
+
+
+def test_required_filter_field():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType, required=True)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.all()
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"firstName": "John"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
