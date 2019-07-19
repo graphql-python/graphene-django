@@ -171,7 +171,7 @@ type Reporter {
   lastName: String!
   email: String!
   pets: [Reporter!]!
-  aChoice: ReporterAChoice!
+  aChoice: ReporterAChoice
   reporterType: ReporterReporterType
   articles(before: String, after: String, first: Int, last: Int): ArticleConnection
 }
