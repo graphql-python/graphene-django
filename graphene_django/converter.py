@@ -195,9 +195,11 @@ def convert_field_to_list_or_connection(field, registry=None):
             if _type._meta.filter_fields or _type._meta.filterset_class:
                 from .filter.fields import DjangoFilterConnectionField
 
-                return DjangoFilterConnectionField(_type, description=description)
+                return DjangoFilterConnectionField(
+                    _type, required=True, description=description
+                )
 
-            return DjangoConnectionField(_type, description=description)
+            return DjangoConnectionField(_type, required=True, description=description)
 
         return DjangoListField(
             _type,
