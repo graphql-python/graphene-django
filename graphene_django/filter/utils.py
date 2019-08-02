@@ -13,21 +13,25 @@ def get_filtering_args_from_filterset(filterset_class, type):
     args = {}
     model = filterset_class._meta.model
     for name, filter_field in six.iteritems(filterset_class.base_filters):
+        form_field = None
+
         if name in filterset_class.declared_filters:
             form_field = filter_field.field
         else:
             field_name = name.split("__", 1)[0]
-            model_field = model._meta.get_field(field_name)
 
-            if hasattr(model_field, "formfield"):
-                form_field = model_field.formfield(
-                    required=filter_field.extra.get("required", False)
-                )
+            if hasattr(model, field_name):
+                model_field = model._meta.get_field(field_name)
 
-            # Fallback to field defined on filter if we can't get it from the
-            # model field
-            if not form_field:
-                form_field = filter_field.field
+                if hasattr(model_field, "formfield"):
+                    form_field = model_field.formfield(
+                        required=filter_field.extra.get("required", False)
+                    )
+
+        # Fallback to field defined on filter if we can't get it from the
+        # model field
+        if not form_field:
+            form_field = filter_field.field
 
         field_type = convert_form_field(form_field).Argument()
         field_type.description = filter_field.label

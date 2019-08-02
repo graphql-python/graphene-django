@@ -818,3 +818,86 @@ def test_integer_field_filter_type():
         }
     """
     )
+
+
+def test_filter_filterset_based_on_mixin():
+    class ArticleFilterMixin:
+
+        @classmethod
+        def get_filters(cls):
+            filters = super().get_filters()
+            filters.update({
+                'viewer__email__in': django_filters.CharFilter(
+                    method='filter_email_in',
+                    field_name='reporter__email__in',
+                ),
+            })
+
+            return filters
+
+    class NewArticleFilter(ArticleFilterMixin, ArticleFilter):
+        pass
+
+    class NewReporterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class NewArticleFilterNode(DjangoObjectType):
+        viewer = Field(NewReporterNode)
+
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filterset_class = NewArticleFilter
+
+        def resolve_viewer(self, info):
+            return self.reporter
+
+    class Query(ObjectType):
+        all_articles = DjangoFilterConnectionField(NewArticleFilterNode)
+
+    reporter = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="john@doe.com")
+
+    article = Article.objects.create(
+        headline="Hello",
+        reporter=reporter,
+        editor=reporter,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now())
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allArticles {
+                edges {
+                    node {
+                        viewer {
+                            email
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allArticles": {
+            "edges": [
+                {
+                    "node": {
+                        "viewer": {
+                            "email": reporter.email,
+                        }
+                    }
+                }
+            ]
+        }
+    }
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
