@@ -34,11 +34,21 @@ class DjangoListField(Field):
         return _type._meta.model
 
     @staticmethod
-    def list_resolver(resolver, root, info, **args):
-        return maybe_queryset(resolver(root, info, **args))
+    def list_resolver(django_object_type, resolver, root, info, **args):
+        queryset = maybe_queryset(resolver(root, info, **args))
+        if queryset is None:
+            model = django_object_type._meta.model
+            queryset = maybe_queryset(
+                django_object_type.get_queryset(model.objects, info)
+            )
+        return queryset
 
     def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
+        _type = self.type
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+        django_object_type = _type.of_type.of_type
+        return partial(self.list_resolver, django_object_type, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):
