@@ -99,13 +99,17 @@ def test_should_query_nested_field():
     expected = {
         "reporter": {
             "lastName": "ABA",
-            'pets': {'edges': [{'node': {
-                'lastName': 'Griffin',
-                'pets': {'edges': [{'node': {
-                    'lastName': 'ABA',
-                } } ] }
-            } } ] },
-        },
+            "pets": {
+                "edges": [
+                    {
+                        "node": {
+                            "lastName": "Griffin",
+                            "pets": {"edges": [{"node": {"lastName": "ABA"}}]},
+                        }
+                    }
+                ]
+            },
+        }
     }
     schema = graphene.Schema(query=Query)
     result = schema.execute(
