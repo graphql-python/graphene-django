@@ -20,7 +20,10 @@ class DjangoListField(Field):
 
     @property
     def model(self):
-        return self.type.of_type._meta.node._meta.model
+        _type = self.type.of_type
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+        return _type._meta.model
 
     @staticmethod
     def list_resolver(resolver, root, info, **args):
