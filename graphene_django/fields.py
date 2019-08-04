@@ -37,6 +37,8 @@ class DjangoListField(Field):
     def list_resolver(django_object_type, resolver, root, info, **args):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
+            # Default to Django Model queryset
+            # N.B. This happens if DjangoListField is used in the top level Query object
             model = django_object_type._meta.model
             queryset = maybe_queryset(
                 django_object_type.get_queryset(model.objects, info)

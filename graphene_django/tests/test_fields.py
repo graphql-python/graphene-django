@@ -69,6 +69,36 @@ class TestDjangoListField:
             "reporters": [{"firstName": "Tara"}, {"firstName": "Debra"}]
         }
 
+    def test_override_resolver(self):
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name",)
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+            def resolve_reporters(_, info):
+                return ReporterModel.objects.filter(first_name="Tara")
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Tara"}]}
+
     def test_nested_list_field(self):
         class Article(DjangoObjectType):
             class Meta:
@@ -79,6 +109,57 @@ class TestDjangoListField:
             class Meta:
                 model = ReporterModel
                 fields = ("first_name", "articles")
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                    articles {
+                        headline
+                    }
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {
+            "reporters": [
+                {"firstName": "Tara", "articles": [{"headline": "Amazing news"}]},
+                {"firstName": "Debra", "articles": []},
+            ]
+        }
+
+    def test_override_resolver_nested_list_field(self):
+        class Article(DjangoObjectType):
+            class Meta:
+                model = ArticleModel
+                fields = ("headline",)
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            def resolve_reporters(reporter, info):
+                return reporter.articles.all()
 
         class Query(ObjectType):
             reporters = DjangoListField(Reporter)
