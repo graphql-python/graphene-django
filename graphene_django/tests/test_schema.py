@@ -48,6 +48,6 @@ def test_should_map_only_few_fields():
     class Reporter2(DjangoObjectType):
         class Meta:
             model = Reporter
-            only_fields = ("id", "email")
+            fields = ("id", "email")
 
     assert list(Reporter2._meta.fields.keys()) == ["id", "email"]

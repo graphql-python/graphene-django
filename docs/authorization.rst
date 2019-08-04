@@ -154,7 +154,8 @@ Adding Login Required
 To restrict users from accessing the GraphQL API page the standard Django LoginRequiredMixin_ can be used to create your own standard Django Class Based View, which includes the ``LoginRequiredMixin`` and subclasses the ``GraphQLView``.:
 
 .. code:: python
-    #views.py
+
+    # views.py
 
     from django.contrib.auth.mixins import LoginRequiredMixin
     from graphene_django.views import GraphQLView

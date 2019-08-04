@@ -1,6 +1,11 @@
+from collections import OrderedDict, defaultdict
+from textwrap import dedent
+
+import pytest
+from django.db import models
 from mock import patch
 
-from graphene import Interface, ObjectType, Schema, Connection, String
+from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
@@ -165,10 +170,10 @@ type Reporter {
   firstName: String!
   lastName: String!
   email: String!
-  pets: [Reporter]
-  aChoice: ReporterAChoice!
+  pets: [Reporter!]!
+  aChoice: ReporterAChoice
   reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection
+  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
 }
 
 enum ReporterAChoice {
@@ -206,21 +211,216 @@ def with_local_registry(func):
 
 @with_local_registry
 def test_django_objecttype_only_fields():
-    class Reporter(DjangoObjectType):
-        class Meta:
-            model = ReporterModel
-            only_fields = ("id", "email", "films")
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
 
 
 @with_local_registry
-def test_django_objecttype_exclude_fields():
+def test_django_objecttype_fields():
     class Reporter(DjangoObjectType):
         class Meta:
             model = ReporterModel
-            exclude_fields = "email"
+            fields = ("id", "email", "films")
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_only_fields_and_fields():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
+                fields = ("id", "email", "films")
+
+
+@with_local_registry
+def test_django_objecttype_all_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = "__all__"
+
+    fields = list(Reporter._meta.fields.keys())
+    assert len(fields) == len(ReporterModel._meta.get_fields())
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields():
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude_fields = ["email"]
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
+
+
+@with_local_registry
+def test_django_objecttype_exclude():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            exclude = ["email"]
+
+    fields = list(Reporter._meta.fields.keys())
+    assert "email" not in fields
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_and_exclude():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                exclude_fields = ["email"]
+
+
+@with_local_registry
+def test_django_objecttype_exclude_and_only():
+    with pytest.raises(AssertionError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                fields = ["id"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_exclude_type_checking():
+    with pytest.raises(TypeError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = "foo"
+
+    with pytest.raises(TypeError):
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = "foo"
+
+
+class TestDjangoObjectType:
+    @pytest.fixture
+    def PetModel(self):
+        class PetModel(models.Model):
+            kind = models.CharField(choices=(("cat", "Cat"), ("dog", "Dog")))
+            cuteness = models.IntegerField(
+                choices=((1, "Kind of cute"), (2, "Pretty cute"), (3, "OMG SO CUTE!!!"))
+            )
+
+        yield PetModel
+
+        # Clear Django model cache so we don't get warnings when creating the
+        # model multiple times
+        PetModel._meta.apps.all_models = defaultdict(OrderedDict)
+
+    def test_django_objecttype_convert_choices_enum_false(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = False
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: String!
+          cuteness: Int!
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
+
+    def test_django_objecttype_convert_choices_enum_list(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = ["kind"]
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: PetModelKind!
+          cuteness: Int!
+        }
+
+        enum PetModelKind {
+          CAT
+          DOG
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
+
+    def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = []
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: String!
+          cuteness: Int!
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )

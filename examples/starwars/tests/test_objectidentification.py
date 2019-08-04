@@ -8,19 +8,16 @@ pytestmark = pytest.mark.django_db
 
 def test_correctly_fetches_id_name_rebels():
     initialize()
-    query = '''
+    query = """
       query RebelsQuery {
         rebels {
           id
           name
         }
       }
-    '''
+    """
     expected = {
-        'rebels': {
-            'id': 'RmFjdGlvbjox',
-            'name': 'Alliance to Restore the Republic'
-        }
+        "rebels": {"id": "RmFjdGlvbjox", "name": "Alliance to Restore the Republic"}
     }
     result = schema.execute(query)
     assert not result.errors
@@ -29,7 +26,7 @@ def test_correctly_fetches_id_name_rebels():
 
 def test_correctly_refetches_rebels():
     initialize()
-    query = '''
+    query = """
       query RebelsRefetchQuery {
         node(id: "RmFjdGlvbjox") {
           id
@@ -38,12 +35,9 @@ def test_correctly_refetches_rebels():
           }
         }
       }
-    '''
+    """
     expected = {
-        'node': {
-            'id': 'RmFjdGlvbjox',
-            'name': 'Alliance to Restore the Republic'
-        }
+        "node": {"id": "RmFjdGlvbjox", "name": "Alliance to Restore the Republic"}
     }
     result = schema.execute(query)
     assert not result.errors
@@ -52,20 +46,15 @@ def test_correctly_refetches_rebels():
 
 def test_correctly_fetches_id_name_empire():
     initialize()
-    query = '''
+    query = """
       query EmpireQuery {
         empire {
           id
           name
         }
       }
-    '''
-    expected = {
-        'empire': {
-            'id': 'RmFjdGlvbjoy',
-            'name': 'Galactic Empire'
-        }
-    }
+    """
+    expected = {"empire": {"id": "RmFjdGlvbjoy", "name": "Galactic Empire"}}
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
@@ -73,7 +62,7 @@ def test_correctly_fetches_id_name_empire():
 
 def test_correctly_refetches_empire():
     initialize()
-    query = '''
+    query = """
       query EmpireRefetchQuery {
         node(id: "RmFjdGlvbjoy") {
           id
@@ -82,13 +71,8 @@ def test_correctly_refetches_empire():
           }
         }
       }
-    '''
-    expected = {
-        'node': {
-            'id': 'RmFjdGlvbjoy',
-            'name': 'Galactic Empire'
-        }
-    }
+    """
+    expected = {"node": {"id": "RmFjdGlvbjoy", "name": "Galactic Empire"}}
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
@@ -96,7 +80,7 @@ def test_correctly_refetches_empire():
 
 def test_correctly_refetches_xwing():
     initialize()
-    query = '''
+    query = """
       query XWingRefetchQuery {
         node(id: "U2hpcDox") {
           id
@@ -105,13 +89,8 @@ def test_correctly_refetches_xwing():
           }
         }
       }
-    '''
-    expected = {
-        'node': {
-            'id': 'U2hpcDox',
-            'name': 'X-Wing'
-        }
-    }
+    """
+    expected = {"node": {"id": "U2hpcDox", "name": "X-Wing"}}
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
