@@ -68,17 +68,20 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
 
 
-def convert_django_field_with_choices(field, registry=None):
+def convert_django_field_with_choices(
+    field, registry=None, convert_choices_to_enum=True
+):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
     choices = getattr(field, "choices", None)
-    if choices:
+    if choices and convert_choices_to_enum:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         enum = convert_choices_to_named_enum_with_descriptions(name, choices)
-        converted = enum(description=field.help_text, required=not field.null)
+        required = not (field.blank or field.null)
+        converted = enum(description=field.help_text, required=required)
     else:
         converted = convert_django_field(field, registry)
     if registry is not None:
@@ -184,19 +187,32 @@ def convert_field_to_list_or_connection(field, registry=None):
         if not _type:
             return
 
+        description = (
+            field.help_text
+            if isinstance(field, models.ManyToManyField)
+            else field.field.help_text
+        )
+
         # If there is a connection, we should transform the field
         # into a DjangoConnectionField
         if _type._meta.connection:
             # Use a DjangoFilterConnectionField if there are
-            # defined filter_fields in the DjangoObjectType Meta
-            if _type._meta.filter_fields:
+            # defined filter_fields or a filterset_class in the
+            # DjangoObjectType Meta
+            if _type._meta.filter_fields or _type._meta.filterset_class:
                 from .filter.fields import DjangoFilterConnectionField
 
-                return DjangoFilterConnectionField(_type)
+                return DjangoFilterConnectionField(
+                    _type, required=True, description=description
+                )
 
-            return DjangoConnectionField(_type)
+            return DjangoConnectionField(_type, required=True, description=description)
 
-        return DjangoListField(_type)
+        return DjangoListField(
+            _type,
+            required=True,  # A Set is always returned, never None.
+            description=description,
+        )
 
     return Dynamic(dynamic_type)
 

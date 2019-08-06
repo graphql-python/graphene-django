@@ -38,7 +38,7 @@ class Reporter(models.Model):
     last_name = models.CharField(max_length=30)
     email = models.EmailField()
     pets = models.ManyToManyField("self")
-    a_choice = models.CharField(max_length=30, choices=CHOICES)
+    a_choice = models.CharField(max_length=30, choices=CHOICES, blank=True)
     objects = models.Manager()
     doe_objects = DoeReporterManager()
 
@@ -65,6 +65,11 @@ class Reporter(models.Model):
             self.__class__ = CNNReporter
 
 
+class CNNReporterManager(models.Manager):
+    def get_queryset(self):
+        return super(CNNReporterManager, self).get_queryset().filter(reporter_type=2)
+
+
 class CNNReporter(Reporter):
     """
     This class is a proxy model for Reporter, used for testing
@@ -73,6 +78,8 @@ class CNNReporter(Reporter):
 
     class Meta:
         proxy = True
+
+    objects = CNNReporterManager()
 
 
 class Article(models.Model):

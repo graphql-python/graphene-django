@@ -22,7 +22,7 @@ class GraphQLTestCase(TestCase):
                 "Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase."
             )
 
-        cls._client = Client(cls.GRAPHQL_SCHEMA)
+        cls._client = Client()
 
     def query(self, query, op_name=None, input_data=None):
         """
@@ -54,8 +54,8 @@ class GraphQLTestCase(TestCase):
         the call was fine.
         :resp HttpResponse: Response
         """
-        content = json.loads(resp.content)
         self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
         self.assertNotIn("errors", list(content.keys()))
 
     def assertResponseHasErrors(self, resp):

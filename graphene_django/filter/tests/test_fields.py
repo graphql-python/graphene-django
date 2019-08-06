@@ -1,17 +1,16 @@
 from datetime import datetime
+from textwrap import dedent
 
 import pytest
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 
-from graphene import Field, ObjectType, Schema, Argument, Float, Boolean, String
+from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
-
-# for annotation test
-from django.db.models import TextField, Value
-from django.db.models.functions import Concat
 
 pytestmark = []
 
@@ -183,7 +182,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context_value=context())
+    result = schema.execute(query, context=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
@@ -227,6 +226,74 @@ def test_filter_filterset_information_on_meta_related():
     assert_not_orderable(articles_field)
 
 
+def test_filter_filterset_class_filter_fields_exception():
+    with pytest.raises(Exception):
+
+        class ReporterFilter(FilterSet):
+            class Meta:
+                model = Reporter
+                fields = ["first_name", "articles"]
+
+        class ReporterFilterNode(DjangoObjectType):
+            class Meta:
+                model = Reporter
+                interfaces = (Node,)
+                filterset_class = ReporterFilter
+                filter_fields = ["first_name", "articles"]
+
+
+def test_filter_filterset_class_information_on_meta():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = ["first_name", "articles"]
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filterset_class = ReporterFilter
+
+    field = DjangoFilterConnectionField(ReporterFilterNode)
+    assert_arguments(field, "first_name", "articles")
+    assert_not_orderable(field)
+
+
+def test_filter_filterset_class_information_on_meta_related():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = ["first_name", "articles"]
+
+    class ArticleFilter(FilterSet):
+        class Meta:
+            model = Article
+            fields = ["headline", "reporter"]
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filterset_class = ReporterFilter
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filterset_class = ArticleFilter
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    schema = Schema(query=Query)
+    articles_field = ReporterFilterNode._meta.fields["articles"].get_type()
+    assert_arguments(articles_field, "headline", "reporter")
+    assert_not_orderable(articles_field)
+
+
 def test_filter_filterset_related_results():
     class ReporterFilterNode(DjangoObjectType):
         class Meta:
@@ -253,12 +320,14 @@ def test_filter_filterset_related_results():
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r1,
+        editor=r1,
     )
     Article.objects.create(
         headline="a2",
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r2,
+        editor=r2,
     )
 
     query = """
@@ -382,7 +451,7 @@ def test_global_id_multiple_field_explicit_reverse():
     assert multiple_filter.field_class == GlobalIDMultipleChoiceField
 
 
-def test_filter_filterset_related_results():
+def test_filter_filterset_related_results_with_filter():
     class ReporterFilterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -392,15 +461,15 @@ def test_filter_filterset_related_results():
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
 
-    r1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="A test user", last_name="Last Name", email="test1@test.com"
     )
-    r2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Other test user",
         last_name="Other Last Name",
         email="test2@test.com",
     )
-    r3 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Random", last_name="RandomLast", email="random@test.com"
     )
 
@@ -568,7 +637,7 @@ def test_should_query_filter_node_double_limit_raises():
     Reporter.objects.create(
         first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
     )
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -614,7 +683,7 @@ def test_order_by_is_perserved():
             return reporters
 
     Reporter.objects.create(first_name="b")
-    r = Reporter.objects.create(first_name="a")
+    Reporter.objects.create(first_name="a")
 
     schema = Schema(query=Query)
     query = """
@@ -697,3 +766,55 @@ def test_annotation_is_perserved():
 
     assert not result.errors
     assert result.data == expected
+
+
+def test_integer_field_filter_type():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+            interfaces = (Node,)
+            filter_fields = {"age": ["exact"]}
+            fields = ("age",)
+
+    class Query(ObjectType):
+        pets = DjangoFilterConnectionField(PetType)
+
+    schema = Schema(query=Query)
+
+    assert str(schema) == dedent(
+        """\
+        schema {
+          query: Query
+        }
+
+        interface Node {
+          id: ID!
+        }
+
+        type PageInfo {
+          hasNextPage: Boolean!
+          hasPreviousPage: Boolean!
+          startCursor: String
+          endCursor: String
+        }
+
+        type PetType implements Node {
+          age: Int!
+          id: ID!
+        }
+
+        type PetTypeConnection {
+          pageInfo: PageInfo!
+          edges: [PetTypeEdge]!
+        }
+
+        type PetTypeEdge {
+          node: PetType
+          cursor: String!
+        }
+
+        type Query {
+          pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+        }
+    """
+    )
