@@ -835,6 +835,9 @@ def test_filter_filterset_based_on_mixin():
 
             return filters
 
+        def filter_email_in(cls, queryset, name, value):
+            return queryset.filter(**{name: [value]})
+
     class NewArticleFilter(ArticleFilterMixin, ArticleFilter):
         pass
 
@@ -857,23 +860,36 @@ def test_filter_filterset_based_on_mixin():
     class Query(ObjectType):
         all_articles = DjangoFilterConnectionField(NewArticleFilterNode)
 
-    reporter = Reporter.objects.create(
+    reporter_1 = Reporter.objects.create(
         first_name="John", last_name="Doe", email="john@doe.com"
     )
 
-    article = Article.objects.create(
+    article_1 = Article.objects.create(
         headline="Hello",
-        reporter=reporter,
-        editor=reporter,
+        reporter=reporter_1,
+        editor=reporter_1,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+    )
+
+    reporter_2 = Reporter.objects.create(
+        first_name="Adam", last_name="Doe", email="adam@doe.com"
+    )
+
+    article_2 = Article.objects.create(
+        headline="Good Bye",
+        reporter=reporter_2,
+        editor=reporter_2,
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
     )
 
     schema = Schema(query=Query)
 
-    query = """
+    query = (
+        """
         query NodeFilteringQuery {
-            allArticles {
+            allArticles(viewer_Email_In: "%s") {
                 edges {
                     node {
                         viewer {
@@ -884,9 +900,11 @@ def test_filter_filterset_based_on_mixin():
             }
         }
     """
+        % reporter_1.email
+    )
 
     expected = {
-        "allArticles": {"edges": [{"node": {"viewer": {"email": reporter.email}}}]}
+        "allArticles": {"edges": [{"node": {"viewer": {"email": reporter_1.email}}}]}
     }
 
     result = schema.execute(query)
