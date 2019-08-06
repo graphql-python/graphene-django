@@ -1,5 +1,5 @@
 graphene
 graphene-django
 graphql-core>=2.1rc1
-django==2.2.3
+django==2.2.4
 django-filter>=2
