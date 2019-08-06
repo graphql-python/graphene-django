@@ -61,8 +61,12 @@ def test_should_url_convert_string():
 
 
 def test_should_choice_convert_enum():
-    field = assert_conversion(serializers.ChoiceField, graphene.Enum,
-        choices=[('h', 'Hello'), ('w', 'World')], source='word')
+    field = assert_conversion(
+        serializers.ChoiceField,
+        graphene.Enum,
+        choices=[("h", "Hello"), ("w", "World")],
+        source="word",
+    )
     assert field._meta.enum.__members__["H"].value == "h"
     assert field._meta.enum.__members__["H"].description == "Hello"
     assert field._meta.enum.__members__["W"].value == "w"

@@ -153,5 +153,5 @@ def convert_serializer_field_to_list_of_enum(field):
 @get_graphene_type_from_serializer_field.register(serializers.ChoiceField)
 def convert_serializer_field_to_enum(field):
     # enums require a name
-    name = field.field_name or field.source or 'Choices'
+    name = field.field_name or field.source or "Choices"
     return convert_choices_to_named_enum_with_descriptions(name, field.choices)
