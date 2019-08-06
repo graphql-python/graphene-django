@@ -32,7 +32,11 @@ class GraphQLTestCase(TestCase):
                                 supply the op_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
-                                to this value
+                                to this value. If both ``input_data`` and ``variables``, 
+                                are provided, the ``input`` field in the ``variables``
+                                dict will be overwritten with this value.
+            variables (dict)  - If provided, the "variables" field in GraphQL will be
+                                set to this value. 
 
         Returns:
             Response object from client
@@ -43,7 +47,7 @@ class GraphQLTestCase(TestCase):
         if variables:
             body["variables"] = variables
         if input_data:
-            if variables in body and isinstance(body, dict):
+            if variables in body:
                 body["variables"]["input"] = input_data
             else:
                 body["variables"] = {"input": input_data}
