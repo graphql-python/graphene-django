@@ -892,6 +892,7 @@ def test_filter_filterset_based_on_mixin():
             allArticles(viewer_Email_In: "%s") {
                 edges {
                     node {
+                        headline
                         viewer {
                             email
                         }
@@ -904,7 +905,16 @@ def test_filter_filterset_based_on_mixin():
     )
 
     expected = {
-        "allArticles": {"edges": [{"node": {"viewer": {"email": reporter_1.email}}}]}
+        "allArticles": {
+            "edges": [
+                {
+                    "node": {
+                        "headline": article_1.headline,
+                        "viewer": {"email": reporter_1.email},
+                    }
+                }
+            ]
+        }
     }
 
     result = schema.execute(query)
