@@ -818,3 +818,106 @@ def test_integer_field_filter_type():
         }
     """
     )
+
+
+def test_filter_filterset_based_on_mixin():
+    class ArticleFilterMixin(FilterSet):
+        @classmethod
+        def get_filters(cls):
+            filters = super(FilterSet, cls).get_filters()
+            filters.update(
+                {
+                    "viewer__email__in": django_filters.CharFilter(
+                        method="filter_email_in", field_name="reporter__email__in"
+                    )
+                }
+            )
+
+            return filters
+
+        def filter_email_in(cls, queryset, name, value):
+            return queryset.filter(**{name: [value]})
+
+    class NewArticleFilter(ArticleFilterMixin, ArticleFilter):
+        pass
+
+    class NewReporterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class NewArticleFilterNode(DjangoObjectType):
+        viewer = Field(NewReporterNode)
+
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filterset_class = NewArticleFilter
+
+        def resolve_viewer(self, info):
+            return self.reporter
+
+    class Query(ObjectType):
+        all_articles = DjangoFilterConnectionField(NewArticleFilterNode)
+
+    reporter_1 = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="john@doe.com"
+    )
+
+    article_1 = Article.objects.create(
+        headline="Hello",
+        reporter=reporter_1,
+        editor=reporter_1,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+    )
+
+    reporter_2 = Reporter.objects.create(
+        first_name="Adam", last_name="Doe", email="adam@doe.com"
+    )
+
+    article_2 = Article.objects.create(
+        headline="Good Bye",
+        reporter=reporter_2,
+        editor=reporter_2,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+    )
+
+    schema = Schema(query=Query)
+
+    query = (
+        """
+        query NodeFilteringQuery {
+            allArticles(viewer_Email_In: "%s") {
+                edges {
+                    node {
+                        headline
+                        viewer {
+                            email
+                        }
+                    }
+                }
+            }
+        }
+    """
+        % reporter_1.email
+    )
+
+    expected = {
+        "allArticles": {
+            "edges": [
+                {
+                    "node": {
+                        "headline": article_1.headline,
+                        "viewer": {"email": reporter_1.email},
+                    }
+                }
+            ]
+        }
+    }
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
