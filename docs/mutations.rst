@@ -151,7 +151,7 @@ customize the look up with the ``lookup_field`` attribute on the ``SerializerMut
 .. code:: python
 
     from graphene_django.rest_framework.mutation import SerializerMutation
-    from .serializers imoprt MyModelSerializer
+    from .serializers import MyModelSerializer
 
 
     class AwesomeModelMutation(SerializerMutation):
@@ -168,7 +168,7 @@ Use the method ``get_serializer_kwargs`` to override how updates are applied.
 .. code:: python
 
     from graphene_django.rest_framework.mutation import SerializerMutation
-    from .serializers imoprt MyModelSerializer
+    from .serializers import MyModelSerializer
 
 
     class AwesomeModelMutation(SerializerMutation):
@@ -199,7 +199,7 @@ You can use relay with mutations. A Relay mutation must inherit from
 
 .. code:: python
 
-    import graphene 
+    import graphene
     from graphene import relay
     from graphene_django import DjangoObjectType
     from graphql_relay import from_global_id
