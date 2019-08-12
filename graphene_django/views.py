@@ -12,7 +12,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
-from graphql.error import GraphQLError
+from graphql.error import GraphQLError, GraphQLSyntaxError
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 
@@ -245,10 +245,10 @@ class GraphQLView(View):
                 return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
+        backend = self.get_backend(request)
         try:
-            backend = self.get_backend(request)
             document = backend.document_from_string(self.schema, query)
-        except Exception as e:
+        except GraphQLSyntaxError as e:
             return ExecutionResult(errors=[e], invalid=True)
 
         if request.method.lower() == "get":
@@ -266,13 +266,13 @@ class GraphQLView(View):
                     )
                 )
 
-        try:
-            extra_options = {}
-            if self.executor:
-                # We only include it optionally since
-                # executor is not a valid argument in all backends
-                extra_options["executor"] = self.executor
+        extra_options = {}
+        if self.executor:
+            # We only include it optionally since
+            # executor is not a valid argument in all backends
+            extra_options["executor"] = self.executor
 
+        try:
             return document.execute(
                 root=self.get_root_value(request),
                 variables=variables,
@@ -281,7 +281,7 @@ class GraphQLView(View):
                 middleware=self.get_middleware(request),
                 **extra_options
             )
-        except Exception as e:
+        except GraphQLError as e:
             return ExecutionResult(errors=[e], invalid=True)
 
     @classmethod
