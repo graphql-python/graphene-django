@@ -4,11 +4,11 @@ import re
 
 import six
 from django.http import HttpResponse, HttpResponseNotAllowed
-from django.http.response import HttpResponseBadRequest
+from django.http.response import HttpResponseBadRequest, HttpResponseServerError
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import View
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, requires_csrf_token
 
 from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
@@ -338,3 +338,8 @@ class GraphQLView(View):
         meta = request.META
         content_type = meta.get("CONTENT_TYPE", meta.get("HTTP_CONTENT_TYPE", ""))
         return content_type.split(";", 1)[0].lower()
+
+
+@requires_csrf_token
+def server_error(request, template_name=None):
+    return HttpResponseServerError('{"errors":["server error"]}', content_type='application/json')
