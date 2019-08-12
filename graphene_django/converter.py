@@ -52,13 +52,15 @@ def get_choices(choices):
             yield name, value, description
 
 
-def convert_django_field_with_choices(field, registry=None):
+def convert_django_field_with_choices(
+    field, registry=None, convert_choices_to_enum=True
+):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
     choices = getattr(field, "choices", None)
-    if choices:
+    if choices and convert_choices_to_enum:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
         choices = list(get_choices(choices))
@@ -71,7 +73,8 @@ def convert_django_field_with_choices(field, registry=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        converted = enum(description=field.help_text, required=not field.null)
+        required = not (field.blank or field.null)
+        converted = enum(description=field.help_text, required=required)
     else:
         converted = convert_django_field(field, registry)
     if registry is not None:
@@ -192,11 +195,17 @@ def convert_field_to_list_or_connection(field, registry=None):
             if _type._meta.filter_fields or _type._meta.filterset_class:
                 from .filter.fields import DjangoFilterConnectionField
 
-                return DjangoFilterConnectionField(_type, description=description)
+                return DjangoFilterConnectionField(
+                    _type, required=True, description=description
+                )
 
-            return DjangoConnectionField(_type, description=description)
+            return DjangoConnectionField(_type, required=True, description=description)
 
-        return DjangoListField(_type, description=description)
+        return DjangoListField(
+            _type,
+            required=True,  # A Set is always returned, never None.
+            description=description,
+        )
 
     return Dynamic(dynamic_type)
 

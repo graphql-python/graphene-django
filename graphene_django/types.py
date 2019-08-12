@@ -1,8 +1,10 @@
-import six
+import warnings
 from collections import OrderedDict
 
+import six
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
+
 import graphene
 from graphene import Field
 from graphene.relay import Connection, Node
@@ -11,14 +13,24 @@ from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model
-
+from .settings import graphene_settings
+from .utils import (
+    DJANGO_FILTER_INSTALLED,
+    camelize,
+    get_model_fields,
+    is_valid_django_model,
+)
 
 if six.PY3:
     from typing import Type
 
 
-def construct_fields(model, registry, only_fields, exclude_fields):
+ALL_FIELDS = "__all__"
+
+
+def construct_fields(
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum
+):
     _model_fields = get_model_fields(model)
 
     fields = OrderedDict()
@@ -33,7 +45,18 @@ def construct_fields(model, registry, only_fields, exclude_fields):
             # in there. Or when we exclude this field in exclude_fields.
             # Or when there is no back reference.
             continue
-        converted = convert_django_field_with_choices(field, registry)
+
+        _convert_choices_to_enum = convert_choices_to_enum
+        if not isinstance(_convert_choices_to_enum, bool):
+            # then `convert_choices_to_enum` is a list of field names to convert
+            if name in _convert_choices_to_enum:
+                _convert_choices_to_enum = True
+            else:
+                _convert_choices_to_enum = False
+
+        converted = convert_django_field_with_choices(
+            field, registry, convert_choices_to_enum=_convert_choices_to_enum
+        )
         fields[name] = converted
 
     return fields
@@ -55,14 +78,17 @@ class DjangoObjectType(ObjectType):
         model=None,
         registry=None,
         skip_registry=False,
-        only_fields=(),
-        exclude_fields=(),
+        only_fields=(),  # deprecated in favour of `fields`
+        fields=(),
+        exclude_fields=(),  # deprecated in favour of `exclude`
+        exclude=(),
         filter_fields=None,
         filterset_class=None,
         connection=None,
         connection_class=None,
         use_connection=None,
         interfaces=(),
+        convert_choices_to_enum=True,
         _meta=None,
         **options
     ):
@@ -89,8 +115,49 @@ class DjangoObjectType(ObjectType):
                 )
             )
 
+        assert not (fields and exclude), (
+            "Cannot set both 'fields' and 'exclude' options on "
+            "DjangoObjectType {class_name}.".format(class_name=cls.__name__)
+        )
+
+        # Alias only_fields -> fields
+        if only_fields and fields:
+            raise Exception("Can't set both only_fields and fields")
+        if only_fields:
+            warnings.warn(
+                "Defining `only_fields` is deprecated in favour of `fields`.",
+                PendingDeprecationWarning,
+                stacklevel=2,
+            )
+            fields = only_fields
+        if fields and fields != ALL_FIELDS and not isinstance(fields, (list, tuple)):
+            raise TypeError(
+                'The `fields` option must be a list or tuple or "__all__". '
+                "Got %s." % type(fields).__name__
+            )
+
+        if fields == ALL_FIELDS:
+            fields = None
+
+        # Alias exclude_fields -> exclude
+        if exclude_fields and exclude:
+            raise Exception("Can't set both exclude_fields and exclude")
+        if exclude_fields:
+            warnings.warn(
+                "Defining `exclude_fields` is deprecated in favour of `exclude`.",
+                PendingDeprecationWarning,
+                stacklevel=2,
+            )
+            exclude = exclude_fields
+        if exclude and not isinstance(exclude, (list, tuple)):
+            raise TypeError(
+                "The `exclude` option must be a list or tuple. Got %s."
+                % type(exclude).__name__
+            )
+
         django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, only_fields, exclude_fields), _as=Field
+            construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
+            _as=Field,
         )
 
         if use_connection is None and interfaces:
@@ -165,3 +232,8 @@ class DjangoObjectType(ObjectType):
 class ErrorType(ObjectType):
     field = graphene.String(required=True)
     messages = graphene.List(graphene.NonNull(graphene.String), required=True)
+
+    @classmethod
+    def from_errors(cls, errors):
+        data = camelize(errors) if graphene_settings.CAMELCASE_ERRORS else errors
+        return [cls(field=key, messages=value) for key, value in data.items()]

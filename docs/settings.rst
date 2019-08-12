@@ -30,7 +30,7 @@ Default: ``None``
 
 
 ``SCHEMA_OUTPUT``
-----------
+-----------------
 
 The name of the file where the GraphQL schema output will go.
 
@@ -44,7 +44,7 @@ Default: ``schema.json``
 
 
 ``SCHEMA_INDENT``
-----------
+-----------------
 
 The indentation level of the schema output.
 
@@ -58,7 +58,7 @@ Default: ``2``
 
 
 ``MIDDLEWARE``
-----------
+--------------
 
 A tuple of middleware that will be executed for each GraphQL query.
 
@@ -76,7 +76,7 @@ Default: ``()``
 
 
 ``RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST``
-----------
+------------------------------------------
 
 Enforces relay queries to have the ``first`` or ``last`` argument.
 
@@ -90,7 +90,7 @@ Default: ``False``
 
 
 ``RELAY_CONNECTION_MAX_LIMIT``
-----------
+------------------------------
 
 The maximum size of objects that can be requested through a relay connection.
 
@@ -101,3 +101,42 @@ Default: ``100``
     GRAPHENE = {
         'RELAY_CONNECTION_MAX_LIMIT': 100,
     }
+
+
+``CAMELCASE_ERRORS``
+------------------------------------
+
+When set to ``True`` field names in the ``errors`` object will be camel case.
+By default they will be snake case.
+
+Default: ``False``
+
+.. code:: python
+
+   GRAPHENE = {
+      'CAMELCASE_ERRORS': False,
+   }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'test_field',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]
+
+.. code:: python
+
+   GRAPHENE = {
+      'CAMELCASE_ERRORS': True,
+   }
+
+   # result = schema.execute(...)
+   print(result.errors)
+   # [
+   #     {
+   #         'field': 'testField',
+   #         'messages': ['This field is required.'],
+   #     }
+   # ]

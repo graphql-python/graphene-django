@@ -1,18 +1,16 @@
 from datetime import datetime
+from textwrap import dedent
 
 import pytest
+from django.db.models import TextField, Value
+from django.db.models.functions import Concat
 
 from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
 from graphene.relay import Node
-
 from graphene_django import DjangoObjectType
 from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from graphene_django.tests.models import Article, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
-
-# for annotation test
-from django.db.models import TextField, Value
-from django.db.models.functions import Concat
 
 pytestmark = []
 
@@ -184,7 +182,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context_value=context())
+    result = schema.execute(query, context=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
@@ -322,12 +320,14 @@ def test_filter_filterset_related_results():
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r1,
+        editor=r1,
     )
     Article.objects.create(
         headline="a2",
         pub_date=datetime.now(),
         pub_date_time=datetime.now(),
         reporter=r2,
+        editor=r2,
     )
 
     query = """
@@ -451,7 +451,7 @@ def test_global_id_multiple_field_explicit_reverse():
     assert multiple_filter.field_class == GlobalIDMultipleChoiceField
 
 
-def test_filter_filterset_related_results():
+def test_filter_filterset_related_results_with_filter():
     class ReporterFilterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -461,15 +461,15 @@ def test_filter_filterset_related_results():
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
 
-    r1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="A test user", last_name="Last Name", email="test1@test.com"
     )
-    r2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Other test user",
         last_name="Other Last Name",
         email="test2@test.com",
     )
-    r3 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Random", last_name="RandomLast", email="random@test.com"
     )
 
@@ -637,7 +637,7 @@ def test_should_query_filter_node_double_limit_raises():
     Reporter.objects.create(
         first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
     )
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -683,7 +683,7 @@ def test_order_by_is_perserved():
             return reporters
 
     Reporter.objects.create(first_name="b")
-    r = Reporter.objects.create(first_name="a")
+    Reporter.objects.create(first_name="a")
 
     schema = Schema(query=Query)
     query = """
@@ -768,36 +768,154 @@ def test_annotation_is_perserved():
     assert result.data == expected
 
 
-def test_filter_with_union():
-    class ReporterType(DjangoObjectType):
+def test_integer_field_filter_type():
+    class PetType(DjangoObjectType):
         class Meta:
-            model = Reporter
+            model = Pet
             interfaces = (Node,)
-            filter_fields = ("first_name",)
+            filter_fields = {"age": ["exact"]}
+            fields = ("age",)
 
     class Query(ObjectType):
-        all_reporters = DjangoFilterConnectionField(ReporterType)
-
-        @classmethod
-        def resolve_all_reporters(cls, root, info, **kwargs):
-            ret = Reporter.objects.none() | Reporter.objects.filter(first_name="John")
-
-    Reporter.objects.create(first_name="John", last_name="Doe")
+        pets = DjangoFilterConnectionField(PetType)
 
     schema = Schema(query=Query)
 
-    query = """
+    assert str(schema) == dedent(
+        """\
+        schema {
+          query: Query
+        }
+
+        interface Node {
+          id: ID!
+        }
+
+        type PageInfo {
+          hasNextPage: Boolean!
+          hasPreviousPage: Boolean!
+          startCursor: String
+          endCursor: String
+        }
+
+        type PetType implements Node {
+          age: Int!
+          id: ID!
+        }
+
+        type PetTypeConnection {
+          pageInfo: PageInfo!
+          edges: [PetTypeEdge]!
+        }
+
+        type PetTypeEdge {
+          node: PetType
+          cursor: String!
+        }
+
+        type Query {
+          pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+        }
+    """
+    )
+
+
+def test_filter_filterset_based_on_mixin():
+    class ArticleFilterMixin(FilterSet):
+        @classmethod
+        def get_filters(cls):
+            filters = super(FilterSet, cls).get_filters()
+            filters.update(
+                {
+                    "viewer__email__in": django_filters.CharFilter(
+                        method="filter_email_in", field_name="reporter__email__in"
+                    )
+                }
+            )
+
+            return filters
+
+        def filter_email_in(cls, queryset, name, value):
+            return queryset.filter(**{name: [value]})
+
+    class NewArticleFilter(ArticleFilterMixin, ArticleFilter):
+        pass
+
+    class NewReporterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class NewArticleFilterNode(DjangoObjectType):
+        viewer = Field(NewReporterNode)
+
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filterset_class = NewArticleFilter
+
+        def resolve_viewer(self, info):
+            return self.reporter
+
+    class Query(ObjectType):
+        all_articles = DjangoFilterConnectionField(NewArticleFilterNode)
+
+    reporter_1 = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="john@doe.com"
+    )
+
+    article_1 = Article.objects.create(
+        headline="Hello",
+        reporter=reporter_1,
+        editor=reporter_1,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+    )
+
+    reporter_2 = Reporter.objects.create(
+        first_name="Adam", last_name="Doe", email="adam@doe.com"
+    )
+
+    article_2 = Article.objects.create(
+        headline="Good Bye",
+        reporter=reporter_2,
+        editor=reporter_2,
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+    )
+
+    schema = Schema(query=Query)
+
+    query = (
+        """
         query NodeFilteringQuery {
-            allReporters(firstName: "abc") {
+            allArticles(viewer_Email_In: "%s") {
                 edges {
                     node {
-                        firstName
+                        headline
+                        viewer {
+                            email
+                        }
                     }
                 }
             }
         }
     """
-    expected = {"allReporters": {"edges": []}}
+        % reporter_1.email
+    )
+
+    expected = {
+        "allArticles": {
+            "edges": [
+                {
+                    "node": {
+                        "headline": article_1.headline,
+                        "viewer": {"email": reporter_1.email},
+                    }
+                }
+            ]
+        }
+    }
 
     result = schema.execute(query)
 

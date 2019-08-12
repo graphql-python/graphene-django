@@ -54,8 +54,8 @@ class GraphQLTestCase(TestCase):
         the call was fine.
         :resp HttpResponse: Response
         """
-        content = json.loads(resp.content)
         self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
         self.assertNotIn("errors", list(content.keys()))
 
     def assertResponseHasErrors(self, resp):

@@ -1,23 +1,22 @@
 import base64
 import datetime
 
+import graphene
 import pytest
 from django.db import models
+from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
+from graphene.relay import Node
 from py.test import raises
 
-from django.db.models import Q
-
 from graphql_relay import to_global_id
-import graphene
-from graphene.relay import Node
 
-from ..utils import DJANGO_FILTER_INSTALLED
-from ..compat import MissingType, JSONField
+from ..compat import JSONField, MissingType
 from ..fields import DjangoConnectionField
-from ..types import DjangoObjectType
 from ..settings import graphene_settings
-from .models import Article, CNNReporter, Reporter, Film, FilmDetails
+from ..types import DjangoObjectType
+from ..utils import DJANGO_FILTER_INSTALLED
+from .models import Article, CNNReporter, Film, FilmDetails, Reporter
 
 pytestmark = pytest.mark.django_db
 
@@ -28,7 +27,7 @@ def test_should_query_only_fields():
         class ReporterType(DjangoObjectType):
             class Meta:
                 model = Reporter
-                only_fields = ("articles",)
+                fields = ("articles",)
 
         schema = graphene.Schema(query=ReporterType)
         query = """
@@ -44,7 +43,7 @@ def test_should_query_simplelazy_objects():
     class ReporterType(DjangoObjectType):
         class Meta:
             model = Reporter
-            only_fields = ("id",)
+            fields = ("id",)
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -289,7 +288,7 @@ def test_should_query_connectionfields():
         class Meta:
             model = Reporter
             interfaces = (Node,)
-            only_fields = ("articles",)
+            fields = ("articles",)
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -329,7 +328,7 @@ def test_should_keep_annotations():
         class Meta:
             model = Reporter
             interfaces = (Node,)
-            only_fields = ("articles",)
+            fields = ("articles",)
 
     class ArticleType(DjangoObjectType):
         class Meta:
@@ -1236,3 +1235,54 @@ def test_should_resolve_get_queryset_connectionfields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+
+
+def test_should_preserve_prefetch_related(django_assert_num_queries):
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (graphene.relay.Node,)
+
+    class FilmType(DjangoObjectType):
+        reporters = DjangoConnectionField(ReporterType)
+
+        class Meta:
+            model = Film
+            interfaces = (graphene.relay.Node,)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        def resolve_films(root, info, **kwargs):
+            qs = Film.objects.prefetch_related("reporters")
+            return qs
+
+    r1 = Reporter.objects.create(first_name="Dave", last_name="Smith")
+    r2 = Reporter.objects.create(first_name="Jane", last_name="Doe")
+
+    f1 = Film.objects.create()
+    f1.reporters.set([r1, r2])
+    f2 = Film.objects.create()
+    f2.reporters.set([r2])
+
+    query = """
+        query {
+            films {
+                edges {
+                    node {
+                        reporters {
+                            edges {
+                                node {
+                                    firstName
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    with django_assert_num_queries(3) as captured:
+        result = schema.execute(query)
+    assert not result.errors

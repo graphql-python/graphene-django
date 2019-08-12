@@ -111,7 +111,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return partial(
             self.connection_resolver,
             parent_resolver,
-            self.type,
+            self.connection_type,
             self.get_manager(),
             self.max_limit,
             self.enforce_first_or_last,

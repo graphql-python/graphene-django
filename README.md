@@ -38,12 +38,12 @@ GRAPHENE = {
 We need to set up a `GraphQL` endpoint in our Django app, so we can serve the queries.
 
 ```python
-from django.conf.urls import url
+from django.urls import path
 from graphene_django.views import GraphQLView
 
 urlpatterns = [
     # ...
-    url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
+    path('graphql', GraphQLView.as_view(graphiql=True)),
 ]
 ```
 
