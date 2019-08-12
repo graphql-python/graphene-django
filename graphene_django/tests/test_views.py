@@ -1,6 +1,8 @@
 import json
 
 import pytest
+from mock import patch
+import django.http
 
 try:
     from urllib import urlencode
@@ -558,3 +560,15 @@ def test_passes_request_into_context_request(client):
 
     assert response.status_code == 200
     assert response_json(response) == {"data": {"request": "testing"}}
+
+
+def test_response_500(client):
+    with pytest.raises(RuntimeError), patch('graphql.backend.core.execute_and_validate', side_effect=RuntimeError):
+        response = client.get(url_string(query="{request}", q="testing"))
+
+
+def test_response_500_handler(client):
+    import graphene_django.views
+    response = graphene_django.views.server_error(django.http.HttpRequest())
+    assert response.status_code == 500
+    assert response_json(response) == {"errors": ["server error"]}
