@@ -84,7 +84,7 @@ with the context argument.
 
         def resolve_my_posts(self, info):
             # context will reference to the Django request
-            if not info.context.user.is_authenticated():
+            if not info.context.user.is_authenticated:
                 return Post.objects.none()
             else:
                 return Post.objects.filter(owner=info.context.user)
