@@ -44,7 +44,7 @@ Simple example
             return QuestionMutation(question=question)
 
 
-    class Mutation:
+    class Mutation(graphene.ObjectType):
         update_question = QuestionMutation.Field()
 
 
