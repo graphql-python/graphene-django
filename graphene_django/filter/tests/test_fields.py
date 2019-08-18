@@ -56,8 +56,6 @@ if DJANGO_FILTER_INSTALLED:
             model = Pet
             interfaces = (Node,)
 
-    # schema = Schema()
-
 
 def get_args(field):
     return field.args
@@ -815,6 +813,58 @@ def test_integer_field_filter_type():
 
         type Query {
           pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+        }
+    """
+    )
+
+
+def test_other_filter_types():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+            interfaces = (Node,)
+            filter_fields = {"age": ["exact", "isnull", "lt"]}
+            fields = ("age",)
+
+    class Query(ObjectType):
+        pets = DjangoFilterConnectionField(PetType)
+
+    schema = Schema(query=Query)
+
+    assert str(schema) == dedent(
+        """\
+        schema {
+          query: Query
+        }
+
+        interface Node {
+          id: ID!
+        }
+
+        type PageInfo {
+          hasNextPage: Boolean!
+          hasPreviousPage: Boolean!
+          startCursor: String
+          endCursor: String
+        }
+
+        type PetType implements Node {
+          age: Int!
+          id: ID!
+        }
+
+        type PetTypeConnection {
+          pageInfo: PageInfo!
+          edges: [PetTypeEdge]!
+        }
+
+        type PetTypeEdge {
+          node: PetType
+          cursor: String!
+        }
+
+        type Query {
+          pets(before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
     """
     )
