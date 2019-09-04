@@ -127,7 +127,7 @@ create your own ``FilterSet``. You can pass it directly as follows:
         all_animals = DjangoFilterConnectionField(AnimalNode,
                                                   filterset_class=AnimalFilter)
 
-You can also specify the ``FilterSet`` class using the ``filerset_class``
+You can also specify the ``FilterSet`` class using the ``filterset_class``
 parameter when defining your ``DjangoObjectType``, however, this can't be used
 in unison  with the ``filter_fields`` parameter:
 
