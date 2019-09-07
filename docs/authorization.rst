@@ -20,7 +20,7 @@ Let's use a simple example model.
 Limiting Field Access
 ---------------------
 
-To limit fields in a GraphQL query simply use the ``only_fields`` meta attribute.
+To limit fields in a GraphQL query simply use the ``fields`` meta attribute.
 
 .. code:: python
 
@@ -31,10 +31,10 @@ To limit fields in a GraphQL query simply use the ``only_fields`` meta attribute
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            only_fields = ('title', 'content')
+            fields = ('title', 'content')
             interfaces = (relay.Node, )
 
-conversely you can use ``exclude_fields`` meta attribute.
+conversely you can use ``exclude`` meta attribute.
 
 .. code:: python
 
@@ -45,7 +45,7 @@ conversely you can use ``exclude_fields`` meta attribute.
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            exclude_fields = ('published', 'owner')
+            exclude = ('published', 'owner')
             interfaces = (relay.Node, )
 
 Queryset Filtering On Lists
@@ -133,7 +133,7 @@ method to your ``DjangoObjectType``.
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            only_fields = ('title', 'content')
+            fields = ('title', 'content')
             interfaces = (relay.Node, )
 
         @classmethod
