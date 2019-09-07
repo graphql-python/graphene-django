@@ -24,7 +24,7 @@ class GraphQLTestCase(TestCase):
 
         cls._client = Client()
 
-    def query(self, query, op_name=None, input_data=None):
+    def query(self, query, op_name=None, input_data=None, variables=None):
         """
         Args:
             query (string)    - GraphQL query to run
@@ -32,7 +32,11 @@ class GraphQLTestCase(TestCase):
                                 supply the op_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
-                                to this value
+                                to this value. If both ``input_data`` and ``variables``, 
+                                are provided, the ``input`` field in the ``variables``
+                                dict will be overwritten with this value.
+            variables (dict)  - If provided, the "variables" field in GraphQL will be
+                                set to this value. 
 
         Returns:
             Response object from client
@@ -40,8 +44,13 @@ class GraphQLTestCase(TestCase):
         body = {"query": query}
         if op_name:
             body["operation_name"] = op_name
+        if variables:
+            body["variables"] = variables
         if input_data:
-            body["variables"] = {"input": input_data}
+            if variables in body:
+                body["variables"]["input"] = input_data
+            else:
+                body["variables"] = {"input": input_data}
 
         resp = self._client.post(
             self.GRAPHQL_URL, json.dumps(body), content_type="application/json"
