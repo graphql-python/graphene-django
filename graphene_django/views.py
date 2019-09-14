@@ -51,7 +51,7 @@ def instantiate_middleware(middlewares):
 
 
 class GraphQLView(View):
-    graphiql_version = "0.13.0"
+    graphiql_version = "0.14.0"
     graphiql_template = "graphene/graphiql.html"
     react_version = "16.8.6"
 
