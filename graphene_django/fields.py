@@ -1,12 +1,11 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
+from graphene import NonNull
+from graphene.relay import ConnectionField
+from graphene.types import Field, List
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
-
-from graphene import NonNull
-from graphene.relay import ConnectionField, PageInfo
-from graphene.types import Field, List
 
 from .settings import graphene_settings
 from .utils import maybe_queryset
@@ -128,9 +127,9 @@ class DjangoConnectionField(ConnectionField):
             slice_start=0,
             list_length=_len,
             list_slice_length=_len,
-            connection_type=connection,
+            connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
-            pageinfo_type=PageInfo,
+            pageinfo_type=page_info_adapter,
         )
         connection.iterable = iterable
         connection.length = _len
