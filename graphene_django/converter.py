@@ -19,7 +19,7 @@ from graphene import (
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
-from graphql import assert_valid_name
+from graphql import assert_valid_name, GraphQLError
 
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
@@ -32,7 +32,7 @@ def convert_choice_name(name):
     name = to_const(force_text(name))
     try:
         assert_valid_name(name)
-    except AssertionError:
+    except GraphQLError:
         name = "A_%s" % name
     return name
 
@@ -48,7 +48,7 @@ def get_choices(choices):
             while name in converted_names:
                 name += "_" + str(len(converted_names))
             converted_names.append(name)
-            description = help_text
+            description = str(help_text)  # TODO: translatable description: https://github.com/graphql-python/graphql-core-next/issues/58
             yield name, value, description
 
 
