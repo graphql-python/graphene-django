@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.encoding import force_text
+from django.utils.functional import Promise
 
 from graphene import (
     ID,
@@ -20,6 +21,7 @@ from graphene import (
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name, GraphQLError
+from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
@@ -48,7 +50,7 @@ def get_choices(choices):
             while name in converted_names:
                 name += "_" + str(len(converted_names))
             converted_names.append(name)
-            description = str(help_text)  # TODO: translatable description: https://github.com/graphql-python/graphql-core-next/issues/58
+            description = help_text
             yield name, value, description
 
 
@@ -245,3 +247,8 @@ def convert_posgres_range_to_string(field, registry=None):
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
     return List(inner_type, description=field.help_text, required=not field.null)
+
+
+# Register Django lazy()-wrapped values as GraphQL description/help_text.
+# This is needed for using lazy translations, see https://github.com/graphql-python/graphql-core-next/issues/58.
+register_description(Promise)
