@@ -9,7 +9,6 @@ from .types import DictType
 
 singledispatch = import_single_dispatch()
 
-
 @singledispatch
 def get_graphene_type_from_serializer_field(field):
     raise ImproperlyConfigured(

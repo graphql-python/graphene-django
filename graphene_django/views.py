@@ -9,8 +9,9 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.decorators.csrf import ensure_csrf_cookie
+from graphene import Schema
+from graphql import parse, get_operation_ast, OperationType, execute, validate
 
-from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
@@ -55,10 +56,8 @@ class GraphQLView(View):
     graphiql_template = "graphene/graphiql.html"
     react_version = "16.8.6"
 
-    schema = None
+    schema: Schema = None
     graphiql = False
-    executor = None
-    backend = None
     middleware = None
     root_value = None
     pretty = False
@@ -67,19 +66,14 @@ class GraphQLView(View):
     def __init__(
         self,
         schema=None,
-        executor=None,
         middleware=None,
         root_value=None,
         graphiql=False,
         pretty=False,
         batch=False,
-        backend=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
-
-        if backend is None:
-            backend = get_default_backend()
 
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
@@ -87,15 +81,13 @@ class GraphQLView(View):
         self.schema = self.schema or schema
         if middleware is not None:
             self.middleware = list(instantiate_middleware(middleware))
-        self.executor = executor
         self.root_value = root_value
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
-        self.backend = backend
 
         assert isinstance(
-            self.schema, GraphQLSchema
+            self.schema, Schema
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
 
@@ -108,9 +100,6 @@ class GraphQLView(View):
 
     def get_context(self, request):
         return request
-
-    def get_backend(self, request):
-        return self.backend
 
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
@@ -173,7 +162,9 @@ class GraphQLView(View):
                     self.format_error(e) for e in execution_result.errors
                 ]
 
-            if execution_result.invalid:
+            if execution_result.errors and any(
+                not e.path for e in execution_result.errors
+            ):
                 status_code = 400
             else:
                 response["data"] = execution_result.data
@@ -246,14 +237,13 @@ class GraphQLView(View):
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
         try:
-            backend = self.get_backend(request)
-            document = backend.document_from_string(self.schema, query)
+            document = parse(query)
         except Exception as e:
-            return ExecutionResult(errors=[e], invalid=True)
+            return ExecutionResult(errors=[e])
 
         if request.method.lower() == "get":
-            operation_type = document.get_operation_type(operation_name)
-            if operation_type and operation_type != "query":
+            operation_ast = get_operation_ast(document, operation_name)
+            if operation_ast and operation_ast.operation != OperationType.QUERY:
                 if show_graphiql:
                     return None
 
@@ -261,28 +251,24 @@ class GraphQLView(View):
                     HttpResponseNotAllowed(
                         ["POST"],
                         "Can only perform a {} operation from a POST request.".format(
-                            operation_type
+                            operation_ast.operation.value
                         ),
                     )
                 )
 
-        try:
-            extra_options = {}
-            if self.executor:
-                # We only include it optionally since
-                # executor is not a valid argument in all backends
-                extra_options["executor"] = self.executor
+        validation_errors = validate(self.schema.graphql_schema, document)
+        if validation_errors:
+            return ExecutionResult(data=None, errors=validation_errors)
 
-            return document.execute(
-                root=self.get_root_value(request),
-                variables=variables,
-                operation_name=operation_name,
-                context=self.get_context(request),
-                middleware=self.get_middleware(request),
-                **extra_options
-            )
-        except Exception as e:
-            return ExecutionResult(errors=[e], invalid=True)
+        return execute(
+            schema=self.schema.graphql_schema,
+            document=document,
+            root_value=self.get_root_value(request),
+            variable_values=variables,
+            operation_name=operation_name,
+            context_value=self.get_context(request),
+            middleware=self.get_middleware(request),
+        )
 
     @classmethod
     def can_display_graphiql(cls, request, data):
