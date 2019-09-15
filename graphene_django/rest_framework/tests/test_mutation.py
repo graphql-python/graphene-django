@@ -18,6 +18,7 @@ def mock_info():
         None,
         None,
         None,
+        path=None,
         schema=None,
         fragments=None,
         root_value=None,
