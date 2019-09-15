@@ -657,8 +657,8 @@ def test_should_query_filter_node_double_limit_raises():
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
-        "Received two sliced querysets (high mark) in the connection, please slice only in one."
+    assert str(result.errors[0]).startswith(
+        "Received two sliced querysets (high mark) in the connection, please slice only in one.\n"
     )
 
 
