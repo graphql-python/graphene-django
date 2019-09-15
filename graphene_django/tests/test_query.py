@@ -1083,7 +1083,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info):
+        def resolve_films(root, info, **args):
             qs = Film.objects.prefetch_related("reporters")
             return qs
 
@@ -1115,4 +1115,4 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     schema = graphene.Schema(query=Query)
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
-    assert not result.errors
+        assert not result.errors
