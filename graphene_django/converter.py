@@ -52,7 +52,9 @@ def get_choices(choices):
             while name in converted_names:
                 name += "_" + str(len(converted_names))
             converted_names.append(name)
-            description = str(help_text)  # TODO: translatable description: https://github.com/graphql-python/graphql-core-next/issues/58
+            description = str(
+                help_text
+            )  # TODO: translatable description: https://github.com/graphql-python/graphql-core-next/issues/58
             yield name, value, description
 
 

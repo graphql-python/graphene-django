@@ -612,9 +612,9 @@ def test_should_enforce_first_or_last(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "You must provide a `first` or `last` value to properly "
-        "paginate the `allReporters` connection."
+        "paginate the `allReporters` connection.\n"
     )
     assert result.data == expected
 
@@ -653,9 +653,9 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `first` limit of 100 records."
+        "exceeds the `first` limit of 100 records.\n"
     )
     assert result.data == expected
 
@@ -694,9 +694,9 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `last` limit of 100 records."
+        "exceeds the `last` limit of 100 records.\n"
     )
     assert result.data == expected
 
