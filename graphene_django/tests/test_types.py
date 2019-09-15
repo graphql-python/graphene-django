@@ -118,53 +118,95 @@ schema {
   query: RootQuery
 }
 
+\"""Article description\"""
 type Article implements Node {
+  \"""The ID of the object\"""
   id: ID!
   headline: String!
   pubDate: Date!
   pubDateTime: DateTime!
   reporter: Reporter!
   editor: Reporter!
+
+  \"""Language\"""
   lang: ArticleLang!
   importance: ArticleImportance
 }
 
 type ArticleConnection {
+  \"""Pagination data for this connection.\"""
   pageInfo: PageInfo!
+
+  \"""Contains the nodes in this connection.\"""
   edges: [ArticleEdge]!
   test: String
 }
 
+\"""A Relay edge containing a `Article` and its cursor.\"""
 type ArticleEdge {
+  \"""The item at the end of the edge\"""
   node: Article
+
+  \"""A cursor for use in pagination\"""
   cursor: String!
 }
 
+\"""An enumeration.\"""
 enum ArticleImportance {
+  \"""Very important\"""
   A_1
+
+  \"""Not as important\"""
   A_2
 }
 
+\"""An enumeration.\"""
 enum ArticleLang {
+  \"""Spanish\"""
   ES
+
+  \"""English\"""
   EN
 }
 
+\"""
+The `Date` scalar type represents a Date
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+\"""
 scalar Date
 
+\"""
+The `DateTime` scalar type represents a DateTime
+value as specified by
+[iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+\"""
 scalar DateTime
 
+\"""An object with an ID\"""
 interface Node {
+  \"""The ID of the object\"""
   id: ID!
 }
 
+\"""
+The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+\"""
 type PageInfo {
+  \"""When paginating forwards, are there more items?\"""
   hasNextPage: Boolean!
+
+  \"""When paginating backwards, are there more items?\"""
   hasPreviousPage: Boolean!
+
+  \"""When paginating backwards, the cursor to continue.\"""
   startCursor: String
+
+  \"""When paginating forwards, the cursor to continue.\"""
   endCursor: String
 }
 
+\"""Reporter description\"""
 type Reporter {
   id: ID!
   firstName: String!
@@ -173,20 +215,29 @@ type Reporter {
   pets: [Reporter!]!
   aChoice: ReporterAChoice
   reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
+  articles(before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
 }
 
+\"""An enumeration.\"""
 enum ReporterAChoice {
+  \"""this\"""
   A_1
+
+  \"""that\"""
   A_2
 }
 
+\"""An enumeration.\"""
 enum ReporterReporterType {
+  \"""Regular\"""
   A_1
+
+  \"""CNN Reporter\"""
   A_2
 }
 
 type RootQuery {
+  \"""The ID of the object\"""
   node(id: ID!): Node
 }
 """.lstrip()
@@ -346,10 +397,6 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
-
         type Pet {
           id: ID!
           kind: String!
@@ -375,18 +422,18 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
-
         type Pet {
           id: ID!
           kind: PetModelKind!
           cuteness: Int!
         }
 
+        \"""An enumeration.\"""
         enum PetModelKind {
+          \"""Cat\"""
           CAT
+
+          \"""Dog\"""
           DOG
         }
 
@@ -409,10 +456,6 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
-
         type Pet {
           id: ID!
           kind: String!
