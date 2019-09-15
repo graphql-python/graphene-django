@@ -15,10 +15,10 @@ class context(object):
 
 # from examples.starwars_django.models import Character
 
-pytestmark = pytest.mark.django_db
+pytestmark = [pytest.mark.django_db, pytest.mark.asyncio]
 
 
-def test_should_query_field():
+async def test_should_query_field():
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -53,14 +53,14 @@ def test_should_query_field():
         "_debug": {"sql": [{"rawSql": str(Reporter.objects.order_by("pk")[:1].query)}]},
     }
     schema = graphene.Schema(query=Query)
-    result = schema.execute(
+    result = await schema.execute_async(
         query, context_value=context(), middleware=[DjangoDebugMiddleware()]
     )
     assert not result.errors
     assert result.data == expected
 
 
-def test_should_query_nested_field():
+async def test_should_query_nested_field():
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -112,7 +112,7 @@ def test_should_query_nested_field():
         }
     }
     schema = graphene.Schema(query=Query)
-    result = schema.execute(
+    result = await schema.execute_async(
         query, context_value=context(), middleware=[DjangoDebugMiddleware()]
     )
     assert not result.errors
@@ -127,7 +127,7 @@ def test_should_query_nested_field():
     assert result.data["reporter"] == expected["reporter"]
 
 
-def test_should_query_list():
+async def test_should_query_list():
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -162,14 +162,14 @@ def test_should_query_list():
         "_debug": {"sql": [{"rawSql": str(Reporter.objects.all().query)}]},
     }
     schema = graphene.Schema(query=Query)
-    result = schema.execute(
+    result = await schema.execute_async(
         query, context_value=context(), middleware=[DjangoDebugMiddleware()]
     )
     assert not result.errors
     assert result.data == expected
 
 
-def test_should_query_connection():
+async def test_should_query_connection():
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -205,7 +205,7 @@ def test_should_query_connection():
     """
     expected = {"allReporters": {"edges": [{"node": {"lastName": "ABA"}}]}}
     schema = graphene.Schema(query=Query)
-    result = schema.execute(
+    result = await schema.execute_async(
         query, context_value=context(), middleware=[DjangoDebugMiddleware()]
     )
     assert not result.errors
@@ -215,7 +215,7 @@ def test_should_query_connection():
     assert result.data["_debug"]["sql"][1]["rawSql"] == query
 
 
-def test_should_query_connectionfilter():
+async def test_should_query_connectionfilter():
     from ...filter import DjangoFilterConnectionField
 
     r1 = Reporter(last_name="ABA")
@@ -254,7 +254,7 @@ def test_should_query_connectionfilter():
     """
     expected = {"allReporters": {"edges": [{"node": {"lastName": "ABA"}}]}}
     schema = graphene.Schema(query=Query)
-    result = schema.execute(
+    result = await schema.execute_async(
         query, context_value=context(), middleware=[DjangoDebugMiddleware()]
     )
     assert not result.errors
