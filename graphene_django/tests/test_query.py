@@ -709,7 +709,8 @@ def test_should_error_if_last_is_greater_than_max():
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
-def test_should_query_promise_connectionfields():
+@pytest.mark.asyncio
+async def test_should_query_promise_connectionfields():
     from promise import Promise
 
     class ReporterType(DjangoObjectType):
@@ -738,7 +739,7 @@ def test_should_query_promise_connectionfields():
 
     expected = {"allReporters": {"edges": [{"node": {"id": "UmVwb3J0ZXJUeXBlOjE="}}]}}
 
-    result = schema.execute(query)
+    result = await schema.execute_async(query)
     assert not result.errors
     assert result.data == expected
 
@@ -821,7 +822,8 @@ def test_should_query_connectionfields_with_manager():
     assert result.data == expected
 
 
-def test_should_query_dataloader_fields():
+@pytest.mark.asyncio
+async def test_should_query_dataloader_fields():
     from promise import Promise
     from promise.dataloader import DataLoader
 
@@ -914,7 +916,7 @@ def test_should_query_dataloader_fields():
         }
     }
 
-    result = schema.execute(query)
+    result = await schema.execute_async(query)
     assert not result.errors
     assert result.data == expected
 
