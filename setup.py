@@ -57,7 +57,6 @@ setup(
         "graphene>=3.0.dev,<4",
         "graphql-core>=3.0.0b0,<4",
         "Django>=1.11",
-        "singledispatch>=3.4.0.3",
         "promise>=2.1",
     ],
     setup_requires=["pytest-runner"],

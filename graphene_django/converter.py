@@ -1,6 +1,7 @@
 from django.db import models
 from django.utils.encoding import force_text
 from django.utils.functional import Promise
+from functools import singledispatch
 
 from graphene import (
     ID,
@@ -25,9 +26,6 @@ from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
-from .utils import import_single_dispatch
-
-singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):

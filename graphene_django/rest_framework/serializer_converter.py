@@ -1,13 +1,12 @@
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
+from functools import singledispatch
 
 import graphene
 
 from ..registry import get_global_registry
-from ..utils import import_single_dispatch
 from .types import DictType
 
-singledispatch = import_single_dispatch()
 
 @singledispatch
 def get_graphene_type_from_serializer_field(field):

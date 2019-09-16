@@ -4,7 +4,6 @@ from .utils import (
     camelize,
     get_model_fields,
     get_reverse_fields,
-    import_single_dispatch,
     is_valid_django_model,
     maybe_queryset,
 )
@@ -16,6 +15,5 @@ __all__ = [
     "get_model_fields",
     "camelize",
     "is_valid_django_model",
-    "import_single_dispatch",
     "GraphQLTestCase",
 ]
