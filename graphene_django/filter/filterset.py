@@ -1,7 +1,7 @@
 import itertools
 
 from django.db import models
-from django_filters import Filter, MultipleChoiceFilter, VERSION
+from django_filters import Filter, MultipleChoiceFilter
 from django_filters.filterset import BaseFilterSet, FilterSet
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
@@ -48,36 +48,6 @@ class GrapheneFilterSetMixin(BaseFilterSet):
             FILTER_FOR_DBFIELD_DEFAULTS.items(), GRAPHENE_FILTER_SET_OVERRIDES.items()
         )
     )
-
-
-# To support a Django 1.11 + Python 2.7 combination django-filter must be
-# < 2.x.x. To support the earlier version of django-filter, the
-# filter_for_reverse_field method must be present on GrapheneFilterSetMixin and
-# must not be present for later versions of django-filter.
-if VERSION[0] < 2:
-    from django.utils.text import capfirst
-
-    class GrapheneFilterSetMixinPython2(GrapheneFilterSetMixin):
-        @classmethod
-        def filter_for_reverse_field(cls, f, name):
-            """Handles retrieving filters for reverse relationships
-             We override the default implementation so that we can handle
-            Global IDs (the default implementation expects database
-            primary keys)
-            """
-            try:
-                rel = f.field.remote_field
-            except AttributeError:
-                rel = f.field.rel
-            default = {"name": name, "label": capfirst(rel.related_name)}
-            if rel.multiple:
-                # For to-many relationships
-                return GlobalIDMultipleChoiceFilter(**default)
-            else:
-                # For to-one relationships
-                return GlobalIDFilter(**default)
-
-    GrapheneFilterSetMixin = GrapheneFilterSetMixinPython2
 
 
 def setup_filterset(filterset_class):

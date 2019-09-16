@@ -2,9 +2,8 @@ Filtering
 =========
 
 Graphene integrates with
-`django-filter <https://django-filter.readthedocs.io/en/master/>`__ (2.x for
-Python 3 or 1.x for Python 2) to provide filtering of results. See the `usage
-documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+`django-filter <https://django-filter.readthedocs.io/en/master/>`__ to provide filtering of results.
+See the `usage documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
 This filtering is automatically available when implementing a ``relay.Node``.
