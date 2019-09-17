@@ -1,13 +1,12 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from graphene import NonNull
-
+from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
 
-from graphene.types import Field, List
+from graphene import NonNull
 from graphene.relay import ConnectionField, PageInfo
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphene.types import Field, List
 
 from .settings import graphene_settings
 from .utils import maybe_queryset
@@ -15,19 +14,43 @@ from .utils import maybe_queryset
 
 class DjangoListField(Field):
     def __init__(self, _type, *args, **kwargs):
+        from .types import DjangoObjectType
+
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+
+        assert issubclass(
+            _type, DjangoObjectType
+        ), "DjangoListField only accepts DjangoObjectType types"
+
         # Django would never return a Set of None  vvvvvvv
         super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
 
     @property
     def model(self):
-        return self.type.of_type._meta.node._meta.model
+        _type = self.type.of_type
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+        return _type._meta.model
 
     @staticmethod
-    def list_resolver(resolver, root, info, **args):
-        return maybe_queryset(resolver(root, info, **args))
+    def list_resolver(django_object_type, resolver, root, info, **args):
+        queryset = maybe_queryset(resolver(root, info, **args))
+        if queryset is None:
+            # Default to Django Model queryset
+            # N.B. This happens if DjangoListField is used in the top level Query object
+            model = django_object_type._meta.model
+            queryset = maybe_queryset(
+                django_object_type.get_queryset(model.objects, info)
+            )
+        return queryset
 
     def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
+        _type = self.type
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+        django_object_type = _type.of_type.of_type
+        return partial(self.list_resolver, django_object_type, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):
