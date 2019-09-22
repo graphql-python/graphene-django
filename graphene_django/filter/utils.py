@@ -19,7 +19,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             form_field = filter_field.field
         else:
             try:
-                field_name, filter_type = name.split("__", 1)
+                field_name, filter_type = name.rsplit("__", 1)
             except ValueError:
                 field_name = name
                 filter_type = None
