@@ -4,6 +4,7 @@ from rest_framework import serializers
 import graphene
 
 from ..registry import get_global_registry
+from ..converter import convert_choices_to_named_enum_with_descriptions
 from ..utils import import_single_dispatch
 from .types import DictType
 
@@ -130,7 +131,6 @@ def convert_serializer_field_to_time(field):
 @get_graphene_type_from_serializer_field.register(serializers.ListField)
 def convert_serializer_field_to_list(field, is_input=True):
     child_type = get_graphene_type_from_serializer_field(field.child)
-
     return (graphene.List, child_type)
 
 
@@ -145,5 +145,13 @@ def convert_serializer_field_to_jsonstring(field):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.MultipleChoiceField)
-def convert_serializer_field_to_list_of_string(field):
-    return (graphene.List, graphene.String)
+def convert_serializer_field_to_list_of_enum(field):
+    child_type = convert_serializer_field_to_enum(field)
+    return (graphene.List, child_type)
+
+
+@get_graphene_type_from_serializer_field.register(serializers.ChoiceField)
+def convert_serializer_field_to_enum(field):
+    # enums require a name
+    name = field.field_name or field.source or "Choices"
+    return convert_choices_to_named_enum_with_descriptions(name, field.choices)

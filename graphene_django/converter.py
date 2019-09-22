@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from django.db import models
 from django.utils.encoding import force_text
 
@@ -39,6 +40,8 @@ def convert_choice_name(name):
 
 def get_choices(choices):
     converted_names = []
+    if isinstance(choices, OrderedDict):
+        choices = choices.items()
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
             for choice in get_choices(help_text):
@@ -52,6 +55,19 @@ def get_choices(choices):
             yield name, value, description
 
 
+def convert_choices_to_named_enum_with_descriptions(name, choices):
+    choices = list(get_choices(choices))
+    named_choices = [(c[0], c[1]) for c in choices]
+    named_choices_descriptions = {c[0]: c[2] for c in choices}
+
+    class EnumWithDescriptionsType(object):
+        @property
+        def description(self):
+            return named_choices_descriptions[self.name]
+
+    return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+
+
 def convert_django_field_with_choices(
     field, registry=None, convert_choices_to_enum=True
 ):
@@ -63,16 +79,7 @@ def convert_django_field_with_choices(
     if choices and convert_choices_to_enum:
         meta = field.model._meta
         name = to_camel_case("{}_{}".format(meta.object_name, field.name))
-        choices = list(get_choices(choices))
-        named_choices = [(c[0], c[1]) for c in choices]
-        named_choices_descriptions = {c[0]: c[2] for c in choices}
-
-        class EnumWithDescriptionsType(object):
-            @property
-            def description(self):
-                return named_choices_descriptions[self.name]
-
-        enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+        enum = convert_choices_to_named_enum_with_descriptions(name, choices)
         required = not (field.blank or field.null)
         converted = enum(description=field.help_text, required=required)
     else:
