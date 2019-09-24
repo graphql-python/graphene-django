@@ -2,9 +2,10 @@
   // Parse the cookie value for a CSRF token
   var csrftoken;
   var cookies = document.cookie.split(';').reduce((p, c) => {
-    let x = {};
-    let key = c.split('=')[0].trim();
-    x[key] = p[key] ? p[key].concat([c.split('=')[1]]) : [c.split('=')[1]];
+    var x = {};
+    var key = c.split('=')[0].trim();
+    var value = c.split('=')[1]
+    x[key] = p[key] ? p[key].concat([value]) : [value];
     return Object.assign(p, x);
   }, {});
   // Collect the URL parameters
