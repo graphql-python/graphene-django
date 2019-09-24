@@ -51,13 +51,6 @@
       Accept: 'application/json',
       'Content-Type': 'application/json'
     };
-
-    var cookies = document.cookie.split(';').reduce((p, c) => {
-      let x = {};
-      let key = c.split('=')[0].trim();
-      x[key] = p[key] ? p[key].concat([c.split('=')[1]]) : [c.split('=')[1]];
-      return Object.assign(p, x);
-    }, {});
     if (cookies.csrftoken && cookies.csrftoken.length) {
       headers['X-CSRFToken'] = cookies.csrftoken.pop();
     }
