@@ -8,6 +8,13 @@
     x[key] = p[key] ? p[key].concat([value]) : [value];
     return Object.assign(p, x);
   }, {});
+  var headers = {
+    Accept: 'application/json',
+    'Content-Type': 'application/json'
+  };
+  if (cookies.csrftoken && cookies.csrftoken.length) {
+    headers['X-CSRFToken'] = cookies.csrftoken.pop();
+  }
   // Collect the URL parameters
   var parameters = {};
   window.location.hash
@@ -47,13 +54,6 @@
 
   // Defines a GraphQL fetcher using the fetch API.
   function graphQLFetcher(graphQLParams) {
-    var headers = {
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    };
-    if (cookies.csrftoken && cookies.csrftoken.length) {
-      headers['X-CSRFToken'] = cookies.csrftoken.pop();
-    }
     function getFetch(headers) {
       return fetch(fetchURL, {
         method: 'post',
@@ -73,6 +73,7 @@
         } catch (error) {
           if (cookies.csrftoken && cookies.csrftoken.length) {
             headers['X-CSRFToken'] = cookies.csrftoken.pop();
+            console.log('retry', headers)
             return getFetch(headers);
           }
           return responseBody;
