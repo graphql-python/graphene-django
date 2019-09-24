@@ -71,7 +71,7 @@
         try {
           return JSON.parse(responseBody);
         } catch (error) {
-          if (cookies.csrftoken.length) {
+          if (cookies.csrftoken && cookies.csrftoken.length) {
             headers['X-CSRFToken'] = cookies.csrftoken.pop();
             return getFetch(headers);
           }
