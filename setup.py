@@ -55,7 +55,7 @@ setup(
     install_requires=[
         "six>=1.10.0",
         "graphene>=3.0.dev,<4",
-        "graphql-core>=3.0.0b0,<4",
+        "graphql-core>=3.0.0b1,<4",
         "Django>=1.11",
         "promise>=2.1",
     ],

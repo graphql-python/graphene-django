@@ -92,9 +92,6 @@ def test_allows_get_with_operation_name(client):
     }
 
 
-@pytest.mark.xfail(
-    reason="SourceLocation serialization problem: https://github.com/graphql-python/graphql-core-next/issues/61"
-)
 def test_reports_validation_errors(client):
     response = client.get(url_string(query="{ test, unknownOne, unknownTwo }"))
 
@@ -449,9 +446,6 @@ def test_supports_pretty_printing_by_request(client):
     )
 
 
-@pytest.mark.xfail(
-    reason="SourceLocation serialization problem: https://github.com/graphql-python/graphql-core-next/issues/61"
-)
 def test_handles_field_errors_caught_by_graphql(client):
     response = client.get(url_string(query="{thrower}"))
     assert response.status_code == 200
@@ -467,9 +461,6 @@ def test_handles_field_errors_caught_by_graphql(client):
     }
 
 
-@pytest.mark.xfail(
-    reason="SourceLocation serialization problem: https://github.com/graphql-python/graphql-core-next/issues/61"
-)
 def test_handles_syntax_errors_caught_by_graphql(client):
     response = client.get(url_string(query="syntaxerror"))
     assert response.status_code == 400
@@ -477,8 +468,8 @@ def test_handles_syntax_errors_caught_by_graphql(client):
         "errors": [
             {
                 "locations": [{"column": 1, "line": 1}],
-                "message": "Syntax Error GraphQL (1:1) "
-                'Unexpected Name "syntaxerror"\n\n1: syntaxerror\n   ^\n',
+                "message": "Syntax Error: Unexpected Name 'syntaxerror'",
+                "path": None,
             }
         ]
     }
