@@ -56,8 +56,6 @@ if DJANGO_FILTER_INSTALLED:
             model = Pet
             interfaces = (Node,)
 
-    # schema = Schema()
-
 
 def get_args(field):
     return field.args
@@ -832,6 +830,75 @@ def test_integer_field_filter_type():
 
         type Query {
           pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
+        }
+    """
+    )
+
+
+def test_other_filter_types():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+            interfaces = (Node,)
+            filter_fields = {"age": ["exact", "isnull", "lt"]}
+            fields = ("age",)
+
+    class Query(ObjectType):
+        pets = DjangoFilterConnectionField(PetType)
+
+    schema = Schema(query=Query)
+
+    assert str(schema) == dedent(
+        """\
+        \"""An object with an ID\"""
+        interface Node {
+          \"""The ID of the object\"""
+          id: ID!
+        }
+
+        \"""
+        The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+        \"""
+        type PageInfo {
+          \"""When paginating forwards, are there more items?\"""
+          hasNextPage: Boolean!
+        
+          \"""When paginating backwards, are there more items?\"""
+          hasPreviousPage: Boolean!
+
+          \"""When paginating backwards, the cursor to continue.\"""
+          startCursor: String
+
+          \"""When paginating forwards, the cursor to continue.\"""
+          endCursor: String
+        }
+
+        type PetType implements Node {
+          age: Int!
+
+          \"""The ID of the object\"""
+          id: ID!
+        }
+
+        type PetTypeConnection {
+          \"""Pagination data for this connection.\"""
+          pageInfo: PageInfo!
+
+          \"""Contains the nodes in this connection.\"""
+          edges: [PetTypeEdge]!
+        }
+
+        \"""A Relay edge containing a `PetType` and its cursor.\"""
+        type PetTypeEdge {
+          \"""The item at the end of the edge\"""
+          node: PetType
+
+          \"""A cursor for use in pagination\"""
+          cursor: String!
+        }
+
+        type Query {
+          pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
         }
     """
     )

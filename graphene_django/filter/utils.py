@@ -18,9 +18,16 @@ def get_filtering_args_from_filterset(filterset_class, type):
         if name in filterset_class.declared_filters:
             form_field = filter_field.field
         else:
-            field_name = name.split("__", 1)[0]
+            try:
+                field_name, filter_type = name.rsplit("__", 1)
+            except ValueError:
+                field_name = name
+                filter_type = None
 
-            if hasattr(model, field_name):
+            # If the filter type is `isnull` then use the filter provided by
+            # DjangoFilter (a BooleanFilter).
+            # Otherwise try and get a filter based on the actual model field
+            if filter_type != "isnull" and hasattr(model, field_name):
                 model_field = model._meta.get_field(field_name)
 
                 if hasattr(model_field, "formfield"):
