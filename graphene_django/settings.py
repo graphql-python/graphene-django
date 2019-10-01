@@ -35,7 +35,7 @@ DEFAULTS = {
     "RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST": False,
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
-    "CAMELCASE_ERRORS": False,
+    "CAMELCASE_ERRORS": True,
 }
 
 if settings.DEBUG:
