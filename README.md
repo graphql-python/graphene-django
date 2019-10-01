@@ -101,3 +101,7 @@ To learn more check out the following [examples](examples/):
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## Release Notes
+
+* See [Releases page on github](https://github.com/graphql-python/graphene-django/releases)
