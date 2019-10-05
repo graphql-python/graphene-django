@@ -1,8 +1,8 @@
 import inspect
 
+import six
 from django.db import models
 from django.db.models.manager import Manager
-from django.utils import six
 from django.utils.encoding import force_text
 from django.utils.functional import Promise
 
