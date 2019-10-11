@@ -638,6 +638,8 @@ def test_should_error_if_first_is_greater_than_max():
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
+    assert Query.all_reporters.max_limit == 100
+
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
@@ -678,6 +680,8 @@ def test_should_error_if_last_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -804,7 +808,7 @@ def test_should_query_connectionfields_with_manager():
     schema = graphene.Schema(query=Query)
     query = """
         query ReporterLastQuery {
-            allReporters(first: 2) {
+            allReporters(first: 1) {
                 edges {
                     node {
                         id

@@ -52,69 +52,17 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         return get_filtering_args_from_filterset(self.filterset_class, self.node_type)
 
     @classmethod
-    def merge_querysets(cls, default_queryset, queryset):
-        # There could be the case where the default queryset (returned from the filterclass)
-        # and the resolver queryset have some limits on it.
-        # We only would be able to apply one of those, but not both
-        # at the same time.
-
-        # See related PR: https://github.com/graphql-python/graphene-django/pull/126
-
-        assert not (
-            default_queryset.query.low_mark and queryset.query.low_mark
-        ), "Received two sliced querysets (low mark) in the connection, please slice only in one."
-        assert not (
-            default_queryset.query.high_mark and queryset.query.high_mark
-        ), "Received two sliced querysets (high mark) in the connection, please slice only in one."
-        low = default_queryset.query.low_mark or queryset.query.low_mark
-        high = default_queryset.query.high_mark or queryset.query.high_mark
-        default_queryset.query.clear_limits()
-        queryset = super(DjangoFilterConnectionField, cls).merge_querysets(
-            default_queryset, queryset
-        )
-        queryset.query.set_limits(low, high)
-        return queryset
-
-    @classmethod
-    def connection_resolver(
-        cls,
-        resolver,
-        connection,
-        default_manager,
-        max_limit,
-        enforce_first_or_last,
-        filterset_class,
-        filtering_args,
-        root,
-        info,
-        **args
+    def resolve_queryset(
+        cls, connection, iterable, info, args, filtering_args, filterset_class
     ):
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
-        qs = filterset_class(
-            data=filter_kwargs,
-            queryset=default_manager.get_queryset(),
-            request=info.context,
+        return filterset_class(
+            data=filter_kwargs, queryset=iterable, request=info.context
         ).qs
 
-        return super(DjangoFilterConnectionField, cls).connection_resolver(
-            resolver,
-            connection,
-            qs,
-            max_limit,
-            enforce_first_or_last,
-            root,
-            info,
-            **args
-        )
-
-    def get_resolver(self, parent_resolver):
+    def get_queryset_resolver(self):
         return partial(
-            self.connection_resolver,
-            parent_resolver,
-            self.connection_type,
-            self.get_manager(),
-            self.max_limit,
-            self.enforce_first_or_last,
-            self.filterset_class,
-            self.filtering_args,
+            self.resolve_queryset,
+            filterset_class=self.filterset_class,
+            filtering_args=self.filtering_args,
         )
