@@ -608,6 +608,7 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
+@pytest.mark.skip(reason="no longer relevant?")
 def test_should_query_filter_node_double_limit_raises():
     class ReporterFilter(FilterSet):
         limit = NumberFilter(method="filter_limit")
