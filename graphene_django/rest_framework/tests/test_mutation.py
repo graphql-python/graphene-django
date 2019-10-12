@@ -1,6 +1,8 @@
 import datetime
 
 from py.test import mark, raises
+from rest_framework.exceptions import ValidationError
+
 from rest_framework import serializers
 
 from graphene import Field, ResolveInfo
@@ -204,20 +206,23 @@ def test_mutate_and_get_payload_error():
             serializer_class = MySerializer
 
     # missing required fields
-    result = MyMutation.mutate_and_get_payload(None, mock_info(), **{})
-    assert len(result.errors) > 0
+    with raises(ValidationError):
+        result = MyMutation.mutate_and_get_payload(None, mock_info(), **{})
+        assert len(result.errors) > 0
 
 
 def test_model_mutate_and_get_payload_error():
     # missing required fields
-    result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
-    assert len(result.errors) > 0
+    with raises(ValidationError):
+        result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
+        assert len(result.errors) > 0
 
 
 def test_mutation_error_camelcased():
     graphene_settings.CAMELCASE_ERRORS = True
-    result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
-    assert result.errors[0].field == "coolName"
+    with raises(ValidationError):
+        result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
+        assert result.errors[0].field == "coolName"
     graphene_settings.CAMELCASE_ERRORS = False
 
 
