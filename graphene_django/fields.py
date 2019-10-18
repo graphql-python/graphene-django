@@ -40,7 +40,9 @@ class DjangoListField(Field):
             # Default to Django Model queryset
             # N.B. This happens if DjangoListField is used in the top level Query object
             model_manager = django_object_type._meta.model.objects
-            queryset = maybe_queryset(django_object_type.get_queryset(model, info))
+            queryset = maybe_queryset(
+                django_object_type.get_queryset(model_manager, info)
+            )
         return queryset
 
     def get_resolver(self, parent_resolver):
