@@ -608,59 +608,6 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
-@pytest.mark.skip(reason="no longer relevant?")
-def test_should_query_filter_node_double_limit_raises():
-    class ReporterFilter(FilterSet):
-        limit = NumberFilter(method="filter_limit")
-
-        def filter_limit(self, queryset, name, value):
-            return queryset[:value]
-
-        class Meta:
-            model = Reporter
-            fields = ["first_name"]
-
-    class ReporterType(DjangoObjectType):
-        class Meta:
-            model = Reporter
-            interfaces = (Node,)
-
-    class Query(ObjectType):
-        all_reporters = DjangoFilterConnectionField(
-            ReporterType, filterset_class=ReporterFilter
-        )
-
-        def resolve_all_reporters(self, info, **args):
-            return Reporter.objects.order_by("a_choice")[:2]
-
-    Reporter.objects.create(
-        first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
-    )
-    Reporter.objects.create(
-        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
-    )
-
-    schema = Schema(query=Query)
-    query = """
-        query NodeFilteringQuery {
-            allReporters(limit: 1) {
-                edges {
-                    node {
-                        id
-                        firstName
-                    }
-                }
-            }
-        }
-    """
-
-    result = schema.execute(query)
-    assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
-        "Received two sliced querysets (high mark) in the connection, please slice only in one."
-    )
-
-
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:
