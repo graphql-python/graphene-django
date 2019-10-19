@@ -273,7 +273,7 @@ class GraphQLView(View):
                 # executor is not a valid argument in all backends
                 extra_options["executor"] = self.executor
 
-            return document.execute(
+            execution_result = document.execute(
                 root=self.get_root_value(request),
                 variables=variables,
                 operation_name=operation_name,
@@ -281,6 +281,9 @@ class GraphQLView(View):
                 middleware=self.get_middleware(request),
                 **extra_options
             )
+            if execution_result.errors:
+                return ExecutionResult(errors=execution_result.errors, invalid=True)
+            return execution_result
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 
