@@ -444,7 +444,7 @@ def test_supports_pretty_printing_by_request(client):
 
 def test_handles_field_errors_caught_by_graphql(client):
     response = client.get(url_string(query="{thrower}"))
-    assert response.status_code == 200
+    assert response.status_code == 400
     assert response_json(response) == {
         "data": None,
         "errors": [
