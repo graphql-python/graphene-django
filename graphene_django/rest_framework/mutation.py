@@ -124,7 +124,7 @@ class SerializerMutation(ClientIDMutation):
         kwargs = cls.get_serializer_kwargs(root, info, **input)
         serializer = cls._meta.serializer_class(**kwargs)
 
-        if serializer.is_valid():
+        if serializer.is_valid(raise_exception=True):
             return cls.perform_mutate(serializer, info)
         else:
             errors = ErrorType.from_errors(serializer.errors)
