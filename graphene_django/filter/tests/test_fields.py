@@ -669,7 +669,7 @@ def test_order_by_is_perserved():
     assert reverse_result.data == reverse_expected
 
 
-def test_annotation_is_perserved():
+def test_annotation_is_preserved():
     class ReporterType(DjangoObjectType):
         full_name = String()
 
@@ -686,6 +686,48 @@ def test_annotation_is_perserved():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.annotate(
+                full_name=Concat(
+                    "first_name", Value(" "), "last_name", output_field=TextField()
+                )
+            )
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"fullName": "John Doe"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_annotation_with_only():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.only("first_name", "last_name").annotate(
                 full_name=Concat(
                     "first_name", Value(" "), "last_name", output_field=TextField()
                 )
