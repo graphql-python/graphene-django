@@ -1,35 +1,7 @@
 import six
 
-from django.db.models.constants import LOOKUP_SEP
-from django.core.exceptions import FieldDoesNotExist
-from django.db.models.fields.related import ForeignObjectRel, RelatedField
+from django_filters.utils import get_model_field
 from .filterset import custom_filterset_factory, setup_filterset
-
-
-def get_field_parts_with_expression(model, field_name, lookup_expr):
-    """
-    Traverses the model with a given query expression,
-    returns the found fields along the path and the remaining expression
-    """
-    parts = field_name.split(LOOKUP_SEP)
-    lparts = lookup_expr.split(LOOKUP_SEP)
-    opts = model._meta
-    fields = []
-
-    # walk relationships
-    for i, name in enumerate(parts):
-        try:
-            field = opts.get_field(name)
-        except FieldDoesNotExist:
-            return fields, LOOKUP_SEP.join(parts[i:] + lparts)
-
-        fields.append(field)
-        if isinstance(field, RelatedField):
-            opts = field.remote_field.model._meta
-        elif isinstance(field, ForeignObjectRel):
-            opts = field.related_model._meta
-
-    return fields, lookup_expr
 
 
 def get_filtering_args_from_filterset(filterset_class, type):
@@ -47,12 +19,8 @@ def get_filtering_args_from_filterset(filterset_class, type):
         if name in filterset_class.declared_filters:
             form_field = filter_field.field
         else:
-            fields, lookup_expr = get_field_parts_with_expression(
-                model, filter_field.field_name, filter_field.lookup_expr
-            )
-            model_field = fields[-1]
-            filter_type = lookup_expr
-
+            model_field = get_model_field(model, filter_field.field_name)
+            filter_type = filter_field.lookup_expr
             if filter_type != "isnull" and hasattr(model_field, "formfield"):
                 form_field = model_field.formfield(
                     required=filter_field.extra.get("required", False)
