@@ -6,12 +6,13 @@ from django.db.models.fields.related import ForeignObjectRel, RelatedField
 from .filterset import custom_filterset_factory, setup_filterset
 
 
-def get_field_parts_with_expression(model, query_expr):
+def get_field_parts_with_expression(model, field_name, lookup_expr):
     """
     Traverses the model with a given query expression,
     returns the found fields along the path and the remaining expression
     """
-    parts = query_expr.split(LOOKUP_SEP)
+    parts = field_name.split(LOOKUP_SEP)  # + lookup_expr.split(LOOKUP_SEP)
+    lparts = lookup_expr.split(LOOKUP_SEP)
     opts = model._meta
     fields = []
 
@@ -20,7 +21,7 @@ def get_field_parts_with_expression(model, query_expr):
         try:
             field = opts.get_field(name)
         except FieldDoesNotExist:
-            return fields, LOOKUP_SEP.join(parts[i:])
+            return fields, LOOKUP_SEP.join(parts[i:] + lparts)
 
         fields.append(field)
         if isinstance(field, RelatedField):
@@ -28,7 +29,7 @@ def get_field_parts_with_expression(model, query_expr):
         elif isinstance(field, ForeignObjectRel):
             opts = field.related_model._meta
 
-    return fields, "exact"
+    return fields, lookup_expr
 
 
 def get_filtering_args_from_filterset(filterset_class, type):
@@ -46,8 +47,9 @@ def get_filtering_args_from_filterset(filterset_class, type):
         if name in filterset_class.declared_filters:
             form_field = filter_field.field
         else:
-            fields, lookup_expr = get_field_parts_with_expression(model, name)
-            assert fields, str((model, name, filterset_class))
+            fields, lookup_expr = get_field_parts_with_expression(
+                model, filter_field.field_name, filter_field.lookup_expr
+            )
             model_field = fields[-1]
             filter_type = lookup_expr
 

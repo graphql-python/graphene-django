@@ -877,7 +877,7 @@ def test_filter_filterset_based_on_mixin():
             filters = super(FilterSet, cls).get_filters()
             filters.update(
                 {
-                    "reporter__email__in": django_filters.CharFilter(
+                    "viewer__email__in": django_filters.CharFilter(
                         method="filter_email_in", field_name="reporter__email__in"
                     )
                 }
@@ -897,10 +897,15 @@ def test_filter_filterset_based_on_mixin():
             interfaces = (Node,)
 
     class NewArticleFilterNode(DjangoObjectType):
+        viewer = Field(NewReporterNode)
+
         class Meta:
             model = Article
             interfaces = (Node,)
             filterset_class = NewArticleFilter
+
+        def resolve_viewer(self, info):
+            return self.reporter
 
     class Query(ObjectType):
         all_articles = DjangoFilterConnectionField(NewArticleFilterNode)
@@ -934,11 +939,11 @@ def test_filter_filterset_based_on_mixin():
     query = (
         """
         query NodeFilteringQuery {
-            allArticles(reporter_Email_In: "%s") {
+            allArticles(viewer_Email_In: "%s") {
                 edges {
                     node {
                         headline
-                        reporter {
+                        viewer {
                             email
                         }
                     }
@@ -955,7 +960,7 @@ def test_filter_filterset_based_on_mixin():
                 {
                     "node": {
                         "headline": article_1.headline,
-                        "reporter": {"email": reporter_1.email},
+                        "viewer": {"email": reporter_1.email},
                     }
                 }
             ]
