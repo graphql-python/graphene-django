@@ -11,7 +11,7 @@ def get_field_parts_with_expression(model, field_name, lookup_expr):
     Traverses the model with a given query expression,
     returns the found fields along the path and the remaining expression
     """
-    parts = field_name.split(LOOKUP_SEP)  # + lookup_expr.split(LOOKUP_SEP)
+    parts = field_name.split(LOOKUP_SEP)
     lparts = lookup_expr.split(LOOKUP_SEP)
     opts = model._meta
     fields = []
