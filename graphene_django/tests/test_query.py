@@ -638,6 +638,8 @@ def test_should_error_if_first_is_greater_than_max():
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
+    assert Query.all_reporters.max_limit == 100
+
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
@@ -678,6 +680,8 @@ def test_should_error_if_last_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -804,7 +808,7 @@ def test_should_query_connectionfields_with_manager():
     schema = graphene.Schema(query=Query)
     query = """
         query ReporterLastQuery {
-            allReporters(first: 2) {
+            allReporters(first: 1) {
                 edges {
                     node {
                         id
@@ -1116,3 +1120,55 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
     assert not result.errors
+
+
+def test_should_preserve_annotations():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (graphene.relay.Node,)
+
+    class FilmType(DjangoObjectType):
+        reporters = DjangoConnectionField(ReporterType)
+        reporters_count = graphene.Int()
+
+        class Meta:
+            model = Film
+            interfaces = (graphene.relay.Node,)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        def resolve_films(root, info):
+            qs = Film.objects.prefetch_related("reporters")
+            return qs.annotate(reporters_count=models.Count("reporters"))
+
+    r1 = Reporter.objects.create(first_name="Dave", last_name="Smith")
+    r2 = Reporter.objects.create(first_name="Jane", last_name="Doe")
+
+    f1 = Film.objects.create()
+    f1.reporters.set([r1, r2])
+    f2 = Film.objects.create()
+    f2.reporters.set([r2])
+
+    query = """
+        query {
+            films {
+                edges {
+                    node {
+                        reportersCount
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors, str(result)
+
+    expected = {
+        "films": {
+            "edges": [{"node": {"reportersCount": 2}}, {"node": {"reportersCount": 1}}]
+        }
+    }
+    assert result.data == expected, str(result.data)

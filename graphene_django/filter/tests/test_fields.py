@@ -608,58 +608,6 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
-def test_should_query_filter_node_double_limit_raises():
-    class ReporterFilter(FilterSet):
-        limit = NumberFilter(method="filter_limit")
-
-        def filter_limit(self, queryset, name, value):
-            return queryset[:value]
-
-        class Meta:
-            model = Reporter
-            fields = ["first_name"]
-
-    class ReporterType(DjangoObjectType):
-        class Meta:
-            model = Reporter
-            interfaces = (Node,)
-
-    class Query(ObjectType):
-        all_reporters = DjangoFilterConnectionField(
-            ReporterType, filterset_class=ReporterFilter
-        )
-
-        def resolve_all_reporters(self, info, **args):
-            return Reporter.objects.order_by("a_choice")[:2]
-
-    Reporter.objects.create(
-        first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
-    )
-    Reporter.objects.create(
-        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
-    )
-
-    schema = Schema(query=Query)
-    query = """
-        query NodeFilteringQuery {
-            allReporters(limit: 1) {
-                edges {
-                    node {
-                        id
-                        firstName
-                    }
-                }
-            }
-        }
-    """
-
-    result = schema.execute(query)
-    assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
-        "Received two sliced querysets (high mark) in the connection, please slice only in one."
-    )
-
-
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -721,7 +669,7 @@ def test_order_by_is_perserved():
     assert reverse_result.data == reverse_expected
 
 
-def test_annotation_is_perserved():
+def test_annotation_is_preserved():
     class ReporterType(DjangoObjectType):
         full_name = String()
 
@@ -738,6 +686,48 @@ def test_annotation_is_perserved():
 
         def resolve_all_reporters(self, info, **args):
             return Reporter.objects.annotate(
+                full_name=Concat(
+                    "first_name", Value(" "), "last_name", output_field=TextField()
+                )
+            )
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"fullName": "John Doe"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_annotation_with_only():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.only("first_name", "last_name").annotate(
                 full_name=Concat(
                     "first_name", Value(" "), "last_name", output_field=TextField()
                 )
