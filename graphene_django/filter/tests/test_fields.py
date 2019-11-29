@@ -756,6 +756,44 @@ def test_annotation_with_only():
     assert result.data == expected
 
 
+def test_node_get_queryset_is_called():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset.filter(first_name="b")
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType, reverse_order=Boolean()
+        )
+
+    Reporter.objects.create(first_name="b")
+    Reporter.objects.create(first_name="a")
+
+    schema = Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 10) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"firstName": "b"}}]}}
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_integer_field_filter_type():
     class PetType(DjangoObjectType):
         class Meta:
