@@ -237,8 +237,10 @@ enum ReporterReporterType {
 }
 
 type RootQuery {
-  \"""The ID of the object\"""
-  node(id: ID!): Node
+  node(
+    \"""The ID of the object\"""
+    id: ID!
+  ): Node
 }
 """.lstrip()
     assert str(schema) == expected
