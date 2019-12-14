@@ -53,10 +53,14 @@ class GraphQLTestCase(TestCase):
                 body["variables"]["input"] = input_data
             else:
                 body["variables"] = {"input": input_data}
-
-        resp = self._client.post(
-            self.GRAPHQL_URL, json.dumps(body), content_type="application/json", **headers
-        )
+        if headers:
+            resp = self._client.post(
+                self.GRAPHQL_URL, json.dumps(body), content_type="application/json", **headers
+            )
+        else:
+            resp = self._client.post(
+                self.GRAPHQL_URL, json.dumps(body), content_type="application/json"
+            )
         return resp
 
     def assertResponseNoErrors(self, resp):
