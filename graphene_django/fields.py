@@ -39,9 +39,9 @@ class DjangoListField(Field):
         if queryset is None:
             # Default to Django Model queryset
             # N.B. This happens if DjangoListField is used in the top level Query object
-            model = django_object_type._meta.model
+            model_manager = django_object_type._meta.model.objects
             queryset = maybe_queryset(
-                django_object_type.get_queryset(model.objects, info)
+                django_object_type.get_queryset(model_manager, info)
             )
         return queryset
 
@@ -108,25 +108,13 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def resolve_queryset(cls, connection, queryset, info, args):
+        # queryset is the resolved iterable from ObjectType
         return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
-    def merge_querysets(cls, default_queryset, queryset):
-        if default_queryset.query.distinct and not queryset.query.distinct:
-            queryset = queryset.distinct()
-        elif queryset.query.distinct and not default_queryset.query.distinct:
-            default_queryset = default_queryset.distinct()
-        return queryset & default_queryset
-
-    @classmethod
-    def resolve_connection(cls, connection, default_manager, args, iterable):
-        if iterable is None:
-            iterable = default_manager
+    def resolve_connection(cls, connection, args, iterable):
         iterable = maybe_queryset(iterable)
         if isinstance(iterable, QuerySet):
-            if iterable.model.objects is not default_manager:
-                default_queryset = maybe_queryset(default_manager)
-                iterable = cls.merge_querysets(default_queryset, iterable)
             _len = iterable.count()
         else:
             _len = len(iterable)
@@ -150,6 +138,7 @@ class DjangoConnectionField(ConnectionField):
         resolver,
         connection,
         default_manager,
+        queryset_resolver,
         max_limit,
         enforce_first_or_last,
         root,
@@ -176,7 +165,20 @@ class DjangoConnectionField(ConnectionField):
 
         if max_limit:
             if first is None and last is None:
-                kwargs['first'] = max_limit
+                kwargs['first'] = first = max_limit
+      
+            if first:
+                assert first <= max_limit, (
+                    "Requesting {} records on the `{}` connection exceeds the `first` limit of {} records."
+                ).format(first, info.field_name, max_limit)
+                args["first"] = min(first, max_limit)
+
+            if last:
+                assert last <= max_limit, (
+                    "Requesting {} records on the `{}` connection exceeds the `last` limit of {} records."
+                ).format(last, info.field_name, max_limit)
+                args["last"] = min(last, max_limit)
+                
             else:
                 count = min(i for i in (first, last) if i)
                 if count > max_limit:
@@ -186,7 +188,9 @@ class DjangoConnectionField(ConnectionField):
                                           count=count, info=info, max_limit=max_limit))
 
         iterable = resolver(root, info, **kwargs)
-        queryset = cls.resolve_queryset(connection, default_manager, info, kwargs)
+        if iterable is None:
+            iterable = default_manager
+        queryset = cls.resolve_queryset(connection, iterable, info, kwargs)
         on_resolve = partial(cls.resolve_connection, connection, queryset, kwargs)
 
         if Promise.is_thenable(iterable):
@@ -200,6 +204,10 @@ class DjangoConnectionField(ConnectionField):
             parent_resolver,
             self.connection_type,
             self.get_manager(),
+            self.get_queryset_resolver(),
             self.max_limit,
             self.enforce_first_or_last,
         )
+
+    def get_queryset_resolver(self):
+        return self.resolve_queryset
