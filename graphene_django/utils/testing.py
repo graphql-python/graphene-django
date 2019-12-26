@@ -55,7 +55,10 @@ class GraphQLTestCase(TestCase):
                 body["variables"] = {"input": input_data}
         if headers:
             resp = self._client.post(
-                self.GRAPHQL_URL, json.dumps(body), content_type="application/json", **headers
+                self.GRAPHQL_URL,
+                json.dumps(body),
+                content_type="application/json",
+                **headers
             )
         else:
             resp = self._client.post(
