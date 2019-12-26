@@ -132,7 +132,8 @@ def test_should_boolean_convert_boolean():
 
 
 def test_should_boolean_convert_non_null_boolean():
-    field = assert_conversion(models.BooleanField, graphene.NonNull, null=False)
+    field = assert_conversion(models.BooleanField, graphene.Boolean, null=False)
+    assert isinstance(field.type, graphene.NonNull)
     assert field.type.of_type == graphene.Boolean
 
 
