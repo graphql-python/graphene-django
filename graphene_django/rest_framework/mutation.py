@@ -102,8 +102,10 @@ class SerializerMutation(ClientIDMutation):
                 instance = get_object_or_404(
                     model_class, **{lookup_field: input[lookup_field]}
                 )
+                partial = True
             elif "create" in cls._meta.model_operations:
                 instance = None
+                partial = False
             else:
                 raise Exception(
                     'Invalid update operation. Input parameter "{}" required.'.format(
@@ -115,6 +117,7 @@ class SerializerMutation(ClientIDMutation):
                 "instance": instance,
                 "data": input,
                 "context": {"request": info.context},
+                "partial": partial,
             }
 
         return {"data": input, "context": {"request": info.context}}

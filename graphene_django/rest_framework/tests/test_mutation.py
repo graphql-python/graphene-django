@@ -184,6 +184,16 @@ def test_model_update_mutate_and_get_payload_success():
 
 
 @mark.django_db
+def test_model_partial_update_mutate_and_get_payload_success():
+    instance = MyFakeModel.objects.create(cool_name="Narf")
+    result = MyModelMutation.mutate_and_get_payload(
+        None, mock_info(), **{"id": instance.id}
+    )
+    assert result.errors is None
+    assert result.cool_name == "Narf"
+
+
+@mark.django_db
 def test_model_invalid_update_mutate_and_get_payload_success():
     class InvalidModelMutation(SerializerMutation):
         class Meta:
