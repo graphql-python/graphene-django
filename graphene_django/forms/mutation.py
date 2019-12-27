@@ -66,28 +66,6 @@ class BaseDjangoFormMutation(ClientIDMutation):
         return kwargs
 
 
-# class DjangoFormInputObjectTypeOptions(InputObjectTypeOptions):
-#     form_class = None
-
-
-# class DjangoFormInputObjectType(InputObjectType):
-#     class Meta:
-#         abstract = True
-
-#     @classmethod
-#     def __init_subclass_with_meta__(cls, form_class=None,
-#                                     only_fields=(), exclude_fields=(), _meta=None, **options):
-#         if not _meta:
-#             _meta = DjangoFormInputObjectTypeOptions(cls)
-#         assert isinstance(form_class, forms.Form), (
-#             'form_class must be an instance of django.forms.Form'
-#         )
-#         _meta.form_class = form_class
-#         form = form_class()
-#         fields = fields_for_form(form, only_fields, exclude_fields)
-#         super(DjangoFormInputObjectType, cls).__init_subclass_with_meta__(_meta=_meta, fields=fields, **options)
-
-
 class DjangoFormMutationOptions(MutationOptions):
     form_class = None
 
@@ -163,7 +141,9 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
-        return_field_name = return_field_name
+        if not model_type:
+            raise Exception("No type registered for model: {}".format(model.__name__))
+
         if not return_field_name:
             model_name = model.__name__
             return_field_name = model_name[:1].lower() + model_name[1:]
