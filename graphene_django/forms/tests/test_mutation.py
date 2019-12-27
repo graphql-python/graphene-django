@@ -2,7 +2,7 @@ from django import forms
 from django.test import TestCase
 from py.test import raises
 
-from graphene import ObjectType, Schema, String
+from graphene import ObjectType, Schema, String, Field
 from graphene_django import DjangoObjectType
 from graphene_django.tests.models import Film, FilmDetails, Pet
 
@@ -139,6 +139,8 @@ class ModelFormMutationTests(TestCase):
 
     def test_model_form_mutation_mutate_existing(self):
         class PetMutation(DjangoModelFormMutation):
+            pet = Field(PetType)
+
             class Meta:
                 form_class = PetForm
 
@@ -171,6 +173,8 @@ class ModelFormMutationTests(TestCase):
 
     def test_model_form_mutation_creates_new(self):
         class PetMutation(DjangoModelFormMutation):
+            pet = Field(PetType)
+
             class Meta:
                 form_class = PetForm
 
