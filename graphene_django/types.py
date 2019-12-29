@@ -33,6 +33,24 @@ def construct_fields(
 ):
     _model_fields = get_model_fields(model)
 
+    # Validate the given fields against the model's fields.
+    model_field_names = set(field[0] for field in _model_fields)
+    for fields_list in (only_fields, exclude_fields):
+        if not fields_list:
+            continue
+        for name in fields_list:
+            if name in model_field_names:
+                continue
+
+            if hasattr(model, name):
+                raise Exception(
+                    '"{}" exists on model {} but it\'s not a field.'.format(name, model)
+                )
+            else:
+                raise Exception(
+                    'Field "{}" doesn\'t exist on model {}.'.format(name, model)
+                )
+
     fields = OrderedDict()
     for name, field in _model_fields:
         is_not_in_only = only_fields and name not in only_fields
