@@ -315,7 +315,7 @@ def test_django_objecttype_fields_exclude_type_checking():
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
-                fields = "foo"
+                exclude = "foo"
 
 
 class TestDjangoObjectType:
