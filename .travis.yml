@@ -66,6 +66,7 @@ jobs:
       env: TOXENV=black,flake8
 
     - stage: deploy
+      script: skip
       python: 3.7
       after_success: true
       deploy:
