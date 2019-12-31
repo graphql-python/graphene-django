@@ -64,6 +64,9 @@ class Reporter(models.Model):
         if self.reporter_type == 2:  # quick and dirty way without enums
             self.__class__ = CNNReporter
 
+    def some_method(self):
+        return 123
+
 
 class CNNReporterManager(models.Manager):
     def get_queryset(self):

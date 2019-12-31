@@ -318,6 +318,30 @@ def test_django_objecttype_fields_exclude_type_checking():
                 exclude = "foo"
 
 
+@with_local_registry
+def test_django_objecttype_fields_exclude_exist_on_model():
+    with pytest.raises(Exception, match=r"Field .* doesn't exist"):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "foo", "email"]
+
+    with pytest.raises(Exception, match=r"Field .* doesn't exist"):
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["first_name", "foo", "email"]
+
+    with pytest.raises(Exception, match=r".* exists on model .* but it's not a field"):
+
+        class Reporter3(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "some_method", "email"]
+
+
 class TestDjangoObjectType:
     @pytest.fixture
     def PetModel(self):
