@@ -137,10 +137,5 @@ class SerializerMutation(ClientIDMutation):
     @classmethod
     def perform_mutate(cls, serializer, info):
         obj = serializer.save()
-
-        kwargs = {}
-        for f, field in serializer.fields.items():
-            if not field.write_only:
-                kwargs[f] = field.get_attribute(obj)
-
+        kwargs = serializer.to_representation(obj)
         return cls(errors=None, **kwargs)
