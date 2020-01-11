@@ -22,6 +22,7 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
+from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
@@ -68,6 +69,19 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
 
 
+def generate_enum_name(django_model, field):
+    meta = django_model._meta
+    if graphene_settings.CHOICES_TO_ENUM_UNIQUE_TYPE_NAME is True:
+        name = "DjangoModel{app_label}{object_name}{field_name}Choices".format(
+            app_label=to_camel_case(meta.app_label).capitalize(),
+            object_name=meta.object_name,
+            field_name=to_camel_case(field.name).capitalize(),
+        )
+    else:
+        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
+    return name
+
+
 def convert_django_field_with_choices(
     field, registry=None, convert_choices_to_enum=True
 ):
@@ -77,8 +91,7 @@ def convert_django_field_with_choices(
             return converted
     choices = getattr(field, "choices", None)
     if choices and convert_choices_to_enum:
-        meta = field.model._meta
-        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
+        name = generate_enum_name(field.model, field)
         enum = convert_choices_to_named_enum_with_descriptions(name, choices)
         required = not (field.blank or field.null)
         converted = enum(description=field.help_text, required=required)

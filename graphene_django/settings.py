@@ -36,6 +36,8 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": False,
+    # Set to True to enable unique naming for choice field Enum's
+    "CHOICES_TO_ENUM_UNIQUE_TYPE_NAME": False,
 }
 
 if settings.DEBUG:

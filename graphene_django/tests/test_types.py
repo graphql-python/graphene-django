@@ -9,6 +9,7 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
+from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
@@ -492,3 +493,39 @@ class TestDjangoObjectType:
         }
         """
         )
+
+    def test_django_objecttype_convert_choices_enum_naming_collisions(self, PetModel):
+        graphene_settings.CHOICES_TO_ENUM_UNIQUE_TYPE_NAME = True
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        enum DjangoModelTestsPetModelKindChoices {
+          CAT
+          DOG
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: DjangoModelTestsPetModelKindChoices!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+        """
+        )
+        graphene_settings.CHOICES_TO_ENUM_UNIQUE_TYPE_NAME = False
