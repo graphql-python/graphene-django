@@ -10,7 +10,9 @@ from ..serializer_converter import convert_serializer_field
 from ..types import DictType
 
 
-def _get_type(rest_framework_field, is_input=True, **kwargs):
+def _get_type(
+    rest_framework_field, is_input=True, convert_choices_to_enum=True, **kwargs
+):
     # prevents the following error:
     # AssertionError: The `source` argument is not meaningful when applied to a `child=` field.
     # Remove `source=` from the field declaration.
@@ -21,7 +23,9 @@ def _get_type(rest_framework_field, is_input=True, **kwargs):
 
     field = rest_framework_field(**kwargs)
 
-    return convert_serializer_field(field, is_input=is_input)
+    return convert_serializer_field(
+        field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum
+    )
 
 
 def assert_conversion(rest_framework_field, graphene_field, **kwargs):
@@ -71,6 +75,16 @@ def test_should_choice_convert_enum():
     assert field._meta.enum.__members__["H"].description == "Hello"
     assert field._meta.enum.__members__["W"].value == "w"
     assert field._meta.enum.__members__["W"].description == "World"
+
+
+def test_should_choice_convert_string_if_enum_disabled():
+    assert_conversion(
+        serializers.ChoiceField,
+        graphene.String,
+        choices=[("h", "Hello"), ("w", "World")],
+        source="word",
+        convert_choices_to_enum=False,
+    )
 
 
 def test_should_base_field_convert_string():
