@@ -533,7 +533,7 @@ class TestDjangoObjectType:
 
     def test_django_objecttype_choices_custom_enum_name(self, PetModel):
         def custom_name(field):
-            return f"CustomEnum{field.name.title()}"
+            return "CustomEnum{}".format(field.name.title())
 
         graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = custom_name
 
