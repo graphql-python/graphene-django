@@ -140,3 +140,32 @@ Default: ``False``
    #         'messages': ['This field is required.'],
    #     }
    # ]
+
+
+``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING``
+--------------------------------------
+
+Set to ``True`` to use the new naming format for the auto generated Enum types from Django choice fields. The new format looks like this: ``DjangoModel{app_label}{object_name}{field_name}Choices``
+
+Default: ``False``
+
+
+``DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME``
+--------------------------------------
+
+Set to a function that takes the Django choice field and returns a string to completely customise the naming for the Enum type.
+
+If set to a function then the ``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING`` setting is ignored.
+
+Default: ``None``
+
+.. code:: python
+
+   def enum_naming(field):
+      if isinstance(field.model, User):
+         return f"CustomUserEnum{field.name.title()}"
+      return f"CustomEnum{field.name.title()}"
+
+   GRAPHENE = {
+      'DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME': enum_naming
+   }
