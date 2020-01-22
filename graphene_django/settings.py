@@ -37,7 +37,7 @@ DEFAULTS = {
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": False,
     # Set to True to enable v3 naming convention for choice field Enum's
-    "CHOICES_TO_ENUM_V3_NAMING": False,
+    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
 }
 
 if settings.DEBUG:

@@ -335,7 +335,7 @@ def test_should_postgres_range_convert_list():
 
 def test_generate_enum_name():
     MockDjangoModelMeta = namedtuple("DjangoMeta", ["app_label", "object_name"])
-    graphene_settings.CHOICES_TO_ENUM_V3_NAMING = True
+    graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
 
     # Simple case
     field = graphene.Field(graphene.String, name="type")
@@ -352,4 +352,4 @@ def test_generate_enum_name():
         == "DjangoModelSomeLongAppNameSomeObjectFizzBuzzChoices"
     )
 
-    graphene_settings.CHOICES_TO_ENUM_V3_NAMING = False
+    graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
