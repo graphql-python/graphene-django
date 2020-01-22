@@ -11,6 +11,7 @@ from graphene.relay import Node
 from .. import registry
 from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
+from ..converter import convert_choice_field_to_enum
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -529,3 +530,43 @@ class TestDjangoObjectType:
         """
         )
         graphene_settings.CHOICES_TO_ENUM_UNIQUE_TYPE_NAME = False
+
+    def test_django_objecttype_choices_override_enum(self, PetModel):
+        def convert_choice(model, field_name, **kwargs):
+            return convert_choice_field_to_enum(
+                model._meta.get_field(field_name), **kwargs
+            )
+
+        class PetModelKind(DjangoObjectType):
+            kind = Field(convert_choice(PetModel, "kind", name="CustomEnumName"))
+
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        enum DjangoModelTestsPetModelKindChoices {
+          CAT
+          DOG
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: DjangoModelTestsPetModelKindChoices!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+        """
+        )

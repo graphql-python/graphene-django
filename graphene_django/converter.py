@@ -81,6 +81,13 @@ def generate_enum_name(django_model_meta, field):
     return name
 
 
+def convert_choice_field_to_enum(field, name=None):
+    if name is None:
+        name = generate_enum_name(field.model._meta, field)
+    choices = field.choices
+    return convert_choices_to_named_enum_with_descriptions(name, choices)
+
+
 def convert_django_field_with_choices(
     field, registry=None, convert_choices_to_enum=True
 ):
@@ -90,8 +97,7 @@ def convert_django_field_with_choices(
             return converted
     choices = getattr(field, "choices", None)
     if choices and convert_choices_to_enum:
-        name = generate_enum_name(field.model._meta, field)
-        enum = convert_choices_to_named_enum_with_descriptions(name, choices)
+        enum = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)
         converted = enum(description=field.help_text, required=required)
     else:
