@@ -38,6 +38,7 @@ DEFAULTS = {
     "CAMELCASE_ERRORS": False,
     # Set to True to enable v3 naming convention for choice field Enum's
     "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
+    "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
 }
 
 if settings.DEBUG:

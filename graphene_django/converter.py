@@ -70,7 +70,11 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
 
 
 def generate_enum_name(django_model_meta, field):
-    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING is True:
+    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME and callable(
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME
+    ):
+        name = graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME(field)
+    elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING is True:
         name = "DjangoModel{app_label}{object_name}{field_name}Choices".format(
             app_label=to_camel_case(django_model_meta.app_label.title()),
             object_name=django_model_meta.object_name,

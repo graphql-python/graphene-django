@@ -514,14 +514,14 @@ class TestDjangoObjectType:
           query: Query
         }
 
-        enum DjangoModelTestsPetModelKindChoices {
+        enum CustomEnumKind {
           CAT
           DOG
         }
 
         type PetModelKind {
           id: ID!
-          kind: DjangoModelTestsPetModelKindChoices!
+          kind: CustomEnumKind!
         }
 
         type Query {
@@ -531,15 +531,13 @@ class TestDjangoObjectType:
         )
         graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
 
-    def test_django_objecttype_choices_override_enum(self, PetModel):
-        def convert_choice(model, field_name, **kwargs):
-            return convert_choice_field_to_enum(
-                model._meta.get_field(field_name), **kwargs
-            )
+    def test_django_objecttype_choices_custom_enum_name(self, PetModel):
+        def custom_name(field):
+            return f"CustomEnum{field.name.title()}"
+
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = custom_name
 
         class PetModelKind(DjangoObjectType):
-            kind = Field(convert_choice(PetModel, "kind", name="CustomEnumName"))
-
             class Meta:
                 model = PetModel
                 fields = ["id", "kind"]
@@ -570,3 +568,5 @@ class TestDjangoObjectType:
         }
         """
         )
+
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = None
