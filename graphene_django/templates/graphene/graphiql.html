@@ -31,7 +31,7 @@ add "&raw" to the end of the URL within a browser.
           crossorigin="anonymous"></script>
 </head>
 <body>
-  <div class="editor"></div>
+  <div id="editor"></div>
   {% csrf_token %}
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>
 </body>
