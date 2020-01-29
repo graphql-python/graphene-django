@@ -33,24 +33,6 @@ def construct_fields(
 ):
     _model_fields = get_model_fields(model)
 
-    # Validate the given fields against the model's fields.
-    model_field_names = set(field[0] for field in _model_fields)
-    for fields_list in (only_fields, exclude_fields):
-        if not fields_list:
-            continue
-        for name in fields_list:
-            if name in model_field_names:
-                continue
-
-            if hasattr(model, name):
-                raise Exception(
-                    '"{}" exists on model {} but it\'s not a field.'.format(name, model)
-                )
-            else:
-                raise Exception(
-                    'Field "{}" doesn\'t exist on model {}.'.format(name, model)
-                )
-
     fields = OrderedDict()
     for name, field in _model_fields:
         is_not_in_only = only_fields and name not in only_fields
@@ -78,6 +60,31 @@ def construct_fields(
         fields[name] = converted
 
     return fields
+
+
+def validate_fields(model, fields, only_fields, exclude_fields):
+    # Validate the given fields against the model's fields and custom fields
+    all_field_names = set(fields.keys())
+    for fields_list in (only_fields, exclude_fields):
+        if not fields_list:
+            continue
+        for name in fields_list:
+            if name in all_field_names:
+                continue
+
+            if hasattr(model, name):
+                warnings.warn(
+                    'Field name "{}" exists on Django model {} but it\'s not a model field.'.format(
+                        name, model
+                    )
+                )
+
+            else:
+                warnings.warn(
+                    'Field name "{}" doesn\'t exist on Django model {}.'.format(
+                        name, model
+                    )
+                )
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
@@ -210,6 +217,9 @@ class DjangoObjectType(ObjectType):
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
+
+        # Validate fields
+        validate_fields(model, _meta.fields, fields, exclude)
 
         if not skip_registry:
             registry.register(cls)
