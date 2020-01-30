@@ -97,6 +97,6 @@
   // Render <GraphiQL /> into the body.
   ReactDOM.render(
     React.createElement(GraphiQL, options),
-    document.getElementsByClassName("editor")[0]
+    document.getElementById("editor")
   );
 })();
