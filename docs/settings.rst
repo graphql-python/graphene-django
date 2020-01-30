@@ -145,7 +145,7 @@ Default: ``False``
 ``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING``
 --------------------------------------
 
-Set to ``True`` to use the new naming format for the auto generated Enum types from Django choice fields. The new format looks like this: ``DjangoModel{app_label}{object_name}{field_name}Choices``
+Set to ``True`` to use the new naming format for the auto generated Enum types from Django choice fields. The new format looks like this: ``{app_label}{object_name}{field_name}Choices``
 
 Default: ``False``
 
