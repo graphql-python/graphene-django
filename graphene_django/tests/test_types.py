@@ -231,6 +231,17 @@ def test_django_objecttype_fields():
 
 
 @with_local_registry
+def test_django_objecttype_fields_empty():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = ()
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == []
+
+
+@with_local_registry
 def test_django_objecttype_only_fields_and_fields():
     with pytest.raises(Exception):
 
