@@ -340,7 +340,7 @@ def test_generate_enum_name():
     # Simple case
     field = graphene.Field(graphene.String, name="type")
     model_meta = MockDjangoModelMeta(app_label="users", object_name="User")
-    assert generate_enum_name(model_meta, field) == "DjangoModelUsersUserTypeChoices"
+    assert generate_enum_name(model_meta, field) == "UsersUserTypeChoices"
 
     # More complicated multiple work case
     field = graphene.Field(graphene.String, name="fizz_buzz")
@@ -349,7 +349,7 @@ def test_generate_enum_name():
     )
     assert (
         generate_enum_name(model_meta, field)
-        == "DjangoModelSomeLongAppNameSomeObjectFizzBuzzChoices"
+        == "SomeLongAppNameSomeObjectFizzBuzzChoices"
     )
 
     graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
