@@ -62,7 +62,7 @@ def construct_fields(
     return fields
 
 
-def validate_fields(model, fields, only_fields, exclude_fields):
+def validate_fields(type_, model, fields, only_fields, exclude_fields):
     # Validate the given fields against the model's fields and custom fields
     all_field_names = set(fields.keys())
     for fields_list in (only_fields, exclude_fields):
@@ -74,15 +74,28 @@ def validate_fields(model, fields, only_fields, exclude_fields):
 
             if hasattr(model, name):
                 warnings.warn(
-                    'Field name "{}" exists on Django model {} but it\'s not a model field.'.format(
-                        name, model
+                    (
+                        'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
+                        "but it's not a model field so Graphene cannot determine what type it should be. "
+                        'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
+                    ).format(
+                        field_name=name,
+                        app_label=model._meta.app_label,
+                        object_name=model._meta.object_name,
+                        type_=type_,
                     )
                 )
 
             else:
                 warnings.warn(
-                    'Field name "{}" doesn\'t exist on Django model {}.'.format(
-                        name, model
+                    (
+                        'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                        'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                    ).format(
+                        field_name=name,
+                        app_label=model._meta.app_label,
+                        object_name=model._meta.object_name,
+                        type_=type_,
                     )
                 )
 
@@ -219,7 +232,7 @@ class DjangoObjectType(ObjectType):
         )
 
         # Validate fields
-        validate_fields(model, _meta.fields, fields, exclude)
+        validate_fields(cls, model, _meta.fields, fields, exclude)
 
         if not skip_registry:
             registry.register(cls)

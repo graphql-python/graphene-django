@@ -327,19 +327,12 @@ def test_django_objecttype_fields_exclude_exist_on_model():
                 model = ReporterModel
                 fields = ["first_name", "foo", "email"]
 
-    with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
-
-        class Reporter2(DjangoObjectType):
-            class Meta:
-                model = ReporterModel
-                exclude = ["first_name", "foo", "email"]
-
     with pytest.warns(
         UserWarning,
-        match=r"Field name .* exists on Django model .* but it's not a model field",
-    ):
+        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+    ) as record:
 
-        class Reporter3(DjangoObjectType):
+        class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = ["first_name", "some_method", "email"]
@@ -347,7 +340,7 @@ def test_django_objecttype_fields_exclude_exist_on_model():
     # Don't warn if selecting a custom field
     with pytest.warns(None) as record:
 
-        class Reporter4(DjangoObjectType):
+        class Reporter3(DjangoObjectType):
             custom_field = String()
 
             class Meta:
