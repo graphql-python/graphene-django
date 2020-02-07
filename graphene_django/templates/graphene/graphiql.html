@@ -10,7 +10,7 @@ add "&raw" to the end of the URL within a browser.
 <html>
 <head>
   <style>
-    html, body {
+    html, body, #editor {
       height: 100%;
       margin: 0;
       overflow: hidden;
@@ -31,6 +31,7 @@ add "&raw" to the end of the URL within a browser.
           crossorigin="anonymous"></script>
 </head>
 <body>
+  <div id="editor"></div>
   {% csrf_token %}
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>
 </body>
