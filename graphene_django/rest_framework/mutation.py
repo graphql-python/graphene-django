@@ -19,7 +19,13 @@ class SerializerMutationOptions(MutationOptions):
     serializer_class = None
 
 
-def fields_for_serializer(serializer, only_fields, exclude_fields, is_input=False):
+def fields_for_serializer(
+    serializer,
+    only_fields,
+    exclude_fields,
+    is_input=False,
+    convert_choices_to_enum=True,
+):
     fields = OrderedDict()
     for name, field in serializer.fields.items():
         is_not_in_only = only_fields and name not in only_fields
@@ -34,7 +40,9 @@ def fields_for_serializer(serializer, only_fields, exclude_fields, is_input=Fals
         if is_not_in_only or is_excluded:
             continue
 
-        fields[name] = convert_serializer_field(field, is_input=is_input)
+        fields[name] = convert_serializer_field(
+            field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum
+        )
     return fields
 
 
@@ -55,6 +63,7 @@ class SerializerMutation(ClientIDMutation):
         model_operations=("create", "update"),
         only_fields=(),
         exclude_fields=(),
+        convert_choices_to_enum=True,
         **options
     ):
 
@@ -74,10 +83,18 @@ class SerializerMutation(ClientIDMutation):
             lookup_field = model_class._meta.pk.name
 
         input_fields = fields_for_serializer(
-            serializer, only_fields, exclude_fields, is_input=True
+            serializer,
+            only_fields,
+            exclude_fields,
+            is_input=True,
+            convert_choices_to_enum=convert_choices_to_enum,
         )
         output_fields = fields_for_serializer(
-            serializer, only_fields, exclude_fields, is_input=False
+            serializer,
+            only_fields,
+            exclude_fields,
+            is_input=False,
+            convert_choices_to_enum=convert_choices_to_enum,
         )
 
         _meta = SerializerMutationOptions(cls)
