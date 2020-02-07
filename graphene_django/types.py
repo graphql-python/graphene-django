@@ -33,24 +33,6 @@ def construct_fields(
 ):
     _model_fields = get_model_fields(model)
 
-    # Validate the given fields against the model's fields.
-    model_field_names = set(field[0] for field in _model_fields)
-    for fields_list in (only_fields, exclude_fields):
-        if not fields_list:
-            continue
-        for name in fields_list:
-            if name in model_field_names:
-                continue
-
-            if hasattr(model, name):
-                raise Exception(
-                    '"{}" exists on model {} but it\'s not a field.'.format(name, model)
-                )
-            else:
-                raise Exception(
-                    'Field "{}" doesn\'t exist on model {}.'.format(name, model)
-                )
-
     fields = OrderedDict()
     for name, field in _model_fields:
         is_not_in_only = only_fields and name not in only_fields
@@ -78,6 +60,44 @@ def construct_fields(
         fields[name] = converted
 
     return fields
+
+
+def validate_fields(type_, model, fields, only_fields, exclude_fields):
+    # Validate the given fields against the model's fields and custom fields
+    all_field_names = set(fields.keys())
+    for fields_list in (only_fields, exclude_fields):
+        if not fields_list:
+            continue
+        for name in fields_list:
+            if name in all_field_names:
+                continue
+
+            if hasattr(model, name):
+                warnings.warn(
+                    (
+                        'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
+                        "but it's not a model field so Graphene cannot determine what type it should be. "
+                        'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
+                    ).format(
+                        field_name=name,
+                        app_label=model._meta.app_label,
+                        object_name=model._meta.object_name,
+                        type_=type_,
+                    )
+                )
+
+            else:
+                warnings.warn(
+                    (
+                        'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                        'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                    ).format(
+                        field_name=name,
+                        app_label=model._meta.app_label,
+                        object_name=model._meta.object_name,
+                        type_=type_,
+                    )
+                )
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
@@ -210,6 +230,9 @@ class DjangoObjectType(ObjectType):
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
+
+        # Validate fields
+        validate_fields(cls, model, _meta.fields, fields, exclude)
 
         if not skip_registry:
             registry.register(cls)
