@@ -319,7 +319,7 @@ def test_django_objecttype_fields_exclude_type_checking():
 
 
 @with_local_registry
-def test_django_objecttype_fields_exclude_exist_on_model():
+def test_django_objecttype_fields_exist_on_model():
     with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
 
         class Reporter(DjangoObjectType):
@@ -346,6 +346,42 @@ def test_django_objecttype_fields_exclude_exist_on_model():
             class Meta:
                 model = ReporterModel
                 fields = ["first_name", "custom_field", "email"]
+
+    assert len(record) == 0
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_exist_on_model():
+    with pytest.warns(
+        UserWarning,
+        match=r"Django model .* does not have a field or attribute named .*",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["foo"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(
+        UserWarning,
+        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+    ):
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                exclude = ["custom_field"]
+
+    # Don't warn on exclude fields
+    with pytest.warns(None) as record:
+
+        class Reporter4(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email", "first_name"]
 
     assert len(record) == 0
 
