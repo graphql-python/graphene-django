@@ -2,10 +2,24 @@ Please read [UPGRADE-v2.0.md](https://github.com/graphql-python/graphene/blob/ma
 
 ---
 
-# ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django [![Build Status](https://travis-ci.org/graphql-python/graphene-django.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-django) [![PyPI version](https://badge.fury.io/py/graphene-django.svg)](https://badge.fury.io/py/graphene-django) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphene-django?branch=master)
+# ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django
 
 
 A [Django](https://www.djangoproject.com/) integration for [Graphene](http://graphene-python.org/).
+
+[![travis][travis-image]][travis-url]
+[![pypi][pypi-image]][pypi-url]
+[![Anaconda-Server Badge][conda-image]][conda-url]
+[![coveralls][coveralls-image]][coveralls-url]
+
+[travis-image]: https://travis-ci.org/graphql-python/graphene-django.svg?style=flat
+[travis-url]: https://travis-ci.org/graphql-python/graphene-django
+[pypi-image]: https://img.shields.io/pypi/v/graphene-django.svg?style=flat
+[pypi-url]: https://pypi.org/project/graphene-django/
+[coveralls-image]: https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github
+[coveralls-url]: https://coveralls.io/github/graphql-python/graphene-django?branch=master
+[conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
+[conda-url]: https://anaconda.org/conda-forge/graphene-django
 
 ## Documentation
 
