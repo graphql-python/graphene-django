@@ -274,10 +274,10 @@ class GraphQLView(View):
                 extra_options["executor"] = self.executor
 
             return document.execute(
-                root=self.get_root_value(request),
-                variables=variables,
+                root_value=self.get_root_value(request),
+                variable_values=variables,
                 operation_name=operation_name,
-                context=self.get_context(request),
+                context_value=self.get_context(request),
                 middleware=self.get_middleware(request),
                 **extra_options
             )

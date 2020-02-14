@@ -180,7 +180,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context=context())
+    result = schema.execute(query, context_value=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
