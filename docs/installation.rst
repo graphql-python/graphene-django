@@ -59,9 +59,10 @@ The most basic ``schema.py`` looks like this:
 .. code:: python
 
     import graphene
+    from graphene_django.debug import DjangoDebug
 
     class Query(graphene.ObjectType):
-        pass
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
     schema = graphene.Schema(query=Query)
 
