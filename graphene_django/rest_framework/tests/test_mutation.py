@@ -41,7 +41,7 @@ class MyModelSerializerWithMethod(serializers.ModelSerializer):
         fields = "__all__"
 
     def get_days_since_last_edit(self, obj):
-        now = datetime.date.fromisoformat("2020-01-08")
+        now = datetime.date(2020, 1, 8)
         return (now - obj.last_edited).days
 
 
@@ -231,7 +231,7 @@ def test_perform_mutate_success():
         mock_info(),
         **{
             "cool_name": "Narf",
-            "last_edited": datetime.date.fromisoformat("2020-01-04"),
+            "last_edited": datetime.date(2020, 1, 4),
         }
     )
 
