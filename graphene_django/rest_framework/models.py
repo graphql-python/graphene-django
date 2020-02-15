@@ -9,3 +9,8 @@ class MyFakeModel(models.Model):
 class MyFakeModelWithPassword(models.Model):
     cool_name = models.CharField(max_length=50)
     password = models.CharField(max_length=50)
+
+
+class MyFakeModelWithDate(models.Model):
+    cool_name = models.CharField(max_length=50)
+    last_edited = models.DateField()
