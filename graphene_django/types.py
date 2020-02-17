@@ -65,32 +65,58 @@ def construct_fields(
 def validate_fields(type_, model, fields, only_fields, exclude_fields):
     # Validate the given fields against the model's fields and custom fields
     all_field_names = set(fields.keys())
-    for fields_list in (only_fields, exclude_fields):
-        if not fields_list:
+    for name in only_fields or ():
+        if name in all_field_names:
             continue
-        for name in fields_list:
-            if name in all_field_names:
-                continue
 
-            if hasattr(model, name):
-                warnings.warn(
-                    (
-                        'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
-                        "but it's not a model field so Graphene cannot determine what type it should be. "
-                        'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
-                    ).format(
-                        field_name=name,
-                        app_label=model._meta.app_label,
-                        object_name=model._meta.object_name,
-                        type_=type_,
-                    )
+        if hasattr(model, name):
+            warnings.warn(
+                (
+                    'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
+                    "but it's not a model field so Graphene cannot determine what type it should be. "
+                    'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
                 )
+            )
 
-            else:
+        else:
+            warnings.warn(
+                (
+                    'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
+                )
+            )
+
+    # Validate exclude fields
+    for name in exclude_fields or ():
+        if name in all_field_names:
+            # Field is a custom field
+            warnings.warn(
+                (
+                    'Excluding the custom field "{field_name} on DjangoObjectType "{type_}" has no effect. '
+                    'Either remove the custom field or remove the field from the "exclude" list.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
+                )
+            )
+        else:
+            if not hasattr(model, name):
                 warnings.warn(
                     (
-                        'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
-                        'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
+                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
                     ).format(
                         field_name=name,
                         app_label=model._meta.app_label,
