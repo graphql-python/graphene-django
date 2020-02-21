@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 
 import graphene
 from graphene.relay.mutation import ClientIDMutation
@@ -158,6 +159,9 @@ class SerializerMutation(ClientIDMutation):
         kwargs = {}
         for f, field in serializer.fields.items():
             if not field.write_only:
-                kwargs[f] = field.get_attribute(obj)
+                if isinstance(field, serializers.SerializerMethodField):
+                    kwargs[f] = field.to_representation(obj)
+                else:
+                    kwargs[f] = field.get_attribute(obj)
 
         return cls(errors=None, **kwargs)

@@ -8,7 +8,7 @@ from graphene.types.inputobjecttype import InputObjectType
 
 from ...settings import graphene_settings
 from ...types import DjangoObjectType
-from ..models import MyFakeModel, MyFakeModelWithPassword
+from ..models import MyFakeModel, MyFakeModelWithPassword, MyFakeModelWithDate
 from ..mutation import SerializerMutation
 
 
@@ -31,6 +31,18 @@ class MyModelSerializer(serializers.ModelSerializer):
     class Meta:
         model = MyFakeModel
         fields = "__all__"
+
+
+class MyModelSerializerWithMethod(serializers.ModelSerializer):
+    days_since_last_edit = serializers.SerializerMethodField()
+
+    class Meta:
+        model = MyFakeModelWithDate
+        fields = "__all__"
+
+    def get_days_since_last_edit(self, obj):
+        now = datetime.date(2020, 1, 8)
+        return (now - obj.last_edited).days
 
 
 class MyModelMutation(SerializerMutation):
@@ -206,6 +218,23 @@ def test_model_invalid_update_mutate_and_get_payload_success():
         )
 
     assert '"id" required' in str(exc.value)
+
+
+@mark.django_db
+def test_perform_mutate_success():
+    class MyMethodMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializerWithMethod
+
+    result = MyMethodMutation.mutate_and_get_payload(
+        None,
+        mock_info(),
+        **{"cool_name": "Narf", "last_edited": datetime.date(2020, 1, 4)}
+    )
+
+    assert result.errors is None
+    assert result.cool_name == "Narf"
+    assert result.days_since_last_edit == 4
 
 
 def test_mutate_and_get_payload_error():
