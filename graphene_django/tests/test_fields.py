@@ -20,8 +20,10 @@ class TestDjangoListField:
             list_field = DjangoListField(TestType)
 
     def test_only_import_paths(self):
-        list_field = DjangoListField("graphene_django.tests.models.Reporter")
-        assert list_field._type.of_type.of_type is ReporterModel
+        list_field = DjangoListField("graphene_django.tests.schema.Human")
+        from .schema import Human
+
+        assert list_field._type.of_type.of_type is Human
 
     def test_non_null_type(self):
         class Reporter(DjangoObjectType):
