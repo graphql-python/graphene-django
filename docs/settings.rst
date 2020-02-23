@@ -153,7 +153,7 @@ Default: ``False``
 ``DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME``
 --------------------------------------
 
-Set to a function that takes the Django choice field and returns a string to completely customise the naming for the Enum type.
+Define the path of a function that takes the Django choice field and returns a string to completely customise the naming for the Enum type.
 
 If set to a function then the ``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING`` setting is ignored.
 
@@ -161,11 +161,12 @@ Default: ``None``
 
 .. code:: python
 
+   # myapp.utils
    def enum_naming(field):
       if isinstance(field.model, User):
          return f"CustomUserEnum{field.name.title()}"
       return f"CustomEnum{field.name.title()}"
 
    GRAPHENE = {
-      'DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME': enum_naming
+      'DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME': "myapp.utils.enum_naming"
    }

@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from django.db import models
 from django.utils.encoding import force_str
+from django.utils.module_loading import import_string
 
 from graphene import (
     ID,
@@ -70,10 +71,12 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
 
 
 def generate_enum_name(django_model_meta, field):
-    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME and callable(
-        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME
-    ):
-        name = graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME(field)
+    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME:
+        # Try and import custom function
+        custom_func = import_string(
+            graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME
+        )
+        name = custom_func(field)
     elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING is True:
         name = "{app_label}{object_name}{field_name}Choices".format(
             app_label=to_camel_case(django_model_meta.app_label.title()),

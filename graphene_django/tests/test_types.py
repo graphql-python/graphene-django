@@ -388,6 +388,10 @@ def test_django_objecttype_exclude_fields_exist_on_model():
     assert len(record) == 0
 
 
+def custom_enum_name(field):
+    return "CustomEnum{}".format(field.name.title())
+
+
 class TestDjangoObjectType:
     @pytest.fixture
     def PetModel(self):
@@ -532,10 +536,9 @@ class TestDjangoObjectType:
         graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
 
     def test_django_objecttype_choices_custom_enum_name(self, PetModel):
-        def custom_name(field):
-            return "CustomEnum{}".format(field.name.title())
-
-        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = custom_name
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
+            "graphene_django.tests.test_types.custom_enum_name"
+        )
 
         class PetModelKind(DjangoObjectType):
             class Meta:
@@ -553,14 +556,14 @@ class TestDjangoObjectType:
           query: Query
         }
 
-        enum DjangoModelTestsPetModelKindChoices {
+        enum CustomEnumKind {
           CAT
           DOG
         }
 
         type PetModelKind {
           id: ID!
-          kind: DjangoModelTestsPetModelKindChoices!
+          kind: CustomEnumKind!
         }
 
         type Query {
