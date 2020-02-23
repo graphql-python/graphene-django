@@ -19,6 +19,10 @@ class TestDjangoListField:
         with pytest.raises(AssertionError):
             list_field = DjangoListField(TestType)
 
+    def test_only_import_paths(self):
+        list_field = DjangoListField("graphene_django.tests.models.Reporter")
+        assert list_field._type.of_type.of_type is ReporterModel
+
     def test_non_null_type(self):
         class Reporter(DjangoObjectType):
             class Meta:

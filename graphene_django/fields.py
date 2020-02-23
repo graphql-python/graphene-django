@@ -1,5 +1,6 @@
 from functools import partial
 
+import six
 from django.db.models.query import QuerySet
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
@@ -19,9 +20,10 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
 
-        assert issubclass(
-            _type, DjangoObjectType
-        ), "DjangoListField only accepts DjangoObjectType types"
+        if not isinstance(_type, six.string_types):
+            assert issubclass(
+                _type, DjangoObjectType
+            ), "DjangoListField only accepts DjangoObjectType types"
 
         # Django would never return a Set of None  vvvvvvv
         super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
