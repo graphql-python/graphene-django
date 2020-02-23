@@ -229,7 +229,7 @@ class ModelFormMutationTests(TestCase):
                 }
             }
             """,
-            variables={"pk": pet.pk},
+            variable_values={"pk": pet.pk},
         )
 
         self.assertIs(result.errors, None)
