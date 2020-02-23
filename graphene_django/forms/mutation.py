@@ -47,7 +47,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
         else:
             errors = ErrorType.from_errors(form.errors)
 
-            return cls(errors=errors)
+            return cls(errors=errors, **form.data)
 
     @classmethod
     def get_form(cls, root, info, **input):
@@ -100,7 +100,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
     @classmethod
     def perform_mutate(cls, form, info):
         form.save()
-        return cls(errors=[])
+        return cls(errors=[], **form.cleaned_data)
 
 
 class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):

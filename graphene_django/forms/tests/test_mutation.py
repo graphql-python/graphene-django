@@ -1,5 +1,6 @@
 from django import forms
 from django.test import TestCase
+from django.core.exceptions import ValidationError
 from py.test import raises
 
 from graphene import ObjectType, Schema, String, Field
@@ -12,6 +13,15 @@ from ..mutation import DjangoFormMutation, DjangoModelFormMutation
 
 class MyForm(forms.Form):
     text = forms.CharField()
+
+    def clean_text(self):
+        text = self.cleaned_data["text"]
+        if text == "INVALID_INPUT":
+            raise ValidationError("Invalid input")
+        return text
+
+    def save(self):
+        pass
 
 
 class PetForm(forms.ModelForm):
@@ -81,6 +91,64 @@ def test_mutation_error_camelcased():
 
 class MockQuery(ObjectType):
     a = String()
+
+
+class FormMutationTests(TestCase):
+    def test_form_invalid_form(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+
+        class Mutation(ObjectType):
+            my_mutation = MyMutation.Field()
+
+        schema = Schema(query=MockQuery, mutation=Mutation)
+
+        result = schema.execute(
+            """ mutation MyMutation {
+                myMutation(input: { text: "INVALID_INPUT" }) {
+                    errors {
+                        field
+                        messages
+                    }
+                    text
+                }
+            }
+            """
+        )
+
+        self.assertIs(result.errors, None)
+        self.assertEqual(
+            result.data["myMutation"]["errors"],
+            [{"field": "text", "messages": ["Invalid input"]}],
+        )
+
+    def test_form_valid_input(self):
+        class MyMutation(DjangoFormMutation):
+            class Meta:
+                form_class = MyForm
+
+        class Mutation(ObjectType):
+            my_mutation = MyMutation.Field()
+
+        schema = Schema(query=MockQuery, mutation=Mutation)
+
+        result = schema.execute(
+            """ mutation MyMutation {
+                myMutation(input: { text: "VALID_INPUT" }) {
+                    errors {
+                        field
+                        messages
+                    }
+                    text
+                }
+            }
+            """
+        )
+
+        self.assertIs(result.errors, None)
+        self.assertEqual(result.data["myMutation"]["errors"], [])
+        self.assertEqual(result.data["myMutation"]["text"], "VALID_INPUT")
 
 
 class ModelFormMutationTests(TestCase):
