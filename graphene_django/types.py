@@ -102,7 +102,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
             # Field is a custom field
             warnings.warn(
                 (
-                    'Excluding the custom field "{field_name} on DjangoObjectType "{type_}" has no effect. '
+                    'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
                     'Either remove the custom field or remove the field from the "exclude" list.'
                 ).format(
                     field_name=name,
