@@ -144,6 +144,25 @@ def test_write_only_field_using_extra_kwargs():
     ), "'password' is write_only field and shouldn't be visible"
 
 
+@mark.django_db
+def test_read_only_fields():
+    class ReadOnlyFieldModelSerializer(serializers.ModelSerializer):
+        cool_name = serializers.CharField(read_only=True)
+
+        class Meta:
+            model = MyFakeModelWithPassword
+            fields = ["cool_name", "password"]
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = ReadOnlyFieldModelSerializer
+
+    assert "password" in MyMutation.Input._meta.fields
+    assert (
+        "cool_name" not in MyMutation.Input._meta.fields
+    ), "'cool_name' is read_only field and shouldn't be on arguments"
+
+
 def test_nested_model():
     class MyFakeModelGrapheneType(DjangoObjectType):
         class Meta:

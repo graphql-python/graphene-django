@@ -30,12 +30,13 @@ def fields_for_serializer(
     fields = OrderedDict()
     for name, field in serializer.fields.items():
         is_not_in_only = only_fields and name not in only_fields
-        is_excluded = (
-            name
-            in exclude_fields  # or
-            # name in already_created_fields
-        ) or (
-            field.write_only and not is_input  # don't show write_only fields in Query
+        is_excluded = any(
+            [
+                name in exclude_fields,
+                field.write_only
+                and not is_input,  # don't show write_only fields in Query
+                field.read_only and is_input,  # don't show read_only fields in Input
+            ]
         )
 
         if is_not_in_only or is_excluded:
