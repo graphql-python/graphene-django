@@ -1,6 +1,6 @@
 import json
 
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 
 
 class GraphQLTestCase(TestCase):
@@ -21,8 +21,6 @@ class GraphQLTestCase(TestCase):
             raise AttributeError(
                 "Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase."
             )
-
-        cls._client = Client()
 
     def query(self, query, op_name=None, input_data=None, variables=None, headers=None):
         """
@@ -54,14 +52,14 @@ class GraphQLTestCase(TestCase):
             else:
                 body["variables"] = {"input": input_data}
         if headers:
-            resp = self._client.post(
+            resp = self.client.post(
                 self.GRAPHQL_URL,
                 json.dumps(body),
                 content_type="application/json",
                 **headers
             )
         else:
-            resp = self._client.post(
+            resp = self.client.post(
                 self.GRAPHQL_URL, json.dumps(body), content_type="application/json"
             )
         return resp
