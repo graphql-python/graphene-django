@@ -68,12 +68,6 @@ class GraphQLTestCase(TestCase):
     # URL to graphql endpoint
     GRAPHQL_URL = DEFAULT_GRAPHQL_URL
 
-    @classmethod
-    def setUpClass(cls):
-        super(GraphQLTestCase, cls).setUpClass()
-
-        cls._client = Client()
-
     def query(self, query, op_name=None, input_data=None, variables=None, headers=None):
         """
         Args:
@@ -99,7 +93,7 @@ class GraphQLTestCase(TestCase):
             input_data=input_data,
             variables=variables,
             headers=headers,
-            client=self._client,
+            client=self.client,
             graphql_url=self.GRAPHQL_URL,
         )
 
