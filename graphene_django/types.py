@@ -45,11 +45,11 @@ def construct_fields(
             # in there. Or when we exclude this field in exclude_fields.
             # Or when there is no back reference.
             continue
-        _convert_choices_to_enum = convert_choices_to_enum
-        if not isinstance(_convert_choices_to_enum, bool):
-            # then `convert_choices_to_enum` is a list of field names to convert
-            _convert_choices_to_enum = name in _convert_choices_to_enum
-
+        _convert_choices_to_enum = (
+            convert_choices_to_enum
+            if isinstance(convert_choices_to_enum, bool)
+            else name in convert_choices_to_enum
+        )
         converted = convert_django_field_with_choices(
             field, registry, convert_choices_to_enum=_convert_choices_to_enum
         )
