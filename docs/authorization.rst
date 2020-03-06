@@ -166,7 +166,7 @@ To restrict users from accessing the GraphQL API page the standard Django LoginR
 
 After this, you can use the new ``PrivateGraphQLView`` in the project's URL Configuration file ``url.py``:
 
-For Django 1.9 and below:
+For Django 1.11:
 
 .. code:: python
 
