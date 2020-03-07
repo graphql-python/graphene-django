@@ -277,7 +277,7 @@ from the command line.
     $ python ./manage.py runserver
 
     Performing system checks...
-    Django version 1.9, using settings 'cookbook.settings'
+    Django version 1.11, using settings 'cookbook.settings'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
