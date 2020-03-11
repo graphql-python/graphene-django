@@ -18,7 +18,7 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 
 from graphene_django.settings import graphene_settings
-from graphene_django.forms.forms import HeaderForm
+
 
 class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
@@ -97,7 +97,7 @@ class GraphQLView(APIView):
         assert isinstance(
             self.schema, GraphQLSchema
         ), "A Schema is required to be provided to GraphQLView."
-        assert not all((graphiql, batch)), "Use either graphiql or batch processing"
+        assert not all((graphiql_headers, graphiql, batch)), "Use either graphiql, graphiql_headers, or batch processing"
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -114,9 +114,18 @@ class GraphQLView(APIView):
 
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
-        GET_FROM_CDN = kwargs.get('GET_FROM_CDN', None)
-        if GET_FROM_CDN is None:
-            GET_FROM_CDN = 'static' # this is diconnected
+        # if specified in settings.py:
+            # GRAPHENE = { 
+            # why does this not make it????
+            #      'SOURCE': 'cdn'
+            # }
+        try:
+            GET_FROM_CDN = graphene_settings.SOURCE # get IF it exists
+            if GET_FROM_CDN is None:
+                # should not need
+                GET_FROM_CDN = 'static'
+        except:
+            GET_FROM_CDN = 'static' # this is diconnected by default
 
         graphiql_arguments = {}
         if GET_FROM_CDN == 'cdn':
@@ -128,7 +137,7 @@ class GraphQLView(APIView):
             graphiql_arguments.update({'graphiql_template': 'graphene/graphiql.html'})
             graphiql_arguments.update({'TEMPLATE_SOURCE': 'static'})
         else:
-            print('Unsuppored option in setting.  Choose <cdn> or <static>')
+            print('The option %s is unsuppored option in setting.  Choose <cdn> or <static>' % GET_FROM_CDN) 
 
         try:
             if request.method.lower() not in ("get", "post"):
@@ -386,6 +395,8 @@ class GraphQLView(APIView):
         return content_type.split(";", 1)[0].lower()
 
 def _get_auth_header(iQLView, request, graphiql_arguments):
+    from libs.graphene_django_auth.forms import HeaderForm
+
     # If this is a POST request then process the Form data
     if request.method == 'POST':
 
@@ -396,7 +407,7 @@ def _get_auth_header(iQLView, request, graphiql_arguments):
         if form.is_valid():
             # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
             auth_header = form.cleaned_data['headers']
-            
+
             # return extra stuff to put in META tag for graphiql:
             request.session['HTTP_AUTHORIZATION'] = auth_header
             request.session['use_graphiql'] = True

@@ -36,13 +36,14 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": False,
+    "SOURCE": None
 }
 
 if settings.DEBUG:
     DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
 
 # List of settings that may be in string import notation.
-IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA")
+IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA", "SOURCE")
 
 
 def perform_import(val, setting_name):

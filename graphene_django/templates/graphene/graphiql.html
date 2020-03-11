@@ -6,6 +6,7 @@
 {% block additional_headers %}{{ auth_header }}{% endblock %}
 
 {% block content %}
+  <div id="editor"></div>
   {% csrf_token %}
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>
 {% endblock %}
