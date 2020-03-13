@@ -1,3 +1,4 @@
+import os
 import importlib
 import json
 import functools
@@ -5,6 +6,7 @@ import functools
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import autoreload
 
+from graphql import print_schema
 from graphene_django.settings import graphene_settings
 
 
@@ -44,24 +46,40 @@ class CommandArguments(BaseCommand):
 
 
 class Command(CommandArguments):
-    help = "Dump Graphene schema JSON to file"
+    help = "Dump Graphene schema as a JSON or GraphQL file"
     can_import_settings = True
 
-    def save_file(self, out, schema_dict, indent):
+    def save_json_file(self, out, schema_dict, indent):
         with open(out, "w") as outfile:
             json.dump(schema_dict, outfile, indent=indent, sort_keys=True)
+
+    def save_graphql_file(self, out, schema):
+        with open(out, "w") as outfile:
+            outfile.write(print_schema(schema))
 
     def get_schema(self, schema, out, indent):
         schema_dict = {"data": schema.introspect()}
         if out == "-":
             self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
         else:
-            self.save_file(out, schema_dict, indent)
+            # Determine format
+            _, file_extension = os.path.splitext(out)
+
+            if file_extension == ".graphql":
+                self.save_graphql_file(out, schema)
+            elif file_extension == ".json":
+                self.save_json_file(out, schema_dict, indent)
+            else:
+                raise CommandError(
+                    'Unrecognised file format "{}"'.format(file_extension)
+                )
 
             style = getattr(self, "style", None)
             success = getattr(style, "SUCCESS", lambda x: x)
 
-            self.stdout.write(success("Successfully dumped GraphQL schema to %s" % out))
+            self.stdout.write(
+                success("Successfully dumped GraphQL schema to {}".format(out))
+            )
 
     def handle(self, *args, **options):
         options_schema = options.get("schema")
