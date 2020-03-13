@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from django.db import models
 from django.utils.encoding import force_str
+from django.utils.module_loading import import_string
 
 from graphene import (
     ID,
@@ -22,6 +23,7 @@ from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
+from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
@@ -68,6 +70,31 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
 
 
+def generate_enum_name(django_model_meta, field):
+    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME:
+        # Try and import custom function
+        custom_func = import_string(
+            graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME
+        )
+        name = custom_func(field)
+    elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING is True:
+        name = "{app_label}{object_name}{field_name}Choices".format(
+            app_label=to_camel_case(django_model_meta.app_label.title()),
+            object_name=django_model_meta.object_name,
+            field_name=to_camel_case(field.name.title()),
+        )
+    else:
+        name = to_camel_case("{}_{}".format(django_model_meta.object_name, field.name))
+    return name
+
+
+def convert_choice_field_to_enum(field, name=None):
+    if name is None:
+        name = generate_enum_name(field.model._meta, field)
+    choices = field.choices
+    return convert_choices_to_named_enum_with_descriptions(name, choices)
+
+
 def convert_django_field_with_choices(
     field, registry=None, convert_choices_to_enum=True
 ):
@@ -77,9 +104,7 @@ def convert_django_field_with_choices(
             return converted
     choices = getattr(field, "choices", None)
     if choices and convert_choices_to_enum:
-        meta = field.model._meta
-        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
-        enum = convert_choices_to_named_enum_with_descriptions(name, choices)
+        enum = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)
         converted = enum(description=field.help_text, required=required)
     else:
