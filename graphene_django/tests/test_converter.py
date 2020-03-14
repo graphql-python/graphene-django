@@ -1,7 +1,7 @@
 import pytest
 from collections import namedtuple
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from graphene import NonNull
 from py.test import raises
 
