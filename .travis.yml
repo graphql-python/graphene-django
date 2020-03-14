@@ -5,10 +5,10 @@ dist: xenial
 install:
   - pip install tox tox-travis
 
-script: 
+script:
   - tox
 
-after_success: 
+after_success:
   - pip install coveralls
   - coveralls
 
@@ -24,8 +24,6 @@ jobs:
     - env: DJANGO=master
 
   include:
-    - python: 2.7
-      env: DJANGO=1.11
 
     - python: 3.5
       env: DJANGO=1.11

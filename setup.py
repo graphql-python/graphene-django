@@ -1,5 +1,4 @@
 from setuptools import find_packages, setup
-import sys
 import ast
 import re
 
@@ -19,8 +18,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
-    "django-filter<2;python_version<'3'",
-    "django-filter>=2;python_version>='3'",
+    "django-filter>=2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
 
@@ -45,8 +43,6 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
@@ -56,7 +52,6 @@ setup(
     keywords="api graphql protocol rest relay graphene",
     packages=find_packages(exclude=["tests"]),
     install_requires=[
-        "six>=1.10.0",
         "graphene>=2.1.7,<3",
         "graphql-core>=2.1.0,<3",
         "Django>=1.11",

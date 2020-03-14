@@ -1,6 +1,5 @@
 from functools import partial
 
-import six
 from django.db.models.query import QuerySet
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise

@@ -5,7 +5,6 @@ import json
 from threading import local
 from time import time
 
-import six
 from django.utils.encoding import force_str
 
 from .types import DjangoDebugSQL
@@ -77,7 +76,7 @@ class NormalCursorWrapper(object):
         self.logger = logger
 
     def _quote_expr(self, element):
-        if isinstance(element, six.string_types):
+        if isinstance(element, str):
             return "'%s'" % force_str(element).replace("'", "''")
         else:
             return repr(element)

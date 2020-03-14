@@ -1,7 +1,7 @@
 import warnings
 from collections import OrderedDict
+from typing import Type
 
-import six
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 
@@ -20,9 +20,6 @@ from .utils import (
     get_model_fields,
     is_valid_django_model,
 )
-
-if six.PY3:
-    from typing import Type
 
 
 ALL_FIELDS = "__all__"

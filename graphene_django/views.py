@@ -2,7 +2,6 @@ import inspect
 import json
 import re
 
-import six
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
@@ -314,7 +313,7 @@ class GraphQLView(View):
         variables = request.GET.get("variables") or data.get("variables")
         id = request.GET.get("id") or data.get("id")
 
-        if variables and isinstance(variables, six.text_type):
+        if variables and isinstance(variables, str):
             try:
                 variables = json.loads(variables)
             except Exception:
@@ -331,7 +330,7 @@ class GraphQLView(View):
         if isinstance(error, GraphQLError):
             return format_graphql_error(error)
 
-        return {"message": six.text_type(error)}
+        return {"message": str(error)}
 
     @staticmethod
     def get_content_type(request):

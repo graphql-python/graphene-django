@@ -1,5 +1,3 @@
-import six
-
 from django_filters.utils import get_model_field
 from .filterset import custom_filterset_factory, setup_filterset
 
@@ -13,7 +11,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
     args = {}
     model = filterset_class._meta.model
-    for name, filter_field in six.iteritems(filterset_class.base_filters):
+    for name, filter_field in filterset_class.base_filters.items():
         form_field = None
 
         if name in filterset_class.declared_filters:
