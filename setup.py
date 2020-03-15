@@ -53,8 +53,8 @@ setup(
     keywords="api graphql protocol rest relay graphene",
     packages=find_packages(exclude=["tests"]),
     install_requires=[
-        "graphene>=2.1.7,<3",
-        "graphql-core>=2.1.0,<3",
+        "graphene>=3.0.dev,<4",
+        "graphql-core>=3.0.0b1,<4",
         "Django>=1.11,!=2.0.*,!=2.1.*",
         "promise>=2.1",
     ],
