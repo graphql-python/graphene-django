@@ -1075,7 +1075,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info):
+        def resolve_films(root, info, **kwargs):
             qs = Film.objects.prefetch_related("reporters")
             return qs
 
@@ -1127,7 +1127,7 @@ def test_should_preserve_annotations():
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info):
+        def resolve_films(root, info, **kwargs):
             qs = Film.objects.prefetch_related("reporters")
             return qs.annotate(reporters_count=models.Count("reporters"))
 
