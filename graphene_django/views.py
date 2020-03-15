@@ -8,11 +8,10 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import OperationType, execute, get_operation_ast, parse, validate
+from graphql import OperationType, get_operation_ast, parse, validate
 from graphql.error import GraphQLError
 from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
-from graphql.type.schema import GraphQLSchema
 
 from graphene import Schema
 
@@ -259,9 +258,8 @@ class GraphQLView(View):
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
 
-        return execute(
-            schema=self.schema.graphql_schema,
-            document=document,
+        return self.schema.execute(
+            source=query,
             root_value=self.get_root_value(request),
             variable_values=variables,
             operation_name=operation_name,

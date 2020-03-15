@@ -713,7 +713,7 @@ def test_should_query_promise_connectionfields():
         all_reporters = DjangoConnectionField(ReporterType)
 
         def resolve_all_reporters(self, info, **args):
-            return Promise.resolve([Reporter(id=1)])
+            return Promise.resolve([Reporter(id=1)]).get()
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -842,7 +842,7 @@ def test_should_query_dataloader_fields():
         articles = DjangoConnectionField(ArticleType)
 
         def resolve_articles(self, info, **args):
-            return article_loader.load(self.id)
+            return article_loader.load(self.id).get()
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1075,7 +1075,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info, **args):
+        def resolve_films(root, info, **kwargs):
             qs = Film.objects.prefetch_related("reporters")
             return qs
 
@@ -1105,6 +1105,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
         }
     """
     schema = graphene.Schema(query=Query)
+
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
         assert not result.errors
@@ -1127,7 +1128,7 @@ def test_should_preserve_annotations():
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info):
+        def resolve_films(root, info, **kwargs):
             qs = Film.objects.prefetch_related("reporters")
             return qs.annotate(reporters_count=models.Count("reporters"))
 

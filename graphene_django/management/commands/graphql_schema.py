@@ -56,7 +56,7 @@ class Command(CommandArguments):
 
     def save_graphql_file(self, out, schema):
         with open(out, "w") as outfile:
-            outfile.write(print_schema(schema))
+            outfile.write(print_schema(schema.graphql_schema))
 
     def get_schema(self, schema, out, indent):
         schema_dict = {"data": schema.introspect()}

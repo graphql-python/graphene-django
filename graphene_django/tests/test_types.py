@@ -111,83 +111,165 @@ def test_django_objecttype_with_custom_meta():
 
 
 def test_schema_representation():
-    expected = """
-schema {
-  query: RootQuery
-}
+    expected = dedent(
+        """\
+        schema {
+          query: RootQuery
+        }
 
-type Article implements Node {
-  id: ID!
-  headline: String!
-  pubDate: Date!
-  pubDateTime: DateTime!
-  reporter: Reporter!
-  editor: Reporter!
-  lang: ArticleLang!
-  importance: ArticleImportance
-}
+        \"""Article description\"""
+        type Article implements Node {
+          \"""The ID of the object\"""
+          id: ID!
 
-type ArticleConnection {
-  pageInfo: PageInfo!
-  edges: [ArticleEdge]!
-  test: String
-}
+          \"""\"""
+          headline: String!
 
-type ArticleEdge {
-  node: Article
-  cursor: String!
-}
+          \"""\"""
+          pubDate: Date!
 
-enum ArticleImportance {
-  A_1
-  A_2
-}
+          \"""\"""
+          pubDateTime: DateTime!
 
-enum ArticleLang {
-  ES
-  EN
-}
+          \"""\"""
+          reporter: Reporter!
 
-scalar Date
+          \"""\"""
+          editor: Reporter!
 
-scalar DateTime
+          \"""Language\"""
+          lang: ArticleLang!
 
-interface Node {
-  id: ID!
-}
+          \"""\"""
+          importance: ArticleImportance
+        }
 
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
+        \"""An object with an ID\"""
+        interface Node {
+          \"""The ID of the object\"""
+          id: ID!
+        }
 
-type Reporter {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  email: String!
-  pets: [Reporter!]!
-  aChoice: ReporterAChoice
-  reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
-}
+        \"""
+        The `Date` scalar type represents a Date
+        value as specified by
+        [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+        \"""
+        scalar Date
 
-enum ReporterAChoice {
-  A_1
-  A_2
-}
+        \"""
+        The `DateTime` scalar type represents a DateTime
+        value as specified by
+        [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+        \"""
+        scalar DateTime
 
-enum ReporterReporterType {
-  A_1
-  A_2
-}
+        \"""An enumeration.\"""
+        enum ArticleLang {
+          \"""Spanish\"""
+          ES
 
-type RootQuery {
-  node(id: ID!): Node
-}
-""".lstrip()
+          \"""English\"""
+          EN
+        }
+
+        \"""An enumeration.\"""
+        enum ArticleImportance {
+          \"""Very important\"""
+          A_1
+
+          \"""Not as important\"""
+          A_2
+        }
+
+        \"""Reporter description\"""
+        type Reporter {
+          \"""\"""
+          id: ID!
+
+          \"""\"""
+          firstName: String!
+
+          \"""\"""
+          lastName: String!
+
+          \"""\"""
+          email: String!
+
+          \"""\"""
+          pets: [Reporter!]!
+
+          \"""\"""
+          aChoice: ReporterAChoice
+
+          \"""\"""
+          reporterType: ReporterReporterType
+
+          \"""\"""
+          articles(before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
+        }
+
+        \"""An enumeration.\"""
+        enum ReporterAChoice {
+          \"""this\"""
+          A_1
+
+          \"""that\"""
+          A_2
+        }
+
+        \"""An enumeration.\"""
+        enum ReporterReporterType {
+          \"""Regular\"""
+          A_1
+
+          \"""CNN Reporter\"""
+          A_2
+        }
+
+        type ArticleConnection {
+          \"""Pagination data for this connection.\"""
+          pageInfo: PageInfo!
+
+          \"""Contains the nodes in this connection.\"""
+          edges: [ArticleEdge]!
+          test: String
+        }
+
+        \"""
+        The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+        \"""
+        type PageInfo {
+          \"""When paginating forwards, are there more items?\"""
+          hasNextPage: Boolean!
+
+          \"""When paginating backwards, are there more items?\"""
+          hasPreviousPage: Boolean!
+
+          \"""When paginating backwards, the cursor to continue.\"""
+          startCursor: String
+
+          \"""When paginating forwards, the cursor to continue.\"""
+          endCursor: String
+        }
+
+        \"""A Relay edge containing a `Article` and its cursor.\"""
+        type ArticleEdge {
+          \"""The item at the end of the edge\"""
+          node: Article
+
+          \"""A cursor for use in pagination\"""
+          cursor: String!
+        }
+
+        type RootQuery {
+          node(
+            \"""The ID of the object\"""
+            id: ID!
+          ): Node
+        }
+        """
+    )
     assert str(schema) == expected
 
 
@@ -415,20 +497,21 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: String!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              kind: String!
+
+              \"""\"""
+              cuteness: Int!
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_list(self, PetModel):
@@ -444,25 +527,30 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: PetModelKind!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        enum PetModelKind {
-          CAT
-          DOG
-        }
+              \"""\"""
+              kind: PetModelKind!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              cuteness: Int!
+            }
+
+            \"""An enumeration.\"""
+            enum PetModelKind {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
@@ -478,20 +566,21 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: String!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              kind: String!
+
+              \"""\"""
+              cuteness: Int!
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_naming_collisions(
@@ -511,24 +600,27 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: PetModelKind
+            }
 
-        type PetModelKind {
-          id: ID!
-          kind: TestsPetModelKindChoices!
-        }
+            type PetModelKind {
+              \"""\"""
+              id: ID!
 
-        type Query {
-          pet: PetModelKind
-        }
+              \"""\"""
+              kind: TestsPetModelKindChoices!
+            }
 
-        enum TestsPetModelKindChoices {
-          CAT
-          DOG
-        }
-        """
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
         )
 
     def test_django_objecttype_choices_custom_enum_name(
@@ -550,22 +642,25 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: PetModelKind
+            }
 
-        enum CustomEnumKind {
-          CAT
-          DOG
-        }
+            type PetModelKind {
+              \"""\"""
+              id: ID!
 
-        type PetModelKind {
-          id: ID!
-          kind: CustomEnumKind!
-        }
+              \"""\"""
+              kind: CustomEnumKind!
+            }
 
-        type Query {
-          pet: PetModelKind
-        }
-        """
+            \"""An enumeration.\"""
+            enum CustomEnumKind {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
         )

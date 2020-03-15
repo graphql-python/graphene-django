@@ -5,7 +5,8 @@ from graphql_relay.connection.arrayconnection import connection_from_array_slice
 from promise import Promise
 
 from graphene import NonNull
-from graphene.relay import ConnectionField, PageInfo
+from graphene.relay import ConnectionField
+from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
 
 from .settings import graphene_settings
@@ -126,11 +127,11 @@ class DjangoConnectionField(ConnectionField):
             iterable,
             args,
             slice_start=0,
-            connection_type=connection,
             array_length=_len,
             array_slice_length=_len,
+            connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
-            page_info_type=PageInfo,
+            page_info_type=page_info_adapter,
         )
         connection.iterable = iterable
         connection.length = _len
