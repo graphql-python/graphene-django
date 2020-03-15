@@ -68,7 +68,7 @@ def test_should_query_nested_field():
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
-        debug = graphene.Field(DjangoDebug, name="__debug")
+        debug = graphene.Field(DjangoDebug, name="_debug")
 
         def resolve_reporter(self, info, **args):
             return Reporter.objects.first()
@@ -82,7 +82,7 @@ def test_should_query_nested_field():
               pets { edges { node { lastName } } }
             } } }
           }
-          __debug {
+          _debug {
             sql {
               rawSql
             }
@@ -110,12 +110,12 @@ def test_should_query_nested_field():
     )
     assert not result.errors
     query = str(Reporter.objects.order_by("pk")[:1].query)
-    assert result.data["__debug"]["sql"][0]["rawSql"] == query
-    assert "COUNT" in result.data["__debug"]["sql"][1]["rawSql"]
-    assert "tests_reporter_pets" in result.data["__debug"]["sql"][2]["rawSql"]
-    assert "COUNT" in result.data["__debug"]["sql"][3]["rawSql"]
-    assert "tests_reporter_pets" in result.data["__debug"]["sql"][4]["rawSql"]
-    assert len(result.data["__debug"]["sql"]) == 5
+    assert result.data["_debug"]["sql"][0]["rawSql"] == query
+    assert "COUNT" in result.data["_debug"]["sql"][1]["rawSql"]
+    assert "tests_reporter_pets" in result.data["_debug"]["sql"][2]["rawSql"]
+    assert "COUNT" in result.data["_debug"]["sql"][3]["rawSql"]
+    assert "tests_reporter_pets" in result.data["_debug"]["sql"][4]["rawSql"]
+    assert len(result.data["_debug"]["sql"]) == 5
 
     assert result.data["reporter"] == expected["reporter"]
 
