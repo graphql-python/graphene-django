@@ -1,7 +1,8 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+
+from graphql_relay.connection.arrayconnection import connection_from_array_slice
 from promise import Promise
 
 from graphene import NonNull
@@ -122,15 +123,15 @@ class DjangoConnectionField(ConnectionField):
             _len = iterable.count()
         else:
             _len = len(iterable)
-        connection = connection_from_list_slice(
+        connection = connection_from_array_slice(
             iterable,
             args,
             slice_start=0,
-            list_length=_len,
-            list_slice_length=_len,
             connection_type=connection,
+            array_length=_len,
+            array_slice_length=_len,
             edge_type=connection.Edge,
-            pageinfo_type=PageInfo,
+            page_info_type=PageInfo,
         )
         connection.iterable = iterable
         connection.length = _len
