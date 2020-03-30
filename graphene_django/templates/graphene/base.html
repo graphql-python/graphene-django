@@ -14,11 +14,11 @@
     }
   </style>
 
-  <link rel="stylesheet" href={% static "graphiql/css/graphiql.css" %}>
-  <script src={%static "graphiql/js/fetch.min.js" %}></script>
-  <script src={%static "graphiql/js/react.production.min.js" %}></script>
-  <script src={%static "graphiql/js/react-dom.production.min.js" %}></script>
-  <script src={%static "graphiql/js/graphiql.min.js" %}></script>
+  <link rel="stylesheet" href="{% static 'graphiql/css/graphiql.css' %}">
+  <script src="{% static 'graphiql/js/fetch.min.js' %}"></script>
+  <script src="{% static 'graphiql/js/react.production.min.js' %}"></script>
+  <script src="{% static 'graphiql/js/react-dom.production.min.js' %}"></script>
+  <script src="{% static 'graphiql/js/graphiql.min.js' %}"></script>
   <title>{% block title %}{% endblock %}</title>
   
   <meta name="Authorization" content="{% block additional_headers %}{% endblock %}">

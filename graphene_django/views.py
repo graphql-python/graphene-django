@@ -97,7 +97,9 @@ class GraphQLView(APIView):
         assert isinstance(
             self.schema, GraphQLSchema
         ), "A Schema is required to be provided to GraphQLView."
-        assert not all((graphiql_headers, graphiql, batch)), "Use either graphiql, graphiql_headers, or batch processing"
+        assert not all(
+            (graphiql_headers, graphiql, batch)
+        ), "Use either graphiql, graphiql_headers, or batch processing"
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -115,29 +117,32 @@ class GraphQLView(APIView):
     @method_decorator(ensure_csrf_cookie)
     def dispatch(self, request, *args, **kwargs):
         # if specified in settings.py:
-            # GRAPHENE = { 
-            # why does this not make it????
-            #      'SOURCE': 'cdn'
-            # }
+        # GRAPHENE = {
+        # why does this not make it????
+        #      'SOURCE': 'cdn'
+        # }
         try:
-            GET_FROM_CDN = graphene_settings.SOURCE # get IF it exists
+            GET_FROM_CDN = graphene_settings.SOURCE  # get IF it exists
             if GET_FROM_CDN is None:
                 # should not need
-                GET_FROM_CDN = 'static'
+                GET_FROM_CDN = "static"
         except:
-            GET_FROM_CDN = 'static' # this is diconnected by default
+            GET_FROM_CDN = "static"  # this is diconnected by default
 
         graphiql_arguments = {}
-        if GET_FROM_CDN == 'cdn':
-            graphiql_arguments.update({'graphiql_version': '0.14.0'})
-            graphiql_arguments.update({'graphiql_template': 'graphene/graphiql.html'})
-            graphiql_arguments.update({'react_version': '16.8.6'})
-            graphiql_arguments.update({'TEMPLATE_SOURCE': 'cdn'})
-        elif GET_FROM_CDN == 'static':
-            graphiql_arguments.update({'graphiql_template': 'graphene/graphiql.html'})
-            graphiql_arguments.update({'TEMPLATE_SOURCE': 'static'})
+        if GET_FROM_CDN == "cdn":
+            graphiql_arguments.update({"graphiql_version": "0.14.0"})
+            graphiql_arguments.update({"graphiql_template": "graphene/graphiql.html"})
+            graphiql_arguments.update({"react_version": "16.8.6"})
+            graphiql_arguments.update({"TEMPLATE_SOURCE": "cdn"})
+        elif GET_FROM_CDN == "static":
+            graphiql_arguments.update({"graphiql_template": "graphene/graphiql.html"})
+            graphiql_arguments.update({"TEMPLATE_SOURCE": "static"})
         else:
-            print('The option %s is unsuppored option in setting.  Choose <cdn> or <static>' % GET_FROM_CDN) 
+            print(
+                "The option %s is unsuppored option in setting.  Choose <cdn> or <static>"
+                % GET_FROM_CDN
+            )
 
         try:
             if request.method.lower() not in ("get", "post"):
@@ -149,7 +154,7 @@ class GraphQLView(APIView):
 
             data = self.parse_body(request)
             try:
-                if request.session['use_graphiql']:
+                if request.session["use_graphiql"]:
                     use_graphiql = True
                 else:
                     use_graphiql = False
@@ -157,29 +162,30 @@ class GraphQLView(APIView):
                 use_graphiql = False
 
             show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
-            show_graphiql_headers = self.graphiql_headers and self.can_display_graphiql(request, data)
+            show_graphiql_headers = self.graphiql_headers and self.can_display_graphiql(
+                request, data
+            )
 
             if show_graphiql:
-                request.session['use_graphiql'] = True
+                request.session["use_graphiql"] = True
                 request.session.save()
-                graphiql_arguments.update({'auth_header': None})
-                return self.render_graphiql(
-                    request,
-                    graphiql_arguments,
-                )
+                graphiql_arguments.update({"auth_header": None})
+                return self.render_graphiql(request, graphiql_arguments)
             elif show_graphiql_headers:
-                request.session['use_graphiql'] = True
+                request.session["use_graphiql"] = True
                 request.session.save()
 
                 return _get_auth_header(self, request, graphiql_arguments)
             else:
                 # not interactive, so save headers in session -- nothing to return() here
                 try:
-                    request.session['HTTP_AUTHORIZATION'] = request.META['HTTP_AUTHORIZATION']
-                    request.session['use_graphiql'] = False
+                    request.session["HTTP_AUTHORIZATION"] = request.META[
+                        "HTTP_AUTHORIZATION"
+                    ]
+                    request.session["use_graphiql"] = False
                     request.session.save()
                 except:
-                    pass # not first time through
+                    pass  # not first time through
 
             if self.batch:
                 responses = [self.get_response(request, entry) for entry in data]
@@ -234,15 +240,15 @@ class GraphQLView(APIView):
             result = self.json_encode(request, response, pretty=show_graphiql)
         else:
             result = None
-        
+
         return result, status_code
 
     def render_graphiql(self, request, data):
         template = None
         for (key, value) in data.items():
-            if key == 'graphiql_template':
+            if key == "graphiql_template":
                 template = value
-        return render(request, template, data) # data is context -- list of dicts
+        return render(request, template, data)  # data is context -- list of dicts
 
     def json_encode(self, request, d, pretty=False):
         if not (self.pretty or pretty) and not request.GET.get("pretty"):
@@ -327,7 +333,9 @@ class GraphQLView(APIView):
                 extra_options["executor"] = self.executor
 
             # put auth in session for the schema.py to use
-            request.META.update({'HTTP_AUTHORIZATION': request.session['HTTP_AUTHORIZATION']})
+            request.META.update(
+                {"HTTP_AUTHORIZATION": request.session["HTTP_AUTHORIZATION"]}
+            )
             return document.execute(
                 root_value=self.get_root_value(request),
                 variable_values=variables,
@@ -394,11 +402,12 @@ class GraphQLView(APIView):
         content_type = meta.get("CONTENT_TYPE", meta.get("HTTP_CONTENT_TYPE", ""))
         return content_type.split(";", 1)[0].lower()
 
+
 def _get_auth_header(iQLView, request, graphiql_arguments):
     from libs.graphene_django_auth.forms import HeaderForm
 
     # If this is a POST request then process the Form data
-    if request.method == 'POST':
+    if request.method == "POST":
 
         # Create a form instance and populate it with data from the request (binding):
         form = HeaderForm(request.POST)
@@ -406,24 +415,19 @@ def _get_auth_header(iQLView, request, graphiql_arguments):
         # Check if the form is valid:
         if form.is_valid():
             # process the data in form.cleaned_data as required (here we just write it to the model due_back field)
-            auth_header = form.cleaned_data['headers']
+            auth_header = form.cleaned_data["headers"]
 
             # return extra stuff to put in META tag for graphiql:
-            request.session['HTTP_AUTHORIZATION'] = auth_header
-            request.session['use_graphiql'] = True
+            request.session["HTTP_AUTHORIZATION"] = auth_header
+            request.session["use_graphiql"] = True
             request.session.save()
-            graphiql_arguments.update({'auth_header': auth_header})
-            return iQLView.render_graphiql(
-                request,
-                graphiql_arguments,
-            )
+            graphiql_arguments.update({"auth_header": auth_header})
+            return iQLView.render_graphiql(request, graphiql_arguments)
 
     # If this is a GET (or any other method) create the default form.
     else:
         form = HeaderForm()
 
-    context = {
-        'form': form,
-    }
+    context = {"form": form}
 
-    return render(request, 'graphene/header_jwt_auth.html', context)
+    return render(request, "graphene/header_jwt_auth.html", context)
