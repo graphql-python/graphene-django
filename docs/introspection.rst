@@ -29,6 +29,20 @@ you're ready to use Relay with Graphene GraphQL implementation.
 
 The schema file is sorted to create a reproducible canonical representation.
 
+GraphQL SDL Representation
+--------------------------
+
+The schema can also be exported as a GraphQL SDL file by changing the file
+extension :
+
+.. code:: bash
+
+    ./manage.py graphql_schema --schema tutorial.quickstart.schema --out schema.graphql
+
+When exporting the schema as a ``.graphql`` file the ``--indent`` option is
+ignored.
+
+
 Advanced Usage
 --------------
 

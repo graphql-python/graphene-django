@@ -1,5 +1,6 @@
 from functools import partial
 
+import six
 from django.db.models.query import QuerySet
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
@@ -19,19 +20,23 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
 
-        assert issubclass(
-            _type, DjangoObjectType
-        ), "DjangoListField only accepts DjangoObjectType types"
-
         # Django would never return a Set of None  vvvvvvv
         super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
 
+        assert issubclass(
+            self._underlying_type, DjangoObjectType
+        ), "DjangoListField only accepts DjangoObjectType types"
+
+    @property
+    def _underlying_type(self):
+        _type = self._type
+        while hasattr(_type, "of_type"):
+            _type = _type.of_type
+        return _type
+
     @property
     def model(self):
-        _type = self.type.of_type
-        if isinstance(_type, NonNull):
-            _type = _type.of_type
-        return _type._meta.model
+        return self._underlying_type._meta.model
 
     @staticmethod
     def list_resolver(django_object_type, resolver, root, info, **args):
