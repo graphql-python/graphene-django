@@ -36,6 +36,12 @@ class PetForm(forms.ModelForm):
         return age
 
 
+class FilmDetailsForm(forms.ModelForm):
+    class Meta:
+        model = FilmDetails
+        fields = "__all__"
+
+
 class PetType(DjangoObjectType):
     class Meta:
         model = Pet
