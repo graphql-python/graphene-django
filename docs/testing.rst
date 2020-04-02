@@ -3,6 +3,8 @@ Testing API calls with django
 
 If you want to unittest your API calls derive your test case from the class `GraphQLTestCase`.
 
+Your endpoint is set with `GRAPHQL_URL`. The default endpoint is `GRAPHQL_URL="/graphql/"` in `GraphQLTestCase`
+
 Usage:
 
 .. code:: python
