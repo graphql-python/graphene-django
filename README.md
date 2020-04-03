@@ -110,6 +110,11 @@ To learn more check out the following [examples](examples/):
 * **Relay Schema**: [Starwars Relay example](examples/starwars)
 
 
+## GraphQL testing clients
+ - [Firecamp](https://firecamp.io/graphql)
+ - [GraphiQL](https://github.com/graphql/graphiql)
+
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md)
