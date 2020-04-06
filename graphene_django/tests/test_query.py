@@ -612,9 +612,9 @@ def test_should_enforce_first_or_last(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "You must provide a `first` or `last` value to properly "
-        "paginate the `allReporters` connection."
+        "paginate the `allReporters` connection.\n"
     )
     assert result.data == expected
 
@@ -653,9 +653,9 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `first` limit of 100 records."
+        "exceeds the `first` limit of 100 records.\n"
     )
     assert result.data == expected
 
@@ -694,9 +694,9 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `last` limit of 100 records."
+        "exceeds the `last` limit of 100 records.\n"
     )
     assert result.data == expected
 
@@ -713,7 +713,7 @@ def test_should_query_promise_connectionfields():
         all_reporters = DjangoConnectionField(ReporterType)
 
         def resolve_all_reporters(self, info, **args):
-            return Promise.resolve([Reporter(id=1)])
+            return Promise.resolve([Reporter(id=1)]).get()
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -842,7 +842,7 @@ def test_should_query_dataloader_fields():
         articles = DjangoConnectionField(ArticleType)
 
         def resolve_articles(self, info, **args):
-            return article_loader.load(self.id)
+            return article_loader.load(self.id).get()
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1105,6 +1105,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
         }
     """
     schema = graphene.Schema(query=Query)
+
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
     assert not result.errors
