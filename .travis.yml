@@ -5,10 +5,10 @@ dist: xenial
 install:
   - pip install tox tox-travis
 
-script: 
+script:
   - tox
 
-after_success: 
+after_success:
   - pip install coveralls
   - coveralls
 
@@ -24,24 +24,8 @@ jobs:
     - env: DJANGO=master
 
   include:
-    - python: 2.7
-      env: DJANGO=1.11
-
-    - python: 3.5
-      env: DJANGO=1.11
-    - python: 3.5
-      env: DJANGO=2.0
-    - python: 3.5
-      env: DJANGO=2.1
-    - python: 3.5
-      env: DJANGO=2.2
-
     - python: 3.6
       env: DJANGO=1.11
-    - python: 3.6
-      env: DJANGO=2.0
-    - python: 3.6
-      env: DJANGO=2.1
     - python: 3.6
       env: DJANGO=2.2
     - python: 3.6
@@ -52,22 +36,27 @@ jobs:
     - python: 3.7
       env: DJANGO=1.11
     - python: 3.7
-      env: DJANGO=2.0
-    - python: 3.7
-      env: DJANGO=2.1
-    - python: 3.7
       env: DJANGO=2.2
     - python: 3.7
       env: DJANGO=3.0
     - python: 3.7
       env: DJANGO=master
 
-    - python: 3.7
+    - python: 3.8
+      env: DJANGO=1.11
+    - python: 3.8
+      env: DJANGO=2.2
+    - python: 3.8
+      env: DJANGO=3.0
+    - python: 3.8
+      env: DJANGO=master
+
+    - python: 3.8
       env: TOXENV=black,flake8
 
     - stage: deploy
       script: skip
-      python: 3.7
+      python: 3.8
       after_success: true
       deploy:
         provider: pypi

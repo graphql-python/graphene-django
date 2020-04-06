@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 CHOICES = ((1, "this"), (2, _("that")))
 
@@ -46,7 +46,7 @@ class Reporter(models.Model):
         "Reporter Type",
         null=True,
         blank=True,
-        choices=[(1, u"Regular"), (2, u"CNN Reporter")],
+        choices=[(1, "Regular"), (2, "CNN Reporter")],
     )
 
     def __str__(self):  # __unicode__ on Python 2
@@ -105,7 +105,7 @@ class Article(models.Model):
         "Importance",
         null=True,
         blank=True,
-        choices=[(1, u"Very important"), (2, u"Not as important")],
+        choices=[(1, "Very important"), (2, "Not as important")],
     )
 
     def __str__(self):  # __unicode__ on Python 2

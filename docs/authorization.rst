@@ -184,4 +184,4 @@ For Django 2.0 and above:
       path('graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
-.. _LoginRequiredMixin: https://docs.djangoproject.com/en/1.10/topics/auth/default/#the-loginrequired-mixin
+.. _LoginRequiredMixin: https://docs.djangoproject.com/en/dev/topics/auth/default/#the-loginrequired-mixin

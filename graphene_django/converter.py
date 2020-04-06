@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from functools import singledispatch
+
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.module_loading import import_string
@@ -26,9 +28,6 @@ from graphql import assert_valid_name
 from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
-from .utils import import_single_dispatch
-
-singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):
