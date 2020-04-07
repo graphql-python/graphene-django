@@ -47,7 +47,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
         else:
             errors = ErrorType.from_errors(form.errors)
 
-            return cls(errors=errors, **form.data)
+            return cls(errors=errors)
 
     @classmethod
     def get_form(cls, root, info, **input):
