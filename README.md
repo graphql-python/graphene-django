@@ -21,6 +21,8 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 [conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
 [conda-url]: https://anaconda.org/conda-forge/graphene-django
 
+[💬 Join the community on Slack](https://join.slack.com/t/graphenetools/shared_invite/enQtOTE2MDQ1NTg4MDM1LTA4Nzk0MGU0NGEwNzUxZGNjNDQ4ZjAwNDJjMjY0OGE1ZDgxZTg4YjM2ZTc4MjE2ZTAzZjE2ZThhZTQzZTkyMmM)
+
 ## Documentation
 
 [Visit the documentation to get started!](https://docs.graphene-python.org/projects/django/en/latest/)
