@@ -14,8 +14,17 @@ You will need to install it manually, which can be done as follows:
 
 .. code:: bash
 
-    # You'll need to django-filter
+    # You'll need to install django-filter
     pip install django-filter>=2
+    
+After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        # ...
+        "django_filters",
+    ]
 
 Note: The techniques below are demoed in the `cookbook example
 app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
