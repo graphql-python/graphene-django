@@ -1,3 +1,5 @@
+.. _queries-objecttypes:
+
 Queries & ObjectTypes
 =====================
 
@@ -204,6 +206,8 @@ need to create the most basic class for this to work:
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
+
+.. _django-objecttype-get-queryset:
 
 Default QuerySet
 -----------------
