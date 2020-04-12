@@ -198,10 +198,10 @@ class ModelFormMutationTests(TestCase):
         class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
-                model = Film
+                model = Pet
                 return_field_name = "animal"
 
-        self.assertEqual(PetMutation._meta.model, Film)
+        self.assertEqual(PetMutation._meta.model, Pet)
         self.assertEqual(PetMutation._meta.return_field_name, "animal")
         self.assertIn("animal", PetMutation._meta.fields)
 
