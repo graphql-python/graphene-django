@@ -316,3 +316,63 @@ class TestDjangoListField:
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Debra"},]}
+
+    def test_get_queryset_foreign_key(self):
+        class Article(DjangoObjectType):
+            class Meta:
+                model = ArticleModel
+                fields = ("headline",)
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Rose tinted glasses
+                return queryset.exclude(headline__contains="Not so good")
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                    articles {
+                        headline
+                    }
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+        ArticleModel.objects.create(
+            headline="Not so good news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {
+            "reporters": [
+                {"firstName": "Tara", "articles": [{"headline": "Amazing news"},],},
+                {"firstName": "Debra", "articles": []},
+            ]
+        }
