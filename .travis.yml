@@ -62,6 +62,19 @@ jobs:
     - python: 3.7
       env: DJANGO=master
 
+    - python: 3.8
+      env: DJANGO=1.11
+    - python: 3.8
+      env: DJANGO=2.0
+    - python: 3.8
+      env: DJANGO=2.1
+    - python: 3.8
+      env: DJANGO=2.2
+    - python: 3.8
+      env: DJANGO=3.0
+    - python: 3.8
+      env: DJANGO=master
+
     - python: 3.7
       env: TOXENV=black,flake8
 
