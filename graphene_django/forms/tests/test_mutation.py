@@ -5,7 +5,7 @@ from py.test import raises
 
 from graphene import ObjectType, Schema, String, Field
 from graphene_django import DjangoObjectType
-from graphene_django.tests.models import Film, FilmDetails, Pet
+from graphene_django.tests.models import Film, Pet
 
 from ...settings import graphene_settings
 from ..mutation import DjangoFormMutation, DjangoModelFormMutation
@@ -39,12 +39,6 @@ class PetType(DjangoObjectType):
 class FilmType(DjangoObjectType):
     class Meta:
         model = Film
-        fields = "__all__"
-
-
-class FilmDetailsType(DjangoObjectType):
-    class Meta:
-        model = FilmDetails
         fields = "__all__"
 
 
@@ -185,23 +179,14 @@ class ModelFormMutationTests(TestCase):
         self.assertIn("client_mutation_id", PetMutation.Input._meta.fields)
         self.assertNotIn("id", PetMutation.Input._meta.fields)
 
-    def test_return_field_name_is_camelcased(self):
-        class PetMutation(DjangoModelFormMutation):
-            class Meta:
-                form_class = PetForm
-                model = FilmDetails
-
-        self.assertEqual(PetMutation._meta.model, FilmDetails)
-        self.assertEqual(PetMutation._meta.return_field_name, "filmDetails")
-
     def test_custom_return_field_name(self):
         class PetMutation(DjangoModelFormMutation):
             class Meta:
                 form_class = PetForm
-                model = Film
+                model = Pet
                 return_field_name = "animal"
 
-        self.assertEqual(PetMutation._meta.model, Film)
+        self.assertEqual(PetMutation._meta.model, Pet)
         self.assertEqual(PetMutation._meta.return_field_name, "animal")
         self.assertIn("animal", PetMutation._meta.fields)
 
