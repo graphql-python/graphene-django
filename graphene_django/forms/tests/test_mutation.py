@@ -29,6 +29,12 @@ class PetForm(forms.ModelForm):
         model = Pet
         fields = "__all__"
 
+    def clean_age(self):
+        age = self.cleaned_data["age"]
+        if age >= 99:
+            raise ValidationError("Too old")
+        return age
+
 
 class PetType(DjangoObjectType):
     class Meta:
@@ -243,6 +249,10 @@ class ModelFormMutationTests(TestCase):
                         name
                         age
                     }
+                    errors {
+                        field
+                        messages
+                    }
                 }
             }
             """
@@ -254,6 +264,42 @@ class ModelFormMutationTests(TestCase):
         pet = Pet.objects.get()
         self.assertEqual(pet.name, "Mia")
         self.assertEqual(pet.age, 10)
+
+    def test_model_form_mutation_invalid_input(self):
+        class PetMutation(DjangoModelFormMutation):
+            pet = Field(PetType)
+
+            class Meta:
+                form_class = PetForm
+
+        class Mutation(ObjectType):
+            pet_mutation = PetMutation.Field()
+
+        schema = Schema(query=MockQuery, mutation=Mutation)
+
+        result = schema.execute(
+            """ mutation PetMutation {
+                petMutation(input: { name: "Mia", age: 99 }) {
+                    pet {
+                        name
+                        age
+                    }
+                    errors {
+                        field
+                        messages
+                    }
+                }
+            }
+            """
+        )
+        self.assertIs(result.errors, None)
+        self.assertEqual(result.data["petMutation"]["pet"], None)
+        self.assertEqual(
+            result.data["petMutation"]["errors"],
+            [{"field": "age", "messages": ["Too old"],}],
+        )
+
+        self.assertEqual(Pet.objects.count(), 0)
 
     def test_model_form_mutation_mutate_invalid_form(self):
         class PetMutation(DjangoModelFormMutation):
