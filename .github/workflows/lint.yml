@@ -16,7 +16,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install tox
-    - name: Test with tox
+    - name: Run lint 💅
       run: tox
       env:
         TOXENV: flake8
