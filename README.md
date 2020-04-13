@@ -12,7 +12,7 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 [travis-url]: https://travis-ci.org/graphql-python/graphene-django
 [pypi-image]: https://img.shields.io/pypi/v/graphene-django.svg?style=flat
 [pypi-url]: https://pypi.org/project/graphene-django/
-[coveralls-image]: https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github
+[coveralls-image]: https://coveralls.io/repos/github/graphql-python/graphene-django/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/graphql-python/graphene-django?branch=master
 [conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
 [conda-url]: https://anaconda.org/conda-forge/graphene-django
