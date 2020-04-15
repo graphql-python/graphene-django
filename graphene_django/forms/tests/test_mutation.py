@@ -1,9 +1,10 @@
 import pytest
 from django import forms
+from django.test import TestCase
 from django.core.exceptions import ValidationError
 from py.test import raises
 
-from graphene import Field, ObjectType, Schema, String
+from graphene import Field, Int, ObjectType, Schema, String
 from graphene_django import DjangoObjectType
 from graphene_django.tests.models import Pet
 
@@ -22,12 +23,16 @@ def pet_type():
 
 class MyForm(forms.Form):
     text = forms.CharField()
+    another = forms.CharField(required=False)
 
     def clean_text(self):
         text = self.cleaned_data["text"]
         if text == "INVALID_INPUT":
             raise ValidationError("Invalid input")
         return text
+
+    def clean_another(self):
+        self.cleaned_data["another"] = self.cleaned_data["another"] or "defaultvalue"
 
     def save(self):
         pass
@@ -68,6 +73,83 @@ def test_has_input_fields():
             form_class = MyForm
 
     assert "text" in MyMutation.Input._meta.fields
+    assert "another" in MyMutation.Input._meta.fields
+
+
+def test_no_input_fields():
+    class MyMutation(DjangoFormMutation):
+        class Meta:
+            form_class = MyForm
+            input_fields = []
+    assert set(MyMutation.Input._meta.fields.keys()) == set(["client_mutation_id"])
+
+
+def test_filtering_input_fields():
+    class MyMutation(DjangoFormMutation):
+        class Meta:
+            form_class = MyForm
+            input_fields = ["text"]
+
+    assert "text" in  MyMutation.Input._meta.fields
+    assert "another" not in MyMutation.Input._meta.fields
+
+
+def test_select_output_fields():
+    class MyMutation(DjangoFormMutation):
+        class Meta:
+            form_class = MyForm
+            fields = ["text"]
+    assert "text" in MyMutation._meta.fields
+    assert "another" not in MyMutation._meta.fields
+
+
+def test_filtering_output_fields_exclude():
+    class FormWithWeirdOutput(MyForm):
+        """Weird form that has extra cleaned_data we want to expose"""
+        text = forms.CharField()
+        another = forms.CharField(required=False)
+        def clean(self):
+            super(FormWithWeirdOutput, self).clean()
+            self.cleaned_data["some_integer"] = 5
+            return self.cleaned_data
+
+    class MyMutation(DjangoFormMutation):
+        class Meta:
+            form_class = FormWithWeirdOutput
+            exclude = ["text"]
+
+        some_integer = Int()
+
+    assert "text" in MyMutation.Input._meta.fields
+    assert "another" in MyMutation.Input._meta.fields
+
+    assert "text" not in MyMutation._meta.fields
+    assert "another" in MyMutation._meta.fields
+    assert "some_integer" in MyMutation._meta.fields
+
+    class Mutation(ObjectType):
+        my_mutation = MyMutation.Field()
+
+    schema = Schema(query=MockQuery, mutation=Mutation)
+
+    result = schema.execute(
+        """ mutation MyMutation {
+            myMutation(input: { text: "VALID_INPUT" }) {
+                errors {
+                    field
+                    messages
+                }
+                another
+                someInteger
+            }
+        }
+        """
+    )
+
+    assert result.errors is None
+    assert result.data["myMutation"]["errors"] == []
+    assert result.data["myMutation"]["someInteger"] == 5
+    assert result.data["myMutation"]["another"] == "defaultvalue"
 
 
 def test_mutation_error_camelcased(pet_type, graphene_settings):

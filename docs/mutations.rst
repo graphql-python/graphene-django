@@ -63,9 +63,15 @@ DjangoFormMutation
     class MyForm(forms.Form):
         name = forms.CharField()
 
+        def clean(self):
+            self.cleaned_data["constructed_output"] = "an item"
+
     class MyMutation(DjangoFormMutation):
         class Meta:
             form_class = MyForm
+            input_fields = "__all__"
+
+        constructed_output = graphene.String()
 
 ``MyMutation`` will automatically receive an ``input`` argument. This argument should be a ``dict`` where the key is ``name`` and the value is a string.
 

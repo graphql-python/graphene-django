@@ -1,4 +1,5 @@
 # from django import forms
+import warnings
 from collections import OrderedDict
 
 import graphene
@@ -71,6 +72,31 @@ class DjangoFormMutationOptions(MutationOptions):
 
 
 class DjangoFormMutation(BaseDjangoFormMutation):
+    """Create a mutation based on a Django Form.
+
+    The form's fields will, by default, be set as inputs. Specify ``input_fields`` to limit to a
+    subset.
+
+    You can use ``fields`` and ``exclude`` to limit output fields. Use ``fields = '__all__'`` to
+    select all fields.
+
+    Fields are considered to be required based on the ``required`` attribute of the form.
+
+    Meta fields:
+        form_class (class): the model to base form off of
+        input_fields (List[str], optional): limit the input fields of the form to be used (by default uses all of them)
+        fields (List[str], optional): only output the subset of fields as output (based on ``cleaned_data``), use
+            ``__all__`` to get all fields
+        exclude (List[str], optional): remove specified fields from output (uses ``cleaned_data``)
+
+    The default output of the mutation will use ``form.cleaned_data`` as params.
+
+    Override ``perform_mutate(cls, form, info) -> DjangoFormMutation`` to customize this behavior.
+
+    NOTE: ``only_fields`` and ``exclude_fields`` are still supported for backwards compatibility
+    but are deprecated and will be removed in a future version.
+    """
+
     class Meta:
         abstract = True
 
@@ -78,15 +104,37 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls, form_class=None, only_fields=(), exclude_fields=(), **options
+        cls, form_class=None, only_fields=(), exclude_fields=(), 
+        fields=None, exclude=(), input_fields=None,
+        **options
     ):
 
         if not form_class:
             raise Exception("form_class is required for DjangoFormMutation")
 
         form = form_class()
-        input_fields = fields_for_form(form, only_fields, exclude_fields)
-        output_fields = fields_for_form(form, only_fields, exclude_fields)
+        if (any([fields, exclude, input_fields])
+             and (only_fields or exclude_fields)):
+            raise Exception("Cannot specify legacy `only_fields` or `exclude_fields` params with"
+                            " `only`, `exclude`, or `input_fields` params")
+        if only_fields or exclude_fields:
+            warnings.warn(
+                "only_fields/exclude_fields have been deprecated, use "
+                "input_fields or only/exclude (for output fields)"
+                "instead",
+                DeprecationWarning
+            )
+        if not fields or exclude:
+            warnings.warn(
+                "a future version of graphene-django will require fields or exclude."
+                " Set fields='__all__' to allow all fields through.",
+                DeprecationWarning
+            )
+        if not input_fields and input_fields is not None:
+            input_fields = {}
+        else:
+            input_fields = fields_for_form(form, only_fields or input_fields, exclude_fields)
+        output_fields = fields_for_form(form, only_fields or fields, exclude_fields or exclude)
 
         _meta = DjangoFormMutationOptions(cls)
         _meta.form_class = form_class
