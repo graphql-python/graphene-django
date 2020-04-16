@@ -1,15 +1,15 @@
 from functools import partial, reduce
 
 from django.db.models.query import QuerySet
-from graphene.types import Field, List
 
 from graphene import NonNull
+from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphene_django.utils.utils import auth_resolver
 from promise import Promise
 
-from graphene_django.utils.utils import auth_resolver
 from .settings import graphene_settings
 from .utils import maybe_queryset
 
@@ -140,16 +140,16 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def connection_resolver(
-            cls,
-            resolver,
-            connection,
-            default_manager,
-            queryset_resolver,
-            max_limit,
-            enforce_first_or_last,
-            root,
-            info,
-            **args
+        cls,
+        resolver,
+        connection,
+        default_manager,
+        queryset_resolver,
+        max_limit,
+        enforce_first_or_last,
+        root,
+        info,
+        **args
     ):
         first = args.get("first")
         last = args.get("last")
