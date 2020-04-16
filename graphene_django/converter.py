@@ -1,11 +1,14 @@
 from collections import OrderedDict
+
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.module_loading import import_string
-
 from graphene import (
     ID,
+    UUID,
     Boolean,
+    Date,
+    DateTime,
     Dynamic,
     Enum,
     Field,
@@ -14,18 +17,15 @@ from graphene import (
     List,
     NonNull,
     String,
-    UUID,
-    DateTime,
-    Date,
     Time,
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
 from graphql import assert_valid_name
 
-from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
-from .fields import DjangoListField, DjangoConnectionField
+from .fields import DjangoConnectionField, DjangoListField
+from .settings import graphene_settings
 from .utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()

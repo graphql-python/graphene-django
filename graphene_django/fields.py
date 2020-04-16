@@ -1,13 +1,12 @@
 from functools import partial, reduce
 
 from django.db.models.query import QuerySet
-
 from graphene import NonNull
-from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
+from graphene.types import Field, List
 from graphene.utils.get_unbound_function import get_unbound_function
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from graphene_django.utils.utils import auth_resolver
+from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
 
 from .settings import graphene_settings

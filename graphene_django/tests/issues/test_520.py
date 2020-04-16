@@ -2,20 +2,17 @@
 
 import datetime
 
-from django import forms
-
 import graphene
-
+from django import forms
 from graphene import Field, ResolveInfo
 from graphene.types.inputobjecttype import InputObjectType
-from py.test import raises
-from py.test import mark
+from py.test import mark, raises
 from rest_framework import serializers
 
-from ...types import DjangoObjectType
+from ...forms.mutation import DjangoFormMutation
 from ...rest_framework.models import MyFakeModel
 from ...rest_framework.mutation import SerializerMutation
-from ...forms.mutation import DjangoFormMutation
+from ...types import DjangoObjectType
 
 
 class MyModelSerializer(serializers.ModelSerializer):

@@ -1,10 +1,12 @@
 import itertools
 
 from django.db import models
-from django_filters import Filter, MultipleChoiceFilter, VERSION
-from django_filters.filterset import BaseFilterSet, FilterSet
-from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
-
+from django_filters import VERSION, Filter, MultipleChoiceFilter
+from django_filters.filterset import (
+    FILTER_FOR_DBFIELD_DEFAULTS,
+    BaseFilterSet,
+    FilterSet,
+)
 from graphql_relay.node.node import from_global_id
 
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField

@@ -2,10 +2,9 @@ import graphene
 import pytest
 from django.db import models
 from graphene import Schema
-from rest_framework import serializers
-
 from graphene_django import DjangoObjectType
 from graphene_django.rest_framework.mutation import SerializerMutation
+from rest_framework import serializers
 
 pytestmark = pytest.mark.django_db
 

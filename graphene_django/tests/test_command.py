@@ -1,10 +1,10 @@
 from textwrap import dedent
 
-from django.core import management
-from mock import mock_open, patch
 from six import StringIO
 
+from django.core import management
 from graphene import ObjectType, Schema, String
+from mock import mock_open, patch
 
 
 @patch("graphene_django.management.commands.graphql_schema.Command.save_json_file")

@@ -1,26 +1,25 @@
-import pytest
 from collections import namedtuple
+
+import graphene
+import pytest
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from graphene import NonNull
+from graphene.relay import ConnectionField, Node
+from graphene.types.datetime import Date, DateTime, Time
+from graphene.types.json import JSONString
 from py.test import raises
 
-import graphene
-from graphene.relay import ConnectionField, Node
-from graphene.types.datetime import DateTime, Date, Time
-from graphene.types.json import JSONString
-
-from ..compat import JSONField, ArrayField, HStoreField, RangeField, MissingType
+from ..compat import ArrayField, HStoreField, JSONField, MissingType, RangeField
 from ..converter import (
     convert_django_field,
     convert_django_field_with_choices,
     generate_enum_name,
 )
 from ..registry import Registry
-from ..types import DjangoObjectType
 from ..settings import graphene_settings
+from ..types import DjangoObjectType
 from .models import Article, Film, FilmDetails, Reporter
-
 
 # from graphene.core.types.custom_scalars import DateTime, Time, JSONString
 

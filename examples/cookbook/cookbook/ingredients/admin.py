@@ -1,6 +1,5 @@
-from django.contrib import admin
-
 from cookbook.ingredients.models import Category, Ingredient
+from django.contrib import admin
 
 
 @admin.register(Ingredient)

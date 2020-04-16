@@ -1,10 +1,9 @@
+import graphene
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
 
-import graphene
-
-from ..registry import get_global_registry
 from ..converter import convert_choices_to_named_enum_with_descriptions
+from ..registry import get_global_registry
 from ..utils import import_single_dispatch
 from .types import DictType
 

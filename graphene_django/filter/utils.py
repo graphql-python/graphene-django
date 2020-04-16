@@ -1,6 +1,7 @@
 import six
 
 from django_filters.utils import get_model_field
+
 from .filterset import custom_filterset_factory, setup_filterset
 
 

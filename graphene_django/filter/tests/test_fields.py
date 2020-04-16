@@ -4,7 +4,6 @@ from textwrap import dedent
 import pytest
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
-
 from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType

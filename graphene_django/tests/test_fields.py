@@ -1,14 +1,14 @@
 import datetime
+from unittest import TestCase
 
 import pytest
-
-from graphene import List, NonNull, ObjectType, Schema, String
-from mock import mock
-from unittest import TestCase
 from django.core.exceptions import PermissionDenied
-from graphene_django.fields import DjangoField, DataLoaderField
-from promise.dataloader import DataLoader
+from graphene import List, NonNull, ObjectType, Schema, String
+from graphene_django.fields import DataLoaderField, DjangoField
+from mock import mock
 from promise import Promise
+from promise.dataloader import DataLoader
+
 from ..fields import DjangoListField
 from ..types import DjangoObjectType
 from .models import Article as ArticleModel

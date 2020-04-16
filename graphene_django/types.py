@@ -3,16 +3,16 @@ from collections import OrderedDict
 from functools import partial
 
 import six
-import graphene
 
+import graphene
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 from graphene import Field, NonNull
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
-
 from graphene_django.utils.utils import auth_resolver
+
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .settings import graphene_settings
@@ -29,7 +29,7 @@ ALL_FIELDS = "__all__"
 
 
 def construct_fields(
-        model, registry, only_fields, exclude_fields, convert_choices_to_enum
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum
 ):
     _model_fields = get_model_fields(model)
 
@@ -71,30 +71,16 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
 
         if hasattr(model, name):
             warnings.warn(
-                (
-                    'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
-                    "but it's not a model field so Graphene cannot determine what type it should be. "
-                    'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
-                ).format(
-                    field_name=name,
-                    app_label=model._meta.app_label,
-                    object_name=model._meta.object_name,
-                    type_=type_,
-                )
-            )
+                ('Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
+                 "but it's not a model field so Graphene cannot determine what type it should be. "
+                 'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.').format(
+                    field_name=name, app_label=model._meta.app_label, object_name=model._meta.object_name, type_=type_, ))
 
         else:
             warnings.warn(
-                (
-                    'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
-                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
-                ).format(
-                    field_name=name,
-                    app_label=model._meta.app_label,
-                    object_name=model._meta.object_name,
-                    type_=type_,
-                )
-            )
+                ('Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                 'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.').format(
+                    field_name=name, app_label=model._meta.app_label, object_name=model._meta.object_name, type_=type_, ))
 
     # Validate exclude fields
     for name in exclude_fields or ():
@@ -114,16 +100,9 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
         else:
             if not hasattr(model, name):
                 warnings.warn(
-                    (
-                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
-                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
-                    ).format(
-                        field_name=name,
-                        app_label=model._meta.app_label,
-                        object_name=model._meta.object_name,
-                        type_=type_,
-                    )
-                )
+                    ('Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
+                     'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect').format(
+                        field_name=name, app_label=model._meta.app_label, object_name=model._meta.object_name, type_=type_, ))
 
 
 def get_auth_resolver(name, permissions, resolver=None):

@@ -3,10 +3,9 @@ from textwrap import dedent
 
 import pytest
 from django.db import models
-from mock import patch
-
-from graphene import Interface, ObjectType, Schema, Connection, String, Field
+from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
+from mock import patch
 
 from .. import registry
 from ..settings import graphene_settings

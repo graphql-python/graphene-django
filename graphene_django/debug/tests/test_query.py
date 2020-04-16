@@ -1,6 +1,5 @@
-import pytest
-
 import graphene
+import pytest
 from graphene.relay import Node
 from graphene_django import DjangoConnectionField, DjangoObjectType
 

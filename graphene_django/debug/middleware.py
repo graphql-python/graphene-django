@@ -1,5 +1,4 @@
 from django.db import connections
-
 from promise import Promise
 
 from .sql.tracking import unwrap_cursor, wrap_cursor
