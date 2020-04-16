@@ -7,7 +7,7 @@ from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 
 import graphene
-from graphene import Field
+from graphene import Field, NonNull
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
