@@ -3,6 +3,7 @@ from collections import OrderedDict
 from functools import partial
 
 import six
+from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 
 import graphene
