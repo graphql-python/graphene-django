@@ -10,8 +10,9 @@ from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
 from promise import Promise
 
+from graphene_django.utils.utils import auth_resolver
 from .settings import graphene_settings
-from .utils import maybe_queryset, auth_resolver
+from .utils import maybe_queryset
 
 
 class DjangoListField(Field):

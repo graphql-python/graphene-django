@@ -12,10 +12,11 @@ from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
 
+from graphene_django.utils.utils import auth_resolver
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .settings import graphene_settings
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model, camelize, auth_resolver
+from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model, camelize
 
 if six.PY3:
     from typing import Type
