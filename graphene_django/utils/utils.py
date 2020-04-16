@@ -5,7 +5,6 @@ from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.db.models.manager import Manager
 
-
 # from graphene.utils import LazyList
 from graphene.types.resolver import get_default_resolver
 from graphene.utils.get_unbound_function import get_unbound_function

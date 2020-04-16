@@ -99,6 +99,7 @@ class FormMutationTests(TestCase):
         class MyMutation(DjangoFormMutation):
             class Meta:
                 form_class = MyForm
+                mirror_input = True
 
         class Mutation(ObjectType):
             my_mutation = MyMutation.Field()
@@ -128,6 +129,7 @@ class FormMutationTests(TestCase):
         class MyMutation(DjangoFormMutation):
             class Meta:
                 form_class = MyForm
+                mirror_input = True
 
         class Mutation(ObjectType):
             my_mutation = MyMutation.Field()

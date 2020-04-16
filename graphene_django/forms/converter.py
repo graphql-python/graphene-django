@@ -8,7 +8,6 @@ from graphene_django.converter import get_choices
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from ..utils import import_single_dispatch
 
-
 singledispatch = import_single_dispatch()
 
 

@@ -11,7 +11,6 @@ from graphene.relay import Node
 from .. import registry
 from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
-from ..converter import convert_choice_field_to_enum
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -214,7 +213,6 @@ def with_local_registry(func):
 @with_local_registry
 def test_django_objecttype_only_fields():
     with pytest.warns(PendingDeprecationWarning):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -238,7 +236,6 @@ def test_django_objecttype_fields():
 @with_local_registry
 def test_django_objecttype_only_fields_and_fields():
     with pytest.raises(Exception):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -260,7 +257,6 @@ def test_django_objecttype_all_fields():
 @with_local_registry
 def test_django_objecttype_exclude_fields():
     with pytest.warns(PendingDeprecationWarning):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -284,7 +280,6 @@ def test_django_objecttype_exclude():
 @with_local_registry
 def test_django_objecttype_exclude_fields_and_exclude():
     with pytest.raises(Exception):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -295,7 +290,6 @@ def test_django_objecttype_exclude_fields_and_exclude():
 @with_local_registry
 def test_django_objecttype_exclude_and_only():
     with pytest.raises(AssertionError):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -306,14 +300,12 @@ def test_django_objecttype_exclude_and_only():
 @with_local_registry
 def test_django_objecttype_fields_exclude_type_checking():
     with pytest.raises(TypeError):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = "foo"
 
     with pytest.raises(TypeError):
-
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -323,17 +315,15 @@ def test_django_objecttype_fields_exclude_type_checking():
 @with_local_registry
 def test_django_objecttype_fields_exist_on_model():
     with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = ["first_name", "foo", "email"]
 
     with pytest.warns(
-        UserWarning,
-        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+            UserWarning,
+            match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
     ) as record:
-
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -341,7 +331,6 @@ def test_django_objecttype_fields_exist_on_model():
 
     # Don't warn if selecting a custom field
     with pytest.warns(None) as record:
-
         class Reporter3(DjangoObjectType):
             custom_field = String()
 
@@ -355,10 +344,9 @@ def test_django_objecttype_fields_exist_on_model():
 @with_local_registry
 def test_django_objecttype_exclude_fields_exist_on_model():
     with pytest.warns(
-        UserWarning,
-        match=r"Django model .* does not have a field or attribute named .*",
+            UserWarning,
+            match=r"Django model .* does not have a field or attribute named .*",
     ):
-
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -366,10 +354,9 @@ def test_django_objecttype_exclude_fields_exist_on_model():
 
     # Don't warn if selecting a custom field
     with pytest.warns(
-        UserWarning,
-        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+            UserWarning,
+            match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
     ):
-
         class Reporter3(DjangoObjectType):
             custom_field = String()
 
@@ -379,7 +366,6 @@ def test_django_objecttype_exclude_fields_exist_on_model():
 
     # Don't warn on exclude fields
     with pytest.warns(None) as record:
-
         class Reporter4(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -619,6 +605,7 @@ def test_permission_resolver():
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_headline(MyType, Info())
@@ -635,6 +622,7 @@ def test_resolver_without_permission():
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_headline(MyType, Info())
@@ -651,6 +639,7 @@ def test_permission_resolver_to_field():
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_extra_field(MyType, Info())
@@ -667,6 +656,7 @@ def test_resolver_to_field_without_permission():
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_extra_field(MyType, Info())
