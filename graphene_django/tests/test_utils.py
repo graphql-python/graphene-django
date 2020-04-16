@@ -1,6 +1,7 @@
 from django.utils.translation import gettext_lazy
 
-from ..utils import camelize, get_model_fields, has_permissions
+from graphene_django.utils.utils import has_permissions
+from ..utils import camelize, get_model_fields
 from .models import Film, Reporter
 
 

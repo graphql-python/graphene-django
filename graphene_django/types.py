@@ -345,7 +345,7 @@ class DjangoObjectType(ObjectType):
     def __set_as_nullable__(cls, field_permissions, model, registry):
         """Set restricted fields as nullable"""
         django_fields = yank_fields_from_attrs(
-            construct_fields(model, registry, field_permissions.keys(), ()),
+            construct_fields(model, registry, field_permissions.keys(), (), True),
             _as=Field,
         )
         for name, field in django_fields.items():
