@@ -163,6 +163,17 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         )
 
     @classmethod
+    def mutate_and_get_payload(cls, root, info, **input):
+        form = cls.get_form(root, info, **input)
+
+        if form.is_valid():
+            return cls.perform_mutate(form, info)
+        else:
+            errors = ErrorType.from_errors(form.errors)
+
+            return cls(errors=errors)
+
+    @classmethod
     def perform_mutate(cls, form, info):
         obj = form.save()
         kwargs = {cls._meta.return_field_name: obj}
