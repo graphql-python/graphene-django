@@ -16,14 +16,18 @@ class DjangoDebugContext(object):
     def get_debug_promise(self):
         if not self.debug_promise:
             self.debug_promise = Promise.all(self.promises)
+            self.promises = []
         return self.debug_promise.then(self.on_resolve_all_promises)
 
     def on_resolve_all_promises(self, values):
+        if self.promises:
+            self.debug_promise = None
+            return self.get_debug_promise()
         self.disable_instrumentation()
         return self.object
 
     def add_promise(self, promise):
-        if self.debug_promise and not self.debug_promise.is_fulfilled:
+        if self.debug_promise:
             self.promises.append(promise)
 
     def enable_instrumentation(self):

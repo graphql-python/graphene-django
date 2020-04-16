@@ -1,6 +1,3 @@
 import graphene
 
-
-class ErrorType(graphene.ObjectType):
-    field = graphene.String()
-    messages = graphene.List(graphene.String)
+from ..types import ErrorType  # noqa Import ErrorType for backwards compatability

@@ -4,6 +4,7 @@ from rest_framework import serializers
 import graphene
 
 from ..registry import get_global_registry
+from ..converter import convert_choices_to_named_enum_with_descriptions
 from ..utils import import_single_dispatch
 from .types import DictType
 
@@ -18,14 +19,17 @@ def get_graphene_type_from_serializer_field(field):
     )
 
 
-def convert_serializer_field(field, is_input=True):
+def convert_serializer_field(field, is_input=True, convert_choices_to_enum=True):
     """
     Converts a django rest frameworks field to a graphql field
     and marks the field as required if we are creating an input type
     and the field itself is required
     """
 
-    graphql_type = get_graphene_type_from_serializer_field(field)
+    if isinstance(field, serializers.ChoiceField) and not convert_choices_to_enum:
+        graphql_type = graphene.String
+    else:
+        graphql_type = get_graphene_type_from_serializer_field(field)
 
     args = []
     kwargs = {"description": field.help_text, "required": is_input and field.required}
@@ -57,18 +61,27 @@ def convert_serializer_field(field, is_input=True):
 
 
 def convert_serializer_to_input_type(serializer_class):
+    cached_type = convert_serializer_to_input_type.cache.get(
+        serializer_class.__name__, None
+    )
+    if cached_type:
+        return cached_type
     serializer = serializer_class()
 
     items = {
         name: convert_serializer_field(field)
         for name, field in serializer.fields.items()
     }
-
-    return type(
+    ret_type = type(
         "{}Input".format(serializer.__class__.__name__),
         (graphene.InputObjectType,),
         items,
     )
+    convert_serializer_to_input_type.cache[serializer_class.__name__] = ret_type
+    return ret_type
+
+
+convert_serializer_to_input_type.cache = {}
 
 
 @get_graphene_type_from_serializer_field.register(serializers.Field)
@@ -121,7 +134,6 @@ def convert_serializer_field_to_time(field):
 @get_graphene_type_from_serializer_field.register(serializers.ListField)
 def convert_serializer_field_to_list(field, is_input=True):
     child_type = get_graphene_type_from_serializer_field(field.child)
-
     return (graphene.List, child_type)
 
 
@@ -136,5 +148,13 @@ def convert_serializer_field_to_jsonstring(field):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.MultipleChoiceField)
-def convert_serializer_field_to_list_of_string(field):
-    return (graphene.List, graphene.String)
+def convert_serializer_field_to_list_of_enum(field):
+    child_type = convert_serializer_field_to_enum(field)
+    return (graphene.List, child_type)
+
+
+@get_graphene_type_from_serializer_field.register(serializers.ChoiceField)
+def convert_serializer_field_to_enum(field):
+    # enums require a name
+    name = field.field_name or field.source or "Choices"
+    return convert_choices_to_named_enum_with_descriptions(name, field.choices)

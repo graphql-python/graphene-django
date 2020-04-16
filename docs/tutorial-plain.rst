@@ -1,12 +1,9 @@
-Introduction tutorial - Graphene and Django
+Basic Tutorial
 ===========================================
 
-Graphene has a number of additional features that are designed to make
-working with Django *really simple*.
-
-Our primary focus here is to give a good understanding of how to connect models from Django ORM to graphene object types.
-
-A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__ documentation first.
+Graphene Django has a number of additional features that are designed to make
+working with Django easy. Our primary focus in this tutorial is to give a good
+understanding of how to connect models from Django ORM to graphene object types.
 
 Set up the Django project
 -------------------------
@@ -91,7 +88,7 @@ Don't forget to create & run migrations:
 
     python manage.py makemigrations
     python manage.py migrate
-    
+
 
 Load some test data
 ^^^^^^^^^^^^^^^^^^^
@@ -108,7 +105,7 @@ following:
     $ python ./manage.py loaddata ingredients
 
     Installed 6 object(s) from 1 fixture(s)
-    
+
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
 create a login for yourself too (``./manage.py createsuperuser``).
@@ -255,7 +252,7 @@ aforementioned GraphiQL we specify that on the parameters with ``graphiql=True``
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
     ]
 
 
@@ -273,7 +270,7 @@ as explained above, we can do so here using:
 
     urlpatterns = [
         url(r'^admin/', admin.site.urls),
-        url(r'^graphql', GraphQLView.as_view(graphiql=True, schema=schema)),
+        url(r'^graphql$', GraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 
@@ -289,7 +286,7 @@ from the command line.
     $ python ./manage.py runserver
 
     Performing system checks...
-    Django version 1.9, using settings 'cookbook.settings'
+    Django version 1.11, using settings 'cookbook.settings'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
@@ -420,74 +417,17 @@ Getting single objects
 So far, we have been able to fetch list of objects and follow relation. But what about single objects?
 
 We can update our schema to support that, by adding new query for ``ingredient`` and ``category`` and adding arguments, so we can query for specific objects.
+Add the **Highlighted** lines to ``cookbook/ingredients/schema.py``
 
-.. code:: python
-
-  import graphene
-
-  from graphene_django.types import DjangoObjectType
-
-  from cookbook.ingredients.models import Category, Ingredient
-
-
-  class CategoryType(DjangoObjectType):
-      class Meta:
-          model = Category
-
-
-  class IngredientType(DjangoObjectType):
-      class Meta:
-          model = Ingredient
-
-
-  class Query(object):
-      category = graphene.Field(CategoryType,
-                                id=graphene.Int(),
-                                name=graphene.String())
-      all_categories = graphene.List(CategoryType)
-
-
-      ingredient = graphene.Field(IngredientType,
-                                  id=graphene.Int(),
-                                  name=graphene.String())
-      all_ingredients = graphene.List(IngredientType)
-
-      def resolve_all_categories(self, info, **kwargs):
-          return Category.objects.all()
-
-      def resolve_all_ingredients(self, info, **kwargs):
-          return Ingredient.objects.all()
-
-      def resolve_category(self, info, **kwargs):
-          id = kwargs.get('id')
-          name = kwargs.get('name')
-
-          if id is not None:
-              return Category.objects.get(pk=id)
-
-          if name is not None:
-              return Category.objects.get(name=name)
-
-          return None
-
-      def resolve_ingredient(self, info, **kwargs):
-          id = kwargs.get('id')
-          name = kwargs.get('name')
-
-          if id is not None:
-              return Ingredient.objects.get(pk=id)
-
-          if name is not None:
-              return Ingredient.objects.get(name=name)
-
-          return None
+.. literalinclude:: schema.py
+  :emphasize-lines: 19-21,25-27,36-58
 
 Now, with the code in place, we can query for single objects.
 
 For example, lets query ``category``:
 
 
-.. code:: 
+.. code::
 
     query {
       category(id: 1) {
@@ -536,3 +476,6 @@ Summary
 As you can see, GraphQL is very powerful but there are a lot of repetitions in our example. We can do a lot of improvements by adding layers of abstraction on top of ``graphene-django``.
 
 If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the **relay tutorial.**
+
+A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__
+documentation but it is not essential to understand and use Graphene-Django in your project.

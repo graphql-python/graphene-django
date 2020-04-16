@@ -13,9 +13,9 @@ back to the defaults.
 """
 from __future__ import unicode_literals
 
+import six
 from django.conf import settings
 from django.test.signals import setting_changed
-from django.utils import six
 
 try:
     import importlib  # Available in Python 3.1+
@@ -28,13 +28,17 @@ except ImportError:
 DEFAULTS = {
     "SCHEMA": None,
     "SCHEMA_OUTPUT": "schema.json",
-    "SCHEMA_INDENT": None,
+    "SCHEMA_INDENT": 2,
     "MIDDLEWARE": (),
     # Set to True if the connection fields must have
     # either the first or last argument
     "RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST": False,
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
+    "CAMELCASE_ERRORS": False,
+    # Set to True to enable v3 naming convention for choice field Enum's
+    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
+    "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
 }
 
 if settings.DEBUG:
