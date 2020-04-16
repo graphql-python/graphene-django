@@ -1,12 +1,13 @@
-import functools
+import os
 import importlib
 import json
-import os
+import functools
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import autoreload
-from graphene_django.settings import graphene_settings
+
 from graphql import print_schema
+from graphene_django.settings import graphene_settings
 
 
 class CommandArguments(BaseCommand):
@@ -83,7 +84,7 @@ class Command(CommandArguments):
     def handle(self, *args, **options):
         options_schema = options.get("schema")
 
-        if options_schema and isinstance(options_schema, str):
+        if options_schema and type(options_schema) is str:
             module_str, schema_name = options_schema.rsplit(".", 1)
             mod = importlib.import_module(module_str)
             schema = getattr(mod, schema_name)

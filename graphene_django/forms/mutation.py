@@ -1,10 +1,10 @@
 # from django import forms
 from collections import OrderedDict
-
 import graphene
 from graphene import Field, InputField
 from graphene.relay.mutation import ClientIDMutation
 from graphene.types.mutation import MutationOptions
+
 # from graphene.types.inputobjecttype import (
 #     InputObjectTypeOptions,
 #     InputObjectType,
@@ -22,8 +22,8 @@ def fields_for_form(form, only_fields, exclude_fields):
     for name, field in form.fields.items():
         is_not_in_only = only_fields and name not in only_fields
         is_excluded = (
-            name
-            in exclude_fields  # or
+                name
+                in exclude_fields  # or
             # name in already_created_fields
         )
 

@@ -1,10 +1,11 @@
 from django import forms
-from django.core.exceptions import ValidationError
 from django.test import TestCase
-from graphene import Field, ObjectType, Schema, String
+from django.core.exceptions import ValidationError
+from py.test import raises
+
+from graphene import ObjectType, Schema, String, Field
 from graphene_django import DjangoObjectType
 from graphene_django.tests.models import Film, Pet
-from py.test import raises
 
 from ...settings import graphene_settings
 from ..mutation import DjangoFormMutation, DjangoModelFormMutation

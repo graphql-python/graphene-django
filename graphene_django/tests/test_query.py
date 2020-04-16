@@ -1,21 +1,23 @@
 import base64
 import datetime
 
-import graphene
 import pytest
 from django.db import models
-from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
-from graphene.relay import Node
-from graphql_relay import to_global_id
 from py.test import raises
 
-from ..compat import JSONField, MissingType
-from ..fields import DjangoConnectionField
-from ..settings import graphene_settings
-from ..types import DjangoObjectType
+from django.db.models import Q
+
+from graphql_relay import to_global_id
+import graphene
+from graphene.relay import Node
+
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Reporter
+from ..compat import MissingType, JSONField
+from ..fields import DjangoConnectionField
+from ..types import DjangoObjectType
+from ..settings import graphene_settings
+from .models import Article, CNNReporter, Reporter, Film, FilmDetails
 
 pytestmark = pytest.mark.django_db
 

@@ -1,19 +1,20 @@
 from django import forms
+from py.test import raises
+
 from graphene import (
+    String,
+    Int,
+    Boolean,
+    Float,
     ID,
     UUID,
-    Boolean,
-    Date,
-    DateTime,
-    Enum,
-    Float,
-    Int,
     List,
     NonNull,
-    String,
+    DateTime,
+    Date,
     Time,
+    Enum,
 )
-from py.test import raises
 
 from ..converter import convert_form_field, convert_form_field_with_choices
 

@@ -3,16 +3,16 @@ import json
 import re
 
 import six
-
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
+from django.views.decorators.csrf import ensure_csrf_cookie
+
 from graphql import get_default_backend
-from graphql.error import GraphQLError
 from graphql.error import format_error as format_graphql_error
+from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 

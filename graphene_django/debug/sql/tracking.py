@@ -6,7 +6,6 @@ from threading import local
 from time import time
 
 import six
-
 from django.utils.encoding import force_str
 
 from .types import DjangoDebugSQL

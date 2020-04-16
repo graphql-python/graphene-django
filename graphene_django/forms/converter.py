@@ -1,23 +1,12 @@
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
-from graphene import (
-    ID,
-    UUID,
-    Boolean,
-    Date,
-    DateTime,
-    Enum,
-    Float,
-    Int,
-    List,
-    String,
-    Time,
-)
-from graphene.utils.str_converters import to_camel_case
-from graphene_django.converter import get_choices
 
-from ..utils import import_single_dispatch
+from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time, Enum
+from graphene.utils.str_converters import to_camel_case
+
+from graphene_django.converter import get_choices
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
+from ..utils import import_single_dispatch
 
 singledispatch = import_single_dispatch()
 

@@ -1,5 +1,6 @@
 import django_filters
 from django_filters import OrderingFilter
+
 from graphene_django.tests.models import Article, Pet, Reporter
 
 
