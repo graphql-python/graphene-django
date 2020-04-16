@@ -151,25 +151,25 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
 class DjangoObjectType(ObjectType):
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            model=None,
-            registry=None,
-            skip_registry=False,
-            only_fields=(),  # deprecated in favour of `fields`
-            fields=(),
-            exclude_fields=(),  # deprecated in favour of `exclude`
-            exclude=(),
-            filter_fields=None,
-            filterset_class=None,
-            connection=None,
-            connection_class=None,
-            use_connection=None,
-            interfaces=(),
-            convert_choices_to_enum=True,
-            field_to_permission=None,
-            permission_to_field=None,
-            _meta=None,
-            **options
+        cls,
+        model=None,
+        registry=None,
+        skip_registry=False,
+        only_fields=(),  # deprecated in favour of `fields`
+        fields=(),
+        exclude_fields=(),  # deprecated in favour of `exclude`
+        exclude=(),
+        filter_fields=None,
+        filterset_class=None,
+        connection=None,
+        connection_class=None,
+        use_connection=None,
+        interfaces=(),
+        convert_choices_to_enum=True,
+        field_to_permission=None,
+        permission_to_field=None,
+        _meta=None,
+        **options
     ):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
