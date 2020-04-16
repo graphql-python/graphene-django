@@ -3,11 +3,11 @@ from collections import OrderedDict
 from functools import partial
 
 import six
-import graphene
-
 from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
-from graphene import Field, NonNull
+
+import graphene
+from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -25,11 +25,13 @@ from .utils import (
 
 if six.PY3:
     from typing import Type
+
+
 ALL_FIELDS = "__all__"
 
 
 def construct_fields(
-        model, registry, only_fields, exclude_fields, convert_choices_to_enum
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum
 ):
     _model_fields = get_model_fields(model)
 
@@ -147,23 +149,6 @@ class DjangoObjectTypeOptions(ObjectTypeOptions):
 
 
 class DjangoObjectType(ObjectType):
-    """
-    DjangoObjectType inheritance to handle field authorization
-    Accepts field's permissions description as:
-
-    class Meta:
-
-        field_to_permission = {
-            'restricted_field': ('permission1', 'permission2')
-        }
-
-        permission_to_field = {
-            'permission': ('restricted_field_1', 'restricted_field_2')
-        }
-
-    At least one of the permissions must be accomplished in order to resolve the field.
-    """
-
     @classmethod
     def __init_subclass_with_meta__(
             cls,
