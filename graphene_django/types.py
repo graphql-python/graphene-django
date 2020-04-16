@@ -16,7 +16,12 @@ from graphene_django.utils.utils import auth_resolver
 from .converter import convert_django_field_with_choices
 from .registry import Registry, get_global_registry
 from .settings import graphene_settings
-from .utils import DJANGO_FILTER_INSTALLED, get_model_fields, is_valid_django_model, camelize
+from .utils import (
+    DJANGO_FILTER_INSTALLED,
+    camelize,
+    get_model_fields,
+    is_valid_django_model,
+)
 
 if six.PY3:
     from typing import Type
