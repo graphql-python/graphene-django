@@ -52,6 +52,7 @@ class FilmType(DjangoObjectType):
 
 def test_needs_form_class():
     with raises(Exception) as exc:
+
         class MyMutation(DjangoFormMutation):
             pass
 
@@ -180,7 +181,7 @@ class FormMutationTests(TestCase):
         class MyMutation(DjangoFormMutation):
             class Meta:
                 form_class = MyForm
-                exclude_fields = ['text']
+                exclude_fields = ["text"]
 
         self.assertNotIn("text", MyMutation.Input._meta.fields)
         self.assertIn("client_mutation_id", MyMutation.Input._meta.fields)
@@ -331,7 +332,7 @@ class ModelFormMutationTests(TestCase):
         self.assertEqual(result.data["petMutation"]["pet"], None)
         self.assertEqual(
             result.data["petMutation"]["errors"],
-            [{"field": "age", "messages": ["Too old"], }],
+            [{"field": "age", "messages": ["Too old"],}],
         )
 
         self.assertEqual(Pet.objects.count(), 0)
@@ -341,7 +342,7 @@ class ModelFormMutationTests(TestCase):
             class Meta:
                 form_class = PetForm
 
-        result = PetMutation.mutate_and_get_payload(None, None, test_camel='text')
+        result = PetMutation.mutate_and_get_payload(None, None, test_camel="text")
 
         # A pet was not created
         self.assertEqual(Pet.objects.count(), 0)
@@ -349,8 +350,8 @@ class ModelFormMutationTests(TestCase):
         fields_w_error = {e.field: e.messages for e in result.errors}
         self.assertEqual(len(result.errors), 3)
         self.assertIn("test_camel", fields_w_error)
-        self.assertEqual(fields_w_error['test_camel'], ["Enter a whole number."])
+        self.assertEqual(fields_w_error["test_camel"], ["Enter a whole number."])
         self.assertIn("name", fields_w_error)
-        self.assertEqual(fields_w_error['name'], ["This field is required."])
+        self.assertEqual(fields_w_error["name"], ["This field is required."])
         self.assertIn("age", fields_w_error)
-        self.assertEqual(fields_w_error['age'], ["This field is required."])
+        self.assertEqual(fields_w_error["age"], ["This field is required."])

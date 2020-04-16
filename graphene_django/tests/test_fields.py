@@ -231,15 +231,14 @@ data_loader = DataLoader(batch_load_fn=batch_load_fn)
 
 
 class PermissionFieldTests(TestCase):
-
     def test_permission_field(self):
         MyType = object()
-        field = DjangoField(MyType, permissions=['perm1', 'perm2'], source='resolver')
+        field = DjangoField(MyType, permissions=["perm1", "perm2"], source="resolver")
         resolver = field.get_resolver(None)
 
         class Viewer(object):
             def has_perm(self, perm):
-                return perm == 'perm2'
+                return perm == "perm2"
 
         info = mock.Mock(context=mock.Mock(user=Viewer()))
 
@@ -247,7 +246,7 @@ class PermissionFieldTests(TestCase):
 
     def test_permission_field_without_permission(self):
         MyType = object()
-        field = DjangoField(MyType, permissions=['perm1', 'perm2'], source='resolver')
+        field = DjangoField(MyType, permissions=["perm1", "perm2"], source="resolver")
         resolver = field.get_resolver(field.resolver)
 
         class Viewer(object):
@@ -261,10 +260,11 @@ class PermissionFieldTests(TestCase):
 
 
 class DataLoaderFieldTests(TestCase):
-
     def test_dataloaderfield(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='key', type=MyType)
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader, source_loader="key", type=MyType
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()
@@ -273,7 +273,9 @@ class DataLoaderFieldTests(TestCase):
 
     def test_dataloaderfield_many(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='keys', type=MyType, load_many=True)
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader, source_loader="keys", type=MyType, load_many=True
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()
@@ -282,7 +284,9 @@ class DataLoaderFieldTests(TestCase):
 
     def test_dataloaderfield_inner_prop(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='InnerClass.key', type=MyType)
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader, source_loader="InnerClass.key", type=MyType
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()
@@ -291,8 +295,12 @@ class DataLoaderFieldTests(TestCase):
 
     def test_dataloaderfield_many_inner_prop(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='InnerClass.keys', type=MyType,
-                                            load_many=True)
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader,
+            source_loader="InnerClass.keys",
+            type=MyType,
+            load_many=True,
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()
@@ -301,15 +309,19 @@ class DataLoaderFieldTests(TestCase):
 
     def test_dataloaderfield_permissions(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='key', type=MyType,
-                                            permissions=['perm1', 'perm2'])
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader,
+            source_loader="key",
+            type=MyType,
+            permissions=["perm1", "perm2"],
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()
 
         class Viewer(object):
             def has_perm(self, perm):
-                return perm == 'perm2'
+                return perm == "perm2"
 
         info = mock.Mock(context=mock.Mock(user=Viewer()))
 
@@ -317,8 +329,12 @@ class DataLoaderFieldTests(TestCase):
 
     def test_dataloaderfield_without_permissions(self):
         MyType = object()
-        data_loader_field = DataLoaderField(data_loader=data_loader, source_loader='key', type=MyType,
-                                            permissions=['perm1', 'perm2'])
+        data_loader_field = DataLoaderField(
+            data_loader=data_loader,
+            source_loader="key",
+            type=MyType,
+            permissions=["perm1", "perm2"],
+        )
 
         resolver = data_loader_field.get_resolver(None)
         instance = MyInstance()

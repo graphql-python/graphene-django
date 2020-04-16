@@ -3,7 +3,6 @@ from collections import OrderedDict
 from functools import partial
 
 import six
-from django.db.models import Model
 from django.utils.functional import SimpleLazyObject
 
 import graphene
@@ -76,7 +75,8 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                 (
                     'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
                     "but it's not a model field so Graphene cannot determine what type it should be. "
-                    'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
+                    'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" '
+                    "list. "
                 ).format(
                     field_name=name,
                     app_label=model._meta.app_label,
@@ -89,7 +89,8 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
             warnings.warn(
                 (
                     'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
-                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has '
+                    "no effect. "
                 ).format(
                     field_name=name,
                     app_label=model._meta.app_label,
@@ -117,8 +118,10 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
             if not hasattr(model, name):
                 warnings.warn(
                     (
-                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
-                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
+                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{'
+                        'field_name}". '
+                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it '
+                        "has no effect "
                     ).format(
                         field_name=name,
                         app_label=model._meta.app_label,
@@ -268,7 +271,9 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
-        field_permissions = cls.__get_field_permissions__(field_to_permission, permission_to_field)
+        field_permissions = cls.__get_field_permissions__(
+            field_to_permission, permission_to_field
+        )
         if field_permissions:
             cls.__set_as_nullable__(field_permissions, model, registry)
 
@@ -323,13 +328,17 @@ class DjangoObjectType(ObjectType):
     def __set_permissions_resolvers__(cls, permissions):
         """Set permission resolvers"""
         for field_name, field_permissions in permissions.items():
-            attr = 'resolve_{}'.format(field_name)
-            resolver = getattr(cls._meta.fields[field_name], 'resolver', None) or getattr(cls, attr, None)
+            attr = "resolve_{}".format(field_name)
+            resolver = getattr(
+                cls._meta.fields[field_name], "resolver", None
+            ) or getattr(cls, attr, None)
 
-            if not hasattr(field_permissions, '__iter__'):
+            if not hasattr(field_permissions, "__iter__"):
                 field_permissions = tuple(field_permissions)
 
-            setattr(cls, attr, get_auth_resolver(field_name, field_permissions, resolver))
+            setattr(
+                cls, attr, get_auth_resolver(field_name, field_permissions, resolver)
+            )
 
     @classmethod
     def __set_as_nullable__(cls, field_permissions, model, registry):
@@ -339,7 +348,7 @@ class DjangoObjectType(ObjectType):
             _as=Field,
         )
         for name, field in django_fields.items():
-            if hasattr(field, '_type') and isinstance(field._type, NonNull):
+            if hasattr(field, "_type") and isinstance(field._type, NonNull):
                 field._type = field._type._of_type
                 setattr(cls, name, field)
 

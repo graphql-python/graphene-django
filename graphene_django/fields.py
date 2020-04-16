@@ -205,7 +205,9 @@ class DjangoConnectionField(ConnectionField):
 class DjangoField(Field):
     """Class to manage permission for fields"""
 
-    def __init__(self, type, permissions=(), permissions_resolver=auth_resolver, *args, **kwargs):
+    def __init__(
+        self, type, permissions=(), permissions_resolver=auth_resolver, *args, **kwargs
+    ):
         """Get permissions to access a field"""
         super(DjangoField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
@@ -215,15 +217,23 @@ class DjangoField(Field):
         """Intercept resolver to analyse permissions"""
         parent_resolver = super(DjangoField, self).get_resolver(parent_resolver)
         if self.permissions:
-            return partial(get_unbound_function(self.permissions_resolver), parent_resolver, self.permissions, None,
-                           None, True)
+            return partial(
+                get_unbound_function(self.permissions_resolver),
+                parent_resolver,
+                self.permissions,
+                None,
+                None,
+                True,
+            )
         return parent_resolver
 
 
 class DataLoaderField(DjangoField):
     """Class to manage access to data-loader when resolve the field"""
 
-    def __init__(self, type, data_loader, source_loader, load_many=False, *args, **kwargs):
+    def __init__(
+        self, type, data_loader, source_loader, load_many=False, *args, **kwargs
+    ):
         """
         Initialization of data-loader to resolve field
         :param data_loader: data-loader to resolve field
@@ -243,7 +253,9 @@ class DataLoaderField(DjangoField):
     def resolver_data_loader(self, root, info, *args, **kwargs):
         """Resolve field through dataloader"""
         if root:
-            source_loader = reduce(lambda x, y: getattr(x, y), self.source_loader.split('.'), root)
+            source_loader = reduce(
+                lambda x, y: getattr(x, y), self.source_loader.split("."), root
+            )
         else:
             source_loader = kwargs.get(self.source_loader)
 

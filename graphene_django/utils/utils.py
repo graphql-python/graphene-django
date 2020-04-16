@@ -132,7 +132,16 @@ def resolve_bound_resolver(resolver, root, info, **args):
     return resolver(root, info, **args)
 
 
-def auth_resolver(parent_resolver, permissions, attname, default_value, raise_exception, root, info, **args):
+def auth_resolver(
+    parent_resolver,
+    permissions,
+    attname,
+    default_value,
+    raise_exception,
+    root,
+    info,
+    **args
+):
     """
     Middleware resolver to check viewer's permissions
     :param parent_resolver: Field resolver
@@ -146,7 +155,7 @@ def auth_resolver(parent_resolver, permissions, attname, default_value, raise_ex
     :return: Resolved field. None if the viewer does not have permission to access the field.
     """
     # Get viewer from context
-    if not hasattr(info.context, 'user'):
+    if not hasattr(info.context, "user"):
         raise PermissionDenied()
     user = info.context.user
 

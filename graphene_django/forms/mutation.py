@@ -22,8 +22,8 @@ def fields_for_form(form, only_fields, exclude_fields):
     for name, field in form.fields.items():
         is_not_in_only = only_fields and name not in only_fields
         is_excluded = (
-                name
-                in exclude_fields  # or
+            name
+            in exclude_fields  # or
             # name in already_created_fields
         )
 
@@ -46,7 +46,10 @@ class BaseDjangoFormMutation(ClientIDMutation):
             return cls.perform_mutate(form, info)
         else:
             errors = [
-                ErrorType(field=to_camel_case(key) if key != '__all__' else key, messages=value)
+                ErrorType(
+                    field=to_camel_case(key) if key != "__all__" else key,
+                    messages=value,
+                )
                 for key, value in form.errors.items()
             ]
 
@@ -81,7 +84,12 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls, form_class=None, mirror_input=False, only_fields=(), exclude_fields=(), **options
+        cls,
+        form_class=None,
+        mirror_input=False,
+        only_fields=(),
+        exclude_fields=(),
+        **options
     ):
 
         if not form_class:
@@ -122,13 +130,13 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            form_class=None,
-            model=None,
-            return_field_name=None,
-            only_fields=(),
-            exclude_fields=(),
-            **options
+        cls,
+        form_class=None,
+        model=None,
+        return_field_name=None,
+        only_fields=(),
+        exclude_fields=(),
+        **options
     ):
 
         if not form_class:

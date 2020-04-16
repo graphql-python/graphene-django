@@ -213,6 +213,7 @@ def with_local_registry(func):
 @with_local_registry
 def test_django_objecttype_only_fields():
     with pytest.warns(PendingDeprecationWarning):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -236,6 +237,7 @@ def test_django_objecttype_fields():
 @with_local_registry
 def test_django_objecttype_only_fields_and_fields():
     with pytest.raises(Exception):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -257,6 +259,7 @@ def test_django_objecttype_all_fields():
 @with_local_registry
 def test_django_objecttype_exclude_fields():
     with pytest.warns(PendingDeprecationWarning):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -280,6 +283,7 @@ def test_django_objecttype_exclude():
 @with_local_registry
 def test_django_objecttype_exclude_fields_and_exclude():
     with pytest.raises(Exception):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -290,6 +294,7 @@ def test_django_objecttype_exclude_fields_and_exclude():
 @with_local_registry
 def test_django_objecttype_exclude_and_only():
     with pytest.raises(AssertionError):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -300,12 +305,14 @@ def test_django_objecttype_exclude_and_only():
 @with_local_registry
 def test_django_objecttype_fields_exclude_type_checking():
     with pytest.raises(TypeError):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = "foo"
 
     with pytest.raises(TypeError):
+
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -315,15 +322,17 @@ def test_django_objecttype_fields_exclude_type_checking():
 @with_local_registry
 def test_django_objecttype_fields_exist_on_model():
     with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = ["first_name", "foo", "email"]
 
     with pytest.warns(
-            UserWarning,
-            match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+        UserWarning,
+        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
     ) as record:
+
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -331,6 +340,7 @@ def test_django_objecttype_fields_exist_on_model():
 
     # Don't warn if selecting a custom field
     with pytest.warns(None) as record:
+
         class Reporter3(DjangoObjectType):
             custom_field = String()
 
@@ -344,9 +354,10 @@ def test_django_objecttype_fields_exist_on_model():
 @with_local_registry
 def test_django_objecttype_exclude_fields_exist_on_model():
     with pytest.warns(
-            UserWarning,
-            match=r"Django model .* does not have a field or attribute named .*",
+        UserWarning,
+        match=r"Django model .* does not have a field or attribute named .*",
     ):
+
         class Reporter(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -354,9 +365,10 @@ def test_django_objecttype_exclude_fields_exist_on_model():
 
     # Don't warn if selecting a custom field
     with pytest.warns(
-            UserWarning,
-            match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+        UserWarning,
+        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
     ):
+
         class Reporter3(DjangoObjectType):
             custom_field = String()
 
@@ -366,6 +378,7 @@ def test_django_objecttype_exclude_fields_exist_on_model():
 
     # Don't warn on exclude fields
     with pytest.warns(None) as record:
+
         class Reporter4(DjangoObjectType):
             class Meta:
                 model = ReporterModel
@@ -562,7 +575,7 @@ class TestDjangoObjectType:
 
 
 def extra_field_resolver(root, info, **kwargs):
-    return 'extra field'
+    return "extra field"
 
 
 class PermissionArticle(DjangoObjectType):
@@ -570,27 +583,28 @@ class PermissionArticle(DjangoObjectType):
 
     class Meta(object):
         """Meta Class"""
+
         field_to_permission = {
-            'headline': ('content_type.permission1',),
-            'pub_date': ('content_type.permission2',)
+            "headline": ("content_type.permission1",),
+            "pub_date": ("content_type.permission2",),
         }
         permission_to_field = {
-            'content_type.permission3': ('headline', 'reporter', 'extra_field',)
+            "content_type.permission3": ("headline", "reporter", "extra_field",)
         }
         model = ArticleModel
 
     extra_field = Field(String, resolver=extra_field_resolver)
 
     def resolve_headline(self, info, **kwargs):
-        return 'headline'
+        return "headline"
 
 
 def test_django_permissions():
     expected = {
-        'headline': ('content_type.permission1', 'content_type.permission3'),
-        'pub_date': ('content_type.permission2',),
-        'reporter': ('content_type.permission3',),
-        'extra_field': ('content_type.permission3',),
+        "headline": ("content_type.permission1", "content_type.permission3"),
+        "pub_date": ("content_type.permission2",),
+        "reporter": ("content_type.permission3",),
+        "extra_field": ("content_type.permission3",),
     }
     assert PermissionArticle.field_permissions == expected
 
@@ -600,7 +614,7 @@ def test_permission_resolver():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm == 'content_type.permission3'
+            return perm == "content_type.permission3"
 
     class Info(object):
         class Context(object):
@@ -609,7 +623,7 @@ def test_permission_resolver():
         context = Context()
 
     resolved = PermissionArticle.resolve_headline(MyType, Info())
-    assert resolved == 'headline'
+    assert resolved == "headline"
 
 
 def test_resolver_without_permission():
@@ -634,7 +648,7 @@ def test_permission_resolver_to_field():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm == 'content_type.permission3'
+            return perm == "content_type.permission3"
 
     class Info(object):
         class Context(object):
@@ -643,7 +657,7 @@ def test_permission_resolver_to_field():
         context = Context()
 
     resolved = PermissionArticle.resolve_extra_field(MyType, Info())
-    assert resolved == 'extra field'
+    assert resolved == "extra field"
 
 
 def test_resolver_to_field_without_permission():
@@ -651,7 +665,7 @@ def test_resolver_to_field_without_permission():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm != 'content_type.permission3'
+            return perm != "content_type.permission3"
 
     class Info(object):
         class Context(object):
