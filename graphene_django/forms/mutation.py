@@ -53,7 +53,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
                 for key, value in form.errors.items()
             ]
 
-            return cls(errors=errors, **form.data)
+            return cls(errors=errors)
 
     @classmethod
     def get_form(cls, root, info, **input):
@@ -175,17 +175,6 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
-
-    @classmethod
-    def mutate_and_get_payload(cls, root, info, **input):
-        form = cls.get_form(root, info, **input)
-
-        if form.is_valid():
-            return cls.perform_mutate(form, info)
-        else:
-            errors = ErrorType.from_errors(form.errors)
-
-            return cls(errors=errors)
 
     @classmethod
     def perform_mutate(cls, form, info):
