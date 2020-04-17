@@ -45,7 +45,13 @@ class BaseDjangoFormMutation(ClientIDMutation):
         if form.is_valid():
             return cls.perform_mutate(form, info)
         else:
-            errors = ErrorType.from_errors(form.errors)
+            errors = [
+                ErrorType(
+                    field=to_camel_case(key) if key != "__all__" else key,
+                    messages=value,
+                )
+                for key, value in form.errors.items()
+            ]
 
             return cls(errors=errors, **form.data)
 
