@@ -40,7 +40,7 @@ def test_camelize():
 @patch("graphene_django.utils.testing.Client.post")
 def test_graphql_test_case_op_name(post_mock):
     """
-    Test that `GraphQLTestCase.query()`'s `op_name` argument produces an `operationName` key.
+    Test that `GraphQLTestCase.query()`'s `op_name` argument produces an `operationName` field.
     """
 
     class TestClass(GraphQLTestCase):
@@ -50,7 +50,8 @@ def test_graphql_test_case_op_name(post_mock):
     tc.setUpClass()
     tc.query("query { }", op_name="QueryName")
     body = json.loads(post_mock.call_args.args[1])
+    # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
         "operationName",
         "QueryName",
-    ) in body.items(), "Key 'operationName' is not present in the final request."
+    ) in body.items(), "Field 'operationName' is not present in the final request."
