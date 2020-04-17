@@ -46,6 +46,9 @@ def test_graphql_test_case_op_name(post_mock):
     class TestClass(GraphQLTestCase):
         GRAPHQL_SCHEMA = True
 
+        def runTest(self):
+            pass
+
     tc = TestClass()
     tc.setUpClass()
     tc.query("query { }", op_name="QueryName")
