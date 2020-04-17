@@ -223,7 +223,6 @@ class DjangoField(Field):
                 self.permissions,
                 None,
                 None,
-                None,
                 True,
             )
         return parent_resolver
