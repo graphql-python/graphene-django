@@ -1,5 +1,3 @@
-import pytest
-
 import graphene
 from graphene.relay import Node
 from graphene_django import DjangoConnectionField, DjangoObjectType
@@ -11,11 +9,6 @@ from ..types import DjangoDebug
 
 class context(object):
     pass
-
-
-# from examples.starwars_django.models import Character
-
-pytestmark = pytest.mark.django_db
 
 
 def test_should_query_field():
