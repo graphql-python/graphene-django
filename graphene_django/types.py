@@ -11,6 +11,7 @@ from graphene import Field, NonNull
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
+from graphene.utils.str_converters import to_camel_case
 
 from graphene_django.utils.utils import auth_resolver
 from .converter import convert_django_field_with_choices
@@ -392,5 +393,10 @@ class ErrorType(ObjectType):
 
     @classmethod
     def from_errors(cls, errors):
-        data = camelize(errors) if graphene_settings.CAMELCASE_ERRORS else errors
+        data = {
+            to_camel_case(key)
+            if key != "__all__" and graphene_settings.CAMELCASE_ERRORS
+            else key: value
+            for key, value in errors.items()
+        }
         return [cls(field=key, messages=value) for key, value in data.items()]
