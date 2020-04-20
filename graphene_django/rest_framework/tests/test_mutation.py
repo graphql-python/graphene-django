@@ -1,14 +1,13 @@
 import datetime
 
-from py.test import mark, raises
+from py.test import raises
 from rest_framework import serializers
 
 from graphene import Field, ResolveInfo
 from graphene.types.inputobjecttype import InputObjectType
 
-from ...settings import graphene_settings
 from ...types import DjangoObjectType
-from ..models import MyFakeModel, MyFakeModelWithPassword, MyFakeModelWithDate
+from ..models import MyFakeModel, MyFakeModelWithDate, MyFakeModelWithPassword
 from ..mutation import SerializerMutation
 
 
@@ -99,7 +98,6 @@ def test_exclude_fields():
     assert "created" not in MyMutation.Input._meta.fields
 
 
-@mark.django_db
 def test_write_only_field():
     class WriteOnlyFieldModelSerializer(serializers.ModelSerializer):
         password = serializers.CharField(write_only=True)
@@ -122,7 +120,6 @@ def test_write_only_field():
     ), "'password' is write_only field and shouldn't be visible"
 
 
-@mark.django_db
 def test_write_only_field_using_extra_kwargs():
     class WriteOnlyFieldModelSerializer(serializers.ModelSerializer):
         class Meta:
@@ -144,7 +141,6 @@ def test_write_only_field_using_extra_kwargs():
     ), "'password' is write_only field and shouldn't be visible"
 
 
-@mark.django_db
 def test_read_only_fields():
     class ReadOnlyFieldModelSerializer(serializers.ModelSerializer):
         cool_name = serializers.CharField(read_only=True)
@@ -194,7 +190,6 @@ def test_mutate_and_get_payload_success():
     assert result.errors is None
 
 
-@mark.django_db
 def test_model_add_mutate_and_get_payload_success():
     result = MyModelMutation.mutate_and_get_payload(
         None, mock_info(), **{"cool_name": "Narf"}
@@ -204,7 +199,6 @@ def test_model_add_mutate_and_get_payload_success():
     assert isinstance(result.created, datetime.datetime)
 
 
-@mark.django_db
 def test_model_update_mutate_and_get_payload_success():
     instance = MyFakeModel.objects.create(cool_name="Narf")
     result = MyModelMutation.mutate_and_get_payload(
@@ -214,7 +208,6 @@ def test_model_update_mutate_and_get_payload_success():
     assert result.cool_name == "New Narf"
 
 
-@mark.django_db
 def test_model_partial_update_mutate_and_get_payload_success():
     instance = MyFakeModel.objects.create(cool_name="Narf")
     result = MyModelMutation.mutate_and_get_payload(
@@ -224,7 +217,6 @@ def test_model_partial_update_mutate_and_get_payload_success():
     assert result.cool_name == "Narf"
 
 
-@mark.django_db
 def test_model_invalid_update_mutate_and_get_payload_success():
     class InvalidModelMutation(SerializerMutation):
         class Meta:
@@ -239,7 +231,6 @@ def test_model_invalid_update_mutate_and_get_payload_success():
     assert '"id" required' in str(exc.value)
 
 
-@mark.django_db
 def test_perform_mutate_success():
     class MyMethodMutation(SerializerMutation):
         class Meta:
@@ -272,11 +263,10 @@ def test_model_mutate_and_get_payload_error():
     assert len(result.errors) > 0
 
 
-def test_mutation_error_camelcased():
+def test_mutation_error_camelcased(graphene_settings):
     graphene_settings.CAMELCASE_ERRORS = True
     result = MyModelMutation.mutate_and_get_payload(None, mock_info(), **{})
     assert result.errors[0].field == "coolName"
-    graphene_settings.CAMELCASE_ERRORS = False
 
 
 def test_invalid_serializer_operations():

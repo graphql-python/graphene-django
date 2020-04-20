@@ -1,25 +1,20 @@
-import base64
 import datetime
 
 import pytest
 from django.db import models
+from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
+from graphql_relay import to_global_id
 from py.test import raises
 
-from django.db.models import Q
-
-from graphql_relay import to_global_id
 import graphene
 from graphene.relay import Node
 
-from ..utils import DJANGO_FILTER_INSTALLED
-from ..compat import MissingType, JSONField
+from ..compat import JSONField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
-from ..settings import graphene_settings
-from .models import Article, CNNReporter, Reporter, Film, FilmDetails
-
-pytestmark = pytest.mark.django_db
+from ..utils import DJANGO_FILTER_INSTALLED
+from .models import Article, CNNReporter, Film, FilmDetails, Reporter
 
 
 def test_should_query_only_fields():
@@ -147,9 +142,6 @@ def test_should_query_postgres_fields():
 
 
 def test_should_node():
-    # reset_global_registry()
-    # Node._meta.registry = get_global_registry()
-
     class ReporterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -588,7 +580,7 @@ def test_should_query_node_multiple_filtering():
     assert result.data == expected
 
 
-def test_should_enforce_first_or_last():
+def test_should_enforce_first_or_last(graphene_settings):
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = True
 
     class ReporterType(DjangoObjectType):
@@ -627,7 +619,7 @@ def test_should_enforce_first_or_last():
     assert result.data == expected
 
 
-def test_should_error_if_first_is_greater_than_max():
+def test_should_error_if_first_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -667,10 +659,8 @@ def test_should_error_if_first_is_greater_than_max():
     )
     assert result.data == expected
 
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
-
-def test_should_error_if_last_is_greater_than_max():
+def test_should_error_if_last_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -709,8 +699,6 @@ def test_should_error_if_last_is_greater_than_max():
         "exceeds the `last` limit of 100 records."
     )
     assert result.data == expected
-
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
 def test_should_query_promise_connectionfields():

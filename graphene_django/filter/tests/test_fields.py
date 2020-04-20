@@ -35,9 +35,6 @@ else:
         )
     )
 
-pytestmark.append(pytest.mark.django_db)
-
-
 if DJANGO_FILTER_INSTALLED:
 
     class ArticleNode(DjangoObjectType):
