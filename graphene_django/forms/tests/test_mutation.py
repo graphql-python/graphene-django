@@ -12,7 +12,7 @@ from ..mutation import DjangoFormMutation, DjangoModelFormMutation
 
 
 class MyForm(forms.Form):
-    text = forms.CharField()
+    text = forms.CharField(required=False)
 
     def clean_text(self):
         text = self.cleaned_data["text"]
@@ -52,7 +52,6 @@ class FilmType(DjangoObjectType):
 
 def test_needs_form_class():
     with raises(Exception) as exc:
-
         class MyMutation(DjangoFormMutation):
             pass
 
@@ -332,7 +331,7 @@ class ModelFormMutationTests(TestCase):
         self.assertEqual(result.data["petMutation"]["pet"], None)
         self.assertEqual(
             result.data["petMutation"]["errors"],
-            [{"field": "age", "messages": ["Too old"],}],
+            [{"field": "age", "messages": ["Too old"], }],
         )
 
         self.assertEqual(Pet.objects.count(), 0)
