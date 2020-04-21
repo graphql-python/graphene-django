@@ -9,7 +9,9 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
+from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
+from ..converter import convert_choice_field_to_enum
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -386,6 +388,10 @@ def test_django_objecttype_exclude_fields_exist_on_model():
     assert len(record) == 0
 
 
+def custom_enum_name(field):
+    return "CustomEnum{}".format(field.name.title())
+
+
 class TestDjangoObjectType:
     @pytest.fixture
     def PetModel(self):
@@ -492,3 +498,78 @@ class TestDjangoObjectType:
         }
         """
         )
+
+    def test_django_objecttype_convert_choices_enum_naming_collisions(self, PetModel):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: TestsPetModelKindChoices!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+
+        enum TestsPetModelKindChoices {
+          CAT
+          DOG
+        }
+        """
+        )
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
+
+    def test_django_objecttype_choices_custom_enum_name(self, PetModel):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
+            "graphene_django.tests.test_types.custom_enum_name"
+        )
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        enum CustomEnumKind {
+          CAT
+          DOG
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: CustomEnumKind!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+        """
+        )
+
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = None
