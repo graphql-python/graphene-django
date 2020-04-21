@@ -28,6 +28,17 @@ class GlobalIDFormField(Field):
 
         return value
 
+class GlobalIDMultipleChoiceField(MultipleChoiceField):
+    default_error_messages = {
+        "invalid_choice": _("One of the specified IDs was invalid (%(value)s)."),
+        "invalid_list": _("Enter a list of values."),
+    }
+
+    def valid_value(self, value):
+        # Clean will raise a validation error if there is a problem
+        GlobalIDFormField().clean(value)
+        return True
+
 class HeaderForm(forms.Form):
     # make a ChoiceField for 'JWT' and other methods -- use a widget? 
     headers = forms.CharField(help_text="Enter auth method to be stored in the <head> as HTTP_AUTHORIZATION", initial="JWT ")
