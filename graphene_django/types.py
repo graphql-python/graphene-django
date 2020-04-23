@@ -270,7 +270,7 @@ class DjangoObjectType(ObjectType):
     def is_type_of(cls, root, info):
         if isinstance(root, cls):
             return True
-        if not is_valid_django_model(type(root.__class__)):
+        if not is_valid_django_model(root.__class__):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
         if cls._meta.model._meta.proxy:
