@@ -10,11 +10,10 @@ from graphene.types.mutation import MutationOptions
 #     InputObjectType,
 # )
 from graphene.types.utils import yank_fields_from_attrs
-from graphene.utils.str_converters import to_camel_case
 from graphene_django.registry import get_global_registry
 
+from ..types import ErrorType
 from .converter import convert_form_field_with_choices
-from .types import ErrorType
 
 
 def fields_for_form(form, only_fields, exclude_fields):
@@ -45,10 +44,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
         if form.is_valid():
             return cls.perform_mutate(form, info)
         else:
-            errors = [
-                ErrorType(field=to_camel_case(key) if key != '__all__' else key, messages=value)
-                for key, value in form.errors.items()
-            ]
+            errors = ErrorType.from_errors(form.errors)
 
             return cls(errors=errors)
 
@@ -69,28 +65,6 @@ class BaseDjangoFormMutation(ClientIDMutation):
         return kwargs
 
 
-# class DjangoFormInputObjectTypeOptions(InputObjectTypeOptions):
-#     form_class = None
-
-
-# class DjangoFormInputObjectType(InputObjectType):
-#     class Meta:
-#         abstract = True
-
-#     @classmethod
-#     def __init_subclass_with_meta__(cls, form_class=None,
-#                                     only_fields=(), exclude_fields=(), _meta=None, **options):
-#         if not _meta:
-#             _meta = DjangoFormInputObjectTypeOptions(cls)
-#         assert isinstance(form_class, forms.Form), (
-#             'form_class must be an instance of django.forms.Form'
-#         )
-#         _meta.form_class = form_class
-#         form = form_class()
-#         fields = fields_for_form(form, only_fields, exclude_fields)
-#         super(DjangoFormInputObjectType, cls).__init_subclass_with_meta__(_meta=_meta, fields=fields, **options)
-
-
 class DjangoFormMutationOptions(MutationOptions):
     form_class = None
 
@@ -103,7 +77,12 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls, form_class=None, mirror_input=False, only_fields=(), exclude_fields=(), **options
+        cls,
+        form_class=None,
+        mirror_input=False,
+        only_fields=(),
+        exclude_fields=(),
+        **options
     ):
 
         if not form_class:
@@ -128,7 +107,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
     @classmethod
     def perform_mutate(cls, form, info):
         form.save()
-        return cls(errors=[])
+        return cls(errors=[], **form.cleaned_data)
 
 
 class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
@@ -169,7 +148,9 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
-        return_field_name = return_field_name
+        if not model_type:
+            raise Exception("No type registered for model: {}".format(model.__name__))
+
         if not return_field_name:
             model_name = model.__name__
             return_field_name = model_name[:1].lower() + model_name[1:]

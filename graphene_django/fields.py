@@ -1,30 +1,62 @@
 from functools import partial, reduce
 
 from django.db.models.query import QuerySet
+
+from graphene import NonNull
 from graphene.types import Field, List
 from graphene.relay import ConnectionField, PageInfo
 from graphene.utils.get_unbound_function import get_unbound_function
 from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphene_django.utils.utils import auth_resolver
 from promise import Promise
 
 from .settings import graphene_settings
-from .utils import maybe_queryset, auth_resolver
+from .utils import maybe_queryset
 
 
 class DjangoListField(Field):
     def __init__(self, _type, *args, **kwargs):
-        super(DjangoListField, self).__init__(List(_type), *args, **kwargs)
+        from .types import DjangoObjectType
+
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+
+        # Django would never return a Set of None  vvvvvvv
+        super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
+
+        assert issubclass(
+            self._underlying_type, DjangoObjectType
+        ), "DjangoListField only accepts DjangoObjectType types"
+
+    @property
+    def _underlying_type(self):
+        _type = self._type
+        while hasattr(_type, "of_type"):
+            _type = _type.of_type
+        return _type
 
     @property
     def model(self):
-        return self.type.of_type._meta.node._meta.model
+        return self._underlying_type._meta.model
 
     @staticmethod
-    def list_resolver(resolver, root, info, **args):
-        return maybe_queryset(resolver(root, info, **args))
+    def list_resolver(django_object_type, resolver, root, info, **args):
+        queryset = maybe_queryset(resolver(root, info, **args))
+        if queryset is None:
+            # Default to Django Model queryset
+            # N.B. This happens if DjangoListField is used in the top level Query object
+            model_manager = django_object_type._meta.model.objects
+            queryset = maybe_queryset(
+                django_object_type.get_queryset(model_manager, info)
+            )
+        return queryset
 
     def get_resolver(self, parent_resolver):
-        return partial(self.list_resolver, parent_resolver)
+        _type = self.type
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+        django_object_type = _type.of_type.of_type
+        return partial(self.list_resolver, django_object_type, parent_resolver)
 
 
 class DjangoConnectionField(ConnectionField):
@@ -44,17 +76,31 @@ class DjangoConnectionField(ConnectionField):
         from .types import DjangoObjectType
 
         _type = super(ConnectionField, self).type
+        non_null = False
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+            non_null = True
         assert issubclass(
             _type, DjangoObjectType
         ), "DjangoConnectionField only accepts DjangoObjectType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
-        return _type._meta.connection
+        connection_type = _type._meta.connection
+        if non_null:
+            return NonNull(connection_type)
+        return connection_type
+
+    @property
+    def connection_type(self):
+        type = self.type
+        if isinstance(type, NonNull):
+            return type.of_type
+        return type
 
     @property
     def node_type(self):
-        return self.type._meta.node
+        return self.connection_type._meta.node
 
     @property
     def model(self):
@@ -67,22 +113,18 @@ class DjangoConnectionField(ConnectionField):
             return self.model._default_manager
 
     @classmethod
-    def merge_querysets(cls, default_queryset, queryset):
-        if default_queryset.query.distinct and not queryset.query.distinct:
-            queryset = queryset.distinct()
-        elif queryset.query.distinct and not default_queryset.query.distinct:
-            default_queryset = default_queryset.distinct()
-        return queryset & default_queryset
+    def resolve_queryset(cls, connection, queryset, info, args):
+        # queryset is the resolved iterable from ObjectType
+        return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
-    def resolve_connection(cls, connection, default_manager, args, iterable):
+    def resolve_connection(cls, connection, args, default_manager, iterable):
+
         if iterable is None:
             iterable = default_manager
+
         iterable = maybe_queryset(iterable)
         if isinstance(iterable, QuerySet):
-            if iterable is not default_manager:
-                default_queryset = maybe_queryset(default_manager)
-                iterable = cls.merge_querysets(default_queryset, iterable)
             _len = iterable.count()
         else:
             _len = len(iterable)
@@ -106,6 +148,7 @@ class DjangoConnectionField(ConnectionField):
         resolver,
         connection,
         default_manager,
+        queryset_resolver,
         max_limit,
         enforce_first_or_last,
         root,
@@ -133,8 +176,15 @@ class DjangoConnectionField(ConnectionField):
                 ).format(last, info.field_name, max_limit)
                 args["last"] = min(last, max_limit)
 
+        # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
+        # or a resolve_foo (does not accept queryset)
         iterable = resolver(root, info, **args)
-        on_resolve = partial(cls.resolve_connection, connection, default_manager, args)
+        if iterable is None:
+            iterable = default_manager
+        # thus the iterable gets refiltered by resolve_queryset
+        # but iterable might be promise
+        iterable = queryset_resolver(connection, iterable, info, args)
+        on_resolve = partial(cls.resolve_connection, connection, args, default_manager)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
@@ -145,17 +195,23 @@ class DjangoConnectionField(ConnectionField):
         return partial(
             self.connection_resolver,
             parent_resolver,
-            self.type,
+            self.connection_type,
             self.get_manager(),
+            self.get_queryset_resolver(),
             self.max_limit,
             self.enforce_first_or_last,
         )
+
+    def get_queryset_resolver(self):
+        return self.resolve_queryset
 
 
 class DjangoField(Field):
     """Class to manage permission for fields"""
 
-    def __init__(self, type, permissions=(), permissions_resolver=auth_resolver, *args, **kwargs):
+    def __init__(
+        self, type, permissions=(), permissions_resolver=auth_resolver, *args, **kwargs
+    ):
         """Get permissions to access a field"""
         super(DjangoField, self).__init__(type, *args, **kwargs)
         self.permissions = permissions
@@ -165,15 +221,23 @@ class DjangoField(Field):
         """Intercept resolver to analyse permissions"""
         parent_resolver = super(DjangoField, self).get_resolver(parent_resolver)
         if self.permissions:
-            return partial(get_unbound_function(self.permissions_resolver), parent_resolver, self.permissions, None,
-                           None, True)
+            return partial(
+                get_unbound_function(self.permissions_resolver),
+                parent_resolver,
+                self.permissions,
+                None,
+                None,
+                True,
+            )
         return parent_resolver
 
 
 class DataLoaderField(DjangoField):
     """Class to manage access to data-loader when resolve the field"""
 
-    def __init__(self, type, data_loader, source_loader, load_many=False, *args, **kwargs):
+    def __init__(
+        self, type, data_loader, source_loader, load_many=False, *args, **kwargs
+    ):
         """
         Initialization of data-loader to resolve field
         :param data_loader: data-loader to resolve field
@@ -193,7 +257,9 @@ class DataLoaderField(DjangoField):
     def resolver_data_loader(self, root, info, *args, **kwargs):
         """Resolve field through dataloader"""
         if root:
-            source_loader = reduce(lambda x, y: getattr(x, y), self.source_loader.split('.'), root)
+            source_loader = reduce(
+                lambda x, y: getattr(x, y), self.source_loader.split("."), root
+            )
         else:
             source_loader = kwargs.get(self.source_loader)
 

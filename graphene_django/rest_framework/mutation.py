@@ -1,15 +1,16 @@
 from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
+from rest_framework import serializers
 
 import graphene
+from graphene.relay.mutation import ClientIDMutation
 from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
-from graphene.relay.mutation import ClientIDMutation
 from graphene.types.objecttype import yank_fields_from_attrs
 
+from ..types import ErrorType
 from .serializer_converter import convert_serializer_field
-from .types import ErrorType
 
 
 class SerializerMutationOptions(MutationOptions):
@@ -19,20 +20,31 @@ class SerializerMutationOptions(MutationOptions):
     serializer_class = None
 
 
-def fields_for_serializer(serializer, only_fields, exclude_fields, is_input=False):
+def fields_for_serializer(
+    serializer,
+    only_fields,
+    exclude_fields,
+    is_input=False,
+    convert_choices_to_enum=True,
+):
     fields = OrderedDict()
     for name, field in serializer.fields.items():
         is_not_in_only = only_fields and name not in only_fields
-        is_excluded = (
-            name
-            in exclude_fields  # or
-            # name in already_created_fields
+        is_excluded = any(
+            [
+                name in exclude_fields,
+                field.write_only
+                and not is_input,  # don't show write_only fields in Query
+                field.read_only and is_input,  # don't show read_only fields in Input
+            ]
         )
 
         if is_not_in_only or is_excluded:
             continue
 
-        fields[name] = convert_serializer_field(field, is_input=is_input)
+        fields[name] = convert_serializer_field(
+            field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum
+        )
     return fields
 
 
@@ -50,9 +62,10 @@ class SerializerMutation(ClientIDMutation):
         lookup_field=None,
         serializer_class=None,
         model_class=None,
-        model_operations=["create", "update"],
+        model_operations=("create", "update"),
         only_fields=(),
         exclude_fields=(),
+        convert_choices_to_enum=True,
         **options
     ):
 
@@ -72,10 +85,18 @@ class SerializerMutation(ClientIDMutation):
             lookup_field = model_class._meta.pk.name
 
         input_fields = fields_for_serializer(
-            serializer, only_fields, exclude_fields, is_input=True
+            serializer,
+            only_fields,
+            exclude_fields,
+            is_input=True,
+            convert_choices_to_enum=convert_choices_to_enum,
         )
         output_fields = fields_for_serializer(
-            serializer, only_fields, exclude_fields, is_input=False
+            serializer,
+            only_fields,
+            exclude_fields,
+            is_input=False,
+            convert_choices_to_enum=convert_choices_to_enum,
         )
 
         _meta = SerializerMutationOptions(cls)
@@ -100,8 +121,10 @@ class SerializerMutation(ClientIDMutation):
                 instance = get_object_or_404(
                     model_class, **{lookup_field: input[lookup_field]}
                 )
+                partial = True
             elif "create" in cls._meta.model_operations:
                 instance = None
+                partial = False
             else:
                 raise Exception(
                     'Invalid update operation. Input parameter "{}" required.'.format(
@@ -113,6 +136,7 @@ class SerializerMutation(ClientIDMutation):
                 "instance": instance,
                 "data": input,
                 "context": {"request": info.context},
+                "partial": partial,
             }
 
         return {"data": input, "context": {"request": info.context}}
@@ -125,10 +149,7 @@ class SerializerMutation(ClientIDMutation):
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
         else:
-            errors = [
-                ErrorType(field=key, messages=value)
-                for key, value in serializer.errors.items()
-            ]
+            errors = ErrorType.from_errors(serializer.errors)
 
             return cls(errors=errors)
 
@@ -138,6 +159,10 @@ class SerializerMutation(ClientIDMutation):
 
         kwargs = {}
         for f, field in serializer.fields.items():
-            kwargs[f] = field.get_attribute(obj)
+            if not field.write_only:
+                if isinstance(field, serializers.SerializerMethodField):
+                    kwargs[f] = field.to_representation(obj)
+                else:
+                    kwargs[f] = field.get_attribute(obj)
 
         return cls(errors=None, **kwargs)

@@ -1,59 +1,92 @@
 language: python
-sudo: false
-python:
-- 2.7
-- 3.4
-- 3.5
-- 3.6
+cache: pip
+dist: xenial
+
 install:
-- |
-  if [ "$TEST_TYPE" = build ]; then
-    pip install -e .[test]
-    pip install psycopg2 # Required for Django postgres fields testing
-    pip install django==$DJANGO_VERSION
-    python setup.py develop
-  elif [ "$TEST_TYPE" = lint ]; then
-    pip install flake8
-  fi
-script:
-- |
-  if [ "$TEST_TYPE" = lint ]; then
-    echo "Checking Python code lint."
-    flake8 graphene_django
-    exit
-  elif [ "$TEST_TYPE" = build ]; then
-    py.test --cov=graphene_django graphene_django examples
-  fi
-after_success:
-- |
-  if [ "$TEST_TYPE" = build ]; then
-      coveralls
-  fi
-env:
-  matrix:
-  - TEST_TYPE=build DJANGO_VERSION=1.11
-matrix:
+  - pip install tox tox-travis
+
+script: 
+  - tox
+
+after_success: 
+  - pip install coveralls
+  - coveralls
+
+stages:
+  - test
+  - name: deploy
+    if: tag IS present
+
+jobs:
   fast_finish: true
+
+  allow_failures:
+    - env: DJANGO=master
+
   include:
-  - python: '3.4'
-    env: TEST_TYPE=build DJANGO_VERSION=2.0
-  - python: '3.5'
-    env: TEST_TYPE=build DJANGO_VERSION=2.0
-  - python: '3.6'
-    env: TEST_TYPE=build DJANGO_VERSION=2.0
-  - python: '3.5'
-    env: TEST_TYPE=build DJANGO_VERSION=2.1
-  - python: '3.6'
-    env: TEST_TYPE=build DJANGO_VERSION=2.1
-  - python: '2.7'
-    env: TEST_TYPE=lint
-  - python: '3.6'
-    env: TEST_TYPE=lint
-deploy:
-  provider: pypi
-  user: syrusakbary
-  on:
-    tags: true
-  password:
-    secure: kymIFCEPUbkgRqe2NAXkWfxMmGRfWvWBOP6LIXdVdkOOkm91fU7bndPGrAjos+/7gN0Org609ZmHSlVXNMJUWcsL2or/x5LcADJ4cZDe+79qynuoRb9xs1Ri4O4SBAuVMZxuVJvs8oUzT2R11ql5vASSMtXgbX+ZDGpmPRVZStkCuXgOc4LBhbPKyl3OFy7UQFPgAEmy3Yjh4ZSKzlXheK+S6mmr60+DCIjpaA0BWPxYK9FUE0qm7JJbHLUbwsUP/QMp5MmGjwFisXCNsIe686B7QKRaiOw62eJc2R7He8AuEC8T9OM4kRwDlecSn8mMpkoSB7QWtlJ+6XdLrJFPNvtrOfgfzS9/96Qrw9WlOslk68hMlhJeRb0s2YUD8tiV3UUkvbL1mfFoS4SI9U+rojS55KhUEJWHg1w7DjoOPoZmaIL2ChRupmvrFYNAGae1cxwG3Urh+t3wYlN3gpKsRDe5GOT7Wm2tr0ad3McCpDGUwSChX59BAJXe/MoLxkKScTrMyR8yMxHOF0b4zpVn5l7xB/o2Ik4zavx5q/0rGBMK2D+5d+gpQogKShoquTPsZUwO7sB5hYeH2hqGqpeGzZtb76E2zZYd18pJ0FsBudm5+KWjYdZ+vbtGrLxdTXJ1EEtzVXm0lscykTpqUucbXSa51dhStJvW2xEEz6p3rHo=
-  distributions: "sdist bdist_wheel"
+    - python: 2.7
+      env: DJANGO=1.11
+
+    - python: 3.5
+      env: DJANGO=1.11
+    - python: 3.5
+      env: DJANGO=2.0
+    - python: 3.5
+      env: DJANGO=2.1
+    - python: 3.5
+      env: DJANGO=2.2
+
+    - python: 3.6
+      env: DJANGO=1.11
+    - python: 3.6
+      env: DJANGO=2.0
+    - python: 3.6
+      env: DJANGO=2.1
+    - python: 3.6
+      env: DJANGO=2.2
+    - python: 3.6
+      env: DJANGO=3.0
+    - python: 3.6
+      env: DJANGO=master
+
+    - python: 3.7
+      env: DJANGO=1.11
+    - python: 3.7
+      env: DJANGO=2.0
+    - python: 3.7
+      env: DJANGO=2.1
+    - python: 3.7
+      env: DJANGO=2.2
+    - python: 3.7
+      env: DJANGO=3.0
+    - python: 3.7
+      env: DJANGO=master
+
+    - python: 3.8
+      env: DJANGO=1.11
+    - python: 3.8
+      env: DJANGO=2.0
+    - python: 3.8
+      env: DJANGO=2.1
+    - python: 3.8
+      env: DJANGO=2.2
+    - python: 3.8
+      env: DJANGO=3.0
+    - python: 3.8
+      env: DJANGO=master
+
+    - python: 3.7
+      env: TOXENV=black,flake8
+
+    - stage: deploy
+      script: skip
+      python: 3.7
+      after_success: true
+      deploy:
+        provider: pypi
+        user: syrusakbary
+        on:
+          tags: true
+        password:
+          secure: kymIFCEPUbkgRqe2NAXkWfxMmGRfWvWBOP6LIXdVdkOOkm91fU7bndPGrAjos+/7gN0Org609ZmHSlVXNMJUWcsL2or/x5LcADJ4cZDe+79qynuoRb9xs1Ri4O4SBAuVMZxuVJvs8oUzT2R11ql5vASSMtXgbX+ZDGpmPRVZStkCuXgOc4LBhbPKyl3OFy7UQFPgAEmy3Yjh4ZSKzlXheK+S6mmr60+DCIjpaA0BWPxYK9FUE0qm7JJbHLUbwsUP/QMp5MmGjwFisXCNsIe686B7QKRaiOw62eJc2R7He8AuEC8T9OM4kRwDlecSn8mMpkoSB7QWtlJ+6XdLrJFPNvtrOfgfzS9/96Qrw9WlOslk68hMlhJeRb0s2YUD8tiV3UUkvbL1mfFoS4SI9U+rojS55KhUEJWHg1w7DjoOPoZmaIL2ChRupmvrFYNAGae1cxwG3Urh+t3wYlN3gpKsRDe5GOT7Wm2tr0ad3McCpDGUwSChX59BAJXe/MoLxkKScTrMyR8yMxHOF0b4zpVn5l7xB/o2Ik4zavx5q/0rGBMK2D+5d+gpQogKShoquTPsZUwO7sB5hYeH2hqGqpeGzZtb76E2zZYd18pJ0FsBudm5+KWjYdZ+vbtGrLxdTXJ1EEtzVXm0lscykTpqUucbXSa51dhStJvW2xEEz6p3rHo=
+        distributions: "sdist bdist_wheel"

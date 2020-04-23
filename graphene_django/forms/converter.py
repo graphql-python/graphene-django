@@ -1,13 +1,24 @@
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
 
-from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time, Enum
+from graphene import (
+    ID,
+    Boolean,
+    Float,
+    Int,
+    List,
+    String,
+    UUID,
+    Date,
+    DateTime,
+    Time,
+    Enum,
+)
 from graphene.utils.str_converters import to_camel_case
 
 from graphene_django.converter import get_choices
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from ..utils import import_single_dispatch
-
 
 singledispatch = import_single_dispatch()
 
@@ -45,7 +56,7 @@ def convert_form_field_to_int(field):
 
 @convert_form_field.register(forms.BooleanField)
 def convert_form_field_to_boolean(field):
-    return Boolean(description=field.help_text, required=True)
+    return Boolean(description=field.help_text, required=field.required)
 
 
 @convert_form_field.register(forms.NullBooleanField)
@@ -88,7 +99,7 @@ def convert_form_field_to_id(field):
 
 def get_form_name(form):
     """Get form name"""
-    class_name = str(form.__class__).split('.')[-1]
+    class_name = str(form.__class__).split(".")[-1]
     return class_name[:-2]
 
 
@@ -100,15 +111,20 @@ def convert_form_field_with_choices(field, name=None, form=None):
     :param form: field's form
     :return: graphene Field
     """
-    choices = getattr(field, 'choices', None)
+    choices = getattr(field, "choices", None)
 
     # If is a choice field, but not depends on models
-    if not isinstance(field, (forms.ModelMultipleChoiceField, forms.ModelChoiceField)) and choices:
+    if (
+        not isinstance(field, (forms.ModelMultipleChoiceField, forms.ModelChoiceField))
+        and choices
+    ):
         if form:
-            name = to_camel_case("{}_{}".format(get_form_name(form), field.label or name))
+            name = to_camel_case(
+                "{}_{}".format(get_form_name(form), field.label or name)
+            )
         else:
             name = field.label or name
-        name = to_camel_case(name.replace(' ', '_'))
+        name = to_camel_case(name.replace(" ", "_"))
         choices = list(get_choices(choices))
         named_choices = [(c[0], c[1]) for c in choices]
         named_choices_descriptions = {c[0]: c[2] for c in choices}
@@ -123,5 +139,7 @@ def convert_form_field_with_choices(field, name=None, form=None):
                 return named_choices_descriptions[self.name]
 
         enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
-        return enum(description=field.help_text, required=field.required)  # pylint: disable=E1102
+        return enum(
+            description=field.help_text, required=field.required
+        )  # pylint: disable=E1102
     return convert_form_field(field)

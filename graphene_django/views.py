@@ -51,8 +51,9 @@ def instantiate_middleware(middlewares):
 
 
 class GraphQLView(View):
-    graphiql_version = "0.11.10"
+    graphiql_version = "0.14.0"
     graphiql_template = "graphene/graphiql.html"
+    react_version = "16.8.6"
 
     schema = None
     graphiql = False
@@ -124,6 +125,13 @@ class GraphQLView(View):
             data = self.parse_body(request)
             show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
 
+            if show_graphiql:
+                return self.render_graphiql(
+                    request,
+                    graphiql_version=self.graphiql_version,
+                    react_version=self.react_version,
+                )
+
             if self.batch:
                 responses = [self.get_response(request, entry) for entry in data]
                 result = "[{}]".format(
@@ -136,19 +144,6 @@ class GraphQLView(View):
                 )
             else:
                 result, status_code = self.get_response(request, data, show_graphiql)
-
-            if show_graphiql:
-                query, variables, operation_name, id = self.get_graphql_params(
-                    request, data
-                )
-                return self.render_graphiql(
-                    request,
-                    graphiql_version=self.graphiql_version,
-                    query=query or "",
-                    variables=json.dumps(variables) or "",
-                    operation_name=operation_name or "",
-                    result=result or "",
-                )
 
             return HttpResponse(
                 status=status_code, content=result, content_type="application/json"
@@ -279,10 +274,10 @@ class GraphQLView(View):
                 extra_options["executor"] = self.executor
 
             return document.execute(
-                root=self.get_root_value(request),
-                variables=variables,
+                root_value=self.get_root_value(request),
+                variable_values=variables,
                 operation_name=operation_name,
-                context=self.get_context(request),
+                context_value=self.get_context(request),
                 middleware=self.get_middleware(request),
                 **extra_options
             )

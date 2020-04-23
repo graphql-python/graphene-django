@@ -5,8 +5,8 @@ import json
 from threading import local
 from time import time
 
-from django.utils import six
-from django.utils.encoding import force_text
+import six
+from django.utils.encoding import force_str
 
 from .types import DjangoDebugSQL
 
@@ -78,7 +78,7 @@ class NormalCursorWrapper(object):
 
     def _quote_expr(self, element):
         if isinstance(element, six.string_types):
-            return "'%s'" % force_text(element).replace("'", "''")
+            return "'%s'" % force_str(element).replace("'", "''")
         else:
             return repr(element)
 
@@ -91,7 +91,7 @@ class NormalCursorWrapper(object):
 
     def _decode(self, param):
         try:
-            return force_text(param, strings_only=True)
+            return force_str(param, strings_only=True)
         except UnicodeDecodeError:
             return "(encoded string)"
 

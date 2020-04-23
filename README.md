@@ -1,13 +1,29 @@
-Please read [UPGRADE-v2.0.md](https://github.com/graphql-python/graphene/blob/master/UPGRADE-v2.0.md) to learn how to upgrade to Graphene `2.0`.
-
----
-
-# ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django [![Build Status](https://travis-ci.org/graphql-python/graphene-django.svg?branch=master)](https://travis-ci.org/graphql-python/graphene-django) [![PyPI version](https://badge.fury.io/py/graphene-django.svg)](https://badge.fury.io/py/graphene-django) [![Coverage Status](https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github)](https://coveralls.io/github/graphql-python/graphene-django?branch=master)
+# ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django
 
 
 A [Django](https://www.djangoproject.com/) integration for [Graphene](http://graphene-python.org/).
 
-## Installation
+[![travis][travis-image]][travis-url]
+[![pypi][pypi-image]][pypi-url]
+[![Anaconda-Server Badge][conda-image]][conda-url]
+[![coveralls][coveralls-image]][coveralls-url]
+
+[travis-image]: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master&style=flat
+[travis-url]: https://travis-ci.org/graphql-python/graphene-django
+[pypi-image]: https://img.shields.io/pypi/v/graphene-django.svg?style=flat
+[pypi-url]: https://pypi.org/project/graphene-django/
+[coveralls-image]: https://coveralls.io/repos/github/graphql-python/graphene-django/badge.svg?branch=master
+[coveralls-url]: https://coveralls.io/github/graphql-python/graphene-django?branch=master
+[conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
+[conda-url]: https://anaconda.org/conda-forge/graphene-django
+
+[💬 Join the community on Slack](https://join.slack.com/t/graphenetools/shared_invite/enQtOTE2MDQ1NTg4MDM1LTA4Nzk0MGU0NGEwNzUxZGNjNDQ4ZjAwNDJjMjY0OGE1ZDgxZTg4YjM2ZTc4MjE2ZTAzZjE2ZThhZTQzZTkyMmM)
+
+## Documentation
+
+[Visit the documentation to get started!](https://docs.graphene-python.org/projects/django/en/latest/)
+
+## Quickstart
 
 For installing graphene, just run this command in your shell
 
@@ -20,6 +36,7 @@ pip install "graphene-django>=2.0"
 ```python
 INSTALLED_APPS = (
     # ...
+    'django.contrib.staticfiles', # Required for GraphiQL
     'graphene_django',
 )
 
@@ -33,12 +50,12 @@ GRAPHENE = {
 We need to set up a `GraphQL` endpoint in our Django app, so we can serve the queries.
 
 ```python
-from django.conf.urls import url
+from django.urls import path
 from graphene_django.views import GraphQLView
 
 urlpatterns = [
     # ...
-    url(r'^graphql', GraphQLView.as_view(graphiql=True)),
+    path('graphql', GraphQLView.as_view(graphiql=True)),
 ]
 ```
 
@@ -73,7 +90,7 @@ class Query(graphene.ObjectType):
 schema = graphene.Schema(query=Query)
 ```
 
-Then you can simply query the schema:
+Then you can query the schema:
 
 ```python
 query = '''
@@ -95,32 +112,8 @@ To learn more check out the following [examples](examples/):
 
 ## Contributing
 
-After cloning this repo, ensure dependencies are installed by running:
+See [CONTRIBUTING.md](CONTRIBUTING.md)
 
-```sh
-pip install -e ".[test]"
-```
+## Release Notes
 
-After developing, the full test suite can be evaluated by running:
-
-```sh
-py.test graphene_django --cov=graphene_django # Use -v -s for verbose mode
-```
-
-
-### Documentation
-
-The [documentation](http://docs.graphene-python.org/projects/django/en/latest/) is generated using the excellent [Sphinx](http://www.sphinx-doc.org/) and a custom theme.
-
-The documentation dependencies are installed by running:
-
-```sh
-cd docs
-pip install -r requirements.txt
-```
-
-Then to produce a HTML version of the documentation:
-
-```sh
-make html
-```
+* See [Releases page on github](https://github.com/graphql-python/graphene-django/releases)

@@ -1,9 +1,15 @@
+from collections import OrderedDict, defaultdict
+from textwrap import dedent
+
+import pytest
+from django.db import models
 from mock import patch
 
 from graphene import Interface, ObjectType, Schema, Connection, String, Field
 from graphene.relay import Node
 
 from .. import registry
+from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
@@ -165,10 +171,10 @@ type Reporter {
   firstName: String!
   lastName: String!
   email: String!
-  pets: [Reporter]
-  aChoice: ReporterAChoice!
+  pets: [Reporter!]!
+  aChoice: ReporterAChoice
   reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection
+  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
 }
 
 enum ReporterAChoice {
@@ -206,28 +212,370 @@ def with_local_registry(func):
 
 @with_local_registry
 def test_django_objecttype_only_fields():
-    class Reporter(DjangoObjectType):
-        class Meta:
-            model = ReporterModel
-            only_fields = ("id", "email", "films")
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
 
 
 @with_local_registry
-def test_django_objecttype_exclude_fields():
+def test_django_objecttype_fields():
     class Reporter(DjangoObjectType):
         class Meta:
             model = ReporterModel
-            exclude_fields = "email"
+            fields = ("id", "email", "films")
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_only_fields_and_fields():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                only_fields = ("id", "email", "films")
+                fields = ("id", "email", "films")
+
+
+@with_local_registry
+def test_django_objecttype_all_fields():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = "__all__"
+
+    fields = list(Reporter._meta.fields.keys())
+    assert len(fields) == len(ReporterModel._meta.get_fields())
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields():
+    with pytest.warns(PendingDeprecationWarning):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude_fields = ["email"]
 
     fields = list(Reporter._meta.fields.keys())
     assert "email" not in fields
 
 
+@with_local_registry
+def test_django_objecttype_exclude():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            exclude = ["email"]
+
+    fields = list(Reporter._meta.fields.keys())
+    assert "email" not in fields
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_and_exclude():
+    with pytest.raises(Exception):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                exclude_fields = ["email"]
+
+
+@with_local_registry
+def test_django_objecttype_exclude_and_only():
+    with pytest.raises(AssertionError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+                fields = ["id"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_exclude_type_checking():
+    with pytest.raises(TypeError):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = "foo"
+
+    with pytest.raises(TypeError):
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = "foo"
+
+
+@with_local_registry
+def test_django_objecttype_fields_exist_on_model():
+    with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "foo", "email"]
+
+    with pytest.warns(
+        UserWarning,
+        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+    ) as record:
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "some_method", "email"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(None) as record:
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "custom_field", "email"]
+
+    assert len(record) == 0
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_exist_on_model():
+    with pytest.warns(
+        UserWarning,
+        match=r"Django model .* does not have a field or attribute named .*",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["foo"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(
+        UserWarning,
+        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+    ):
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                exclude = ["custom_field"]
+
+    # Don't warn on exclude fields
+    with pytest.warns(None) as record:
+
+        class Reporter4(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email", "first_name"]
+
+    assert len(record) == 0
+
+
+def custom_enum_name(field):
+    return "CustomEnum{}".format(field.name.title())
+
+
+class TestDjangoObjectType:
+    @pytest.fixture
+    def PetModel(self):
+        class PetModel(models.Model):
+            kind = models.CharField(choices=(("cat", "Cat"), ("dog", "Dog")))
+            cuteness = models.IntegerField(
+                choices=((1, "Kind of cute"), (2, "Pretty cute"), (3, "OMG SO CUTE!!!"))
+            )
+
+        yield PetModel
+
+        # Clear Django model cache so we don't get warnings when creating the
+        # model multiple times
+        PetModel._meta.apps.all_models = defaultdict(OrderedDict)
+
+    def test_django_objecttype_convert_choices_enum_false(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = False
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: String!
+          cuteness: Int!
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
+
+    def test_django_objecttype_convert_choices_enum_list(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = ["kind"]
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: PetModelKind!
+          cuteness: Int!
+        }
+
+        enum PetModelKind {
+          CAT
+          DOG
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
+
+    def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = []
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type Pet {
+          id: ID!
+          kind: String!
+          cuteness: Int!
+        }
+
+        type Query {
+          pet: Pet
+        }
+        """
+        )
+
+    def test_django_objecttype_convert_choices_enum_naming_collisions(self, PetModel):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: TestsPetModelKindChoices!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+
+        enum TestsPetModelKindChoices {
+          CAT
+          DOG
+        }
+        """
+        )
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
+
+    def test_django_objecttype_choices_custom_enum_name(self, PetModel):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
+            "graphene_django.tests.test_types.custom_enum_name"
+        )
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        enum CustomEnumKind {
+          CAT
+          DOG
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: CustomEnumKind!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+        """
+        )
+
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = None
+
+
 def extra_field_resolver(root, info, **kwargs):
-    return 'extra field'
+    return "extra field"
 
 
 class PermissionArticle(DjangoObjectType):
@@ -235,27 +583,28 @@ class PermissionArticle(DjangoObjectType):
 
     class Meta(object):
         """Meta Class"""
+
         field_to_permission = {
-            'headline': ('content_type.permission1',),
-            'pub_date': ('content_type.permission2',)
+            "headline": ("content_type.permission1",),
+            "pub_date": ("content_type.permission2",),
         }
         permission_to_field = {
-            'content_type.permission3': ('headline', 'reporter', 'extra_field',)
+            "content_type.permission3": ("headline", "reporter", "extra_field",)
         }
         model = ArticleModel
 
     extra_field = Field(String, resolver=extra_field_resolver)
 
     def resolve_headline(self, info, **kwargs):
-        return 'headline'
+        return "headline"
 
 
 def test_django_permissions():
     expected = {
-        'headline': ('content_type.permission1', 'content_type.permission3'),
-        'pub_date': ('content_type.permission2',),
-        'reporter': ('content_type.permission3',),
-        'extra_field': ('content_type.permission3',),
+        "headline": ("content_type.permission1", "content_type.permission3"),
+        "pub_date": ("content_type.permission2",),
+        "reporter": ("content_type.permission3",),
+        "extra_field": ("content_type.permission3",),
     }
     assert PermissionArticle.field_permissions == expected
 
@@ -265,15 +614,16 @@ def test_permission_resolver():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm == 'content_type.permission3'
+            return perm == "content_type.permission3"
 
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_headline(MyType, Info())
-    assert resolved == 'headline'
+    assert resolved == "headline"
 
 
 def test_resolver_without_permission():
@@ -286,6 +636,7 @@ def test_resolver_without_permission():
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_headline(MyType, Info())
@@ -297,15 +648,16 @@ def test_permission_resolver_to_field():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm == 'content_type.permission3'
+            return perm == "content_type.permission3"
 
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_extra_field(MyType, Info())
-    assert resolved == 'extra field'
+    assert resolved == "extra field"
 
 
 def test_resolver_to_field_without_permission():
@@ -313,11 +665,12 @@ def test_resolver_to_field_without_permission():
 
     class Viewer(object):
         def has_perm(self, perm):
-            return perm != 'content_type.permission3'
+            return perm != "content_type.permission3"
 
     class Info(object):
         class Context(object):
             user = Viewer()
+
         context = Context()
 
     resolved = PermissionArticle.resolve_extra_field(MyType, Info())
