@@ -124,10 +124,14 @@ create your own ``FilterSet``. You can pass it directly as follows:
         # Do case-insensitive lookups on 'name'
         name = django_filters.CharFilter(lookup_expr=['iexact'])
         # Allow multiple genera to be selected at once
-        genera = django_filters.MultipleChoiceFilter(field_name='genus',
-                                                     choices=(('Canis', 'Canis'),
-                                                              ('Panthera', 'Panthera'),
-                                                              ('Seahorse', 'Seahorse')))
+        genera = django_filters.MultipleChoiceFilter(
+            field_name='genus',
+            choices=(
+                ('Canis', 'Canis'),
+                ('Panthera', 'Panthera'),
+                ('Seahorse', 'Seahorse')
+            )
+        )
 
         class Meta:
             model = Animal
