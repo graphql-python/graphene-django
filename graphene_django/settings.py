@@ -23,7 +23,7 @@ except ImportError:
     from django.utils import importlib  # Will be removed in Django 1.9
 
 
-# Copied shamelessly from Django REST Framework
+# Copied shamelessly from Django REST Framework -- make sure session now part of MIDDLEWARE for tests()
 
 DEFAULTS = {
     "SCHEMA": None,

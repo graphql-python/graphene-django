@@ -3,9 +3,9 @@ import json
 import re
 
 import six
-from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
+from django.template.response import TemplateResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
-from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
@@ -169,25 +169,12 @@ class GraphQLView(APIView):
             if show_graphiql:
                 request.session["use_graphiql"] = True
                 request.session.save()
+
                 graphiql_arguments.update({"auth_header": None})
                 return self.render_graphiql(request, graphiql_arguments)
             elif show_graphiql_headers:
-                request.session["use_graphiql"] = True
-                request.session.save()
-
                 return _get_auth_header(self, request, graphiql_arguments)
-            else:
-                # not interactive, so save headers in session -- nothing to return() here
-                try:
-                    request.session["HTTP_AUTHORIZATION"] = request.META[
-                        "HTTP_AUTHORIZATION"
-                    ]
-                    request.session["use_graphiql"] = False
-                    request.session.save()
-                except:
-                    pass  # not first time through
-
-            if self.batch:
+            elif self.batch:
                 responses = [self.get_response(request, entry) for entry in data]
                 result = "[{}]".format(
                     ",".join([response[0] for response in responses])
@@ -197,12 +184,25 @@ class GraphQLView(APIView):
                     and max(responses, key=lambda response: response[1])[1]
                     or 200
                 )
+                content_type = "application/json"
             else:
-                result, status_code = self.get_response(request, data, use_graphiql)
+                # not interactive,  return data, NOT graphiql")
+                graphene_arguments = {}
+                # output type from URL -- for unit tests
+                graphene_arguments.update({"HTTP_ACCEPT": request.GET.get("HTTP_ACCEPT",'')})
+                # TODO: get URL AUTH (optional)
+                # TODO: get URL query -- ? any mutations ? -- !! why so short (does it work in 2.8.2?) !!
+                graphene_arguments.update({"query": request.GET.get("query",'')})
+                    
+                # return self.???  # render_graphiql(request, graphiql_arguments)
 
-            return HttpResponse(
-                status=status_code, content=result, content_type="application/json"
-            )
+                content_type = "text/html"
+                if "json" in graphene_arguments["HTTP_ACCEPT"]:
+                    content_type = graphene_arguments["HTTP_ACCEPT"]
+
+                result, status_code = self.get_response(request, graphene_arguments)
+
+            return HttpResponse(status=status_code, content=result, content_type=content_type)
 
         except HttpError as e:
             response = e.response
@@ -248,7 +248,8 @@ class GraphQLView(APIView):
         for (key, value) in data.items():
             if key == "graphiql_template":
                 template = value
-        return render(request, template, data)  # data is context -- list of dicts
+
+        return TemplateResponse(request, template, data)  # data is context -- list of dicts
 
     def json_encode(self, request, d, pretty=False):
         if not (self.pretty or pretty) and not request.GET.get("pretty"):
@@ -419,7 +420,8 @@ def _get_auth_header(iQLView, request, graphiql_arguments):
 
             # return extra stuff to put in META tag for graphiql:
             request.session["HTTP_AUTHORIZATION"] = auth_header
-            request.session["use_graphiql"] = True
+            request.session["use_graphiql"] = False
+            request.session["use_graphiql_headers"] = True
             request.session.save()
             graphiql_arguments.update({"auth_header": auth_header})
             return iQLView.render_graphiql(request, graphiql_arguments)

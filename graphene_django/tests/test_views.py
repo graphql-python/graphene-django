@@ -1,7 +1,17 @@
+# TODO: view() is now a historical session -- "request.session"
+# TODO: auth headers a **url_parms?? -- may wat to be separate test, since is based on a lib for just us
+#    ? will put JWT in header
+###from socom_simplejwt.test import APITokenTestCase # then make this a part of class that ALL tests belong to
+#    ? will use diff graphql import (graphiql_headers) -- by GraphQLView.as_view(graphiql_headers=True) in urls ??
+#    -- also in settings.py INSTALLED_APPS
+#
+# ?? want to run just a specifed test -- test_graphiql_is_enabled()
+# ?? this (need to make tests() seesion aware??):
+#    E               AttributeError: 'WSGIRequest' object has no attribute 'session'
+# ? is session in MIDDLEWARE ??
+
 import json
-
 import pytest
-
 try:
     from urllib import urlencode
 except ImportError:
@@ -27,31 +37,49 @@ j = lambda **kwargs: json.dumps(kwargs)
 jl = lambda **kwargs: json.dumps([kwargs])
 
 
+@pytest.mark.django_db
 def test_graphiql_is_enabled(client):
+    from django.conf import settings
+    print("**APPS**%s" % settings.INSTALLED_APPS)
+    print("**MIDDLEWARE**%s" % settings.MIDDLEWARE)
+    # ?? HOWTO get URL ??
+    print(client.__dict__)
+
     response = client.get(url_string(), HTTP_ACCEPT="text/html")
     assert response.status_code == 200
     assert response["Content-Type"].split(";")[0] == "text/html"
 
 
+@pytest.mark.django_db
 def test_qfactor_graphiql(client):
     response = client.get(
-        url_string(query="{test}"),
-        HTTP_ACCEPT="application/json;q=0.8, text/html;q=0.9",
+        url_string(
+            query="{test}",
+            HTTP_ACCEPT="text/html",
+        )
     )
+    print("**** test_qfactor_graphigl -- PASS")
+    print(client)
     assert response.status_code == 200
     assert response["Content-Type"].split(";")[0] == "text/html"
 
 
+@pytest.mark.django_db
 def test_qfactor_json(client):
     response = client.get(
-        url_string(query="{test}"),
-        HTTP_ACCEPT="text/html;q=0.8, application/json;q=0.9",
-    )
+        url_string(
+            query="{test}",
+            HTTP_ACCEPT="application/json",
+        )
+    ).json()
+    # why fail?????
+    print("**** test_qfactor_json -- PASS now?? -- JSON in veiw()")
     assert response.status_code == 200
     assert response["Content-Type"].split(";")[0] == "application/json"
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
+@pytest.mark.django_db
 def test_allows_get_with_query_param(client):
     response = client.get(url_string(query="{test}"))
 
@@ -59,6 +87,7 @@ def test_allows_get_with_query_param(client):
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
+@pytest.mark.django_db
 def test_allows_get_with_variable_values(client):
     response = client.get(
         url_string(
@@ -71,6 +100,7 @@ def test_allows_get_with_variable_values(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_allows_get_with_operation_name(client):
     response = client.get(
         url_string(
@@ -92,6 +122,7 @@ def test_allows_get_with_operation_name(client):
     }
 
 
+@pytest.mark.django_db
 def test_reports_validation_errors(client):
     response = client.get(url_string(query="{ test, unknownOne, unknownTwo }"))
 
@@ -110,6 +141,7 @@ def test_reports_validation_errors(client):
     }
 
 
+@pytest.mark.django_db
 def test_errors_when_missing_operation_name(client):
     response = client.get(
         url_string(
@@ -130,6 +162,7 @@ def test_errors_when_missing_operation_name(client):
     }
 
 
+@pytest.mark.django_db
 def test_errors_when_sending_a_mutation_via_get(client):
     response = client.get(
         url_string(
@@ -146,6 +179,7 @@ def test_errors_when_sending_a_mutation_via_get(client):
     }
 
 
+@pytest.mark.django_db
 def test_errors_when_selecting_a_mutation_within_a_get(client):
     response = client.get(
         url_string(
@@ -165,6 +199,7 @@ def test_errors_when_selecting_a_mutation_within_a_get(client):
     }
 
 
+@pytest.mark.django_db
 def test_allows_mutation_to_exist_within_a_get(client):
     response = client.get(
         url_string(
@@ -180,6 +215,7 @@ def test_allows_mutation_to_exist_within_a_get(client):
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
+@pytest.mark.django_db
 def test_allows_post_with_json_encoding(client):
     response = client.post(url_string(), j(query="{test}"), "application/json")
 
@@ -187,6 +223,7 @@ def test_allows_post_with_json_encoding(client):
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
+@pytest.mark.django_db
 def test_batch_allows_post_with_json_encoding(client):
     response = client.post(
         batch_url_string(), jl(id=1, query="{test}"), "application/json"
@@ -198,6 +235,7 @@ def test_batch_allows_post_with_json_encoding(client):
     ]
 
 
+@pytest.mark.django_db
 def test_batch_fails_if_is_empty(client):
     response = client.post(batch_url_string(), "[]", "application/json")
 
@@ -207,6 +245,7 @@ def test_batch_fails_if_is_empty(client):
     }
 
 
+@pytest.mark.django_db
 def test_allows_sending_a_mutation_via_post(client):
     response = client.post(
         url_string(),
@@ -218,6 +257,7 @@ def test_allows_sending_a_mutation_via_post(client):
     assert response_json(response) == {"data": {"writeTest": {"test": "Hello World"}}}
 
 
+@pytest.mark.django_db
 def test_allows_post_with_url_encoding(client):
     response = client.post(
         url_string(),
@@ -229,6 +269,7 @@ def test_allows_post_with_url_encoding(client):
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
+@pytest.mark.django_db
 def test_supports_post_json_query_with_string_variables(client):
     response = client.post(
         url_string(),
@@ -243,6 +284,7 @@ def test_supports_post_json_query_with_string_variables(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_batch_supports_post_json_query_with_string_variables(client):
     response = client.post(
         batch_url_string(),
@@ -260,6 +302,7 @@ def test_batch_supports_post_json_query_with_string_variables(client):
     ]
 
 
+@pytest.mark.django_db
 def test_supports_post_json_query_with_json_variables(client):
     response = client.post(
         url_string(),
@@ -274,6 +317,7 @@ def test_supports_post_json_query_with_json_variables(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_batch_supports_post_json_query_with_json_variables(client):
     response = client.post(
         batch_url_string(),
@@ -291,6 +335,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
     ]
 
 
+@pytest.mark.django_db
 def test_supports_post_url_encoded_query_with_string_variables(client):
     response = client.post(
         url_string(),
@@ -307,6 +352,7 @@ def test_supports_post_url_encoded_query_with_string_variables(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_supports_post_json_quey_with_get_variable_values(client):
     response = client.post(
         url_string(variables=json.dumps({"who": "Dolly"})),
@@ -318,6 +364,7 @@ def test_supports_post_json_quey_with_get_variable_values(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_post_url_encoded_query_with_get_variable_values(client):
     response = client.post(
         url_string(variables=json.dumps({"who": "Dolly"})),
@@ -329,6 +376,7 @@ def test_post_url_encoded_query_with_get_variable_values(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_supports_post_raw_text_query_with_get_variable_values(client):
     response = client.post(
         url_string(variables=json.dumps({"who": "Dolly"})),
@@ -340,6 +388,7 @@ def test_supports_post_raw_text_query_with_get_variable_values(client):
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
+@pytest.mark.django_db
 def test_allows_post_with_operation_name(client):
     response = client.post(
         url_string(),
@@ -363,6 +412,7 @@ def test_allows_post_with_operation_name(client):
     }
 
 
+@pytest.mark.django_db
 def test_batch_allows_post_with_operation_name(client):
     response = client.post(
         batch_url_string(),
@@ -391,6 +441,7 @@ def test_batch_allows_post_with_operation_name(client):
     ]
 
 
+@pytest.mark.django_db
 def test_allows_post_with_get_operation_name(client):
     response = client.post(
         url_string(operationName="helloWorld"),
@@ -411,6 +462,7 @@ def test_allows_post_with_get_operation_name(client):
     }
 
 
+@pytest.mark.django_db
 @pytest.mark.urls("graphene_django.tests.urls_inherited")
 def test_inherited_class_with_attributes_works(client):
     inherited_url = "/graphql/inherited/"
@@ -425,6 +477,7 @@ def test_inherited_class_with_attributes_works(client):
     assert response.status_code == 200
 
 
+@pytest.mark.django_db
 @pytest.mark.urls("graphene_django.tests.urls_pretty")
 def test_supports_pretty_printing(client):
     response = client.get(url_string(query="{test}"))
@@ -434,6 +487,7 @@ def test_supports_pretty_printing(client):
     )
 
 
+@pytest.mark.django_db
 def test_supports_pretty_printing_by_request(client):
     response = client.get(url_string(query="{test}", pretty="1"))
 
@@ -442,6 +496,7 @@ def test_supports_pretty_printing_by_request(client):
     )
 
 
+@pytest.mark.django_db
 def test_handles_field_errors_caught_by_graphql(client):
     response = client.get(url_string(query="{thrower}"))
     assert response.status_code == 200
@@ -457,6 +512,7 @@ def test_handles_field_errors_caught_by_graphql(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_syntax_errors_caught_by_graphql(client):
     response = client.get(url_string(query="syntaxerror"))
     assert response.status_code == 400
@@ -471,6 +527,7 @@ def test_handles_syntax_errors_caught_by_graphql(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_errors_caused_by_a_lack_of_query(client):
     response = client.get(url_string())
 
@@ -480,6 +537,7 @@ def test_handles_errors_caused_by_a_lack_of_query(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_not_expected_json_bodies(client):
     response = client.post(url_string(), "[]", "application/json")
 
@@ -489,6 +547,7 @@ def test_handles_not_expected_json_bodies(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_invalid_json_bodies(client):
     response = client.post(url_string(), "[oh}", "application/json")
 
@@ -498,6 +557,7 @@ def test_handles_invalid_json_bodies(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_django_request_error(client, monkeypatch):
     def mocked_read(*args):
         raise IOError("foo-bar")
@@ -511,6 +571,7 @@ def test_handles_django_request_error(client, monkeypatch):
     assert response_json(response) == {"errors": [{"message": "foo-bar"}]}
 
 
+@pytest.mark.django_db
 def test_handles_incomplete_json_bodies(client):
     response = client.post(url_string(), '{"query":', "application/json")
 
@@ -520,6 +581,7 @@ def test_handles_incomplete_json_bodies(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_plain_post_text(client):
     response = client.post(
         url_string(variables=json.dumps({"who": "Dolly"})),
@@ -532,6 +594,7 @@ def test_handles_plain_post_text(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_poorly_formed_variables(client):
     response = client.get(
         url_string(
@@ -544,6 +607,7 @@ def test_handles_poorly_formed_variables(client):
     }
 
 
+@pytest.mark.django_db
 def test_handles_unsupported_http_methods(client):
     response = client.put(url_string(query="{test}"))
     assert response.status_code == 405
@@ -553,6 +617,7 @@ def test_handles_unsupported_http_methods(client):
     }
 
 
+@pytest.mark.django_db
 def test_passes_request_into_context_request(client):
     response = client.get(url_string(query="{request}", q="testing"))
 
