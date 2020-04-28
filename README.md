@@ -1,7 +1,3 @@
-Please read [UPGRADE-v2.0.md](https://github.com/graphql-python/graphene/blob/master/UPGRADE-v2.0.md) to learn how to upgrade to Graphene `2.0`.
-
----
-
 # ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django
 
 
@@ -12,14 +8,16 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 [![Anaconda-Server Badge][conda-image]][conda-url]
 [![coveralls][coveralls-image]][coveralls-url]
 
-[travis-image]: https://travis-ci.org/graphql-python/graphene-django.svg?style=flat
+[travis-image]: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master&style=flat
 [travis-url]: https://travis-ci.org/graphql-python/graphene-django
 [pypi-image]: https://img.shields.io/pypi/v/graphene-django.svg?style=flat
 [pypi-url]: https://pypi.org/project/graphene-django/
-[coveralls-image]: https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github
+[coveralls-image]: https://coveralls.io/repos/github/graphql-python/graphene-django/badge.svg?branch=master
 [coveralls-url]: https://coveralls.io/github/graphql-python/graphene-django?branch=master
 [conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
 [conda-url]: https://anaconda.org/conda-forge/graphene-django
+
+[💬 Join the community on Slack](https://join.slack.com/t/graphenetools/shared_invite/enQtOTE2MDQ1NTg4MDM1LTA4Nzk0MGU0NGEwNzUxZGNjNDQ4ZjAwNDJjMjY0OGE1ZDgxZTg4YjM2ZTc4MjE2ZTAzZjE2ZThhZTQzZTkyMmM)
 
 ## Documentation
 
@@ -92,7 +90,7 @@ class Query(graphene.ObjectType):
 schema = graphene.Schema(query=Query)
 ```
 
-Then you can simply query the schema:
+Then you can query the schema:
 
 ```python
 query = '''

@@ -9,13 +9,9 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
-from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
-from ..converter import convert_choice_field_to_enum
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
-
-registry.reset_global_registry()
 
 
 class Reporter(DjangoObjectType):
@@ -198,7 +194,6 @@ type RootQuery {
 def with_local_registry(func):
     def inner(*args, **kwargs):
         old = registry.get_global_registry()
-        registry.reset_global_registry()
         try:
             retval = func(*args, **kwargs)
         except Exception as e:
@@ -499,7 +494,9 @@ class TestDjangoObjectType:
         """
         )
 
-    def test_django_objecttype_convert_choices_enum_naming_collisions(self, PetModel):
+    def test_django_objecttype_convert_choices_enum_naming_collisions(
+        self, PetModel, graphene_settings
+    ):
         graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
 
         class PetModelKind(DjangoObjectType):
@@ -533,9 +530,10 @@ class TestDjangoObjectType:
         }
         """
         )
-        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = False
 
-    def test_django_objecttype_choices_custom_enum_name(self, PetModel):
+    def test_django_objecttype_choices_custom_enum_name(
+        self, PetModel, graphene_settings
+    ):
         graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
             "graphene_django.tests.test_types.custom_enum_name"
         )
@@ -571,5 +569,3 @@ class TestDjangoObjectType:
         }
         """
         )
-
-        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = None

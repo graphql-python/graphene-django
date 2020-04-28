@@ -1,6 +1,10 @@
-from django.utils.translation import gettext_lazy
+import json
 
-from ..utils import camelize, get_model_fields
+import pytest
+from django.utils.translation import gettext_lazy
+from mock import patch
+
+from ..utils import camelize, get_model_fields, GraphQLTestCase
 from .models import Film, Reporter
 
 
@@ -30,3 +34,27 @@ def test_camelize():
         "valueA": "value_b"
     }
     assert camelize({0: {"field_a": ["errors"]}}) == {0: {"fieldA": ["errors"]}}
+
+
+@pytest.mark.django_db
+@patch("graphene_django.utils.testing.Client.post")
+def test_graphql_test_case_op_name(post_mock):
+    """
+    Test that `GraphQLTestCase.query()`'s `op_name` argument produces an `operationName` field.
+    """
+
+    class TestClass(GraphQLTestCase):
+        GRAPHQL_SCHEMA = True
+
+        def runTest(self):
+            pass
+
+    tc = TestClass()
+    tc.setUpClass()
+    tc.query("query { }", op_name="QueryName")
+    body = json.loads(post_mock.call_args.args[1])
+    # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
+    assert (
+        "operationName",
+        "QueryName",
+    ) in body.items(), "Field 'operationName' is not present in the final request."

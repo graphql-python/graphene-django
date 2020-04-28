@@ -10,7 +10,6 @@ from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
 
-@pytest.mark.django_db
 class TestDjangoListField:
     def test_only_django_object_types(self):
         class TestType(ObjectType):
