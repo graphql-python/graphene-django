@@ -24,6 +24,7 @@ def mock_info():
         operation=None,
         variable_values=None,
         context=None,
+        is_awaitable=None,
     )
 
 
