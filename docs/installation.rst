@@ -8,7 +8,7 @@ Requirements
 
 Graphene-Django currently supports the following versions of Django:
 
-* >= Django 1.11
+* >= Django 2.2
 
 Installation
 ------------
@@ -32,19 +32,7 @@ Add ``graphene_django`` to the ``INSTALLED_APPS`` in the ``settings.py`` file of
 
 We need to add a ``graphql`` URL to the ``urls.py`` of your Django project:
 
-For Django 1.11:
-
-.. code:: python
-
-    from django.conf.urls import url
-    from graphene_django.views import GraphQLView
-
-    urlpatterns = [
-        # ...
-        url(r"graphql", GraphQLView.as_view(graphiql=True)),
-    ]
-
-For Django 2.0 and above:
+For Django 2.2 and above:
 
 .. code:: python
 
