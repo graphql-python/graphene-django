@@ -7,10 +7,17 @@ sys.path.insert(0, ROOT_PATH + '/examples/')
 SECRET_KEY = 1
 
 INSTALLED_APPS = [
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
     'graphene_django',
     'graphene_django.rest_framework',
     'graphene_django.tests',
     'starwars',
+]
+
+MIDDLEWARE = [
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
 ]
 
 DATABASES = {
