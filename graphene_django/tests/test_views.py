@@ -435,9 +435,7 @@ def test_allows_post_with_operation_name(client):
 
     assert response.status_code == 200
     # returns just json as __dict__
-    expected_dict = {
-        "data": {"test": "Hello World", "shared": "Hello Everyone"}
-    }
+    expected_dict = {"data": {"test": "Hello World", "shared": "Hello Everyone"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
@@ -491,15 +489,13 @@ def test_allows_post_with_get_operation_name(client):
 
     assert response.status_code == 200
     # returns just json as list of __dict__
-    expected_dict = {
-        "data": {"test": "Hello World", "shared": "Hello Everyone"}
-    }
+    expected_dict = {"data": {"test": "Hello World", "shared": "Hello Everyone"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
 
 # inherited/ ??? -- does not work cuurently
-'''
+"""
 @pytest.mark.django_db
 @pytest.mark.urls("graphene_django.tests.urls_inherited")
 def test_inherited_class_with_attributes_works(client):
@@ -517,7 +513,7 @@ def test_inherited_class_with_attributes_works(client):
     # Check graphiql works
     response = client.get(url_string(inherited_url), HTTP_ACCEPT="text/html")
     assert response.status_code == 200
-'''
+"""
 
 
 @pytest.mark.django_db
@@ -618,9 +614,7 @@ def test_handles_plain_post_text(client):
     )
     assert response.status_code == 400
     # returns just json as list of __dict__
-    expected_dict = {
-        "errors": [{"message": "Must provide query string."}]
-    }
+    expected_dict = {"errors": [{"message": "Must provide query string."}]}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
