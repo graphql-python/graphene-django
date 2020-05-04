@@ -6,6 +6,7 @@
 #    -- also in settings.py INSTALLED_APPS
 import json
 import pytest
+
 try:
     from urllib import urlencode
 except ImportError:
@@ -39,12 +40,7 @@ def test_graphiql_is_enabled(client):
 
 @pytest.mark.django_db
 def test_qfactor_graphiql(client):
-    response = client.get(
-        url_string(
-            query="{test}",
-            HTTP_ACCEPT="text/html",
-        )
-    )
+    response = client.get(url_string(query="{test}", HTTP_ACCEPT="text/html",))
 
     assert response.status_code == 200
     ##assert response["Content-Type"].split(";")[0] == "text/html"
@@ -53,10 +49,7 @@ def test_qfactor_graphiql(client):
 @pytest.mark.django_db
 def test_qfactor_json(client):
     response = client.get(
-        url_string(
-            query="{test}",
-            HTTP_ACCEPT="application/json",
-        )
+        url_string(query="{test}", HTTP_ACCEPT="application/json",)
     ).json()
 
     # returns just json as __dict__
@@ -237,7 +230,7 @@ def test_batch_allows_post_with_json_encoding(client):
 
     assert response.status_code == 200
     # returns just json as __dict__
-    expected_dict = [{"id": 1, "data": {"test": "Hello World"}, 'status': 200}]
+    expected_dict = [{"id": 1, "data": {"test": "Hello World"}, "status": 200}]
     # directly compare all key,value for __dict__ -- NOTE responce is list of stuff!
     assert response.json() == expected_dict
 
@@ -268,7 +261,7 @@ def test_allows_sending_a_mutation_via_post(client):
     assert response.json() == expected_dict
 
 
-'''
+"""
 @pytest.mark.django_db
 def test_allows_post_with_url_encoding(client):
     response = client.post(
@@ -282,7 +275,7 @@ def test_allows_post_with_url_encoding(client):
     expected_dict = {"data": {"test": "Hello World"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
-'''
+"""
 
 
 @pytest.mark.django_db
@@ -317,7 +310,7 @@ def test_batch_supports_post_json_query_with_string_variables(client):
 
     assert response.status_code == 200
     # returns just json as __dict__
-    expected_dict = [{"id": 1, "data": {"test": "Hello Dolly"}, 'status': 200}]
+    expected_dict = [{"id": 1, "data": {"test": "Hello Dolly"}, "status": 200}]
     # directly compare all key,value for __dict__ -- NOTE responce is list of stuff!
     assert response.json() == expected_dict
 
@@ -354,14 +347,12 @@ def test_batch_supports_post_json_query_with_json_variables(client):
 
     assert response.status_code == 200
     # returns just json as __dict__
-    expected_dict = [
-        {"id": 1, "data": {"test": "Hello Dolly"}, "status": 200}
-    ]
+    expected_dict = [{"id": 1, "data": {"test": "Hello Dolly"}, "status": 200}]
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
 
-'''
+"""
 @pytest.mark.django_db
 def test_supports_post_url_encoded_query_with_string_variables(client):
     response = client.post(
@@ -380,7 +371,7 @@ def test_supports_post_url_encoded_query_with_string_variables(client):
     expected_dict = {"data": {"test": "Hello Dolly"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
-'''
+"""
 
 
 @pytest.mark.django_db
@@ -398,7 +389,7 @@ def test_supports_post_json_quey_with_get_variable_values(client):
     assert response.json() == expected_dict
 
 
-'''
+"""
 @pytest.mark.django_db
 def test_post_url_encoded_query_with_get_variable_values(client):
     response = client.post(
@@ -412,10 +403,10 @@ def test_post_url_encoded_query_with_get_variable_values(client):
     expected_dict = {"data": {"test": "Hello Dolly"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
-'''
+"""
 
 
-'''
+"""
 @pytest.mark.django_db
 def test_supports_post_raw_text_query_with_get_variable_values(client):
     response = client.post(
@@ -429,7 +420,7 @@ def test_supports_post_raw_text_query_with_get_variable_values(client):
     expected_dict = {"data": {"test": "Hello Dolly"}}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
-'''
+"""
 
 
 '''
@@ -519,7 +510,7 @@ def test_allows_post_with_get_operation_name(client):
 '''
 
 
-'''
+"""
 # inherited/ ???
 @pytest.mark.django_db
 @pytest.mark.urls("graphene_django.tests.urls_inherited")
@@ -538,7 +529,7 @@ def test_inherited_class_with_attributes_works(client):
     # Check graphiql works
     response = client.get(url_string(inherited_url), HTTP_ACCEPT="text/html")
     assert response.status_code == 200
-'''
+"""
 
 
 @pytest.mark.django_db
@@ -578,16 +569,13 @@ def test_handles_syntax_errors_caught_by_graphql(client):
     assert response.json() == expected_dict
 
 
-
 @pytest.mark.django_db
 def test_handles_errors_caused_by_a_lack_of_query(client):
     response = client.get(url_string())
 
     assert response.status_code == 400
     # returns just json as list of __dict__
-    expected_dict = {
-        "errors": [{"message": "Must provide query string."}]
-    }
+    expected_dict = {"errors": [{"message": "Must provide query string."}]}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
@@ -605,16 +593,13 @@ def test_handles_not_expected_json_bodies(client):
     assert response.json() == expected_dict
 
 
-
 @pytest.mark.django_db
 def test_handles_invalid_json_bodies(client):
     response = client.post(url_string(), "[oh}", "application/json")
 
     assert response.status_code == 400
     # returns just json as list of __dict__
-    expected_dict = {
-        "errors": [{"message": "POST body sent invalid JSON."}]
-    }
+    expected_dict = {"errors": [{"message": "POST body sent invalid JSON."}]}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
@@ -636,8 +621,7 @@ def test_handles_django_request_error(client, monkeypatch):
     assert response.json() == expected_dict
 
 
-
-'''
+"""
 @pytest.mark.django_db
 def test_handles_plain_post_text(client):
     response = client.post(
@@ -652,7 +636,7 @@ def test_handles_plain_post_text(client):
     }
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
-'''
+"""
 
 
 @pytest.mark.django_db
@@ -664,9 +648,7 @@ def test_handles_poorly_formed_variables(client):
     )
     assert response.status_code == 400
     # returns just json as list of __dict__
-    expected_dict = {
-        "errors": [{"message": "Variables are invalid JSON."}]
-    }
+    expected_dict = {"errors": [{"message": "Variables are invalid JSON."}]}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
@@ -691,9 +673,7 @@ def test_handles_incomplete_json_bodies(client):
 
     assert response.status_code == 400
     # returns just json as list of __dict__
-    expected_dict = {
-        "errors": [{"message": "POST body sent invalid JSON."}]
-    }
+    expected_dict = {"errors": [{"message": "POST body sent invalid JSON."}]}
     # directly compare all key,value for __dict__
     assert response.json() == expected_dict
 
@@ -710,7 +690,7 @@ def test_passes_request_into_context_request(client):
 
 
 # pretty() -- since we are not comparing as string, not sure about this
-'''
+"""
 @pytest.mark.django_db
 @pytest.mark.urls("graphene_django.tests.urls_pretty")
 def test_supports_pretty_printing(client):
@@ -728,4 +708,4 @@ def test_supports_pretty_printing_by_request(client):
     assert response.content.decode() == (
         "{\n" '  "data": {\n' '    "test": "Hello World"\n' "  }\n" "}"
     )
-'''
+"""
