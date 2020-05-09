@@ -14,7 +14,7 @@ assignees: ''
 
 
 * **If the current behavior is a bug, please provide the steps to reproduce and if possible a minimal demo of the problem** via
-a github repot, https://repl.it or similar (you can use this template as a starting point: https://repl.it/@jkimbo/Graphene-Django-Example).
+a github repo, https://repl.it or similar (you can use this template as a starting point: https://repl.it/@jkimbo/Graphene-Django-Example).
 
 
 
@@ -31,4 +31,4 @@ a github repot, https://repl.it or similar (you can use this template as a start
   - Version: 
   - Platform: 
 
-* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow, gitter, etc)
+* **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow)
