@@ -1,7 +1,7 @@
 from .fields import DjangoConnectionField, DjangoListField
 from .types import DjangoObjectType
 
-__version__ = "2.10.0"
+__version__ = "3.0.0b1"
 
 __all__ = [
     "__version__",
