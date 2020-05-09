@@ -24,11 +24,13 @@ class GraphQLTestCase(TestCase):
 
         cls._client = Client()
 
-    def query(self, query, op_name=None, input_data=None, variables=None, headers=None):
+    def query(
+        self, query, operation_name=None, input_data=None, variables=None, headers=None
+    ):
         """
         Args:
             query (string)    - GraphQL query to run
-            op_name (string)  - If the query is a mutation or named query, you must
+            operation_name (string)  - If the query is a mutation or named query, you must
                                 supply the op_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
@@ -44,8 +46,8 @@ class GraphQLTestCase(TestCase):
             Response object from client
         """
         body = {"query": query}
-        if op_name:
-            body["operationName"] = op_name
+        if operation_name:
+            body["operationName"] = operation_name
         if variables:
             body["variables"] = variables
         if input_data:
