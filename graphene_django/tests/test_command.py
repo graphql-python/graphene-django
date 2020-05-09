@@ -8,7 +8,7 @@ from graphene import ObjectType, Schema, String
 
 
 @patch("graphene_django.management.commands.graphql_schema.Command.save_json_file")
-def test_generate_json_file_on_call_graphql_schema(savefile_mock, settings):
+def test_generate_json_file_on_call_graphql_schema(savefile_mock):
     out = StringIO()
     management.call_command("graphql_schema", schema="", stdout=out)
     assert "Successfully dumped GraphQL schema to schema.json" in out.getvalue()
