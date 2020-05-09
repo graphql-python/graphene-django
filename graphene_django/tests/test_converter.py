@@ -25,12 +25,19 @@ from .models import Article, Film, FilmDetails, Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
-    field = django_field(help_text="Custom Help Text", null=True, *args, **kwargs)
+    _kwargs = kwargs.copy()
+    if "null" not in kwargs:
+        _kwargs["null"] = True
+    field = django_field(help_text="Custom Help Text", *args, **_kwargs)
     graphene_type = convert_django_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
     assert field.description == "Custom Help Text"
-    nonnull_field = django_field(null=False, *args, **kwargs)
+
+    _kwargs = kwargs.copy()
+    if "null" not in kwargs:
+        _kwargs["null"] = False
+    nonnull_field = django_field(*args, **_kwargs)
     if not nonnull_field.null:
         nonnull_graphene_type = convert_django_field(nonnull_field)
         nonnull_field = nonnull_graphene_type.Field()
@@ -126,7 +133,12 @@ def test_should_integer_convert_int():
 
 
 def test_should_boolean_convert_boolean():
-    field = assert_conversion(models.BooleanField, graphene.NonNull)
+    assert_conversion(models.BooleanField, graphene.Boolean, null=True)
+
+
+def test_should_boolean_convert_non_null_boolean():
+    field = assert_conversion(models.BooleanField, graphene.Boolean, null=False)
+    assert isinstance(field.type, graphene.NonNull)
     assert field.type.of_type == graphene.Boolean
 
 
