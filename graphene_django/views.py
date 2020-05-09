@@ -14,6 +14,7 @@ from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
 
 from graphene import Schema
+from graphql.execution.middleware import MiddlewareManager
 
 from .settings import graphene_settings
 
@@ -78,7 +79,10 @@ class GraphQLView(View):
 
         self.schema = self.schema or schema
         if middleware is not None:
-            self.middleware = list(instantiate_middleware(middleware))
+            if isinstance(middleware, MiddlewareManager):
+                self.middleware = middleware
+            else:
+                self.middleware = list(instantiate_middleware(middleware))
         self.root_value = root_value
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql

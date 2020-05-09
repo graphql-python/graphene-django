@@ -154,13 +154,9 @@ def convert_field_to_int(field, registry=None):
     return Int(description=field.help_text, required=not field.null)
 
 
+@convert_django_field.register(models.NullBooleanField)
 @convert_django_field.register(models.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return NonNull(Boolean, description=field.help_text)
-
-
-@convert_django_field.register(models.NullBooleanField)
-def convert_field_to_nullboolean(field, registry=None):
     return Boolean(description=field.help_text, required=not field.null)
 
 

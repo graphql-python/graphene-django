@@ -17,6 +17,7 @@ jobs:
         python-version: 3.8
     - name: Build wheel and source tarball
       run: |
+        pip install wheel
         python setup.py sdist bdist_wheel
     - name: Publish a Python distribution to PyPI
       uses: pypa/gh-action-pypi-publish@v1.1.0
