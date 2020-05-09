@@ -99,12 +99,14 @@ def test_reports_validation_errors(client):
     assert response_json(response) == {
         "errors": [
             {
-                "message": 'Cannot query field "unknownOne" on type "QueryRoot".',
+                "message": "Cannot query field 'unknownOne' on type 'QueryRoot'.",
                 "locations": [{"line": 1, "column": 9}],
+                "path": None,
             },
             {
-                "message": 'Cannot query field "unknownTwo" on type "QueryRoot".',
+                "message": "Cannot query field 'unknownTwo' on type 'QueryRoot'.",
                 "locations": [{"line": 1, "column": 21}],
+                "path": None,
             },
         ]
     }
@@ -124,7 +126,9 @@ def test_errors_when_missing_operation_name(client):
     assert response_json(response) == {
         "errors": [
             {
-                "message": "Must provide operation name if query contains multiple operations."
+                "message": "Must provide operation name if query contains multiple operations.",
+                "locations": None,
+                "path": None,
             }
         ]
     }
@@ -464,8 +468,8 @@ def test_handles_syntax_errors_caught_by_graphql(client):
         "errors": [
             {
                 "locations": [{"column": 1, "line": 1}],
-                "message": "Syntax Error GraphQL (1:1) "
-                'Unexpected Name "syntaxerror"\n\n1: syntaxerror\n   ^\n',
+                "message": "Syntax Error: Unexpected Name 'syntaxerror'.",
+                "path": None,
             }
         ]
     }

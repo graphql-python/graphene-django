@@ -51,10 +51,6 @@ def test_generate_graphql_file_on_call_graphql_schema():
     schema_output = handle.write.call_args[0][0]
     assert schema_output == dedent(
         """\
-        schema {
-          query: Query
-        }
-
         type Query {
           hi: String
         }

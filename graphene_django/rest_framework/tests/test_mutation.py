@@ -17,12 +17,14 @@ def mock_info():
         None,
         None,
         None,
+        path=None,
         schema=None,
         fragments=None,
         root_value=None,
         operation=None,
         variable_values=None,
         context=None,
+        is_awaitable=None,
     )
 
 

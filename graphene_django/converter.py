@@ -3,11 +3,14 @@ from functools import singledispatch
 
 from django.db import models
 from django.utils.encoding import force_str
+from django.utils.functional import Promise
 from django.utils.module_loading import import_string
-
 from graphene import (
     ID,
+    UUID,
     Boolean,
+    Date,
+    DateTime,
     Dynamic,
     Enum,
     Field,
@@ -16,25 +19,23 @@ from graphene import (
     List,
     NonNull,
     String,
-    UUID,
-    DateTime,
-    Date,
     Time,
 )
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case, to_const
-from graphql import assert_valid_name
+from graphql import GraphQLError, assert_valid_name
+from graphql.pyutils import register_description
 
-from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
-from .fields import DjangoListField, DjangoConnectionField
+from .fields import DjangoConnectionField, DjangoListField
+from .settings import graphene_settings
 
 
 def convert_choice_name(name):
     name = to_const(force_str(name))
     try:
         assert_valid_name(name)
-    except AssertionError:
+    except GraphQLError:
         name = "A_%s" % name
     return name
 
@@ -52,7 +53,9 @@ def get_choices(choices):
             while name in converted_names:
                 name += "_" + str(len(converted_names))
             converted_names.append(name)
-            description = help_text
+            description = str(
+                help_text
+            )  # TODO: translatable description: https://github.com/graphql-python/graphql-core-next/issues/58
             yield name, value, description
 
 
@@ -64,7 +67,7 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     class EnumWithDescriptionsType(object):
         @property
         def description(self):
-            return named_choices_descriptions[self.name]
+            return str(named_choices_descriptions[self.name])
 
     return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
 
@@ -276,3 +279,8 @@ def convert_postgres_range_to_string(field, registry=None):
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
     return List(inner_type, description=field.help_text, required=not field.null)
+
+
+# Register Django lazy()-wrapped values as GraphQL description/help_text.
+# This is needed for using lazy translations, see https://github.com/graphql-python/graphql-core-next/issues/58.
+register_description(Promise)
