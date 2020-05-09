@@ -272,12 +272,9 @@ class DjangoObjectType(ObjectType):
 
     @classmethod
     def is_type_of(cls, root, info):
-        if isinstance(root, SimpleLazyObject):
-            root._setup()
-            root = root._wrapped
         if isinstance(root, cls):
             return True
-        if not is_valid_django_model(type(root)):
+        if not is_valid_django_model(root.__class__):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
         if cls._meta.model._meta.proxy:
