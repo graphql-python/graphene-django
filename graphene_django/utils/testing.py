@@ -34,20 +34,20 @@ class GraphQLTestCase(TestCase):
                                 supply the op_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
-                                to this value. If both ``input_data`` and ``variables``, 
+                                to this value. If both ``input_data`` and ``variables``,
                                 are provided, the ``input`` field in the ``variables``
                                 dict will be overwritten with this value.
             variables (dict)  - If provided, the "variables" field in GraphQL will be
                                 set to this value.
             headers (dict)    - If provided, the headers in POST request to GRAPHQL_URL
-                                will be set to this value. 
+                                will be set to this value.
 
         Returns:
             Response object from client
         """
         body = {"query": query}
-        if operation_name:
-            body["operationName"] = operation_name
+        if op_name:
+            body["operationName"] = op_name
         if variables:
             body["variables"] = variables
         if input_data:

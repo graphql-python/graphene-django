@@ -17,7 +17,7 @@ class DjangoDebugContext(object):
         if not self.debug_promise:
             self.debug_promise = Promise.all(self.promises)
             self.promises = []
-        return self.debug_promise.then(self.on_resolve_all_promises)
+        return self.debug_promise.then(self.on_resolve_all_promises).get()
 
     def on_resolve_all_promises(self, values):
         if self.promises:
