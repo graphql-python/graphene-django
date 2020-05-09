@@ -46,8 +46,8 @@ class GraphQLTestCase(TestCase):
             Response object from client
         """
         body = {"query": query}
-        if op_name:
-            body["operationName"] = op_name
+        if operation_name:
+            body["operationName"] = operation_name
         if variables:
             body["variables"] = variables
         if input_data:
