@@ -38,16 +38,21 @@ class DjangoListField(Field):
     def model(self):
         return self._underlying_type._meta.model
 
+    def get_default_queryset(self):
+        return self.model._default_manager.get_queryset()
+
     @staticmethod
-    def list_resolver(django_object_type, resolver, root, info, **args):
+    def list_resolver(
+        django_object_type, resolver, default_queryset, root, info, **args
+    ):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
-            # Default to Django Model queryset
-            # N.B. This happens if DjangoListField is used in the top level Query object
-            model_manager = django_object_type._meta.model.objects
-            queryset = maybe_queryset(
-                django_object_type.get_queryset(model_manager, info)
-            )
+            queryset = default_queryset
+
+        if isinstance(queryset, QuerySet):
+            # Pass queryset to the DjangoObjectType get_queryset method
+            queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
+
         return queryset
 
     def get_resolver(self, parent_resolver):
@@ -55,7 +60,12 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
-        return partial(self.list_resolver, django_object_type, parent_resolver)
+        return partial(
+            self.list_resolver,
+            django_object_type,
+            parent_resolver,
+            self.get_default_queryset(),
+        )
 
 
 class DjangoConnectionField(ConnectionField):
