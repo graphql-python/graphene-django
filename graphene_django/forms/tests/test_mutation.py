@@ -81,6 +81,7 @@ def test_no_input_fields():
         class Meta:
             form_class = MyForm
             input_fields = []
+
     assert set(MyMutation.Input._meta.fields.keys()) == set(["client_mutation_id"])
 
 
@@ -90,7 +91,7 @@ def test_filtering_input_fields():
             form_class = MyForm
             input_fields = ["text"]
 
-    assert "text" in  MyMutation.Input._meta.fields
+    assert "text" in MyMutation.Input._meta.fields
     assert "another" not in MyMutation.Input._meta.fields
 
 
@@ -99,6 +100,7 @@ def test_select_output_fields():
         class Meta:
             form_class = MyForm
             fields = ["text"]
+
     assert "text" in MyMutation._meta.fields
     assert "another" not in MyMutation._meta.fields
 
@@ -106,8 +108,10 @@ def test_select_output_fields():
 def test_filtering_output_fields_exclude():
     class FormWithWeirdOutput(MyForm):
         """Weird form that has extra cleaned_data we want to expose"""
+
         text = forms.CharField()
         another = forms.CharField(required=False)
+
         def clean(self):
             super(FormWithWeirdOutput, self).clean()
             self.cleaned_data["some_integer"] = 5

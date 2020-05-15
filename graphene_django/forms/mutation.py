@@ -104,8 +104,13 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-        cls, form_class=None, only_fields=(), exclude_fields=(), 
-        fields=None, exclude=(), input_fields=None,
+        cls,
+        form_class=None,
+        only_fields=(),
+        exclude_fields=(),
+        fields=None,
+        exclude=(),
+        input_fields=None,
         **options
     ):
 
@@ -113,28 +118,33 @@ class DjangoFormMutation(BaseDjangoFormMutation):
             raise Exception("form_class is required for DjangoFormMutation")
 
         form = form_class()
-        if (any([fields, exclude, input_fields])
-             and (only_fields or exclude_fields)):
-            raise Exception("Cannot specify legacy `only_fields` or `exclude_fields` params with"
-                            " `only`, `exclude`, or `input_fields` params")
+        if any([fields, exclude, input_fields]) and (only_fields or exclude_fields):
+            raise Exception(
+                "Cannot specify legacy `only_fields` or `exclude_fields` params with"
+                " `only`, `exclude`, or `input_fields` params"
+            )
         if only_fields or exclude_fields:
             warnings.warn(
                 "only_fields/exclude_fields have been deprecated, use "
                 "input_fields or only/exclude (for output fields)"
                 "instead",
-                DeprecationWarning
+                DeprecationWarning,
             )
         if not fields or exclude:
             warnings.warn(
                 "a future version of graphene-django will require fields or exclude."
                 " Set fields='__all__' to allow all fields through.",
-                DeprecationWarning
+                DeprecationWarning,
             )
         if not input_fields and input_fields is not None:
             input_fields = {}
         else:
-            input_fields = fields_for_form(form, only_fields or input_fields, exclude_fields)
-        output_fields = fields_for_form(form, only_fields or fields, exclude_fields or exclude)
+            input_fields = fields_for_form(
+                form, only_fields or input_fields, exclude_fields
+            )
+        output_fields = fields_for_form(
+            form, only_fields or fields, exclude_fields or exclude
+        )
 
         _meta = DjangoFormMutationOptions(cls)
         _meta.form_class = form_class
