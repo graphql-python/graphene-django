@@ -1,6 +1,6 @@
 import json
 
-from django.test import Client, TestCase
+from django.test import TestCase
 
 
 class GraphQLTestCase(TestCase):
