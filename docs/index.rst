@@ -9,8 +9,8 @@ Graphene-Django provides some additional abstractions that make it easy to add G
 First time? We recommend you start with the installation guide to get set up and the basic tutorial.
 It is worth reading the `core graphene docs <https://docs.graphene-python.org/en/latest/>`__ to familiarize yourself with the basic utilities.
 
-Core tenants
-------------
+Core tenets
+-----------
 
 If you want to expose your data through GraphQL - read the ``Installation``, ``Schema`` and ``Queries`` section.
 
