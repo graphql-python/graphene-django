@@ -3,8 +3,11 @@
   // Parse the cookie value for a CSRF token
   var csrftoken;
   var cookies = ('; ' + document.cookie).split('; csrftoken=');
-  if (cookies.length == 2)
+  if (cookies.length == 2) {
     csrftoken = cookies.pop().split(';').shift();
+  } else {
+    csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+  }
 
   // Collect the URL parameters
   var parameters = {};
@@ -94,6 +97,6 @@
   // Render <GraphiQL /> into the body.
   ReactDOM.render(
     React.createElement(GraphiQL, options),
-    document.body
+    document.getElementById("editor")
   );
 })();

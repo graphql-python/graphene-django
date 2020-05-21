@@ -13,8 +13,6 @@ from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
-registry.reset_global_registry()
-
 
 class Reporter(DjangoObjectType):
     """Reporter description"""
@@ -113,90 +111,171 @@ def test_django_objecttype_with_custom_meta():
 
 
 def test_schema_representation():
-    expected = """
-schema {
-  query: RootQuery
-}
+    expected = dedent(
+        """\
+        schema {
+          query: RootQuery
+        }
 
-type Article implements Node {
-  id: ID!
-  headline: String!
-  pubDate: Date!
-  pubDateTime: DateTime!
-  reporter: Reporter!
-  editor: Reporter!
-  lang: ArticleLang!
-  importance: ArticleImportance
-}
+        \"""Article description\"""
+        type Article implements Node {
+          \"""The ID of the object\"""
+          id: ID!
 
-type ArticleConnection {
-  pageInfo: PageInfo!
-  edges: [ArticleEdge]!
-  test: String
-}
+          \"""\"""
+          headline: String!
 
-type ArticleEdge {
-  node: Article
-  cursor: String!
-}
+          \"""\"""
+          pubDate: Date!
 
-enum ArticleImportance {
-  A_1
-  A_2
-}
+          \"""\"""
+          pubDateTime: DateTime!
 
-enum ArticleLang {
-  ES
-  EN
-}
+          \"""\"""
+          reporter: Reporter!
 
-scalar Date
+          \"""\"""
+          editor: Reporter!
 
-scalar DateTime
+          \"""Language\"""
+          lang: ArticleLang!
 
-interface Node {
-  id: ID!
-}
+          \"""\"""
+          importance: ArticleImportance
+        }
 
-type PageInfo {
-  hasNextPage: Boolean!
-  hasPreviousPage: Boolean!
-  startCursor: String
-  endCursor: String
-}
+        \"""An object with an ID\"""
+        interface Node {
+          \"""The ID of the object\"""
+          id: ID!
+        }
 
-type Reporter {
-  id: ID!
-  firstName: String!
-  lastName: String!
-  email: String!
-  pets: [Reporter!]!
-  aChoice: ReporterAChoice
-  reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
-}
+        \"""
+        The `Date` scalar type represents a Date
+        value as specified by
+        [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+        \"""
+        scalar Date
 
-enum ReporterAChoice {
-  A_1
-  A_2
-}
+        \"""
+        The `DateTime` scalar type represents a DateTime
+        value as specified by
+        [iso8601](https://en.wikipedia.org/wiki/ISO_8601).
+        \"""
+        scalar DateTime
 
-enum ReporterReporterType {
-  A_1
-  A_2
-}
+        \"""An enumeration.\"""
+        enum ArticleLang {
+          \"""Spanish\"""
+          ES
 
-type RootQuery {
-  node(id: ID!): Node
-}
-""".lstrip()
+          \"""English\"""
+          EN
+        }
+
+        \"""An enumeration.\"""
+        enum ArticleImportance {
+          \"""Very important\"""
+          A_1
+
+          \"""Not as important\"""
+          A_2
+        }
+
+        \"""Reporter description\"""
+        type Reporter {
+          \"""\"""
+          id: ID!
+
+          \"""\"""
+          firstName: String!
+
+          \"""\"""
+          lastName: String!
+
+          \"""\"""
+          email: String!
+
+          \"""\"""
+          pets: [Reporter!]!
+
+          \"""\"""
+          aChoice: ReporterAChoice
+
+          \"""\"""
+          reporterType: ReporterReporterType
+
+          \"""\"""
+          articles(before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
+        }
+
+        \"""An enumeration.\"""
+        enum ReporterAChoice {
+          \"""this\"""
+          A_1
+
+          \"""that\"""
+          A_2
+        }
+
+        \"""An enumeration.\"""
+        enum ReporterReporterType {
+          \"""Regular\"""
+          A_1
+
+          \"""CNN Reporter\"""
+          A_2
+        }
+
+        type ArticleConnection {
+          \"""Pagination data for this connection.\"""
+          pageInfo: PageInfo!
+
+          \"""Contains the nodes in this connection.\"""
+          edges: [ArticleEdge]!
+          test: String
+        }
+
+        \"""
+        The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+        \"""
+        type PageInfo {
+          \"""When paginating forwards, are there more items?\"""
+          hasNextPage: Boolean!
+
+          \"""When paginating backwards, are there more items?\"""
+          hasPreviousPage: Boolean!
+
+          \"""When paginating backwards, the cursor to continue.\"""
+          startCursor: String
+
+          \"""When paginating forwards, the cursor to continue.\"""
+          endCursor: String
+        }
+
+        \"""A Relay edge containing a `Article` and its cursor.\"""
+        type ArticleEdge {
+          \"""The item at the end of the edge\"""
+          node: Article
+
+          \"""A cursor for use in pagination\"""
+          cursor: String!
+        }
+
+        type RootQuery {
+          node(
+            \"""The ID of the object\"""
+            id: ID!
+          ): Node
+        }
+        """
+    )
     assert str(schema) == expected
 
 
 def with_local_registry(func):
     def inner(*args, **kwargs):
         old = registry.get_global_registry()
-        registry.reset_global_registry()
         try:
             retval = func(*args, **kwargs)
         except Exception as e:
@@ -231,6 +310,17 @@ def test_django_objecttype_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_empty():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = ()
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == []
 
 
 @with_local_registry
@@ -315,7 +405,79 @@ def test_django_objecttype_fields_exclude_type_checking():
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
-                fields = "foo"
+                exclude = "foo"
+
+
+@with_local_registry
+def test_django_objecttype_fields_exist_on_model():
+    with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "foo", "email"]
+
+    with pytest.warns(
+        UserWarning,
+        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+    ) as record:
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "some_method", "email"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(None) as record:
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "custom_field", "email"]
+
+    assert len(record) == 0
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_exist_on_model():
+    with pytest.warns(
+        UserWarning,
+        match=r"Django model .* does not have a field or attribute named .*",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["foo"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(
+        UserWarning,
+        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+    ):
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                exclude = ["custom_field"]
+
+    # Don't warn on exclude fields
+    with pytest.warns(None) as record:
+
+        class Reporter4(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email", "first_name"]
+
+    assert len(record) == 0
+
+
+def custom_enum_name(field):
+    return "CustomEnum{}".format(field.name.title())
 
 
 class TestDjangoObjectType:
@@ -346,20 +508,21 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: String!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              kind: String!
+
+              \"""\"""
+              cuteness: Int!
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_list(self, PetModel):
@@ -375,25 +538,30 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: PetModelKind!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        enum PetModelKind {
-          CAT
-          DOG
-        }
+              \"""\"""
+              kind: PetModelKind!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              cuteness: Int!
+            }
+
+            \"""An enumeration.\"""
+            enum PetModelKind {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
@@ -409,18 +577,101 @@ class TestDjangoObjectType:
 
         assert str(schema) == dedent(
             """\
-        schema {
-          query: Query
-        }
+            type Query {
+              pet: Pet
+            }
 
-        type Pet {
-          id: ID!
-          kind: String!
-          cuteness: Int!
-        }
+            type Pet {
+              \"""\"""
+              id: ID!
 
-        type Query {
-          pet: Pet
-        }
-        """
+              \"""\"""
+              kind: String!
+
+              \"""\"""
+              cuteness: Int!
+            }
+            """
+        )
+
+    def test_django_objecttype_convert_choices_enum_naming_collisions(
+        self, PetModel, graphene_settings
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: PetModelKind
+            }
+
+            type PetModelKind {
+              \"""\"""
+              id: ID!
+
+              \"""\"""
+              kind: TestsPetModelKindChoices!
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
+        )
+
+    def test_django_objecttype_choices_custom_enum_name(
+        self, PetModel, graphene_settings
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
+            "graphene_django.tests.test_types.custom_enum_name"
+        )
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: PetModelKind
+            }
+
+            type PetModelKind {
+              \"""\"""
+              id: ID!
+
+              \"""\"""
+              kind: CustomEnumKind!
+            }
+
+            \"""An enumeration.\"""
+            enum CustomEnumKind {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+            """
         )

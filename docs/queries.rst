@@ -1,3 +1,5 @@
+.. _queries-objecttypes:
+
 Queries & ObjectTypes
 =====================
 
@@ -205,6 +207,8 @@ need to create the most basic class for this to work:
         class Meta:
             model = Category
 
+.. _django-objecttype-get-queryset:
+
 Default QuerySet
 -----------------
 
@@ -280,6 +284,13 @@ of Django's ``HTTPRequest`` in your resolve methods, such as checking for authen
             return Question.objects.all()
         else:
             return Question.objects.none()
+
+
+DjangoObjectTypes
+~~~~~~~~~~~~~~~~~
+
+A Resolver that maps to a defined `DjangoObjectType` should only use methods that return a queryset.
+Queryset methods like `values` will return dictionaries, use `defer` instead.
 
 
 Plain ObjectTypes

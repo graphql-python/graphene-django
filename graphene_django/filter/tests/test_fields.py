@@ -35,9 +35,6 @@ else:
         )
     )
 
-pytestmark.append(pytest.mark.django_db)
-
-
 if DJANGO_FILTER_INSTALLED:
 
     class ArticleNode(DjangoObjectType):
@@ -180,7 +177,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context=context())
+    result = schema.execute(query, context_value=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
@@ -608,58 +605,6 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
-def test_should_query_filter_node_double_limit_raises():
-    class ReporterFilter(FilterSet):
-        limit = NumberFilter(method="filter_limit")
-
-        def filter_limit(self, queryset, name, value):
-            return queryset[:value]
-
-        class Meta:
-            model = Reporter
-            fields = ["first_name"]
-
-    class ReporterType(DjangoObjectType):
-        class Meta:
-            model = Reporter
-            interfaces = (Node,)
-
-    class Query(ObjectType):
-        all_reporters = DjangoFilterConnectionField(
-            ReporterType, filterset_class=ReporterFilter
-        )
-
-        def resolve_all_reporters(self, info, **args):
-            return Reporter.objects.order_by("a_choice")[:2]
-
-    Reporter.objects.create(
-        first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
-    )
-    Reporter.objects.create(
-        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
-    )
-
-    schema = Schema(query=Query)
-    query = """
-        query NodeFilteringQuery {
-            allReporters(limit: 1) {
-                edges {
-                    node {
-                        id
-                        firstName
-                    }
-                }
-            }
-        }
-    """
-
-    result = schema.execute(query)
-    assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
-        "Received two sliced querysets (high mark) in the connection, please slice only in one."
-    )
-
-
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -721,7 +666,7 @@ def test_order_by_is_perserved():
     assert reverse_result.data == reverse_expected
 
 
-def test_annotation_is_perserved():
+def test_annotation_is_preserved():
     class ReporterType(DjangoObjectType):
         full_name = String()
 
@@ -766,6 +711,86 @@ def test_annotation_is_perserved():
     assert result.data == expected
 
 
+def test_annotation_with_only():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.only("first_name", "last_name").annotate(
+                full_name=Concat(
+                    "first_name", Value(" "), "last_name", output_field=TextField()
+                )
+            )
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"fullName": "John Doe"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_node_get_queryset_is_called():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset.filter(first_name="b")
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType, reverse_order=Boolean()
+        )
+
+    Reporter.objects.create(first_name="b")
+    Reporter.objects.create(first_name="a")
+
+    schema = Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 10) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"firstName": "b"}}]}}
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
 def test_integer_field_filter_type():
     class PetType(DjangoObjectType):
         class Meta:
@@ -781,38 +806,56 @@ def test_integer_field_filter_type():
 
     assert str(schema) == dedent(
         """\
-        schema {
-          query: Query
-        }
-
-        interface Node {
-          id: ID!
-        }
-
-        type PageInfo {
-          hasNextPage: Boolean!
-          hasPreviousPage: Boolean!
-          startCursor: String
-          endCursor: String
-        }
-
-        type PetType implements Node {
-          age: Int!
-          id: ID!
+        type Query {
+          pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
         }
 
         type PetTypeConnection {
+          \"""Pagination data for this connection.\"""
           pageInfo: PageInfo!
+
+          \"""Contains the nodes in this connection.\"""
           edges: [PetTypeEdge]!
         }
 
+        \"""
+        The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+        \"""
+        type PageInfo {
+          \"""When paginating forwards, are there more items?\"""
+          hasNextPage: Boolean!
+    
+          \"""When paginating backwards, are there more items?\"""
+          hasPreviousPage: Boolean!
+    
+          \"""When paginating backwards, the cursor to continue.\"""
+          startCursor: String
+    
+          \"""When paginating forwards, the cursor to continue.\"""
+          endCursor: String
+        }
+    
+        \"""A Relay edge containing a `PetType` and its cursor.\"""
         type PetTypeEdge {
+          \"""The item at the end of the edge\"""
           node: PetType
+    
+          \"""A cursor for use in pagination\"""
           cursor: String!
         }
-
-        type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+    
+        type PetType implements Node {
+          \"""\"""
+          age: Int!
+    
+          \"""The ID of the object\"""
+          id: ID!
+        }
+    
+        \"""An object with an ID\"""
+        interface Node {
+          \"""The ID of the object\"""
+          id: ID!
         }
     """
     )
@@ -833,40 +876,58 @@ def test_other_filter_types():
 
     assert str(schema) == dedent(
         """\
-        schema {
-          query: Query
-        }
-
-        interface Node {
-          id: ID!
-        }
-
-        type PageInfo {
-          hasNextPage: Boolean!
-          hasPreviousPage: Boolean!
-          startCursor: String
-          endCursor: String
-        }
-
-        type PetType implements Node {
-          age: Int!
-          id: ID!
+        type Query {
+          pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
         }
 
         type PetTypeConnection {
+          \"""Pagination data for this connection.\"""
           pageInfo: PageInfo!
+          
+          \"""Contains the nodes in this connection.\"""
           edges: [PetTypeEdge]!
         }
 
+        \"""
+        The Relay compliant `PageInfo` type, containing data necessary to paginate this connection.
+        \"""
+        type PageInfo {
+          \"""When paginating forwards, are there more items?\"""
+          hasNextPage: Boolean!
+
+          \"""When paginating backwards, are there more items?\"""
+          hasPreviousPage: Boolean!
+
+          \"""When paginating backwards, the cursor to continue.\"""
+          startCursor: String
+
+          \"""When paginating forwards, the cursor to continue.\"""
+          endCursor: String
+        }
+
+        \"""A Relay edge containing a `PetType` and its cursor.\"""
         type PetTypeEdge {
+          \"""The item at the end of the edge\"""
           node: PetType
+        
+          \"""A cursor for use in pagination\"""
           cursor: String!
         }
 
-        type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
+        type PetType implements Node {
+          \"""\"""
+          age: Int!
+        
+          \"""The ID of the object\"""
+          id: ID!
         }
-    """
+
+        \"""An object with an ID\"""
+        interface Node {
+          \"""The ID of the object\"""
+          id: ID!
+        }
+        """
     )
 
 

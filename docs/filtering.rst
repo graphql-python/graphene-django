@@ -2,9 +2,8 @@ Filtering
 =========
 
 Graphene integrates with
-`django-filter <https://django-filter.readthedocs.io/en/master/>`__ (2.x for
-Python 3 or 1.x for Python 2) to provide filtering of results. See the `usage
-documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+`django-filter <https://django-filter.readthedocs.io/en/master/>`__ to provide filtering of results.
+See the `usage documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
 This filtering is automatically available when implementing a ``relay.Node``.
@@ -14,8 +13,17 @@ You will need to install it manually, which can be done as follows:
 
 .. code:: bash
 
-    # You'll need to django-filter
+    # You'll need to install django-filter
     pip install django-filter>=2
+    
+After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        # ...
+        "django_filters",
+    ]
 
 Note: The techniques below are demoed in the `cookbook example
 app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
@@ -115,6 +123,15 @@ create your own ``FilterSet``. You can pass it directly as follows:
     class AnimalFilter(django_filters.FilterSet):
         # Do case-insensitive lookups on 'name'
         name = django_filters.CharFilter(lookup_expr=['iexact'])
+        # Allow multiple genera to be selected at once
+        genera = django_filters.MultipleChoiceFilter(
+            field_name='genus',
+            choices=(
+                ('Canis', 'Canis'),
+                ('Panthera', 'Panthera'),
+                ('Seahorse', 'Seahorse')
+            )
+        )
 
         class Meta:
             model = Animal
@@ -126,6 +143,22 @@ create your own ``FilterSet``. You can pass it directly as follows:
         # We specify our custom AnimalFilter using the filterset_class param
         all_animals = DjangoFilterConnectionField(AnimalNode,
                                                   filterset_class=AnimalFilter)
+
+
+If you were interested in selecting all dogs and cats, you might query as follows:
+
+.. code::
+
+    query {
+      allAnimals(genera: ["Canis", "Panthera"]) {
+        edges {
+          node {
+            id,
+            name
+          }
+        }
+      }
+    }
 
 You can also specify the ``FilterSet`` class using the ``filterset_class``
 parameter when defining your ``DjangoObjectType``, however, this can't be used
@@ -153,6 +186,7 @@ in unison  with the ``filter_fields`` parameter:
     class Query(ObjectType):
         animal = relay.Node.Field(AnimalNode)
         all_animals = DjangoFilterConnectionField(AnimalNode)
+
 
 The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/master/guide/usage.html#request-based-filtering>`__
 in a ``django_filters.FilterSet`` instance. You can use this to customize your

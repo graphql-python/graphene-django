@@ -1,7 +1,7 @@
-from setuptools import find_packages, setup
-import sys
 import ast
 import re
+
+from setuptools import find_packages, setup
 
 _version_re = re.compile(r"__version__\s+=\s+(.*)")
 
@@ -16,20 +16,20 @@ rest_framework_require = ["djangorestframework>=3.6.3"]
 tests_require = [
     "pytest>=3.6.3",
     "pytest-cov",
+    "pytest-random-order",
     "coveralls",
     "mock",
     "pytz",
-    "django-filter<2;python_version<'3'",
-    "django-filter>=2;python_version>='3'",
+    "django-filter>=2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
 
 
 dev_requires = [
-    "black==19.3b0",
-    "flake8==3.7.7",
-    "flake8-black==0.1.0",
-    "flake8-bugbear==19.3.0",
+    "black==19.10b0",
+    "flake8==3.7.9",
+    "flake8-black==0.1.1",
+    "flake8-bugbear==20.1.4",
 ] + tests_require
 
 setup(
@@ -45,22 +45,18 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
     keywords="api graphql protocol rest relay graphene",
     packages=find_packages(exclude=["tests"]),
     install_requires=[
-        "six>=1.10.0",
-        "graphene>=2.1.7,<3",
-        "graphql-core>=2.1.0,<3",
-        "Django>=1.11",
-        "singledispatch>=3.4.0.3",
+        "graphene>=3.0.0b1,<4",
+        "graphql-core>=3.1.0,<4",
+        "Django>=2.2",
         "promise>=2.1",
     ],
     setup_requires=["pytest-runner"],

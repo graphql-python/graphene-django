@@ -1,25 +1,20 @@
-import base64
 import datetime
 
 import pytest
 from django.db import models
+from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
+from graphql_relay import to_global_id
 from py.test import raises
 
-from django.db.models import Q
-
-from graphql_relay import to_global_id
 import graphene
 from graphene.relay import Node
 
-from ..utils import DJANGO_FILTER_INSTALLED
-from ..compat import MissingType, JSONField
+from ..compat import JSONField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
-from ..settings import graphene_settings
-from .models import Article, CNNReporter, Reporter, Film, FilmDetails
-
-pytestmark = pytest.mark.django_db
+from ..utils import DJANGO_FILTER_INSTALLED
+from .models import Article, CNNReporter, Film, FilmDetails, Reporter
 
 
 def test_should_query_only_fields():
@@ -147,9 +142,6 @@ def test_should_query_postgres_fields():
 
 
 def test_should_node():
-    # reset_global_registry()
-    # Node._meta.registry = get_global_registry()
-
     class ReporterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -588,7 +580,7 @@ def test_should_query_node_multiple_filtering():
     assert result.data == expected
 
 
-def test_should_enforce_first_or_last():
+def test_should_enforce_first_or_last(graphene_settings):
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = True
 
     class ReporterType(DjangoObjectType):
@@ -620,14 +612,14 @@ def test_should_enforce_first_or_last():
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "You must provide a `first` or `last` value to properly "
-        "paginate the `allReporters` connection."
+        "paginate the `allReporters` connection.\n"
     )
     assert result.data == expected
 
 
-def test_should_error_if_first_is_greater_than_max():
+def test_should_error_if_first_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -637,6 +629,8 @@ def test_should_error_if_first_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -659,16 +653,14 @@ def test_should_error_if_first_is_greater_than_max():
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `first` limit of 100 records."
+        "exceeds the `first` limit of 100 records.\n"
     )
     assert result.data == expected
 
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
-
-def test_should_error_if_last_is_greater_than_max():
+def test_should_error_if_last_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -678,6 +670,8 @@ def test_should_error_if_last_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -700,13 +694,11 @@ def test_should_error_if_last_is_greater_than_max():
 
     result = schema.execute(query)
     assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
+    assert str(result.errors[0]).startswith(
         "Requesting 101 records on the `allReporters` connection "
-        "exceeds the `last` limit of 100 records."
+        "exceeds the `last` limit of 100 records.\n"
     )
     assert result.data == expected
-
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
 def test_should_query_promise_connectionfields():
@@ -721,7 +713,7 @@ def test_should_query_promise_connectionfields():
         all_reporters = DjangoConnectionField(ReporterType)
 
         def resolve_all_reporters(self, info, **args):
-            return Promise.resolve([Reporter(id=1)])
+            return Promise.resolve([Reporter(id=1)]).get()
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -804,7 +796,7 @@ def test_should_query_connectionfields_with_manager():
     schema = graphene.Schema(query=Query)
     query = """
         query ReporterLastQuery {
-            allReporters(first: 2) {
+            allReporters(first: 1) {
                 edges {
                     node {
                         id
@@ -850,7 +842,7 @@ def test_should_query_dataloader_fields():
         articles = DjangoConnectionField(ArticleType)
 
         def resolve_articles(self, info, **args):
-            return article_loader.load(self.id)
+            return article_loader.load(self.id).get()
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1083,7 +1075,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     class Query(graphene.ObjectType):
         films = DjangoConnectionField(FilmType)
 
-        def resolve_films(root, info):
+        def resolve_films(root, info, **kwargs):
             qs = Film.objects.prefetch_related("reporters")
             return qs
 
@@ -1113,6 +1105,60 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
         }
     """
     schema = graphene.Schema(query=Query)
+
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
+        assert not result.errors
+
+
+def test_should_preserve_annotations():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (graphene.relay.Node,)
+
+    class FilmType(DjangoObjectType):
+        reporters = DjangoConnectionField(ReporterType)
+        reporters_count = graphene.Int()
+
+        class Meta:
+            model = Film
+            interfaces = (graphene.relay.Node,)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        def resolve_films(root, info, **kwargs):
+            qs = Film.objects.prefetch_related("reporters")
+            return qs.annotate(reporters_count=models.Count("reporters"))
+
+    r1 = Reporter.objects.create(first_name="Dave", last_name="Smith")
+    r2 = Reporter.objects.create(first_name="Jane", last_name="Doe")
+
+    f1 = Film.objects.create()
+    f1.reporters.set([r1, r2])
+    f2 = Film.objects.create()
+    f2.reporters.set([r2])
+
+    query = """
+        query {
+            films {
+                edges {
+                    node {
+                        reportersCount
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors, str(result)
+
+    expected = {
+        "films": {
+            "edges": [{"node": {"reportersCount": 2}}, {"node": {"reportersCount": 1}}]
+        }
+    }
+    assert result.data == expected, str(result.data)
     assert not result.errors

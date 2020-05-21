@@ -47,7 +47,7 @@ class BaseDjangoFormMutation(ClientIDMutation):
         else:
             errors = ErrorType.from_errors(form.errors)
 
-            return cls(errors=errors)
+            return cls(errors=errors, **form.data)
 
     @classmethod
     def get_form(cls, root, info, **input):
@@ -64,28 +64,6 @@ class BaseDjangoFormMutation(ClientIDMutation):
             kwargs["instance"] = instance
 
         return kwargs
-
-
-# class DjangoFormInputObjectTypeOptions(InputObjectTypeOptions):
-#     form_class = None
-
-
-# class DjangoFormInputObjectType(InputObjectType):
-#     class Meta:
-#         abstract = True
-
-#     @classmethod
-#     def __init_subclass_with_meta__(cls, form_class=None,
-#                                     only_fields=(), exclude_fields=(), _meta=None, **options):
-#         if not _meta:
-#             _meta = DjangoFormInputObjectTypeOptions(cls)
-#         assert isinstance(form_class, forms.Form), (
-#             'form_class must be an instance of django.forms.Form'
-#         )
-#         _meta.form_class = form_class
-#         form = form_class()
-#         fields = fields_for_form(form, only_fields, exclude_fields)
-#         super(DjangoFormInputObjectType, cls).__init_subclass_with_meta__(_meta=_meta, fields=fields, **options)
 
 
 class DjangoFormMutationOptions(MutationOptions):
@@ -122,7 +100,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
     @classmethod
     def perform_mutate(cls, form, info):
         form.save()
-        return cls(errors=[])
+        return cls(errors=[], **form.cleaned_data)
 
 
 class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
@@ -163,7 +141,9 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
 
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
-        return_field_name = return_field_name
+        if not model_type:
+            raise Exception("No type registered for model: {}".format(model.__name__))
+
         if not return_field_name:
             model_name = model.__name__
             return_field_name = model_name[:1].lower() + model_name[1:]
@@ -181,6 +161,17 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
+
+    @classmethod
+    def mutate_and_get_payload(cls, root, info, **input):
+        form = cls.get_form(root, info, **input)
+
+        if form.is_valid():
+            return cls.perform_mutate(form, info)
+        else:
+            errors = ErrorType.from_errors(form.errors)
+
+            return cls(errors=errors)
 
     @classmethod
     def perform_mutate(cls, form, info):

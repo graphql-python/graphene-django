@@ -1,11 +1,12 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphql_relay.connection.arrayconnection import connection_from_array_slice
 from promise import Promise
 
 from graphene import NonNull
-from graphene.relay import ConnectionField, PageInfo
+from graphene.relay import ConnectionField
+from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
 
 from .settings import graphene_settings
@@ -19,30 +20,39 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
 
-        assert issubclass(
-            _type, DjangoObjectType
-        ), "DjangoListField only accepts DjangoObjectType types"
-
         # Django would never return a Set of None  vvvvvvv
         super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
 
+        assert issubclass(
+            self._underlying_type, DjangoObjectType
+        ), "DjangoListField only accepts DjangoObjectType types"
+
+    @property
+    def _underlying_type(self):
+        _type = self._type
+        while hasattr(_type, "of_type"):
+            _type = _type.of_type
+        return _type
+
     @property
     def model(self):
-        _type = self.type.of_type
-        if isinstance(_type, NonNull):
-            _type = _type.of_type
-        return _type._meta.model
+        return self._underlying_type._meta.model
+
+    def get_default_queryset(self):
+        return self.model._default_manager.get_queryset()
 
     @staticmethod
-    def list_resolver(django_object_type, resolver, root, info, **args):
+    def list_resolver(
+        django_object_type, resolver, default_queryset, root, info, **args
+    ):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
-            # Default to Django Model queryset
-            # N.B. This happens if DjangoListField is used in the top level Query object
-            model = django_object_type._meta.model
-            queryset = maybe_queryset(
-                django_object_type.get_queryset(model.objects, info)
-            )
+            queryset = default_queryset
+
+        if isinstance(queryset, QuerySet):
+            # Pass queryset to the DjangoObjectType get_queryset method
+            queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
+
         return queryset
 
     def get_resolver(self, parent_resolver):
@@ -50,7 +60,12 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
-        return partial(self.list_resolver, django_object_type, parent_resolver)
+        return partial(
+            self.list_resolver,
+            django_object_type,
+            parent_resolver,
+            self.get_default_queryset(),
+        )
 
 
 class DjangoConnectionField(ConnectionField):
@@ -108,37 +123,25 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def resolve_queryset(cls, connection, queryset, info, args):
+        # queryset is the resolved iterable from ObjectType
         return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
-    def merge_querysets(cls, default_queryset, queryset):
-        if default_queryset.query.distinct and not queryset.query.distinct:
-            queryset = queryset.distinct()
-        elif queryset.query.distinct and not default_queryset.query.distinct:
-            default_queryset = default_queryset.distinct()
-        return queryset & default_queryset
-
-    @classmethod
-    def resolve_connection(cls, connection, default_manager, args, iterable):
-        if iterable is None:
-            iterable = default_manager
+    def resolve_connection(cls, connection, args, iterable):
         iterable = maybe_queryset(iterable)
         if isinstance(iterable, QuerySet):
-            if iterable.model.objects is not default_manager:
-                default_queryset = maybe_queryset(default_manager)
-                iterable = cls.merge_querysets(default_queryset, iterable)
             _len = iterable.count()
         else:
             _len = len(iterable)
-        connection = connection_from_list_slice(
+        connection = connection_from_array_slice(
             iterable,
             args,
             slice_start=0,
-            list_length=_len,
-            list_slice_length=_len,
-            connection_type=connection,
+            array_length=_len,
+            array_slice_length=_len,
+            connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
-            pageinfo_type=PageInfo,
+            page_info_type=page_info_adapter,
         )
         connection.iterable = iterable
         connection.length = _len
@@ -150,6 +153,7 @@ class DjangoConnectionField(ConnectionField):
         resolver,
         connection,
         default_manager,
+        queryset_resolver,
         max_limit,
         enforce_first_or_last,
         root,
@@ -177,9 +181,15 @@ class DjangoConnectionField(ConnectionField):
                 ).format(last, info.field_name, max_limit)
                 args["last"] = min(last, max_limit)
 
+        # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
+        # or a resolve_foo (does not accept queryset)
         iterable = resolver(root, info, **args)
-        queryset = cls.resolve_queryset(connection, default_manager, info, args)
-        on_resolve = partial(cls.resolve_connection, connection, queryset, args)
+        if iterable is None:
+            iterable = default_manager
+        # thus the iterable gets refiltered by resolve_queryset
+        # but iterable might be promise
+        iterable = queryset_resolver(connection, iterable, info, args)
+        on_resolve = partial(cls.resolve_connection, connection, args)
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
@@ -192,6 +202,10 @@ class DjangoConnectionField(ConnectionField):
             parent_resolver,
             self.connection_type,
             self.get_manager(),
+            self.get_queryset_resolver(),
             self.max_limit,
             self.enforce_first_or_last,
         )
+
+    def get_queryset_resolver(self):
+        return self.resolve_queryset

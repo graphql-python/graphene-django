@@ -1,3 +1,5 @@
+from functools import singledispatch
+
 from django.core.exceptions import ImproperlyConfigured
 from rest_framework import serializers
 
@@ -5,10 +7,7 @@ import graphene
 
 from ..registry import get_global_registry
 from ..converter import convert_choices_to_named_enum_with_descriptions
-from ..utils import import_single_dispatch
 from .types import DictType
-
-singledispatch = import_single_dispatch()
 
 
 @singledispatch
@@ -19,14 +18,17 @@ def get_graphene_type_from_serializer_field(field):
     )
 
 
-def convert_serializer_field(field, is_input=True):
+def convert_serializer_field(field, is_input=True, convert_choices_to_enum=True):
     """
     Converts a django rest frameworks field to a graphql field
     and marks the field as required if we are creating an input type
     and the field itself is required
     """
 
-    graphql_type = get_graphene_type_from_serializer_field(field)
+    if isinstance(field, serializers.ChoiceField) and not convert_choices_to_enum:
+        graphql_type = graphene.String
+    else:
+        graphql_type = get_graphene_type_from_serializer_field(field)
 
     args = []
     kwargs = {"description": field.help_text, "required": is_input and field.required}
