@@ -79,10 +79,10 @@ def test_mutation_error_camelcased(pet_type, graphene_settings):
             form_class = ExtraPetForm
 
     result = PetMutation.mutate_and_get_payload(None, None)
-    assert {f.field for f in result.errors} == {"name", "age", "test_field"}
-    graphene_settings.CAMELCASE_ERRORS = True
-    result = PetMutation.mutate_and_get_payload(None, None)
     assert {f.field for f in result.errors} == {"name", "age", "testField"}
+    graphene_settings.CAMELCASE_ERRORS = False
+    result = PetMutation.mutate_and_get_payload(None, None)
+    assert {f.field for f in result.errors} == {"name", "age", "test_field"}
 
 
 class MockQuery(ObjectType):
