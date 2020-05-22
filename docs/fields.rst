@@ -47,7 +47,7 @@ Custom resolvers
 If your ``DjangoObjectType`` has defined a custom
 :ref:`get_queryset<django-objecttype-get-queryset>` method, when resolving a
 ``DjangoListField`` it will be called with either the return of the field
-resolver (if one is defined) or the default queryeset from the Django model.
+resolver (if one is defined) or the default queryset from the Django model.
 
 For example the following schema will only resolve recipes which have been
 published and have a title:
