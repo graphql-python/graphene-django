@@ -9,7 +9,14 @@ from django.http.response import HttpResponseBadRequest
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 
-from rest_framework.views import APIView
+try:
+    from rest_framework.views import APIView
+
+    NO_HEADER_PY27_FLAG = False
+except ImportError:
+    from django.views.generic import View as APIView
+
+    NO_HEADER_PY27_FLAG = True
 
 from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
@@ -163,9 +170,12 @@ class GraphQLView(APIView):
                     use_graphiql = True
 
             show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
-            show_graphiql_headers = self.graphiql_headers and self.can_display_graphiql(
-                request, data
-            )
+            if NO_HEADER_PY27_FLAG:
+                print("no auth passed in graphiql header using py 2.7.x due to ReST")
+            else:
+                show_graphiql_headers = (
+                    self.graphiql_headers and self.can_display_graphiql(request, data)
+                )
 
             if show_graphiql:
                 request.session["graphiql_was_used"] = True
