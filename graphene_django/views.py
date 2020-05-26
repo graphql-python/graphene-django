@@ -1,8 +1,10 @@
+from __future__ import print_function
+import six
+
 import inspect
 import json
 import re
 
-import six
 from django.template.response import TemplateResponse
 from django.http import HttpRequest, HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
@@ -172,6 +174,7 @@ class GraphQLView(APIView):
             show_graphiql = self.graphiql and self.can_display_graphiql(request, data)
             if NO_HEADER_PY27_FLAG:
                 print("no auth passed in graphiql header using py 2.7.x due to ReST")
+                show_graphiql_headers = False
             else:
                 show_graphiql_headers = (
                     self.graphiql_headers and self.can_display_graphiql(request, data)
