@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy
 from mock import patch
 
 from ..utils import camelize, get_model_fields, GraphQLTestCase
+from ..views import instantiate_middleware
 from .models import Film, Reporter
 
 
@@ -34,6 +35,27 @@ def test_camelize():
         "valueA": "value_b"
     }
     assert camelize({0: {"field_a": ["errors"]}}) == {0: {"fieldA": ["errors"]}}
+
+
+def test_instantiate_middleware_input_types():
+    from django.middleware.security import SecurityMiddleware
+    from django.middleware.common import CommonMiddleware
+    from django.middleware.csrf import CsrfViewMiddleware
+    from django.contrib.messages.middleware import MessageMiddleware
+
+    middleware = [
+        "django.middleware.security.SecurityMiddleware",
+        CommonMiddleware,
+        CsrfViewMiddleware(),
+        "django.contrib.messages.middleware.MessageMiddleware",
+    ]
+
+    loaded_middlewares = list(instantiate_middleware(middleware))
+
+    assert isinstance(loaded_middlewares[0], SecurityMiddleware)
+    assert isinstance(loaded_middlewares[1], CommonMiddleware)
+    assert isinstance(loaded_middlewares[2], CsrfViewMiddleware)
+    assert isinstance(loaded_middlewares[3], MessageMiddleware)
 
 
 @pytest.mark.django_db

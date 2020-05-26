@@ -9,6 +9,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.generic import View
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.module_loading import import_string
 
 from graphql import get_default_backend
 from graphql.error import format_error as format_graphql_error
@@ -47,6 +48,10 @@ def instantiate_middleware(middlewares):
     for middleware in middlewares:
         if inspect.isclass(middleware):
             yield middleware()
+            continue
+        elif isinstance(middleware, six.string_types):
+            middleware_class = import_string(middleware)
+            yield middleware_class()
             continue
         yield middleware
 
