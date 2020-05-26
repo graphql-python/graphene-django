@@ -1130,7 +1130,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
         }
     """
     schema = graphene.Schema(query=Query)
-    with django_assert_num_queries(3) as captured:
+    with django_assert_num_queries(2) as captured:
         result = schema.execute(query)
     assert not result.errors
 
