@@ -185,3 +185,39 @@ For Django 2.0 and above:
     ]
 
 .. _LoginRequiredMixin: https://docs.djangoproject.com/en/1.10/topics/auth/default/#the-loginrequired-mixin
+
+
+Passing around an AUTH token in the header (eg a JWT token)
+------------------------------------------------------------
+
+To restrict users from accessing the GraphQL API page, a standard AUTH token is passed around in the http META.  This is a common pattern employed for an application spanning across several microservices, and this enables use of 'curl'  with an existing query that has been wrapped with AUTH.  The <HTTP_AUTHORIZATION> is passed along as META data in the <head> section of the redered page.
+
+In order to make use of this mode of interacting with the PRIVATEGRAPHQL view, simply set 'grahiql_headers=True' in the main urls.py.
+For Django 1.11:
+
+.. code:: python
+
+    urlpatterns = [
+      # some other urls
+      url(r'^graphql$', PrivateGraphQLView.as_view(graphiql_headers=True, schema=schema)),
+    ]
+
+For Django 2.0 and above:
+
+.. code:: python
+
+    urlpatterns = [
+      # some other urls
+      path('graphql', PrivateGraphQLView.as_view(graphiql_headers=True, schema=schema)),
+    ]
+
+Now upon navigating to the /graphql/ URL, the initial interaction is a <form> to collect the AUTH tocken to be used in graphiql.  This AUTH token is passed along in the <head> of the resulting graphiql session.
+
+Alternatively, the AUTH header can also be used in the 'curl' command in order to DEBUG the query with AUTH.
+
+For example:
+
+.. code-block:: bash
+
+    $ curl -X POST "http://127.0.0.1:8000/graphql/" -H  "accept: application/json" -H  "Authorization: JWT #########" -d "query=?????"
+

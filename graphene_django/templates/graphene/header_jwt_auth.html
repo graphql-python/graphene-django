@@ -1,0 +1,15 @@
+{% extends 'graphene/base.html' %}
+
+{% load static %}
+
+{% block title %}set a JWT token in the headers (HTTP_AUTHORIZATION){% endblock %}
+
+{% block content %}
+  <form action="" method="post">
+    {% csrf_token %}
+    <table>
+    {{ form.as_table }}
+    </table>
+    <input type="submit" value="Submit">
+  </form>
+{% endblock %}

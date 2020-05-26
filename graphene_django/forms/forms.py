@@ -1,6 +1,7 @@
 import binascii
 
 from django.core.exceptions import ValidationError
+from django import forms
 from django.forms import CharField, Field, MultipleChoiceField
 from django.utils.translation import gettext_lazy as _
 
@@ -38,3 +39,19 @@ class GlobalIDMultipleChoiceField(MultipleChoiceField):
         # Clean will raise a validation error if there is a problem
         GlobalIDFormField().clean(value)
         return True
+
+
+class HeaderForm(forms.Form):
+    # make a ChoiceField for 'JWT' and other methods -- use a widget?
+    headers = forms.CharField(
+        help_text="Enter auth method to be stored in the <head> as HTTP_AUTHORIZATION",
+        initial="JWT ",
+    )
+
+    def clean_auth(self):
+        data = self.cleaned_data["headers"]
+
+        # raise ValidationError()
+
+        # Remember to always return the cleaned data.
+        return data

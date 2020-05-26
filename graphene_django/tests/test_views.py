@@ -38,7 +38,7 @@ def test_qfactor_graphiql(client):
     response = client.get(url_string(query="{test}", HTTP_ACCEPT="text/html",))
 
     assert response.status_code == 200
-    ####assert response["Content-Type"].split(";")[0] == "text/html"
+    assert response["Content-Type"].split(";")[0] == "text/html"
 
 
 @pytest.mark.django_db

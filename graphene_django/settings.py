@@ -23,7 +23,7 @@ except ImportError:
     from django.utils import importlib  # Will be removed in Django 1.9
 
 
-# Copied shamelessly from Django REST Framework
+# Copied shamelessly from Django REST Framework -- make sure session now part of MIDDLEWARE for tests()
 
 DEFAULTS = {
     "SCHEMA": None,
@@ -36,6 +36,7 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": False,
+    "SOURCE": None,
     # Set to True to enable v3 naming convention for choice field Enum's
     "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
     "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
@@ -45,7 +46,7 @@ if settings.DEBUG:
     DEFAULTS["MIDDLEWARE"] += ("graphene_django.debug.DjangoDebugMiddleware",)
 
 # List of settings that may be in string import notation.
-IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA")
+IMPORT_STRINGS = ("MIDDLEWARE", "SCHEMA", "SOURCE")
 
 
 def perform_import(val, setting_name):
