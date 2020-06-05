@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from functools import partial
 
+from django.core.exceptions import ValidationError
 from graphene.types.argument import to_arguments
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
@@ -59,7 +60,12 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             connection, iterable, info, args
         )
         filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
-        return filterset_class(data=filter_kwargs, queryset=qs, request=info.context).qs
+        filterset = filterset_class(
+            data=filter_kwargs, queryset=qs, request=info.context
+        )
+        if filterset.form.is_valid():
+            return filterset.qs
+        raise ValidationError(filterset.form.errors.as_json())
 
     def get_queryset_resolver(self):
         return partial(
