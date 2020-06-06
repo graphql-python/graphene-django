@@ -1086,9 +1086,9 @@ def test_should_resolve_get_queryset_connectionfields():
 
 REPORTERS = [
     dict(
-        first_name=f"First {i}",
-        last_name=f"Last {i}",
-        email=f"johndoe+{i}@example.com",
+        first_name="First {}".format(i),
+        last_name=f"Last {}".format(i),
+        email="johndoe+{i}@example.com".format(i),
         a_choice=1,
     )
     for i in range(6)
