@@ -29,7 +29,9 @@ def convert_form_field(field):
 @convert_form_field.register(forms.RegexField)
 @convert_form_field.register(forms.Field)
 def convert_form_field_to_string(field):
-    return String(description=get_form_field_description(field), required=field.required)
+    return String(
+        description=get_form_field_description(field), required=field.required
+    )
 
 
 @convert_form_field.register(forms.UUIDField)
@@ -45,7 +47,9 @@ def convert_form_field_to_int(field):
 
 @convert_form_field.register(forms.BooleanField)
 def convert_form_field_to_boolean(field):
-    return Boolean(description=get_form_field_description(field), required=field.required)
+    return Boolean(
+        description=get_form_field_description(field), required=field.required
+    )
 
 
 @convert_form_field.register(forms.NullBooleanField)
@@ -61,7 +65,9 @@ def convert_form_field_to_float(field):
 
 @convert_form_field.register(forms.MultipleChoiceField)
 def convert_form_field_to_string_list(field):
-    return List(String, description=get_form_field_description(field), required=field.required)
+    return List(
+        String, description=get_form_field_description(field), required=field.required
+    )
 
 
 @convert_form_field.register(forms.ModelMultipleChoiceField)
@@ -77,7 +83,9 @@ def convert_form_field_to_date(field):
 
 @convert_form_field.register(forms.DateTimeField)
 def convert_form_field_to_datetime(field):
-    return DateTime(description=get_form_field_description(field), required=field.required)
+    return DateTime(
+        description=get_form_field_description(field), required=field.required
+    )
 
 
 @convert_form_field.register(forms.TimeField)

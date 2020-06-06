@@ -108,7 +108,9 @@ def convert_django_field_with_choices(
     if choices and convert_choices_to_enum:
         enum = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)
-        converted = enum(description=get_django_field_description(field), required=required)
+        converted = enum(
+            description=get_django_field_description(field), required=required
+        )
     else:
         converted = convert_django_field(field, registry)
     if registry is not None:
@@ -136,7 +138,9 @@ def convert_django_field(field, registry=None):
 @convert_django_field.register(models.FileField)
 @convert_django_field.register(models.FilePathField)
 def convert_field_to_string(field, registry=None):
-    return String(description=get_django_field_description(field), required=not field.null)
+    return String(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.AutoField)
@@ -146,7 +150,9 @@ def convert_field_to_id(field, registry=None):
 
 @convert_django_field.register(models.UUIDField)
 def convert_field_to_uuid(field, registry=None):
-    return UUID(description=get_django_field_description(field), required=not field.null)
+    return UUID(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.PositiveIntegerField)
@@ -161,29 +167,39 @@ def convert_field_to_int(field, registry=None):
 @convert_django_field.register(models.NullBooleanField)
 @convert_django_field.register(models.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return Boolean(description=get_django_field_description(field), required=not field.null)
+    return Boolean(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.DecimalField)
 @convert_django_field.register(models.FloatField)
 @convert_django_field.register(models.DurationField)
 def convert_field_to_float(field, registry=None):
-    return Float(description=get_django_field_description(field), required=not field.null)
+    return Float(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.DateTimeField)
 def convert_datetime_to_string(field, registry=None):
-    return DateTime(description=get_django_field_description(field), required=not field.null)
+    return DateTime(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.DateField)
 def convert_date_to_string(field, registry=None):
-    return Date(description=get_django_field_description(field), required=not field.null)
+    return Date(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.TimeField)
 def convert_time_to_string(field, registry=None):
-    return Time(description=get_django_field_description(field), required=not field.null)
+    return Time(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.OneToOneRel)
@@ -254,7 +270,11 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type, description=get_django_field_description(field), required=not field.null)
+        return Field(
+            _type,
+            description=get_django_field_description(field),
+            required=not field.null,
+        )
 
     return Dynamic(dynamic_type)
 
@@ -264,13 +284,19 @@ def convert_postgres_array_to_list(field, registry=None):
     base_type = convert_django_field(field.base_field)
     if not isinstance(base_type, (List, NonNull)):
         base_type = type(base_type)
-    return List(base_type, description=get_django_field_description(field), required=not field.null)
+    return List(
+        base_type,
+        description=get_django_field_description(field),
+        required=not field.null,
+    )
 
 
 @convert_django_field.register(HStoreField)
 @convert_django_field.register(JSONField)
 def convert_postgres_field_to_string(field, registry=None):
-    return JSONString(description=get_django_field_description(field), required=not field.null)
+    return JSONString(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(RangeField)
@@ -278,7 +304,11 @@ def convert_postgres_range_to_string(field, registry=None):
     inner_type = convert_django_field(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
         inner_type = type(inner_type)
-    return List(inner_type, description=get_django_field_description(field), required=not field.null)
+    return List(
+        inner_type,
+        description=get_django_field_description(field),
+        required=not field.null,
+    )
 
 
 # Register Django lazy()-wrapped values as GraphQL description/help_text.
