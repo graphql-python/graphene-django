@@ -1088,7 +1088,7 @@ REPORTERS = [
     dict(
         first_name="First {}".format(i),
         last_name="Last {}".format(i),
-        email="johndoe+{i}@example.com".format(i),
+        email="johndoe+{}@example.com".format(i),
         a_choice=1,
     )
     for i in range(6)
