@@ -1084,6 +1084,48 @@ def test_should_resolve_get_queryset_connectionfields():
     assert result.data == expected
 
 
+REPORTERS = [
+    dict(
+        first_name="First {}".format(i),
+        last_name="Last {}".format(i),
+        email="johndoe+{}@example.com".format(i),
+        a_choice=1,
+    )
+    for i in range(6)
+]
+
+
+def test_should_return_max_limit(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query AllReporters {
+            allReporters {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 4
+
+
 def test_should_preserve_prefetch_related(django_assert_num_queries):
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -1130,7 +1172,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
         }
     """
     schema = graphene.Schema(query=Query)
-    with django_assert_num_queries(3) as captured:
+    with django_assert_num_queries(2) as captured:
         result = schema.execute(query)
     assert not result.errors
 

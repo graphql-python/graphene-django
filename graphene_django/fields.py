@@ -127,12 +127,15 @@ class DjangoConnectionField(ConnectionField):
         return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
-    def resolve_connection(cls, connection, args, iterable):
+    def resolve_connection(cls, connection, args, iterable, max_limit=None):
         iterable = maybe_queryset(iterable)
+        # When slicing from the end, need to retrieve the iterable length.
+        if args.get("last"):
+            max_limit = None
         if isinstance(iterable, QuerySet):
-            _len = iterable.count()
+            _len = max_limit or iterable.count()
         else:
-            _len = len(iterable)
+            _len = max_limit or len(iterable)
         connection = connection_from_list_slice(
             iterable,
             args,
@@ -189,7 +192,9 @@ class DjangoConnectionField(ConnectionField):
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
         iterable = queryset_resolver(connection, iterable, info, args)
-        on_resolve = partial(cls.resolve_connection, connection, args)
+        on_resolve = partial(
+            cls.resolve_connection, connection, args, max_limit=max_limit
+        )
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)
