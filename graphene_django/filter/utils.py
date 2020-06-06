@@ -30,7 +30,9 @@ def get_filtering_args_from_filterset(filterset_class, type):
             form_field = filter_field.field
 
         field_type = convert_form_field(form_field).Argument()
-        field_type.description = filter_field.label
+        field_type.description = (
+            None if filter_field.label is None else str(filter_field.label)
+        )
         args[name] = field_type
 
     return args
