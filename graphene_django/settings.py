@@ -35,8 +35,8 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": True,
-    # Set to True to enable v3 naming convention for choice field Enum's
-    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
+    # Set to True to enable v2 naming convention for choice field Enum's
+    "DJANGO_CHOICE_FIELD_ENUM_V2_NAMING": False,
     "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
 }
 

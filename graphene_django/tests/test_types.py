@@ -138,10 +138,10 @@ def test_schema_representation():
           editor: Reporter!
 
           \"""Language\"""
-          lang: ArticleLang!
+          lang: TestsArticleLangChoices!
 
           \"""\"""
-          importance: ArticleImportance
+          importance: TestsArticleImportanceChoices
         }
 
         \"""An object with an ID\"""
@@ -165,7 +165,7 @@ def test_schema_representation():
         scalar DateTime
 
         \"""An enumeration.\"""
-        enum ArticleLang {
+        enum TestsArticleLangChoices {
           \"""Spanish\"""
           ES
 
@@ -174,7 +174,7 @@ def test_schema_representation():
         }
 
         \"""An enumeration.\"""
-        enum ArticleImportance {
+        enum TestsArticleImportanceChoices {
           \"""Very important\"""
           A_1
 
@@ -200,17 +200,17 @@ def test_schema_representation():
           pets: [Reporter!]!
 
           \"""\"""
-          aChoice: ReporterAChoice
+          aChoice: TestsReporterAChoiceChoices
 
           \"""\"""
-          reporterType: ReporterReporterType
+          reporterType: TestsReporterReporterTypeChoices
 
           \"""\"""
           articles(before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
         }
 
         \"""An enumeration.\"""
-        enum ReporterAChoice {
+        enum TestsReporterAChoiceChoices {
           \"""this\"""
           A_1
 
@@ -219,7 +219,7 @@ def test_schema_representation():
         }
 
         \"""An enumeration.\"""
-        enum ReporterReporterType {
+        enum TestsReporterReporterTypeChoices {
           \"""Regular\"""
           A_1
 
@@ -547,14 +547,14 @@ class TestDjangoObjectType:
               id: ID!
 
               \"""\"""
-              kind: PetModelKind!
+              kind: TestsPetModelKindChoices!
 
               \"""\"""
               cuteness: Int!
             }
 
             \"""An enumeration.\"""
-            enum PetModelKind {
+            enum TestsPetModelKindChoices {
               \"""Cat\"""
               CAT
 
@@ -597,8 +597,6 @@ class TestDjangoObjectType:
     def test_django_objecttype_convert_choices_enum_naming_collisions(
         self, PetModel, graphene_settings
     ):
-        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
-
         class PetModelKind(DjangoObjectType):
             class Meta:
                 model = PetModel

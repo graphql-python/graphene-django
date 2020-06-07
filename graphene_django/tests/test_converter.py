@@ -159,7 +159,7 @@ def test_field_with_choices_convert_enum():
 
     graphene_type = convert_django_field_with_choices(field)
     assert isinstance(graphene_type, graphene.Enum)
-    assert graphene_type._meta.name == "TranslatedModelLanguage"
+    assert graphene_type._meta.name == "TestTranslatedModelLanguageChoices"
     assert graphene_type._meta.enum.__members__["ES"].value == "es"
     assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
     assert graphene_type._meta.enum.__members__["EN"].value == "en"
@@ -344,9 +344,8 @@ def test_should_postgres_range_convert_list():
     assert field.type.of_type.of_type == graphene.Int
 
 
-def test_generate_enum_name(graphene_settings):
+def test_generate_enum_name():
     MockDjangoModelMeta = namedtuple("DjangoMeta", ["app_label", "object_name"])
-    graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
 
     # Simple case
     field = graphene.Field(graphene.String, name="type")
@@ -362,3 +361,20 @@ def test_generate_enum_name(graphene_settings):
         generate_enum_name(model_meta, field)
         == "SomeLongAppNameSomeObjectFizzBuzzChoices"
     )
+
+
+def test_generate_v2_enum_name(graphene_settings):
+    MockDjangoModelMeta = namedtuple("DjangoMeta", ["app_label", "object_name"])
+    graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V2_NAMING = True
+
+    # Simple case
+    field = graphene.Field(graphene.String, name="type")
+    model_meta = MockDjangoModelMeta(app_label="users", object_name="User")
+    assert generate_enum_name(model_meta, field) == "UserType"
+
+    # More complicated multiple work case
+    field = graphene.Field(graphene.String, name="fizz_buzz")
+    model_meta = MockDjangoModelMeta(
+        app_label="some_long_app_name", object_name="SomeObject"
+    )
+    assert generate_enum_name(model_meta, field) == "SomeObjectFizzBuzz"
