@@ -12,6 +12,7 @@ class Ship(DjangoObjectType):
     class Meta:
         model = ShipModel
         interfaces = (relay.Node,)
+        fields = "__all__"
 
     @classmethod
     def get_node(cls, info, id):
@@ -22,12 +23,14 @@ class Ship(DjangoObjectType):
 class Character(DjangoObjectType):
     class Meta:
         model = CharacterModel
+        fields = "__all__"
 
 
 class Faction(DjangoObjectType):
     class Meta:
         model = FactionModel
         interfaces = (relay.Node,)
+        fields = "__all__"
 
     @classmethod
     def get_node(cls, info, id):
