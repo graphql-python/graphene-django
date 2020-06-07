@@ -194,7 +194,7 @@ class DjangoObjectType(ObjectType):
         if only_fields:
             warnings.warn(
                 "Defining `only_fields` is deprecated in favour of `fields`.",
-                PendingDeprecationWarning,
+                DeprecationWarning,
                 stacklevel=2,
             )
             fields = only_fields
@@ -210,7 +210,7 @@ class DjangoObjectType(ObjectType):
         if exclude_fields:
             warnings.warn(
                 "Defining `exclude_fields` is deprecated in favour of `exclude`.",
-                PendingDeprecationWarning,
+                DeprecationWarning,
                 stacklevel=2,
             )
             exclude = exclude_fields

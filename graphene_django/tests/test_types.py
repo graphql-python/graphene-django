@@ -290,7 +290,7 @@ def with_local_registry(func):
 
 @with_local_registry
 def test_django_objecttype_only_fields():
-    with pytest.warns(PendingDeprecationWarning):
+    with pytest.warns(DeprecationWarning):
 
         class Reporter(DjangoObjectType):
             class Meta:
@@ -347,7 +347,7 @@ def test_django_objecttype_all_fields():
 
 @with_local_registry
 def test_django_objecttype_exclude_fields():
-    with pytest.warns(PendingDeprecationWarning):
+    with pytest.warns(DeprecationWarning):
 
         class Reporter(DjangoObjectType):
             class Meta:
