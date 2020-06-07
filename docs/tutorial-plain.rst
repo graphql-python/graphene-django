@@ -157,11 +157,13 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
+            fields = '__all__'
 
 
     class IngredientType(DjangoObjectType):
         class Meta:
             model = Ingredient
+            fields = '__all__'
 
 
     class Query(object):

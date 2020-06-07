@@ -25,6 +25,7 @@ Simple example
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
+            fields = '__all__'
 
 
     class QuestionMutation(graphene.Mutation):
@@ -90,6 +91,7 @@ DjangoModelFormMutation
     class PetType(DjangoObjectType):
         class Meta:
             model = Pet
+            fields = '__all__'
 
     class PetMutation(DjangoModelFormMutation):
         pet = Field(PetType)
