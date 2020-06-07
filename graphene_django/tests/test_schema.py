@@ -9,7 +9,7 @@ def test_should_raise_if_no_model():
     with raises(Exception) as excinfo:
 
         class Character1(DjangoObjectType):
-            pass
+            fields = "__all__"
 
     assert "valid Django Model" in str(excinfo.value)
 
@@ -20,6 +20,7 @@ def test_should_raise_if_model_is_invalid():
         class Character2(DjangoObjectType):
             class Meta:
                 model = 1
+                fields = "__all__"
 
     assert "valid Django Model" in str(excinfo.value)
 
@@ -29,6 +30,7 @@ def test_should_map_fields_correctly():
         class Meta:
             model = Reporter
             registry = Registry()
+            fields = "__all__"
 
     fields = list(ReporterType2._meta.fields.keys())
     assert fields[:-2] == [

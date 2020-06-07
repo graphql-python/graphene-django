@@ -165,6 +165,7 @@ def test_nested_model():
     class MyFakeModelGrapheneType(DjangoObjectType):
         class Meta:
             model = MyFakeModel
+            fields = "__all__"
 
     class MyMutation(SerializerMutation):
         class Meta:

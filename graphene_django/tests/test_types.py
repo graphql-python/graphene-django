@@ -19,6 +19,7 @@ class Reporter(DjangoObjectType):
 
     class Meta:
         model = ReporterModel
+        fields = "__all__"
 
 
 class ArticleConnection(Connection):
@@ -40,6 +41,7 @@ class Article(DjangoObjectType):
         model = ArticleModel
         interfaces = (Node,)
         connection_class = ArticleConnection
+        fields = "__all__"
 
 
 class RootQuery(ObjectType):
@@ -106,6 +108,7 @@ def test_django_objecttype_with_custom_meta():
     class Article(ArticleType):
         class Meta:
             model = ArticleModel
+            fields = "__all__"
 
     assert isinstance(Article._meta, ArticleTypeOptions)
 
@@ -531,6 +534,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = False
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)
@@ -561,6 +565,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = ["kind"]
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)
@@ -600,6 +605,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = []
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)

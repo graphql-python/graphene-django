@@ -9,6 +9,7 @@ class Character(DjangoObjectType):
     class Meta:
         model = Reporter
         interfaces = (relay.Node,)
+        fields = "__all__"
 
     def get_node(self, info, id):
         pass
@@ -20,6 +21,7 @@ class Human(DjangoObjectType):
     class Meta:
         model = Article
         interfaces = (relay.Node,)
+        fields = "__all__"
 
     def resolve_raises(self, info):
         raise Exception("This field should raise exception")

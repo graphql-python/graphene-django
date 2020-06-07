@@ -21,6 +21,7 @@ def test_should_query_field():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -65,6 +66,7 @@ def test_should_query_nested_field():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
@@ -130,6 +132,7 @@ def test_should_query_list():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = graphene.List(ReporterType)
@@ -172,6 +175,7 @@ def test_should_query_connection():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -220,6 +224,7 @@ def test_should_query_connectionfilter():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterType, fields=["last_name"])
