@@ -476,6 +476,37 @@ def test_django_objecttype_exclude_fields_exist_on_model():
     assert len(record) == 0
 
 
+@with_local_registry
+def test_django_objecttype_neither_fields_nor_exclude():
+    with pytest.warns(
+        PendingDeprecationWarning,
+        match=r"Creating a DjangoObjectType without either the `fields` "
+        "or the `exclude` option is deprecated.",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+
+    with pytest.warns(None) as record:
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["email"]
+
+    assert len(record) == 0
+
+    with pytest.warns(None) as record:
+
+        class Reporter3(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+
+    assert len(record) == 0
+
+
 def custom_enum_name(field):
     return "CustomEnum{}".format(field.name.title())
 
