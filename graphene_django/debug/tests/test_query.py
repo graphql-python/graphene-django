@@ -56,8 +56,8 @@ def test_should_query_field():
     assert result.data == expected
 
 
-@pytest.mark.parametrize("max_limit,does_count", [(None, True), (100, False)])
-def test_should_query_nested_field(graphene_settings, max_limit, does_count):
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_nested_field(graphene_settings, max_limit):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
 
     r1 = Reporter(last_name="ABA")
@@ -117,18 +117,11 @@ def test_should_query_nested_field(graphene_settings, max_limit, does_count):
     assert not result.errors
     query = str(Reporter.objects.order_by("pk")[:1].query)
     assert result.data["__debug"]["sql"][0]["rawSql"] == query
-    if does_count:
-        assert "COUNT" in result.data["__debug"]["sql"][1]["rawSql"]
-        assert "tests_reporter_pets" in result.data["__debug"]["sql"][2]["rawSql"]
-        assert "COUNT" in result.data["__debug"]["sql"][3]["rawSql"]
-        assert "tests_reporter_pets" in result.data["__debug"]["sql"][4]["rawSql"]
-        assert len(result.data["__debug"]["sql"]) == 5
-    else:
-        assert len(result.data["__debug"]["sql"]) == 3
-        for i in range(len(result.data["__debug"]["sql"])):
-            assert "COUNT" not in result.data["__debug"]["sql"][i]["rawSql"]
-        assert "tests_reporter_pets" in result.data["__debug"]["sql"][1]["rawSql"]
-        assert "tests_reporter_pets" in result.data["__debug"]["sql"][2]["rawSql"]
+    assert "COUNT" in result.data["__debug"]["sql"][1]["rawSql"]
+    assert "tests_reporter_pets" in result.data["__debug"]["sql"][2]["rawSql"]
+    assert "COUNT" in result.data["__debug"]["sql"][3]["rawSql"]
+    assert "tests_reporter_pets" in result.data["__debug"]["sql"][4]["rawSql"]
+    assert len(result.data["__debug"]["sql"]) == 5
 
     assert result.data["reporter"] == expected["reporter"]
 
@@ -175,8 +168,8 @@ def test_should_query_list():
     assert result.data == expected
 
 
-@pytest.mark.parametrize("max_limit,does_count", [(None, True), (100, False)])
-def test_should_query_connection(graphene_settings, max_limit, does_count):
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_connection(graphene_settings, max_limit):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
 
     r1 = Reporter(last_name="ABA")
@@ -219,20 +212,14 @@ def test_should_query_connection(graphene_settings, max_limit, does_count):
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
-    if does_count:
-        assert len(result.data["__debug"]["sql"]) == 2
-        assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
-        query = str(Reporter.objects.all()[:1].query)
-        assert result.data["__debug"]["sql"][1]["rawSql"] == query
-    else:
-        assert len(result.data["__debug"]["sql"]) == 1
-        assert "COUNT" not in result.data["__debug"]["sql"][0]["rawSql"]
-        query = str(Reporter.objects.all()[:1].query)
-        assert result.data["__debug"]["sql"][0]["rawSql"] == query
+    assert len(result.data["__debug"]["sql"]) == 2
+    assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
+    query = str(Reporter.objects.all()[:1].query)
+    assert result.data["__debug"]["sql"][1]["rawSql"] == query
 
 
-@pytest.mark.parametrize("max_limit,does_count", [(None, True), (100, False)])
-def test_should_query_connectionfilter(graphene_settings, max_limit, does_count):
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_connectionfilter(graphene_settings, max_limit):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
 
     from ...filter import DjangoFilterConnectionField
@@ -278,13 +265,7 @@ def test_should_query_connectionfilter(graphene_settings, max_limit, does_count)
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
-    if does_count:
-        assert len(result.data["__debug"]["sql"]) == 2
-        assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
-        query = str(Reporter.objects.all()[:1].query)
-        assert result.data["__debug"]["sql"][1]["rawSql"] == query
-    else:
-        assert len(result.data["__debug"]["sql"]) == 1
-        assert "COUNT" not in result.data["__debug"]["sql"][0]["rawSql"]
-        query = str(Reporter.objects.all()[:1].query)
-        assert result.data["__debug"]["sql"][0]["rawSql"] == query
+    assert len(result.data["__debug"]["sql"]) == 2
+    assert "COUNT" in result.data["__debug"]["sql"][0]["rawSql"]
+    query = str(Reporter.objects.all()[:1].query)
+    assert result.data["__debug"]["sql"][1]["rawSql"] == query
