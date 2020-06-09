@@ -1170,14 +1170,12 @@ def test_should_have_next_page(graphene_settings):
     assert not result2.errors
     assert len(result2.data["allReporters"]["edges"]) == 2
     assert not result2.data["allReporters"]["pageInfo"]["hasNextPage"]
-    gql_reporters = result.data["allReporters"]["edges"] + result2.data["allReporters"]["edges"]
+    gql_reporters = (
+        result.data["allReporters"]["edges"] + result2.data["allReporters"]["edges"]
+    )
 
-    assert {
-        to_global_id("ReporterType", reporter.id)
-        for reporter in db_reporters
-    } == {
-        gql_reporter["node"]["id"]
-        for gql_reporter in gql_reporters
+    assert {to_global_id("ReporterType", reporter.id) for reporter in db_reporters} == {
+        gql_reporter["node"]["id"] for gql_reporter in gql_reporters
     }
 
 
