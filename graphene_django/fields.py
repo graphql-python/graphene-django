@@ -2,7 +2,10 @@ from functools import partial
 
 import six
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphql_relay.connection.arrayconnection import (
+    connection_from_list_slice,
+    get_offset_with_default,
+)
 from promise import Promise
 
 from graphene import NonNull
@@ -136,6 +139,9 @@ class DjangoConnectionField(ConnectionField):
         else:
             list_length = len(iterable)
             list_slice_length = max_limit or list_length
+
+        after = get_offset_with_default(args.get("after"), -1) + 1
+        list_slice_length += after
 
         connection = connection_from_list_slice(
             iterable,
