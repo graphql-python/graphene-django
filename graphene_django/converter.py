@@ -255,10 +255,14 @@ def convert_field_to_djangomodel(field, registry=None):
 
 @convert_django_field.register(ArrayField)
 def convert_postgres_array_to_list(field, registry=None):
-    base_type = convert_django_field(field.base_field)
-    if not isinstance(base_type, (List, NonNull)):
-        base_type = type(base_type)
-    return List(base_type, description=field.help_text, required=not field.null)
+    inner_type = convert_django_field(field.base_field)
+    if not isinstance(inner_type, (List, NonNull)):
+        inner_type = (
+            NonNull(type(inner_type))
+            if inner_type.kwargs["required"]
+            else type(inner_type)
+        )
+    return List(inner_type, description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(HStoreField)
@@ -271,5 +275,9 @@ def convert_postgres_field_to_string(field, registry=None):
 def convert_postgres_range_to_string(field, registry=None):
     inner_type = convert_django_field(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
-        inner_type = type(inner_type)
+        inner_type = (
+            NonNull(type(inner_type))
+            if inner_type.kwargs["required"]
+            else type(inner_type)
+        )
     return List(inner_type, description=field.help_text, required=not field.null)

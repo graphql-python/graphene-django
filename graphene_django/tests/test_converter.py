@@ -310,6 +310,14 @@ def test_should_postgres_array_convert_list():
     )
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
+    assert isinstance(field.type.of_type.of_type, graphene.NonNull)
+    assert field.type.of_type.of_type.of_type == graphene.String
+
+    field = assert_conversion(
+        ArrayField, graphene.List, models.CharField(max_length=100, null=True)
+    )
+    assert isinstance(field.type, graphene.NonNull)
+    assert isinstance(field.type.of_type, graphene.List)
     assert field.type.of_type.of_type == graphene.String
 
 
@@ -317,6 +325,17 @@ def test_should_postgres_array_convert_list():
 def test_should_postgres_array_multiple_convert_list():
     field = assert_conversion(
         ArrayField, graphene.List, ArrayField(models.CharField(max_length=100))
+    )
+    assert isinstance(field.type, graphene.NonNull)
+    assert isinstance(field.type.of_type, graphene.List)
+    assert isinstance(field.type.of_type.of_type, graphene.List)
+    assert isinstance(field.type.of_type.of_type.of_type, graphene.NonNull)
+    assert field.type.of_type.of_type.of_type.of_type == graphene.String
+
+    field = assert_conversion(
+        ArrayField,
+        graphene.List,
+        ArrayField(models.CharField(max_length=100, null=True)),
     )
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
@@ -341,7 +360,8 @@ def test_should_postgres_range_convert_list():
     field = assert_conversion(IntegerRangeField, graphene.List)
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
-    assert field.type.of_type.of_type == graphene.Int
+    assert isinstance(field.type.of_type.of_type, graphene.NonNull)
+    assert field.type.of_type.of_type.of_type == graphene.Int
 
 
 def test_generate_enum_name(graphene_settings):
