@@ -138,7 +138,7 @@ class DjangoConnectionField(ConnectionField):
             list_slice_length = max(max_limit, list_length)
         else:
             list_length = len(iterable)
-            list_slice_length = max_limit or list_length
+            list_slice_length = max(max_limit, list_length)
 
         after = get_offset_with_default(args.get("after"), -1) + 1
         list_slice_length += after
