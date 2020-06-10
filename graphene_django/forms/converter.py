@@ -9,7 +9,7 @@ from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
 
 def get_form_field_description(field):
-    return None if field.help_text is None else str(field.help_text)
+    return str(field.help_text) if field.help_text else None
 
 
 @singledispatch

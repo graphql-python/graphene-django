@@ -845,7 +845,6 @@ def test_integer_field_filter_type():
         }
     
         type PetType implements Node {
-          \"""\"""
           age: Int!
     
           \"""The ID of the object\"""
@@ -915,7 +914,6 @@ def test_other_filter_types():
         }
 
         type PetType implements Node {
-          \"""\"""
           age: Int!
         
           \"""The ID of the object\"""
