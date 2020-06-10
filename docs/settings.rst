@@ -142,20 +142,20 @@ Default: ``False``
    # ]
 
 
-``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING``
+``DJANGO_CHOICE_FIELD_ENUM_V2_NAMING``
 --------------------------------------
 
-Set to ``True`` to use the new naming format for the auto generated Enum types from Django choice fields. The new format looks like this: ``{app_label}{object_name}{field_name}Choices``
+Set to ``True`` to use the old naming format for the auto generated Enum types from Django choice fields. The old format looks like this: ``{object_name}_{field_name}``
 
 Default: ``False``
 
 
 ``DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME``
---------------------------------------
+----------------------------------------
 
 Define the path of a function that takes the Django choice field and returns a string to completely customise the naming for the Enum type.
 
-If set to a function then the ``DJANGO_CHOICE_FIELD_ENUM_V3_NAMING`` setting is ignored.
+If set to a function then the ``DJANGO_CHOICE_FIELD_ENUM_V2_NAMING`` setting is ignored.
 
 Default: ``None``
 
