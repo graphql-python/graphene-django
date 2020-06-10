@@ -121,26 +121,14 @@ def test_schema_representation():
         type Article implements Node {
           \"""The ID of the object\"""
           id: ID!
-
-          \"""\"""
           headline: String!
-
-          \"""\"""
           pubDate: Date!
-
-          \"""\"""
           pubDateTime: DateTime!
-
-          \"""\"""
           reporter: Reporter!
-
-          \"""\"""
           editor: Reporter!
 
           \"""Language\"""
           lang: TestsArticleLangChoices!
-
-          \"""\"""
           importance: TestsArticleImportanceChoices
         }
 
@@ -184,28 +172,13 @@ def test_schema_representation():
 
         \"""Reporter description\"""
         type Reporter {
-          \"""\"""
           id: ID!
-
-          \"""\"""
           firstName: String!
-
-          \"""\"""
           lastName: String!
-
-          \"""\"""
           email: String!
-
-          \"""\"""
           pets: [Reporter!]!
-
-          \"""\"""
           aChoice: TestsReporterAChoiceChoices
-
-          \"""\"""
           reporterType: TestsReporterReporterTypeChoices
-
-          \"""\"""
           articles(before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
         }
 
@@ -513,13 +486,8 @@ class TestDjangoObjectType:
             }
 
             type Pet {
-              \"""\"""
               id: ID!
-
-              \"""\"""
               kind: String!
-
-              \"""\"""
               cuteness: Int!
             }
             """
@@ -543,13 +511,8 @@ class TestDjangoObjectType:
             }
 
             type Pet {
-              \"""\"""
               id: ID!
-
-              \"""\"""
               kind: TestsPetModelKindChoices!
-
-              \"""\"""
               cuteness: Int!
             }
 
@@ -582,13 +545,8 @@ class TestDjangoObjectType:
             }
 
             type Pet {
-              \"""\"""
               id: ID!
-
-              \"""\"""
               kind: String!
-
-              \"""\"""
               cuteness: Int!
             }
             """
@@ -614,10 +572,7 @@ class TestDjangoObjectType:
             }
 
             type PetModelKind {
-              \"""\"""
               id: ID!
-
-              \"""\"""
               kind: TestsPetModelKindChoices!
             }
 
@@ -656,10 +611,7 @@ class TestDjangoObjectType:
             }
 
             type PetModelKind {
-              \"""\"""
               id: ID!
-
-              \"""\"""
               kind: CustomEnumKind!
             }
 

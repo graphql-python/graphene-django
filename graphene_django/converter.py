@@ -119,7 +119,7 @@ def convert_django_field_with_choices(
 
 
 def get_django_field_description(field):
-    return None if field.help_text is None else str(field.help_text)
+    return str(field.help_text) if field.help_text else None
 
 
 @singledispatch
@@ -230,11 +230,10 @@ def convert_field_to_list_or_connection(field, registry=None):
         if not _type:
             return
 
-        description = (
-            field.help_text
-            if isinstance(field, models.ManyToManyField)
-            else field.field.help_text
-        )
+        if isinstance(field, models.ManyToManyField):
+            description = get_django_field_description(field)
+        else:
+            description = get_django_field_description(field.field)
 
         # If there is a connection, we should transform the field
         # into a DjangoConnectionField
