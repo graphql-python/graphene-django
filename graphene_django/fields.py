@@ -133,6 +133,7 @@ class DjangoConnectionField(ConnectionField):
     def resolve_connection(cls, connection, args, iterable, max_limit=None):
         iterable = maybe_queryset(iterable)
 
+        max_limit = max_limit or 0
         if isinstance(iterable, QuerySet):
             list_length = iterable.count()
             list_slice_length = max(max_limit, list_length)
