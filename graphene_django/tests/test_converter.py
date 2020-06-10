@@ -333,7 +333,9 @@ def test_should_postgres_array_multiple_convert_list():
     assert field.type.of_type.of_type.of_type.of_type == graphene.String
 
     field = assert_conversion(
-        ArrayField, graphene.List, ArrayField(models.CharField(max_length=100, null=True))
+        ArrayField,
+        graphene.List,
+        ArrayField(models.CharField(max_length=100, null=True)),
     )
     assert isinstance(field.type, graphene.NonNull)
     assert isinstance(field.type.of_type, graphene.List)
