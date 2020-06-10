@@ -135,7 +135,7 @@ class DjangoConnectionField(ConnectionField):
 
         if isinstance(iterable, QuerySet):
             list_length = iterable.count()
-            list_slice_length = max_limit or list_length
+            list_slice_length = max(max_limit, list_length)
         else:
             list_length = len(iterable)
             list_slice_length = max_limit or list_length
