@@ -19,6 +19,7 @@ class Reporter(DjangoObjectType):
 
     class Meta:
         model = ReporterModel
+        fields = "__all__"
 
 
 class ArticleConnection(Connection):
@@ -40,6 +41,7 @@ class Article(DjangoObjectType):
         model = ArticleModel
         interfaces = (Node,)
         connection_class = ArticleConnection
+        fields = "__all__"
 
 
 class RootQuery(ObjectType):
@@ -106,6 +108,7 @@ def test_django_objecttype_with_custom_meta():
     class Article(ArticleType):
         class Meta:
             model = ArticleModel
+            fields = "__all__"
 
     assert isinstance(Article._meta, ArticleTypeOptions)
 
@@ -449,6 +452,37 @@ def test_django_objecttype_exclude_fields_exist_on_model():
     assert len(record) == 0
 
 
+@with_local_registry
+def test_django_objecttype_neither_fields_nor_exclude():
+    with pytest.warns(
+        DeprecationWarning,
+        match=r"Creating a DjangoObjectType without either the `fields` "
+        "or the `exclude` option is deprecated.",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+
+    with pytest.warns(None) as record:
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["email"]
+
+    assert len(record) == 0
+
+    with pytest.warns(None) as record:
+
+        class Reporter3(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email"]
+
+    assert len(record) == 0
+
+
 def custom_enum_name(field):
     return "CustomEnum{}".format(field.name.title())
 
@@ -473,6 +507,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = False
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)
@@ -498,6 +533,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = ["kind"]
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)
@@ -532,6 +568,7 @@ class TestDjangoObjectType:
             class Meta:
                 model = PetModel
                 convert_choices_to_enum = []
+                fields = "__all__"
 
         class Query(ObjectType):
             pet = Field(Pet)

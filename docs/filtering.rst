@@ -45,6 +45,7 @@ For example:
         class Meta:
             # Assume you have an Animal model defined with the following fields
             model = Animal
+            fields = '__all__'
             filter_fields = ['name', 'genus', 'is_domesticated']
             interfaces = (relay.Node, )
 
@@ -75,6 +76,7 @@ You can also make more complex lookup types available:
     class AnimalNode(DjangoObjectType):
         class Meta:
             model = Animal
+            fields = '__all__'
             # Provide more complex lookup types
             filter_fields = {
                 'name': ['exact', 'icontains', 'istartswith'],
@@ -116,6 +118,7 @@ create your own ``FilterSet``. You can pass it directly as follows:
         class Meta:
             # Assume you have an Animal model defined with the following fields
             model = Animal
+            fields = '__all__'
             filter_fields = ['name', 'genus', 'is_domesticated']
             interfaces = (relay.Node, )
 
@@ -179,6 +182,7 @@ in unison  with the ``filter_fields`` parameter:
     class AnimalNode(DjangoObjectType):
         class Meta:
             model = Animal
+            fields = '__all__'
             filterset_class = AnimalFilter
             interfaces = (relay.Node, )
 
@@ -236,6 +240,7 @@ Extend the tuple of fields if you want to order by more than one field.
       class Meta:
           name = 'Group'
           model = GroupModel
+          fields = '__all__'
           interfaces = (relay.Node,)
 
       def resolve_users(self, info, **kwargs):

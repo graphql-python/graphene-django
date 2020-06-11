@@ -130,6 +130,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
     class CategoryNode(DjangoObjectType):
         class Meta:
             model = Category
+            fields = '__all__'
             filter_fields = ['name', 'ingredients']
             interfaces = (relay.Node, )
 
@@ -137,6 +138,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
     class IngredientNode(DjangoObjectType):
         class Meta:
             model = Ingredient
+            fields = '__all__'
             # Allow for some more advanced filtering here
             filter_fields = {
                 'name': ['exact', 'icontains', 'istartswith'],

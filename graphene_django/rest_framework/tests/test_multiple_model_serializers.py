@@ -27,12 +27,14 @@ class ParentType(DjangoObjectType):
     class Meta:
         model = MyFakeParentModel
         interfaces = (graphene.relay.Node,)
+        fields = "__all__"
 
 
 class ChildType(DjangoObjectType):
     class Meta:
         model = MyFakeChildModel
         interfaces = (graphene.relay.Node,)
+        fields = "__all__"
 
 
 class MyModelChildSerializer(serializers.ModelSerializer):

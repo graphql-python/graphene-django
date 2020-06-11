@@ -28,6 +28,7 @@ Full example
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
+            fields = '__all__'
 
 
     class Query:
@@ -52,6 +53,9 @@ If you only want a subset of fields to be present, you can do so using
 all fields that should be exposed using the fields attribute.
 This will make it less likely to result in unintentionally exposing data when
 your models change.
+
+Setting neither ``fields`` nor ``exclude`` is deprecated and will raise a warning, you should at least explicitly make
+``DjangoObjectType`` include all fields in the model as described below.
 
 ``fields``
 ~~~~~~~~~~
@@ -127,6 +131,7 @@ For example the following ``Model`` and ``DjangoObjectType``:
    class Pet(DjangoObjectType):
       class Meta:
          model = PetModel
+         fields = '__all__'
 
 Results in the following GraphQL schema definition:
 
@@ -151,6 +156,7 @@ You can disable this automatic conversion by setting
    class Pet(DjangoObjectType):
       class Meta:
          model = PetModel
+         fields = '__all__'
          convert_choices_to_enum = False
 
 .. code::
@@ -168,6 +174,7 @@ automatically converted into enums:
    class Pet(DjangoObjectType):
       class Meta:
          model = PetModel
+         fields = '__all__'
          convert_choices_to_enum = ['kind']
 
 **Note:** Setting ``convert_choices_to_enum = []`` is the same as setting it to
@@ -206,6 +213,7 @@ need to create the most basic class for this to work:
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
+            fields = '__all__'
 
 .. _django-objecttype-get-queryset:
 
@@ -224,6 +232,7 @@ Use this to control filtering on the ObjectType level instead of the Query objec
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
+            fields = '__all__'
 
         @classmethod
         def get_queryset(cls, queryset, info):
@@ -347,6 +356,7 @@ the core graphene pages for more information on customizing the Relay experience
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
+            fields = '__all__'
             interfaces = (relay.Node,)
 
 

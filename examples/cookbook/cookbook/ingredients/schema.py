@@ -10,6 +10,7 @@ class CategoryNode(DjangoObjectType):
     class Meta:
         model = Category
         interfaces = (Node,)
+        fields = "__all__"
         filter_fields = ["name", "ingredients"]
 
 
@@ -18,6 +19,7 @@ class IngredientNode(DjangoObjectType):
         model = Ingredient
         # Allow for some more advanced filtering here
         interfaces = (Node,)
+        fields = "__all__"
         filter_fields = {
             "name": ["exact", "icontains", "istartswith"],
             "notes": ["exact", "icontains"],

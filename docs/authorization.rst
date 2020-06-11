@@ -111,6 +111,7 @@ If you are using ``DjangoObjectType`` you can define a custom `get_queryset`.
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
+            fields = '__all__'
 
         @classmethod
         def get_queryset(cls, queryset, info):

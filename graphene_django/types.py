@@ -220,6 +220,16 @@ class DjangoObjectType(ObjectType):
                 % type(exclude).__name__
             )
 
+        if fields is None and exclude is None:
+            warnings.warn(
+                "Creating a DjangoObjectType without either the `fields` "
+                "or the `exclude` option is deprecated. Add an explicit `fields "
+                "= '__all__'` option on DjangoObjectType {class_name} to use all "
+                "fields".format(class_name=cls.__name__,),
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
             _as=Field,

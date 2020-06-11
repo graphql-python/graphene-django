@@ -41,17 +41,20 @@ if DJANGO_FILTER_INSTALLED:
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ("headline",)
 
     class ReporterNode(DjangoObjectType):
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class PetNode(DjangoObjectType):
         class Meta:
             model = Pet
             interfaces = (Node,)
+            fields = "__all__"
 
 
 def get_args(field):
@@ -189,6 +192,7 @@ def test_filter_filterset_information_on_meta():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["first_name", "articles"]
 
     field = DjangoFilterConnectionField(ReporterFilterNode)
@@ -201,12 +205,14 @@ def test_filter_filterset_information_on_meta_related():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["first_name", "articles"]
 
     class ArticleFilterNode(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["headline", "reporter"]
 
     class Query(ObjectType):
@@ -233,6 +239,7 @@ def test_filter_filterset_class_filter_fields_exception():
             class Meta:
                 model = Reporter
                 interfaces = (Node,)
+                fields = "__all__"
                 filterset_class = ReporterFilter
                 filter_fields = ["first_name", "articles"]
 
@@ -247,6 +254,7 @@ def test_filter_filterset_class_information_on_meta():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = ReporterFilter
 
     field = DjangoFilterConnectionField(ReporterFilterNode)
@@ -269,12 +277,14 @@ def test_filter_filterset_class_information_on_meta_related():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = ReporterFilter
 
     class ArticleFilterNode(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = ArticleFilter
 
     class Query(ObjectType):
@@ -294,12 +304,14 @@ def test_filter_filterset_related_results():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["first_name", "articles"]
 
     class ArticleFilterNode(DjangoObjectType):
         class Meta:
             interfaces = (Node,)
             model = Article
+            fields = "__all__"
             filter_fields = ["headline", "reporter"]
 
     class Query(ObjectType):
@@ -451,6 +463,7 @@ def test_filter_filterset_related_results_with_filter():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = {"first_name": ["icontains"]}
 
     class Query(ObjectType):
@@ -496,6 +509,7 @@ def test_recursive_filter_connection():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
@@ -521,11 +535,13 @@ def test_should_query_filter_node_limit():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class ArticleType(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ("lang",)
 
     class Query(ObjectType):
@@ -610,6 +626,7 @@ def test_order_by_is_perserved():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ()
 
     class Query(ObjectType):
@@ -676,6 +693,7 @@ def test_annotation_is_preserved():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ()
 
     class Query(ObjectType):
@@ -718,6 +736,7 @@ def test_annotation_with_only():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ()
 
     class Query(ObjectType):
@@ -758,6 +777,7 @@ def test_node_get_queryset_is_called():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ()
 
         @classmethod
@@ -954,6 +974,7 @@ def test_filter_filterset_based_on_mixin():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class NewArticleFilterNode(DjangoObjectType):
         viewer = Field(NewReporterNode)
@@ -961,6 +982,7 @@ def test_filter_filterset_based_on_mixin():
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = NewArticleFilter
 
         def resolve_viewer(self, info):
