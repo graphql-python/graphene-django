@@ -226,7 +226,7 @@ class DjangoObjectType(ObjectType):
                 "or the `exclude` option is deprecated. Add an explicit `fields "
                 "= '__all__'` option on DjangoObjectType {class_name} to use all "
                 "fields".format(class_name=cls.__name__,),
-                PendingDeprecationWarning,
+                DeprecationWarning,
                 stacklevel=2,
             )
 

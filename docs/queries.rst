@@ -54,9 +54,8 @@ all fields that should be exposed using the fields attribute.
 This will make it less likely to result in unintentionally exposing data when
 your models change.
 
-Setting neither ``fields`` nor ``exclude`` is allowed but will raise a warning, to
-avoid that you can easily make ``DjangoObjectType`` include all fields in the model as
-described below.
+Setting neither ``fields`` nor ``exclude`` is deprecated and will raise a warning, you should at least explicitly make
+``DjangoObjectType`` include all fields in the model as described below.
 
 ``fields``
 ~~~~~~~~~~

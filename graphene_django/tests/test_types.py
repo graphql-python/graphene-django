@@ -482,7 +482,7 @@ def test_django_objecttype_exclude_fields_exist_on_model():
 @with_local_registry
 def test_django_objecttype_neither_fields_nor_exclude():
     with pytest.warns(
-        PendingDeprecationWarning,
+        DeprecationWarning,
         match=r"Creating a DjangoObjectType without either the `fields` "
         "or the `exclude` option is deprecated.",
     ):
