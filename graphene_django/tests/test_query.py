@@ -1127,7 +1127,7 @@ def test_should_return_max_limit(graphene_settings):
 
 
 def test_should_have_next_page(graphene_settings):
-    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 6
     reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
     Reporter.objects.bulk_create(reporters)
     db_reporters = Reporter.objects.all()
