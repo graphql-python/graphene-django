@@ -146,6 +146,9 @@ class DjangoConnectionField(ConnectionField):
 
         after = get_offset_with_default(args.get("after"), -1) + 1
 
+        if max_limit is not None and "first" not in args:
+            args["first"] = max_limit
+
         connection = connection_from_list_slice(
             iterable[after:],
             args,
