@@ -1127,7 +1127,7 @@ def test_should_return_max_limit(graphene_settings):
 
 
 def test_should_have_next_page(graphene_settings):
-    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 6
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
     reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
     Reporter.objects.bulk_create(reporters)
     db_reporters = Reporter.objects.all()
@@ -1141,9 +1141,6 @@ def test_should_have_next_page(graphene_settings):
         all_reporters = DjangoConnectionField(ReporterType)
 
     schema = graphene.Schema(query=Query)
-    # Need first: 4 here to trigger the `has_next_page` logic in graphql-relay
-    # See `arrayconnection.py::connection_from_list_slice`:
-    # has_next_page=isinstance(first, int) and end_offset < upper_bound
     query = """
         query AllReporters($first: Int, $after: String) {
             allReporters(first: $first, after: $after) {
@@ -1160,7 +1157,7 @@ def test_should_have_next_page(graphene_settings):
         }
     """
 
-    result = schema.execute(query, variable_values=dict(first=4))
+    result = schema.execute(query, variable_values={})
     assert not result.errors
     assert len(result.data["allReporters"]["edges"]) == 4
     assert result.data["allReporters"]["pageInfo"]["hasNextPage"]
