@@ -22,13 +22,14 @@ from graphene import (
     Time,
 )
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_camel_case, to_const
+from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoConnectionField, DjangoListField
 from .settings import graphene_settings
+from .utils.str_converters import to_const
 
 
 def convert_choice_name(name):

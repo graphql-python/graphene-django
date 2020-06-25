@@ -58,6 +58,7 @@ setup(
         "graphql-core>=3.1.0,<4",
         "Django>=2.2",
         "promise>=2.1",
+        "unidecode>=1.1.1,<2",
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,
