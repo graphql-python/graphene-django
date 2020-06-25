@@ -2,7 +2,10 @@ from functools import partial
 
 import six
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import connection_from_list_slice
+from graphql_relay.connection.arrayconnection import (
+    connection_from_list_slice,
+    get_offset_with_default,
+)
 from promise import Promise
 
 from graphene import NonNull
@@ -129,25 +132,32 @@ class DjangoConnectionField(ConnectionField):
     @classmethod
     def resolve_connection(cls, connection, args, iterable, max_limit=None):
         iterable = maybe_queryset(iterable)
-        # When slicing from the end, need to retrieve the iterable length.
-        if args.get("last"):
-            max_limit = None
+
         if isinstance(iterable, QuerySet):
-            _len = max_limit or iterable.count()
+            list_length = iterable.count()
+            list_slice_length = (
+                min(max_limit, list_length) if max_limit is not None else list_length
+            )
         else:
-            _len = max_limit or len(iterable)
+            list_length = len(iterable)
+            list_slice_length = (
+                min(max_limit, list_length) if max_limit is not None else list_length
+            )
+
+        after = get_offset_with_default(args.get("after"), -1) + 1
+
         connection = connection_from_list_slice(
-            iterable,
+            iterable[after:],
             args,
-            slice_start=0,
-            list_length=_len,
-            list_slice_length=_len,
+            slice_start=after,
+            list_length=list_length,
+            list_slice_length=list_slice_length,
             connection_type=connection,
             edge_type=connection.Edge,
             pageinfo_type=PageInfo,
         )
         connection.iterable = iterable
-        connection.length = _len
+        connection.length = list_length
         return connection
 
     @classmethod
