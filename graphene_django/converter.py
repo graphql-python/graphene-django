@@ -20,13 +20,14 @@ from graphene import (
     Time,
 )
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_camel_case, to_const
+from graphene.utils.str_converters import to_camel_case
 from graphql import assert_valid_name
 
 from .settings import graphene_settings
 from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
+from .utils.str_converters import to_const
 
 singledispatch = import_single_dispatch()
 
