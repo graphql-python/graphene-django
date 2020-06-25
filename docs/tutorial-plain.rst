@@ -150,12 +150,12 @@ Create ``cookbook/schema.py`` and type the following:
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
-            fields = "__all__"  # Convert all of the Django model fields on the GraphQL type
+            fields = ("id", "name", "ingredients")
 
     class IngredientType(DjangoObjectType):
         class Meta:
             model = Ingredient
-            fields = "__all__"
+            fields = ("id", "name", "notes", "category")
 
     class Query(graphene.ObjectType):
         all_ingredients = graphene.List(IngredientType)
