@@ -68,6 +68,7 @@ Let's get started with these models:
 Add ingredients as INSTALLED_APPS:
 
 .. code:: python
+
     # cookbook/settings.py
 
     INSTALLED_APPS = [
@@ -97,7 +98,7 @@ following:
 
 .. code:: bash
 
-    $ python manage.py loaddata ingredients
+    python manage.py loaddata ingredients
 
     Installed 6 object(s) from 1 fixture(s)
 
@@ -193,6 +194,8 @@ Add ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/settings.py``:
 
 .. code:: python
 
+    # cookbook/settings.py
+
     INSTALLED_APPS = [
         ...
         "graphene_django",
@@ -201,6 +204,8 @@ Add ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/settings.py``:
 And then add the ``SCHEMA`` to the ``GRAPHENE`` config in ``cookbook/settings.py``:
 
 .. code:: python
+
+    # cookbook/settings.py
 
     GRAPHENE = {
         "SCHEMA": "cookbook.schema.schema"
@@ -221,6 +226,8 @@ aforementioned GraphiQL we specify that on the parameters with ``graphiql=True``
 
 .. code:: python
 
+    # cookbook/urls.py
+
     from django.contrib import admin
     from django.urls import path
     from django.views.decorators.csrf import csrf_exempt
@@ -237,6 +244,9 @@ If we didn't specify the target schema in the Django settings file
 as explained above, we can do so here using:
 
 .. code:: python
+
+    # cookbook/urls.py
+
     from django.contrib import admin
     from django.urls import path
     from django.views.decorators.csrf import csrf_exempt
@@ -260,7 +270,7 @@ from the command line.
 
 .. code:: bash
 
-    $ python manage.py runserver
+    python manage.py runserver
 
     Performing system checks...
     Django version 3.0.7, using settings 'cookbook.settings'
@@ -377,7 +387,7 @@ Summary
 
 As you can see, GraphQL is very powerful and integrating Django models allows you to get started with a working server quickly.
 
-If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the **relay tutorial.**
+If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the :ref:`Relay tutorial`.
 
 A good idea is to check the `Graphene <http://docs.graphene-python.org/en/latest/>`__
 documentation so that you are familiar with it as well.
