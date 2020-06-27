@@ -1,7 +1,10 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import connection_from_array_slice
+from graphql_relay.connection.arrayconnection import (
+    connection_from_array_slice,
+    get_offset_with_default,
+)
 from promise import Promise
 
 from graphene import NonNull
@@ -127,24 +130,37 @@ class DjangoConnectionField(ConnectionField):
         return connection._meta.node.get_queryset(queryset, info)
 
     @classmethod
-    def resolve_connection(cls, connection, args, iterable):
+    def resolve_connection(cls, connection, args, iterable, max_limit=None):
         iterable = maybe_queryset(iterable)
+
         if isinstance(iterable, QuerySet):
-            _len = iterable.count()
+            list_length = iterable.count()
+            list_slice_length = (
+                min(max_limit, list_length) if max_limit is not None else list_length
+            )
         else:
-            _len = len(iterable)
+            list_length = len(iterable)
+            list_slice_length = (
+                min(max_limit, list_length) if max_limit is not None else list_length
+            )
+
+        after = get_offset_with_default(args.get("after"), -1) + 1
+
+        if max_limit is not None and args.get("first", None) == None:
+            args["first"] = max_limit
+
         connection = connection_from_array_slice(
-            iterable,
+            iterable[after:],
             args,
-            slice_start=0,
-            array_length=_len,
-            array_slice_length=_len,
+            slice_start=after,
+            array_length=list_length,
+            array_slice_length=list_slice_length,
             connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
             page_info_type=page_info_adapter,
         )
         connection.iterable = iterable
-        connection.length = _len
+        connection.length = list_length
         return connection
 
     @classmethod
@@ -189,7 +205,9 @@ class DjangoConnectionField(ConnectionField):
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
         iterable = queryset_resolver(connection, iterable, info, args)
-        on_resolve = partial(cls.resolve_connection, connection, args)
+        on_resolve = partial(
+            cls.resolve_connection, connection, args, max_limit=max_limit
+        )
 
         if Promise.is_thenable(iterable):
             return Promise.resolve(iterable).then(on_resolve)

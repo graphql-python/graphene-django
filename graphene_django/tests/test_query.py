@@ -1109,6 +1109,98 @@ def test_should_resolve_get_queryset_connectionfields():
     assert result.data == expected
 
 
+REPORTERS = [
+    dict(
+        first_name="First {}".format(i),
+        last_name="Last {}".format(i),
+        email="johndoe+{}@example.com".format(i),
+        a_choice=1,
+    )
+    for i in range(6)
+]
+
+
+def test_should_return_max_limit(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query AllReporters {
+            allReporters {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 4
+
+
+def test_should_have_next_page(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+    db_reporters = Reporter.objects.all()
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query AllReporters($first: Int, $after: String) {
+            allReporters(first: $first, after: $after) {
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query, variable_values={})
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 4
+    assert result.data["allReporters"]["pageInfo"]["hasNextPage"]
+
+    last_result = result.data["allReporters"]["pageInfo"]["endCursor"]
+    result2 = schema.execute(query, variable_values=dict(first=4, after=last_result))
+    assert not result2.errors
+    assert len(result2.data["allReporters"]["edges"]) == 2
+    assert not result2.data["allReporters"]["pageInfo"]["hasNextPage"]
+    gql_reporters = (
+        result.data["allReporters"]["edges"] + result2.data["allReporters"]["edges"]
+    )
+
+    assert {to_global_id("ReporterType", reporter.id) for reporter in db_reporters} == {
+        gql_reporter["node"]["id"] for gql_reporter in gql_reporters
+    }
+
+
 def test_should_preserve_prefetch_related(django_assert_num_queries):
     class ReporterType(DjangoObjectType):
         class Meta:

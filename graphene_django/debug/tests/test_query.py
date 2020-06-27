@@ -1,4 +1,5 @@
 import graphene
+import pytest
 from graphene.relay import Node
 from graphene_django import DjangoConnectionField, DjangoObjectType
 
@@ -54,7 +55,10 @@ def test_should_query_field():
     assert result.data == expected
 
 
-def test_should_query_nested_field():
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_nested_field(graphene_settings, max_limit):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
+
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -165,7 +169,10 @@ def test_should_query_list():
     assert result.data == expected
 
 
-def test_should_query_connection():
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_connection(graphene_settings, max_limit):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
+
     r1 = Reporter(last_name="ABA")
     r1.save()
     r2 = Reporter(last_name="Griffin")
@@ -207,12 +214,16 @@ def test_should_query_connection():
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
+    assert len(result.data["_debug"]["sql"]) == 2
     assert "COUNT" in result.data["_debug"]["sql"][0]["rawSql"]
     query = str(Reporter.objects.all()[:1].query)
     assert result.data["_debug"]["sql"][1]["rawSql"] == query
 
 
-def test_should_query_connectionfilter():
+@pytest.mark.parametrize("max_limit", [None, 100])
+def test_should_query_connectionfilter(graphene_settings, max_limit):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
+
     from ...filter import DjangoFilterConnectionField
 
     r1 = Reporter(last_name="ABA")
@@ -257,6 +268,7 @@ def test_should_query_connectionfilter():
     )
     assert not result.errors
     assert result.data["allReporters"] == expected["allReporters"]
+    assert len(result.data["_debug"]["sql"]) == 2
     assert "COUNT" in result.data["_debug"]["sql"][0]["rawSql"]
     query = str(Reporter.objects.all()[:1].query)
     assert result.data["_debug"]["sql"][1]["rawSql"] == query
