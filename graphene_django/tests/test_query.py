@@ -1,4 +1,5 @@
 import datetime
+import base64
 
 import pytest
 from django.db import models
@@ -1080,6 +1081,42 @@ def test_should_resolve_get_queryset_connectionfields():
     expected = {"allReporters": {"edges": [{"node": {"id": "UmVwb3J0ZXJUeXBlOjI="}}]}}
 
     result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_connection_should_limit_after_to_list_length():
+    reporter_1 = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    reporter_2 = Reporter.objects.create(
+        first_name="Some", last_name="Guy", email="someguy@cnn.com", a_choice=1
+    )
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($after: String) {
+            allReporters(first: 1 after: $after) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    after = base64.b64encode(b"arrayconnection:10").decode()
+    result = schema.execute(query, variable_values=dict(after=after))
+    expected = {"allReporters": {"edges": []}}
     assert not result.errors
     assert result.data == expected
 

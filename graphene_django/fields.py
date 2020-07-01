@@ -144,7 +144,10 @@ class DjangoConnectionField(ConnectionField):
                 min(max_limit, list_length) if max_limit is not None else list_length
             )
 
-        after = get_offset_with_default(args.get("after"), -1) + 1
+        # If after is higher than list_length, connection_from_list_slice
+        # would try to do a negative slicing which makes django throw an
+        # AssertionError
+        after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
 
         if max_limit is not None and "first" not in args:
             args["first"] = max_limit
