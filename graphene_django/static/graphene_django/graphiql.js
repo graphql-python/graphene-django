@@ -1,5 +1,13 @@
-(function() {
-
+(function (
+  document,
+  GRAPHENE_SETTINGS,
+  GraphiQL,
+  React,
+  ReactDOM,
+  SubscriptionsTransportWs,
+  history,
+  location,
+) {
   // Parse the cookie value for a CSRF token
   var csrftoken;
   var cookies = ('; ' + document.cookie).split('; csrftoken=');
@@ -11,7 +19,7 @@
 
   // Collect the URL parameters
   var parameters = {};
-  window.location.hash.substr(1).split('&').forEach(function (entry) {
+  location.hash.substr(1).split('&').forEach(function (entry) {
     var eq = entry.indexOf('=');
     if (eq >= 0) {
       parameters[decodeURIComponent(entry.slice(0, eq))] =
@@ -41,7 +49,7 @@
   var fetchURL = locationQuery(otherParams);
 
   // Defines a GraphQL fetcher using the fetch API.
-  function graphQLFetcher(graphQLParams) {
+  function httpClient(graphQLParams) {
     var headers = {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
@@ -64,6 +72,68 @@
       }
     });
   }
+
+  // Derive the subscription URL. If the SUBSCRIPTION_URL setting is specified, uses that value. Otherwise
+  // assumes the current window location with an appropriate websocket protocol.
+  var subscribeURL =
+    location.origin.replace(/^http/, "ws") +
+    (GRAPHENE_SETTINGS.subscriptionPath || location.pathname);
+
+  // Create a subscription client.
+  var subscriptionClient = new SubscriptionsTransportWs.SubscriptionClient(
+    subscribeURL,
+    {
+      // Reconnect after any interruptions.
+      reconnect: true,
+      // Delay socket initialization until the first subscription is started.
+      lazy: true,
+    },
+  );
+
+  // Keep a reference to the currently-active subscription, if available.
+  var activeSubscription = null;
+
+  // Define a GraphQL fetcher that can intelligently route queries based on the operation type.
+  function graphQLFetcher(graphQLParams) {
+    var operationType = getOperationType(graphQLParams);
+
+    // If we're about to execute a new operation, and we have an active subscription,
+    // unsubscribe before continuing.
+    if (activeSubscription) {
+      activeSubscription.unsubscribe();
+      activeSubscription = null;
+    }
+
+    if (operationType === "subscription") {
+      return {
+        subscribe: function (observer) {
+          subscriptionClient.request(graphQLParams).subscribe(observer);
+          activeSubscription = subscriptionClient;
+        },
+      };
+    } else {
+      return httpClient(graphQLParams);
+    }
+  }
+
+  // Determine the type of operation being executed for a given set of GraphQL parameters.
+  function getOperationType(graphQLParams) {
+    // Run a regex against the query to determine the operation type (query, mutation, subscription).
+    var operationRegex = new RegExp(
+      // Look for lines that start with an operation keyword, ignoring whitespace.
+      "^\\s*(query|mutation|subscription)\\s+" +
+        // The operation keyword should be followed by the operationName in the GraphQL parameters.
+        graphQLParams.operationName +
+        // The line should eventually encounter an opening curly brace.
+        "[^\\{]*\\{",
+      // Enable multiline matching.
+      "m",
+    );
+    var match = operationRegex.exec(graphQLParams.query);
+
+    return match[1];
+  }
+
   // When the query and variables string is edited, update the URL bar so
   // that it can be easily shared.
   function onEditQuery(newQuery) {
@@ -83,10 +153,10 @@
   }
   var options = {
     fetcher: graphQLFetcher,
-      onEditQuery: onEditQuery,
-      onEditVariables: onEditVariables,
-      onEditOperationName: onEditOperationName,
-      query: parameters.query,
+    onEditQuery: onEditQuery,
+    onEditVariables: onEditVariables,
+    onEditOperationName: onEditOperationName,
+    query: parameters.query,
   }
   if (parameters.variables) {
     options.variables = parameters.variables;
@@ -99,4 +169,13 @@
     React.createElement(GraphiQL, options),
     document.getElementById("editor")
   );
-})();
+})(
+  document,
+  window.GRAPHENE_SETTINGS,
+  window.GraphiQL,
+  window.React,
+  window.ReactDOM,
+  window.SubscriptionsTransportWs,
+  window.history,
+  window.location,
+);

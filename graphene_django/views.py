@@ -52,9 +52,10 @@ def instantiate_middleware(middlewares):
 
 
 class GraphQLView(View):
-    graphiql_version = "0.14.0"
+    graphiql_version = "1.0.3"
     graphiql_template = "graphene/graphiql.html"
-    react_version = "16.8.6"
+    react_version = "16.13.1"
+    subscriptions_transport_ws_version = "0.9.16"
 
     schema = None
     graphiql = False
@@ -64,6 +65,7 @@ class GraphQLView(View):
     root_value = None
     pretty = False
     batch = False
+    subscription_path = None
 
     def __init__(
         self,
@@ -75,6 +77,7 @@ class GraphQLView(View):
         pretty=False,
         batch=False,
         backend=None,
+        subscription_path=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -97,6 +100,8 @@ class GraphQLView(View):
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
         self.backend = backend
+        if subscription_path is None:
+            subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
         assert isinstance(
             self.schema, GraphQLSchema
@@ -134,6 +139,8 @@ class GraphQLView(View):
                     request,
                     graphiql_version=self.graphiql_version,
                     react_version=self.react_version,
+                    subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
+                    subscription_path=self.subscription_path,
                 )
 
             if self.batch:

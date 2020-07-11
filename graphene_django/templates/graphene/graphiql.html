@@ -29,10 +29,19 @@ add "&raw" to the end of the URL within a browser.
           crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.min.js"
           crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/subscriptions-transport-ws@{{subscriptions_transport_ws_version}}/browser/client.js"
+          crossorigin="anonymous"></script>
 </head>
 <body>
   <div id="editor"></div>
   {% csrf_token %}
+  <script type="application/javascript">
+    window.GRAPHENE_SETTINGS = {
+    {% if subscription_path %}
+      subscriptionPath: "{{subscription_path}}",
+    {% endif %}
+    };
+  </script>
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>
 </body>
 </html>
