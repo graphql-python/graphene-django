@@ -156,9 +156,18 @@ class GraphQLView(View):
             if show_graphiql:
                 return self.render_graphiql(
                     request,
-                    graphiql_version=self.graphiql_version,
+                    # Dependency parameters.
+                    whatwg_fetch_version=self.whatwg_fetch_version,
+                    whatwg_fetch_sri=self.whatwg_fetch_sri,
                     react_version=self.react_version,
+                    react_sri=self.react_sri,
+                    react_dom_sri=self.react_dom_sri,
+                    graphiql_version=self.graphiql_version,
+                    graphiql_sri=self.graphiql_sri,
+                    graphiql_css_sri=self.graphiql_css_sri,
                     subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
+                    subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
+                    # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                 )
 
