@@ -170,3 +170,18 @@ Default: ``None``
    GRAPHENE = {
       'DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME': "myapp.utils.enum_naming"
    }
+
+
+``SUBSCRIPTION_PATH``
+--------------------------------------
+
+Define an alternative URL path where subscription operations should be routed.
+
+The GraphiQL interface will use this setting to intelligently route subscription operations. This is useful if you have more advanced infrastructure requirements that prevent websockets from being handled at the same path (e.g., a WSGI server listening at ``/graphql`` and an ASGI server listening at ``/ws/graphql``).
+
+Default: ``None``
+
+.. code:: python
+   GRAPHENE = {
+      'SUBSCRIPTION_PATH': "/ws/graphql"
+   }
