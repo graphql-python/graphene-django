@@ -104,7 +104,7 @@ Default: ``100``
 
 
 ``CAMELCASE_ERRORS``
-------------------------------------
+--------------------
 
 When set to ``True`` field names in the ``errors`` object will be camel case.
 By default they will be snake case.
@@ -151,7 +151,7 @@ Default: ``False``
 
 
 ``DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME``
---------------------------------------
+----------------------------------------
 
 Define the path of a function that takes the Django choice field and returns a string to completely customise the naming for the Enum type.
 
@@ -173,7 +173,7 @@ Default: ``None``
 
 
 ``SUBSCRIPTION_PATH``
---------------------------------------
+---------------------
 
 Define an alternative URL path where subscription operations should be routed.
 
@@ -182,6 +182,7 @@ The GraphiQL interface will use this setting to intelligently route subscription
 Default: ``None``
 
 .. code:: python
+
    GRAPHENE = {
       'SUBSCRIPTION_PATH': "/ws/graphql"
    }

@@ -28,6 +28,7 @@ For more advanced use, check out the Relay tutorial.
    fields
    extra-types
    mutations
+   subscriptions
    filtering
    authorization
    debug

@@ -1,9 +1,9 @@
-Subscription Support
-====================
+Subscriptions
+=============
 
 The ``graphene-django`` project does not currently support GraphQL subscriptions out of the box. However, there are
-several community-driven modules for adding subscription support, and the GraphiQL interface provided by
-``graphene-django`` supports subscriptions over websockets.
+several community-driven modules for adding subscription support, and the provided GraphiQL interface supports
+running subscription operations over a websocket.
 
 To implement websocket-based support for GraphQL subscriptions, you’ll need to do the following:
 
