@@ -56,9 +56,7 @@ class GraphQLView(View):
 
     # Polyfill for window.fetch.
     whatwg_fetch_version = "3.2.0"
-    whatwg_fetch_sri = (
-        "sha384-tqVCX1cJQbZp7b0Kz6FIIK6WN71gjVLpkiJ/Ewi7OhBX6hUGuNq9Mj/TRqh47Tvk"
-    )
+    whatwg_fetch_sri = "sha256-OdOTEWtaemRcFdpGZD+NWFkiCZgo5s6LU3kIT3w2iQk="
 
     # React and ReactDOM.
     react_version = "16.13.1"
@@ -73,7 +71,7 @@ class GraphQLView(View):
     # The websocket transport library for subscriptions.
     subscriptions_transport_ws_version = "0.9.17"
     subscriptions_transport_ws_sri = (
-        "sha384-6gjV060PDpdaEOOO4n8iX7JHLAPFoHqrOizK4QbVtzVKxKcUGVbJ1wF9ujJmmQ7C"
+        "sha256-AYkMMCvLy9lmI+vvCqO5sVM40CeY6Bf+EdulzGlwTXI="
     )
 
     schema = None
