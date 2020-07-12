@@ -52,10 +52,29 @@ def instantiate_middleware(middlewares):
 
 
 class GraphQLView(View):
-    graphiql_version = "1.0.3"
     graphiql_template = "graphene/graphiql.html"
+
+    # Polyfill for window.fetch.
+    whatwg_fetch_version = "3.2.0"
+    whatwg_fetch_sri = (
+        "sha384-tqVCX1cJQbZp7b0Kz6FIIK6WN71gjVLpkiJ/Ewi7OhBX6hUGuNq9Mj/TRqh47Tvk"
+    )
+
+    # React and ReactDOM.
     react_version = "16.13.1"
-    subscriptions_transport_ws_version = "0.9.16"
+    react_sri = "sha256-yUhvEmYVhZ/GGshIQKArLvySDSh6cdmdcIx0spR3UP4="
+    react_dom_sri = "sha256-vFt3l+illeNlwThbDUdoPTqF81M8WNSZZZt3HEjsbSU="
+
+    # The GraphiQL React app.
+    graphiql_version = "1.0.3"
+    graphiql_sri = "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
+    graphiql_css_sri = "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
+
+    # The websocket transport library for subscriptions.
+    subscriptions_transport_ws_version = "0.9.17"
+    subscriptions_transport_ws_sri = (
+        "sha384-6gjV060PDpdaEOOO4n8iX7JHLAPFoHqrOizK4QbVtzVKxKcUGVbJ1wF9ujJmmQ7C"
+    )
 
     schema = None
     graphiql = False
@@ -101,7 +120,7 @@ class GraphQLView(View):
         self.batch = self.batch or batch
         self.backend = backend
         if subscription_path is None:
-            subscription_path = graphene_settings.SUBSCRIPTION_PATH
+            self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
         assert isinstance(
             self.schema, GraphQLSchema
