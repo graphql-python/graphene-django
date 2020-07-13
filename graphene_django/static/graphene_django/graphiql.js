@@ -136,14 +136,15 @@
     var operationRegex = new RegExp(
       // Look for lines that start with an operation keyword, ignoring whitespace.
       "^\\s*(query|mutation|subscription)\\s+" +
-        // The operation keyword should be followed by the operationName in the GraphQL parameters.
-        graphQLParams.operationName +
         // The line should eventually encounter an opening curly brace.
         "[^\\{]*\\{",
       // Enable multiline matching.
       "m",
     );
     var match = operationRegex.exec(graphQLParams.query);
+    if (!match) {
+      return "query";
+    }
 
     return match[1];
   }
