@@ -164,8 +164,7 @@ def test_field_with_choices_convert_enum():
         class Meta:
             app_label = "test"
 
-    graphene_type = convert_django_field_with_choices(field)
-    assert isinstance(graphene_type, graphene.Enum)
+    graphene_type = convert_django_field_with_choices(field).type.of_type
     assert graphene_type._meta.name == "TestTranslatedModelLanguageChoices"
     assert graphene_type._meta.enum.__members__["ES"].value == "es"
     assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
@@ -418,3 +417,43 @@ def test_generate_v2_enum_name(graphene_settings):
         app_label="some_long_app_name", object_name="SomeObject"
     )
     assert generate_enum_name(model_meta, field) == "SomeObjectFizzBuzz"
+
+
+def test_choice_enum_blank_value():
+    """Test that choice fields with blank values work"""
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            fields = (
+                "first_name",
+                "a_choice",
+            )
+
+    class Query(graphene.ObjectType):
+        reporter = graphene.Field(ReporterType)
+
+        def resolve_reporter(root, info):
+            return Reporter.objects.first()
+
+    schema = graphene.Schema(query=Query)
+
+    # Create model with empty choice option
+    Reporter.objects.create(
+        first_name="Bridget", last_name="Jones", email="bridget@example.com"
+    )
+
+    result = schema.execute(
+        """
+        query {
+            reporter {
+                firstName
+                aChoice
+            }
+        }
+    """
+    )
+    assert not result.errors
+    assert result.data == {
+        "reporter": {"firstName": "Bridget", "aChoice": None},
+    }
