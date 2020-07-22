@@ -394,3 +394,43 @@ def test_generate_enum_name(graphene_settings):
         generate_enum_name(model_meta, field)
         == "SomeLongAppNameSomeObjectFizzBuzzChoices"
     )
+
+
+def test_choice_enum_blank_value():
+    """Test that choice fields with blank values work"""
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            fields = (
+                "first_name",
+                "a_choice",
+            )
+
+    class Query(graphene.ObjectType):
+        reporter = graphene.Field(ReporterType)
+
+        def resolve_reporter(root, info):
+            return Reporter.objects.first()
+
+    schema = graphene.Schema(query=Query)
+
+    # Create model with empty choice option
+    Reporter.objects.create(
+        first_name="Bridget", last_name="Jones", email="bridget@example.com"
+    )
+
+    result = schema.execute(
+        """
+        query {
+            reporter {
+                firstName
+                aChoice
+            }
+        }
+    """
+    )
+    assert not result.errors
+    assert result.data == {
+        "reporter": {"firstName": "Bridget", "aChoice": None},
+    }
