@@ -150,7 +150,11 @@ class DjangoConnectionField(ConnectionField):
         after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
 
         if max_limit is not None and "first" not in args:
-            args["first"] = max_limit
+            if "last" in args:
+                args["first"] = list_length
+                list_slice_length = list_length
+            else:
+                args["first"] = max_limit
 
         connection = connection_from_list_slice(
             iterable[after:],
