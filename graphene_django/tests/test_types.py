@@ -590,7 +590,7 @@ def test_django_objecttype_name_connection_propagation():
             model = ReporterModel
             name = "CustomReporterName"
             filter_fields = ["email"]
-            interfaces = (Node, )
+            interfaces = (Node,)
 
     class Query(ObjectType):
         reporter = Node.Field(Reporter)
