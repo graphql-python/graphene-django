@@ -9,8 +9,8 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
-from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from ..filter import DjangoFilterConnectionField
+from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
 
@@ -581,6 +581,7 @@ class TestDjangoObjectType:
         }
         """
         )
+
 
 @with_local_registry
 def test_django_objecttype_name_connection_propagation():
