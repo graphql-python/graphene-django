@@ -12,12 +12,8 @@ Usage:
     import json
 
     from graphene_django.utils.testing import GraphQLTestCase
-    from my_project.config.schema import schema
 
     class MyFancyTestCase(GraphQLTestCase):
-        # Here you need to inject your test case's schema
-        GRAPHQL_SCHEMA = schema
-
         def test_some_query(self):
             response = self.query(
                 '''
