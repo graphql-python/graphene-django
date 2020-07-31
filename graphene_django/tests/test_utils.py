@@ -6,6 +6,7 @@ from mock import patch
 
 from ..utils import camelize, get_model_fields, GraphQLTestCase
 from .models import Film, Reporter
+from ..utils.testing import graphql_query
 
 
 def test_get_model_fields_no_duplication():
@@ -52,6 +53,18 @@ def test_graphql_test_case_op_name(post_mock):
     tc = TestClass()
     tc.setUpClass()
     tc.query("query { }", op_name="QueryName")
+    body = json.loads(post_mock.call_args.args[1])
+    # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
+    assert (
+        "operationName",
+        "QueryName",
+    ) in body.items(), "Field 'operationName' is not present in the final request."
+
+
+@pytest.mark.django_db
+@patch("graphene_django.utils.testing.Client.post")
+def test_graphql_query_case_op_name(post_mock):
+    graphql_query("query { }", op_name="QueryName")
     body = json.loads(post_mock.call_args.args[1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
