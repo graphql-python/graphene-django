@@ -67,17 +67,10 @@ class GraphQLTestCase(TestCase):
 
     # URL to graphql endpoint
     GRAPHQL_URL = DEFAULT_GRAPHQL_URL
-    # Here you need to set your graphql schema for the tests
-    GRAPHQL_SCHEMA = None
 
     @classmethod
     def setUpClass(cls):
         super(GraphQLTestCase, cls).setUpClass()
-
-        if not cls.GRAPHQL_SCHEMA:
-            raise AttributeError(
-                "Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase."
-            )
 
         cls._client = Client()
 
