@@ -41,6 +41,10 @@ DEFAULTS = {
     "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
     # Use a separate path for handling subscriptions.
     "SUBSCRIPTION_PATH": None,
+    # Set to True to enable GraphiQL headers editor tab
+    # This sets headerEditorEnabled GraphiQL option, for details go to
+    # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
+    "GRAPHIQL_HEADER_EDITOR_ENABLED": False,
 }
 
 if settings.DEBUG:
