@@ -76,7 +76,7 @@ def test_graphql_query_case_op_name(post_mock):
 @pytest.fixture
 def client_query(client):
     def func(*args, **kwargs):
-        return graphql_query(*args, **kwargs, client=client)
+        return graphql_query(*args, client=client, **kwargs)
 
     return func
 
