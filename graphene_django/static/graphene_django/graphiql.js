@@ -61,29 +61,19 @@
   var fetchURL = locationQuery(otherParams);
 
   // Defines a GraphQL fetcher using the fetch API.
-  function httpClient(graphQLParams, opts = { headers: {} }) {
-    let headers = opts.headers;
-    // Convert headers to an object.
-    if (typeof headers === 'string') {
-      headers = JSON.parse(opts.headers);
+  function httpClient(graphQLParams, opts) {
+    if (typeof opts === 'undefined') {
+      opts = {};
     }
+    var headers = opts.headers || {};
+    headers['Accept'] = headers['Accept'] || 'application/json';
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     if (csrftoken) {
-      Object.assign(
-          {
-            'X-CSRFToken': csrftoken
-          },
-          headers,
-      )
+      headers['X-CSRFToken'] = csrftoken
     }
     return fetch(fetchURL, {
       method: "post",
-      headers: Object.assign(
-          {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          headers,
-      ),
+      headers: headers,
       body: JSON.stringify(graphQLParams),
       credentials: "include",
     })
@@ -120,7 +110,7 @@
   var activeSubscription = null;
 
   // Define a GraphQL fetcher that can intelligently route queries based on the operation type.
-  function graphQLFetcher(graphQLParams, opts = { headers: {} }) {
+  function graphQLFetcher(graphQLParams, opts) {
     var operationType = getOperationType(graphQLParams);
 
     // If we're about to execute a new operation, and we have an active subscription,
