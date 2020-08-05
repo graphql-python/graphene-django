@@ -2,6 +2,63 @@ import json
 
 from django.test import TestCase, Client
 
+DEFAULT_GRAPHQL_URL = "/graphql/"
+
+
+def graphql_query(
+    query,
+    op_name=None,
+    input_data=None,
+    variables=None,
+    headers=None,
+    client=None,
+    graphql_url=None,
+):
+    """
+    Args:
+        query (string)              - GraphQL query to run
+        op_name (string)            - If the query is a mutation or named query, you must
+                                      supply the op_name.  For annon queries ("{ ... }"),
+                                      should be None (default).
+        input_data (dict)           - If provided, the $input variable in GraphQL will be set
+                                      to this value. If both ``input_data`` and ``variables``,
+                                      are provided, the ``input`` field in the ``variables``
+                                      dict will be overwritten with this value.
+        variables (dict)            - If provided, the "variables" field in GraphQL will be
+                                      set to this value.
+        headers (dict)              - If provided, the headers in POST request to GRAPHQL_URL
+                                      will be set to this value.
+        client (django.test.Client) - Test client. Defaults to django.test.Client.
+        graphql_url (string)        - URL to graphql endpoint. Defaults to "/graphql".
+
+    Returns:
+        Response object from client
+    """
+    if client is None:
+        client = Client()
+    if not graphql_url:
+        graphql_url = DEFAULT_GRAPHQL_URL
+
+    body = {"query": query}
+    if op_name:
+        body["operationName"] = op_name
+    if variables:
+        body["variables"] = variables
+    if input_data:
+        if variables in body:
+            body["variables"]["input"] = input_data
+        else:
+            body["variables"] = {"input": input_data}
+    if headers:
+        resp = client.post(
+            graphql_url, json.dumps(body), content_type="application/json", **headers
+        )
+    else:
+        resp = client.post(
+            graphql_url, json.dumps(body), content_type="application/json"
+        )
+    return resp
+
 
 class GraphQLTestCase(TestCase):
     """
@@ -9,18 +66,11 @@ class GraphQLTestCase(TestCase):
     """
 
     # URL to graphql endpoint
-    GRAPHQL_URL = "/graphql/"
-    # Here you need to set your graphql schema for the tests
-    GRAPHQL_SCHEMA = None
+    GRAPHQL_URL = DEFAULT_GRAPHQL_URL
 
     @classmethod
     def setUpClass(cls):
         super(GraphQLTestCase, cls).setUpClass()
-
-        if not cls.GRAPHQL_SCHEMA:
-            raise AttributeError(
-                "Variable GRAPHQL_SCHEMA not defined in GraphQLTestCase."
-            )
 
         cls._client = Client()
 
@@ -43,28 +93,15 @@ class GraphQLTestCase(TestCase):
         Returns:
             Response object from client
         """
-        body = {"query": query}
-        if op_name:
-            body["operationName"] = op_name
-        if variables:
-            body["variables"] = variables
-        if input_data:
-            if variables in body:
-                body["variables"]["input"] = input_data
-            else:
-                body["variables"] = {"input": input_data}
-        if headers:
-            resp = self._client.post(
-                self.GRAPHQL_URL,
-                json.dumps(body),
-                content_type="application/json",
-                **headers
-            )
-        else:
-            resp = self._client.post(
-                self.GRAPHQL_URL, json.dumps(body), content_type="application/json"
-            )
-        return resp
+        return graphql_query(
+            query,
+            op_name=op_name,
+            input_data=input_data,
+            variables=variables,
+            headers=headers,
+            client=self._client,
+            graphql_url=self.GRAPHQL_URL,
+        )
 
     def assertResponseNoErrors(self, resp):
         """
