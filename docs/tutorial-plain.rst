@@ -3,14 +3,10 @@ Basic Tutorial
 
 Graphene Django has a number of additional features that are designed to make
 working with Django easy. Our primary focus in this tutorial is to give a good
-understanding of how to connect models from Django ORM to graphene object types.
+understanding of how to connect models from Django ORM to Graphene object types.
 
 Set up the Django project
 -------------------------
-
-You can find the entire project in ``examples/cookbook-plain``.
-
-----
 
 We will set up the project, create the following:
 
@@ -28,13 +24,12 @@ We will set up the project, create the following:
     source env/bin/activate  # On Windows use `env\Scripts\activate`
 
     # Install Django and Graphene with Django support
-    pip install django
-    pip install graphene_django
+    pip install django graphene_django
 
     # Set up a new project with a single application
-    django-admin.py startproject cookbook .  # Note the trailing '.' character
+    django-admin startproject cookbook .  # Note the trailing '.' character
     cd cookbook
-    django-admin.py startapp ingredients
+    django-admin startapp ingredients
 
 Now sync your database for the first time:
 
@@ -54,19 +49,18 @@ Let's get started with these models:
     # cookbook/ingredients/models.py
     from django.db import models
 
-
     class Category(models.Model):
         name = models.CharField(max_length=100)
 
         def __str__(self):
             return self.name
 
-
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
         category = models.ForeignKey(
-            Category, related_name='ingredients', on_delete=models.CASCADE)
+            Category, related_name="ingredients", on_delete=models.CASCADE
+        )
 
         def __str__(self):
             return self.name
@@ -75,10 +69,12 @@ Add ingredients as INSTALLED_APPS:
 
 .. code:: python
 
+    # cookbook/settings.py
+
     INSTALLED_APPS = [
         ...
         # Install the ingredients app
-        'cookbook.ingredients',
+        "cookbook.ingredients",
     ]
 
 
@@ -102,13 +98,13 @@ following:
 
 .. code:: bash
 
-    $ python ./manage.py loaddata ingredients
+    python manage.py loaddata ingredients
 
     Installed 6 object(s) from 1 fixture(s)
 
 Alternatively you can use the Django admin interface to create some data
 yourself. You'll need to run the development server (see below), and
-create a login for yourself too (``./manage.py createsuperuser``).
+create a login for yourself too (``python manage.py createsuperuser``).
 
 Register models with admin panel:
 
@@ -138,66 +134,48 @@ order to create this representation, Graphene needs to know about each
 This graph also has a *root type* through which all access begins. This
 is the ``Query`` class below.
 
-This means, for each of our models, we are going to create a type, subclassing ``DjangoObjectType``
+To create GraphQL types for each of our Django models, we are going to subclass the ``DjangoObjectType`` class which will automatically define GraphQL fields that correspond to the fields on the Django models.
 
 After we've done that, we will list those types as fields in the ``Query`` class.
 
-Create ``cookbook/ingredients/schema.py`` and type the following:
+Create ``cookbook/schema.py`` and type the following:
 
 .. code:: python
 
-    # cookbook/ingredients/schema.py
+    # cookbook/schema.py
     import graphene
-
-    from graphene_django.types import DjangoObjectType
+    from graphene_django import DjangoObjectType
 
     from cookbook.ingredients.models import Category, Ingredient
-
 
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
-
+            fields = ("id", "name", "ingredients")
 
     class IngredientType(DjangoObjectType):
         class Meta:
             model = Ingredient
+            fields = ("id", "name", "notes", "category")
 
-
-    class Query(object):
-        all_categories = graphene.List(CategoryType)
+    class Query(graphene.ObjectType):
         all_ingredients = graphene.List(IngredientType)
+        category_by_name = graphene.Field(CategoryType, name=graphene.String(required=True))
 
-        def resolve_all_categories(self, info, **kwargs):
-            return Category.objects.all()
-
-        def resolve_all_ingredients(self, info, **kwargs):
+        def resolve_all_ingredients(root, info):
             # We can easily optimize query count in the resolve method
-            return Ingredient.objects.select_related('category').all()
+            return Ingredient.objects.select_related("category").all()
 
-
-Note that the above ``Query`` class is a mixin, inheriting from
-``object``. This is because we will now create a project-level query
-class which will combine all our app-level mixins.
-
-Create the parent project-level ``cookbook/schema.py``:
-
-.. code:: python
-
-    import graphene
-
-    import cookbook.ingredients.schema
-
-
-    class Query(cookbook.ingredients.schema.Query, graphene.ObjectType):
-        # This class will inherit from multiple Queries
-        # as we begin to add more apps to our project
-        pass
+        def resolve_category_by_name(root, info, name):
+            try:
+                return Category.objects.get(name=name)
+            except Category.DoesNotExist:
+                return None
 
     schema = graphene.Schema(query=Query)
 
 You can think of this as being something like your top-level ``urls.py``
-file (although it currently lacks any namespacing).
+file.
 
 Testing everything so far
 -------------------------
@@ -216,18 +194,21 @@ Add ``graphene_django`` to ``INSTALLED_APPS`` in ``cookbook/settings.py``:
 
 .. code:: python
 
+    # cookbook/settings.py
+
     INSTALLED_APPS = [
         ...
-        # This will also make the `graphql_schema` management command available
-        'graphene_django',
+        "graphene_django",
     ]
 
 And then add the ``SCHEMA`` to the ``GRAPHENE`` config in ``cookbook/settings.py``:
 
 .. code:: python
 
+    # cookbook/settings.py
+
     GRAPHENE = {
-        'SCHEMA': 'cookbook.schema.schema'
+        "SCHEMA": "cookbook.schema.schema"
     }
 
 Alternatively, we can specify the schema to be used in the urls definition,
@@ -245,14 +226,17 @@ aforementioned GraphiQL we specify that on the parameters with ``graphiql=True``
 
 .. code:: python
 
-    from django.conf.urls import url, include
+    # cookbook/urls.py
+
     from django.contrib import admin
+    from django.urls import path
+    from django.views.decorators.csrf import csrf_exempt
 
     from graphene_django.views import GraphQLView
 
     urlpatterns = [
-        url(r'^admin/', admin.site.urls),
-        url(r'^graphql$', GraphQLView.as_view(graphiql=True)),
+        path("admin/", admin.site.urls),
+        path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     ]
 
 
@@ -261,16 +245,19 @@ as explained above, we can do so here using:
 
 .. code:: python
 
-    from django.conf.urls import url, include
+    # cookbook/urls.py
+
     from django.contrib import admin
+    from django.urls import path
+    from django.views.decorators.csrf import csrf_exempt
 
     from graphene_django.views import GraphQLView
 
     from cookbook.schema import schema
 
     urlpatterns = [
-        url(r'^admin/', admin.site.urls),
-        url(r'^graphql$', GraphQLView.as_view(graphiql=True, schema=schema)),
+        path("admin/", admin.site.urls),
+        path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True, schema=schema))),
     ]
 
 
@@ -283,10 +270,10 @@ from the command line.
 
 .. code:: bash
 
-    $ python ./manage.py runserver
+    python manage.py runserver
 
     Performing system checks...
-    Django version 1.11, using settings 'cookbook.settings'
+    Django version 3.0.7, using settings 'cookbook.settings'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 
@@ -329,24 +316,25 @@ If you are using the provided fixtures, you will see the following response:
       }
     }
 
-You can experiment with ``allCategories`` too.
 
-Something to have in mind is the `auto camelcasing <http://docs.graphene-python.org/en/latest/types/schema/#auto-camelcase-field-names>`__ that is happening.
+Congratulations, you have created a working GraphQL server 🥳!
+
+Note: Graphene `automatically camelcases <http://docs.graphene-python.org/en/latest/types/schema/#auto-camelcase-field-names>`__ all field names for better compatibility with JavaScript clients.
 
 
 Getting relations
 -----------------
 
-Right now, with this simple setup in place, we can query for relations too. This is where graphql becomes really powerful!
+Using the current schema we can query for relations too. This is where GraphQL becomes really powerful!
 
-For example, we may want to list all categories and in each category, all ingredients that are in that category.
+For example, we may want to get a specific categories and list all ingredients that are in that category.
 
 We can do that with the following query:
 
 .. code::
 
     query {
-      allCategories {
+      categoryByName(name: "Dairy") {
         id
         name
         ingredients {
@@ -356,43 +344,26 @@ We can do that with the following query:
       }
     }
 
-
 This will give you (in case you are using the fixtures) the following result:
 
 .. code::
 
     {
       "data": {
-        "allCategories": [
-          {
-            "id": "1",
-            "name": "Dairy",
-            "ingredients": [
-              {
-                "id": "1",
-                "name": "Eggs"
-              },
-              {
-                "id": "2",
-                "name": "Milk"
-              }
-            ]
-          },
-          {
-            "id": "2",
-            "name": "Meat",
-            "ingredients": [
-              {
-                "id": "3",
-                "name": "Beef"
-              },
-              {
-                "id": "4",
-                "name": "Chicken"
-              }
-            ]
-          }
-        ]
+        "categoryByName": {
+          "id": "1",
+          "name": "Dairy",
+          "ingredients": [
+            {
+              "id": "1",
+              "name": "Eggs"
+            },
+            {
+              "id": "2",
+              "name": "Milk"
+            }
+          ]
+        }
       }
     }
 
@@ -411,71 +382,12 @@ We can also list all ingredients and get information for the category they are i
       }
     }
 
-Getting single objects
-----------------------
-
-So far, we have been able to fetch list of objects and follow relation. But what about single objects?
-
-We can update our schema to support that, by adding new query for ``ingredient`` and ``category`` and adding arguments, so we can query for specific objects.
-Add the **Highlighted** lines to ``cookbook/ingredients/schema.py``
-
-.. literalinclude:: schema.py
-  :emphasize-lines: 19-21,25-27,36-58
-
-Now, with the code in place, we can query for single objects.
-
-For example, lets query ``category``:
-
-
-.. code::
-
-    query {
-      category(id: 1) {
-        name
-      }
-      anotherCategory: category(name: "Dairy") {
-        ingredients {
-          id
-          name
-        }
-      }
-    }
-
-This will give us the following results:
-
-.. code::
-
-    {
-      "data": {
-        "category": {
-          "name": "Dairy"
-        },
-        "anotherCategory": {
-          "ingredients": [
-            {
-              "id": "1",
-              "name": "Eggs"
-            },
-            {
-              "id": "2",
-              "name": "Milk"
-            }
-          ]
-        }
-      }
-    }
-
-As an exercise, you can try making some queries to ``ingredient``.
-
-Something to keep in mind - since we are using one field several times in our query, we need `aliases <http://graphql.org/learn/queries/#aliases>`__
-
-
 Summary
 -------
 
-As you can see, GraphQL is very powerful but there are a lot of repetitions in our example. We can do a lot of improvements by adding layers of abstraction on top of ``graphene-django``.
+As you can see, GraphQL is very powerful and integrating Django models allows you to get started with a working server quickly.
 
-If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the **relay tutorial.**
+If you want to put things like ``django-filter`` and automatic pagination in action, you should continue with the :ref:`Relay tutorial`.
 
-A good idea is to check the `graphene <http://docs.graphene-python.org/en/latest/>`__
-documentation but it is not essential to understand and use Graphene-Django in your project.
+A good idea is to check the `Graphene <http://docs.graphene-python.org/en/latest/>`__
+documentation so that you are familiar with it as well.
