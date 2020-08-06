@@ -38,6 +38,8 @@ DEFAULTS = {
     # Set to True to enable v2 naming convention for choice field Enum's
     "DJANGO_CHOICE_FIELD_ENUM_V2_NAMING": False,
     "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
+    # Use a separate path for handling subscriptions.
+    "SUBSCRIPTION_PATH": None,
 }
 
 if settings.DEBUG:

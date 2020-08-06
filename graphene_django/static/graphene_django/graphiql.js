@@ -1,35 +1,55 @@
-(function() {
+(function (
+  document,
 
+  GRAPHENE_SETTINGS,
+  GraphiQL,
+  React,
+  ReactDOM,
+  SubscriptionsTransportWs,
+  fetch,
+  history,
+  location,
+) {
   // Parse the cookie value for a CSRF token
   var csrftoken;
-  var cookies = ('; ' + document.cookie).split('; csrftoken=');
+  var cookies = ("; " + document.cookie).split("; csrftoken=");
   if (cookies.length == 2) {
-    csrftoken = cookies.pop().split(';').shift();
+    csrftoken = cookies.pop().split(";").shift();
   } else {
     csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
   }
 
   // Collect the URL parameters
   var parameters = {};
-  window.location.hash.substr(1).split('&').forEach(function (entry) {
-    var eq = entry.indexOf('=');
-    if (eq >= 0) {
-      parameters[decodeURIComponent(entry.slice(0, eq))] =
-        decodeURIComponent(entry.slice(eq + 1));
-    }
-  });
+  location.hash
+    .substr(1)
+    .split("&")
+    .forEach(function (entry) {
+      var eq = entry.indexOf("=");
+      if (eq >= 0) {
+        parameters[decodeURIComponent(entry.slice(0, eq))] = decodeURIComponent(
+          entry.slice(eq + 1),
+        );
+      }
+    });
   // Produce a Location fragment string from a parameter object.
   function locationQuery(params) {
-    return '#' + Object.keys(params).map(function (key) {
-      return encodeURIComponent(key) + '=' +
-        encodeURIComponent(params[key]);
-    }).join('&');
+    return (
+      "#" +
+      Object.keys(params)
+        .map(function (key) {
+          return (
+            encodeURIComponent(key) + "=" + encodeURIComponent(params[key])
+          );
+        })
+        .join("&")
+    );
   }
   // Derive a fetch URL from the current URL, sans the GraphQL parameters.
   var graphqlParamNames = {
     query: true,
     variables: true,
-    operationName: true
+    operationName: true,
   };
   var otherParams = {};
   for (var k in parameters) {
@@ -41,29 +61,96 @@
   var fetchURL = locationQuery(otherParams);
 
   // Defines a GraphQL fetcher using the fetch API.
-  function graphQLFetcher(graphQLParams) {
+  function httpClient(graphQLParams) {
     var headers = {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
+      Accept: "application/json",
+      "Content-Type": "application/json",
     };
     if (csrftoken) {
-      headers['X-CSRFToken'] = csrftoken;
+      headers["X-CSRFToken"] = csrftoken;
     }
     return fetch(fetchURL, {
-      method: 'post',
+      method: "post",
       headers: headers,
       body: JSON.stringify(graphQLParams),
-      credentials: 'include',
-    }).then(function (response) {
-      return response.text();
-    }).then(function (responseBody) {
-      try {
-        return JSON.parse(responseBody);
-      } catch (error) {
-        return responseBody;
-      }
-    });
+      credentials: "include",
+    })
+      .then(function (response) {
+        return response.text();
+      })
+      .then(function (responseBody) {
+        try {
+          return JSON.parse(responseBody);
+        } catch (error) {
+          return responseBody;
+        }
+      });
   }
+
+  // Derive the subscription URL. If the SUBSCRIPTION_URL setting is specified, uses that value. Otherwise
+  // assumes the current window location with an appropriate websocket protocol.
+  var subscribeURL =
+    location.origin.replace(/^http/, "ws") +
+    (GRAPHENE_SETTINGS.subscriptionPath || location.pathname);
+
+  // Create a subscription client.
+  var subscriptionClient = new SubscriptionsTransportWs.SubscriptionClient(
+    subscribeURL,
+    {
+      // Reconnect after any interruptions.
+      reconnect: true,
+      // Delay socket initialization until the first subscription is started.
+      lazy: true,
+    },
+  );
+
+  // Keep a reference to the currently-active subscription, if available.
+  var activeSubscription = null;
+
+  // Define a GraphQL fetcher that can intelligently route queries based on the operation type.
+  function graphQLFetcher(graphQLParams) {
+    var operationType = getOperationType(graphQLParams);
+
+    // If we're about to execute a new operation, and we have an active subscription,
+    // unsubscribe before continuing.
+    if (activeSubscription) {
+      activeSubscription.unsubscribe();
+      activeSubscription = null;
+    }
+
+    if (operationType === "subscription") {
+      return {
+        subscribe: function (observer) {
+          subscriptionClient.request(graphQLParams).subscribe(observer);
+          activeSubscription = subscriptionClient;
+        },
+      };
+    } else {
+      return httpClient(graphQLParams);
+    }
+  }
+
+  // Determine the type of operation being executed for a given set of GraphQL parameters.
+  function getOperationType(graphQLParams) {
+    // Run a regex against the query to determine the operation type (query, mutation, subscription).
+    var operationRegex = new RegExp(
+      // Look for lines that start with an operation keyword, ignoring whitespace.
+      "^\\s*(query|mutation|subscription)\\s*" +
+        // The operation keyword should be followed by whitespace and the operationName in the GraphQL parameters (if available).
+        (graphQLParams.operationName ? ("\\s+" + graphQLParams.operationName) : "") +
+        // The line should eventually encounter an opening curly brace.
+        "[^\\{]*\\{",
+      // Enable multiline matching.
+      "m",
+    );
+    var match = operationRegex.exec(graphQLParams.query);
+    if (!match) {
+      return "query";
+    }
+
+    return match[1];
+  }
+
   // When the query and variables string is edited, update the URL bar so
   // that it can be easily shared.
   function onEditQuery(newQuery) {
@@ -83,11 +170,11 @@
   }
   var options = {
     fetcher: graphQLFetcher,
-      onEditQuery: onEditQuery,
-      onEditVariables: onEditVariables,
-      onEditOperationName: onEditOperationName,
-      query: parameters.query,
-  }
+    onEditQuery: onEditQuery,
+    onEditVariables: onEditVariables,
+    onEditOperationName: onEditOperationName,
+    query: parameters.query,
+  };
   if (parameters.variables) {
     options.variables = parameters.variables;
   }
@@ -97,6 +184,17 @@
   // Render <GraphiQL /> into the body.
   ReactDOM.render(
     React.createElement(GraphiQL, options),
-    document.getElementById("editor")
+    document.getElementById("editor"),
   );
-})();
+})(
+  document,
+
+  window.GRAPHENE_SETTINGS,
+  window.GraphiQL,
+  window.React,
+  window.ReactDOM,
+  window.SubscriptionsTransportWs,
+  window.fetch,
+  window.history,
+  window.location,
+);

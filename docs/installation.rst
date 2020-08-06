@@ -25,8 +25,8 @@ Add ``graphene_django`` to the ``INSTALLED_APPS`` in the ``settings.py`` file of
 
     INSTALLED_APPS = [
         ...
-        'django.contrib.staticfiles', # Required for GraphiQL
-        'graphene_django'
+        "django.contrib.staticfiles", # Required for GraphiQL
+        "graphene_django"
     ]
 
 
@@ -51,7 +51,7 @@ Finally, define the schema location for Graphene in the ``settings.py`` file of 
 .. code:: python
 
     GRAPHENE = {
-        'SCHEMA': 'django_root.schema.schema'
+        "SCHEMA": "django_root.schema.schema"
     }
 
 Where ``path.schema.schema`` is the location of the ``Schema`` object in your Django project.
@@ -63,7 +63,7 @@ The most basic ``schema.py`` looks like this:
     import graphene
 
     class Query(graphene.ObjectType):
-        pass
+        hello = graphene.String(default_value="Hi!")
 
     schema = graphene.Schema(query=Query)
 

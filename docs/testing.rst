@@ -1,6 +1,9 @@
 Testing API calls with django
 =============================
 
+Using unittest
+--------------
+
 If you want to unittest your API calls derive your test case from the class `GraphQLTestCase`.
 
 Your endpoint is set through the `GRAPHQL_URL` attribute on `GraphQLTestCase`. The default endpoint is `GRAPHQL_URL = "/graphql/"`.
@@ -12,12 +15,8 @@ Usage:
     import json
 
     from graphene_django.utils.testing import GraphQLTestCase
-    from my_project.config.schema import schema
 
     class MyFancyTestCase(GraphQLTestCase):
-        # Here you need to inject your test case's schema
-        GRAPHQL_SCHEMA = schema
-
         def test_some_query(self):
             response = self.query(
                 '''
@@ -82,3 +81,38 @@ Usage:
 
             # Add some more asserts if you like
             ...
+
+Using pytest
+------------
+
+To use pytest define a simple fixture using the query helper below
+
+.. code:: python
+
+        # Create a fixture using the graphql_query helper and `client` fixture from `pytest-django`.
+        import pytest
+        from graphene_django.utils.testing import graphql_query
+
+        @pytest.fixture
+        def client_query(client)
+            def func(*args, **kwargs):
+                return graphql_query(*args, **kwargs, client=client)
+
+            return func
+
+        # Test you query using the client_query fixture
+        def test_some_query(client_query):
+            response = graphql_query(
+                '''
+                query {
+                    myModel {
+                        id
+                        name
+                    }
+                }
+                ''',
+                op_name='myModel'
+            )
+
+            content = json.loads(response.content)
+            assert 'errors' not in content

@@ -1,3 +1,5 @@
+.. _Relay tutorial:
+
 Relay tutorial
 ========================================
 

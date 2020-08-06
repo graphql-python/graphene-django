@@ -20,28 +20,26 @@ Full example
     # my_app/schema.py
 
     import graphene
+    from graphene_django import DjangoObjectType
 
-    from graphene_django.types import DjangoObjectType
     from .models import Question
-
 
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = '__all__'
+            fields = ("id", "question_text")
 
-
-    class Query:
+    class Query(graphene.ObjectType):
         questions = graphene.List(QuestionType)
-        question = graphene.Field(QuestionType, question_id=graphene.String())
+        question_by_id = graphene.Field(QuestionType, id=graphene.String())
 
-        def resolve_questions(self, info, **kwargs):
+        def resolve_questions(root, info, **kwargs):
             # Querying a list
             return Question.objects.all()
 
-        def resolve_question(self, info, question_id):
+        def resolve_question_by_id(root, info, id):
             # Querying a single question
-            return Question.objects.get(pk=question_id)
+            return Question.objects.get(pk=id)
 
 
 Specifying which fields to include
@@ -64,21 +62,27 @@ Show **only** these fields on the model:
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Question
+
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = ('id', 'question_text')
+            fields = ("id", "question_text")
 
-You can also set the ``fields`` attribute to the special value ``'__all__'`` to indicate that all fields in the model should be used.
+You can also set the ``fields`` attribute to the special value ``"__all__"`` to indicate that all fields in the model should be used.
 
 For example:
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Question
+
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = '__all__'
+            fields = "__all__"
 
 
 ``exclude``
@@ -88,10 +92,13 @@ Show all fields **except** those in ``exclude``:
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Question
+
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            exclude = ('question_text',)
+            exclude = ("question_text",)
 
 
 Customising fields
@@ -101,16 +108,19 @@ You can completely overwrite a field, or add new fields, to a ``DjangoObjectType
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Question
+
     class QuestionType(DjangoObjectType):
 
         class Meta:
             model = Question
-            fields = ('id', 'question_text')
+            fields = ("id", "question_text")
 
         extra_field = graphene.String()
 
         def resolve_extra_field(self, info):
-            return 'hello!'
+            return "hello!"
 
 
 Choices to Enum conversion
@@ -125,13 +135,19 @@ For example the following ``Model`` and ``DjangoObjectType``:
 
 .. code:: python
 
-   class PetModel(models.Model):
-      kind = models.CharField(max_length=100, choices=(('cat', 'Cat'), ('dog', 'Dog')))
+    from django.db import models
+    from graphene_django import DjangoObjectType
 
-   class Pet(DjangoObjectType):
-      class Meta:
-         model = PetModel
-         fields = '__all__'
+    class PetModel(models.Model):
+        kind = models.CharField(
+            max_length=100,
+            choices=(("cat", "Cat"), ("dog", "Dog"))
+        )
+
+    class Pet(DjangoObjectType):
+        class Meta:
+            model = PetModel
+            fields = ("id", "kind",)
 
 Results in the following GraphQL schema definition:
 
@@ -153,29 +169,35 @@ You can disable this automatic conversion by setting
 
 .. code:: python
 
-   class Pet(DjangoObjectType):
-      class Meta:
-         model = PetModel
-         fields = '__all__'
-         convert_choices_to_enum = False
+    from graphene_django import DjangoObjectType
+    from .models import PetModel
+
+    class Pet(DjangoObjectType):
+        class Meta:
+            model = PetModel
+            fields = ("id", "kind",)
+            convert_choices_to_enum = False
 
 .. code::
 
-   type Pet {
-     id: ID!
-     kind: String!
-   }
+  type Pet {
+    id: ID!
+    kind: String!
+  }
 
 You can also set ``convert_choices_to_enum`` to a list of fields that should be
 automatically converted into enums:
 
 .. code:: python
 
-   class Pet(DjangoObjectType):
-      class Meta:
-         model = PetModel
-         fields = '__all__'
-         convert_choices_to_enum = ['kind']
+    from graphene_django import DjangoObjectType
+    from .models import PetModel
+
+    class Pet(DjangoObjectType):
+        class Meta:
+            model = PetModel
+            fields = ("id", "kind",)
+            convert_choices_to_enum = ["kind"]
 
 **Note:** Setting ``convert_choices_to_enum = []`` is the same as setting it to
 ``False``.
@@ -188,6 +210,8 @@ Say you have the following models:
 
 .. code:: python
 
+    from django.db import models
+
     class Category(models.Model):
         foo = models.CharField(max_length=256)
 
@@ -199,10 +223,13 @@ When ``Question`` is published as a ``DjangoObjectType`` and you want to add ``C
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Question
+
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = ('category',)
+            fields = ("category",)
 
 Then all query-able related models must be defined as DjangoObjectType subclass,
 or they will fail to show if you are trying to query those relation fields. You only
@@ -210,10 +237,13 @@ need to create the most basic class for this to work:
 
 .. code:: python
 
+    from graphene_django import DjangoObjectType
+    from .models import Category
+
     class CategoryType(DjangoObjectType):
         class Meta:
             model = Category
-            fields = '__all__'
+            fields = ("foo",)
 
 .. _django-objecttype-get-queryset:
 
@@ -228,11 +258,10 @@ Use this to control filtering on the ObjectType level instead of the Query objec
     from graphene_django.types import DjangoObjectType
     from .models import Question
 
-
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = '__all__'
+            fields = "__all__"
 
         @classmethod
         def get_queryset(cls, queryset, info):
@@ -249,18 +278,22 @@ This resolve method should follow this format:
 
 .. code:: python
 
-    def resolve_foo(self, info, **kwargs):
+    def resolve_foo(parent, info, **kwargs):
 
 Where "foo" is the name of the field declared in the ``Query`` object.
 
 .. code:: python
 
-    class Query:
+    import graphene
+    from .models import Question
+    from .types import QuestionType
+
+    class Query(graphene.ObjectType):
         foo = graphene.List(QuestionType)
 
-        def resolve_foo(self, info, **kwargs):
-            id = kwargs.get('id')
-            return QuestionModel.objects.get(id)
+        def resolve_foo(root, info):
+            id = kwargs.get("id")
+            return Question.objects.get(id)
 
 Arguments
 ~~~~~~~~~
@@ -269,10 +302,18 @@ Additionally, Resolvers will receive **any arguments declared in the field defin
 
 .. code:: python
 
-    class Query:
-        question = graphene.Field(Question, foo=graphene.String(), bar=graphene.Int())
+    import graphene
+    from .models import Question
+    from .types import QuestionType
 
-        def resolve_question(self, info, foo, bar):
+    class Query(graphene.ObjectType):
+        question = graphene.Field(
+            QuestionType,
+            foo=graphene.String(),
+            bar=graphene.Int()
+        )
+
+        def resolve_question(root, info, foo, bar):
             # If `foo` or `bar` are declared in the GraphQL query they will be here, else None.
             return Question.objects.filter(foo=foo, bar=bar).first()
 
@@ -287,7 +328,15 @@ of Django's ``HTTPRequest`` in your resolve methods, such as checking for authen
 
 .. code:: python
 
-    def resolve_questions(self, info, **kwargs):
+    import graphene
+
+    from .models import Question
+    from .types import QuestionType
+
+    class Query(graphene.ObjectType):
+        questions = graphene.List(QuestionType)
+
+    def resolve_questions(root, info):
         # See if a user is authenticated
         if info.context.user.is_authenticated():
             return Question.objects.all()
@@ -314,15 +363,13 @@ Django models and your external API.
     import graphene
     from .models import Question
 
-
     class MyQuestion(graphene.ObjectType):
         text = graphene.String()
 
-
-    class Query:
+    class Query(graphene.ObjectType):
         question = graphene.Field(MyQuestion, question_id=graphene.String())
 
-        def resolve_question(self, info, question_id):
+        def resolve_question(root, info, question_id):
             question = Question.objects.get(pk=question_id)
             return MyQuestion(
                 text=question.question_text
@@ -352,25 +399,21 @@ the core graphene pages for more information on customizing the Relay experience
     from graphene_django import DjangoObjectType
     from .models import Question
 
-
     class QuestionType(DjangoObjectType):
         class Meta:
             model = Question
-            fields = '__all__'
-            interfaces = (relay.Node,)
-
+            interfaces = (relay.Node,)  # make sure you add this
+            fields = "__all__"
 
     class QuestionConnection(relay.Connection):
         class Meta:
             node = QuestionType
-
 
     class Query:
         questions = relay.ConnectionField(QuestionConnection)
 
         def resolve_questions(root, info, **kwargs):
             return Question.objects.all()
-
 
 You can now execute queries like:
 

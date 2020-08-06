@@ -51,9 +51,27 @@ def instantiate_middleware(middlewares):
 
 
 class GraphQLView(View):
-    graphiql_version = "0.14.0"
     graphiql_template = "graphene/graphiql.html"
-    react_version = "16.8.6"
+
+    # Polyfill for window.fetch.
+    whatwg_fetch_version = "3.2.0"
+    whatwg_fetch_sri = "sha256-l6HCB9TT2v89oWbDdo2Z3j+PSVypKNLA/nqfzSbM8mo="
+
+    # React and ReactDOM.
+    react_version = "16.13.1"
+    react_sri = "sha256-yUhvEmYVhZ/GGshIQKArLvySDSh6cdmdcIx0spR3UP4="
+    react_dom_sri = "sha256-vFt3l+illeNlwThbDUdoPTqF81M8WNSZZZt3HEjsbSU="
+
+    # The GraphiQL React app.
+    graphiql_version = "1.0.3"
+    graphiql_sri = "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
+    graphiql_css_sri = "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
+
+    # The websocket transport library for subscriptions.
+    subscriptions_transport_ws_version = "0.9.17"
+    subscriptions_transport_ws_sri = (
+        "sha256-kCDzver8iRaIQ/SVlfrIwxaBQ/avXf9GQFJRLlErBnk="
+    )
 
     schema = None
     graphiql = False
@@ -61,6 +79,7 @@ class GraphQLView(View):
     root_value = None
     pretty = False
     batch = False
+    subscription_path = None
 
     def __init__(
         self,
@@ -70,6 +89,7 @@ class GraphQLView(View):
         graphiql=False,
         pretty=False,
         batch=False,
+        subscription_path=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -87,6 +107,8 @@ class GraphQLView(View):
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
+        if subscription_path is None:
+            self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
         assert isinstance(
             self.schema, Schema
@@ -119,8 +141,19 @@ class GraphQLView(View):
             if show_graphiql:
                 return self.render_graphiql(
                     request,
-                    graphiql_version=self.graphiql_version,
+                    # Dependency parameters.
+                    whatwg_fetch_version=self.whatwg_fetch_version,
+                    whatwg_fetch_sri=self.whatwg_fetch_sri,
                     react_version=self.react_version,
+                    react_sri=self.react_sri,
+                    react_dom_sri=self.react_dom_sri,
+                    graphiql_version=self.graphiql_version,
+                    graphiql_sri=self.graphiql_sri,
+                    graphiql_css_sri=self.graphiql_css_sri,
+                    subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
+                    subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
+                    # The SUBSCRIPTION_PATH setting.
+                    subscription_path=self.subscription_path,
                 )
 
             if self.batch:
