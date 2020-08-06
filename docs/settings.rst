@@ -193,14 +193,14 @@ Default: ``None``
 
 GraphiQL starting from version 1.0.0 allows setting custom headers in similar fashion to query variables.
 
-Set to ``True`` to enable GraphiQL headers editor tab.
+Set to ``False`` if you want to disable GraphiQL headers editor tab for some reason.
 
 This setting is passed to ``headerEditorEnabled`` GraphiQL options, for details refer to GraphiQLDocs_.
 
 .. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
 
 
-Default: ``False``
+Default: ``True``
 
 .. code:: python
 

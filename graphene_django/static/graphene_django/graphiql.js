@@ -175,7 +175,7 @@
     onEditQuery: onEditQuery,
     onEditVariables: onEditVariables,
     onEditOperationName: onEditOperationName,
-    headerEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled || false,
+    headerEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled || true,
     query: parameters.query,
   };
   if (parameters.variables) {
