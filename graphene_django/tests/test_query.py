@@ -1122,6 +1122,7 @@ def test_connection_should_limit_after_to_list_length():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1166,6 +1167,7 @@ def test_should_return_max_limit(graphene_settings):
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1198,6 +1200,7 @@ def test_should_have_next_page(graphene_settings):
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)

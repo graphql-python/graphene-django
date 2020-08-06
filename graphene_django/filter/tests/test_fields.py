@@ -417,12 +417,14 @@ def test_global_id_field_relation_with_filter():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["first_name", "articles"]
 
     class ArticleFilterNode(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["headline", "reporter"]
 
     class Query(ObjectType):
@@ -472,12 +474,14 @@ def test_global_id_field_relation_with_filter_not_valid_id():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["first_name", "articles"]
 
     class ArticleFilterNode(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = ["headline", "reporter"]
 
     class Query(ObjectType):

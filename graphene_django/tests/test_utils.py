@@ -39,7 +39,7 @@ def test_camelize():
 
 @pytest.mark.django_db
 @patch("graphene_django.utils.testing.Client.post")
-def test_graphql_test_case_op_name(post_mock):
+def test_graphql_test_case_operation_name(post_mock):
     """
     Test that `GraphQLTestCase.query()`'s `operation_name` argument produces an `operationName` field.
     """
@@ -63,8 +63,8 @@ def test_graphql_test_case_op_name(post_mock):
 
 @pytest.mark.django_db
 @patch("graphene_django.utils.testing.Client.post")
-def test_graphql_query_case_op_name(post_mock):
-    graphql_query("query { }", op_name="QueryName")
+def test_graphql_query_case_operation_name(post_mock):
+    graphql_query("query { }", operation_name="QueryName")
     body = json.loads(post_mock.call_args.args[1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (

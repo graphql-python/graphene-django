@@ -58,7 +58,7 @@ class DjangoListField(Field):
 
         return queryset
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         _type = self.type
         if isinstance(_type, NonNull):
             _type = _type.of_type
@@ -217,7 +217,7 @@ class DjangoConnectionField(ConnectionField):
 
         return on_resolve(iterable)
 
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         return partial(
             self.connection_resolver,
             parent_resolver,
