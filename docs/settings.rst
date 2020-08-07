@@ -186,3 +186,24 @@ Default: ``None``
    GRAPHENE = {
       'SUBSCRIPTION_PATH': "/ws/graphql"
    }
+
+
+``GRAPHIQL_HEADER_EDITOR_ENABLED``
+---------------------
+
+GraphiQL starting from version 1.0.0 allows setting custom headers in similar fashion to query variables.
+
+Set to ``False`` if you want to disable GraphiQL headers editor tab for some reason.
+
+This setting is passed to ``headerEditorEnabled`` GraphiQL options, for details refer to GraphiQLDocs_.
+
+.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
+
+
+Default: ``True``
+
+.. code:: python
+
+   GRAPHENE = {
+      'GRAPHIQL_HEADER_EDITOR_ENABLED': True,
+   }

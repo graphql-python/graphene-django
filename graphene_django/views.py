@@ -167,6 +167,8 @@ class GraphQLView(View):
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
+                    # GraphiQL headers tab,
+                    graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
                 )
 
             if self.batch:
