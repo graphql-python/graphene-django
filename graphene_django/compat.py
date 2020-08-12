@@ -16,6 +16,6 @@ except ImportError:
 
 try:
     # JSONField is only available from Django 3.1
-    from django.contrib.fields import JSONField
+    from django.db.models import JSONField
 except ImportError:
     JSONField = MissingType
