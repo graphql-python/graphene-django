@@ -61,13 +61,15 @@
   var fetchURL = locationQuery(otherParams);
 
   // Defines a GraphQL fetcher using the fetch API.
-  function httpClient(graphQLParams) {
-    var headers = {
-      Accept: "application/json",
-      "Content-Type": "application/json",
-    };
+  function httpClient(graphQLParams, opts) {
+    if (typeof opts === 'undefined') {
+      opts = {};
+    }
+    var headers = opts.headers || {};
+    headers['Accept'] = headers['Accept'] || 'application/json';
+    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
     if (csrftoken) {
-      headers["X-CSRFToken"] = csrftoken;
+      headers['X-CSRFToken'] = csrftoken
     }
     return fetch(fetchURL, {
       method: "post",
@@ -108,7 +110,7 @@
   var activeSubscription = null;
 
   // Define a GraphQL fetcher that can intelligently route queries based on the operation type.
-  function graphQLFetcher(graphQLParams) {
+  function graphQLFetcher(graphQLParams, opts) {
     var operationType = getOperationType(graphQLParams);
 
     // If we're about to execute a new operation, and we have an active subscription,
@@ -126,7 +128,7 @@
         },
       };
     } else {
-      return httpClient(graphQLParams);
+      return httpClient(graphQLParams, opts);
     }
   }
 
@@ -173,6 +175,7 @@
     onEditQuery: onEditQuery,
     onEditVariables: onEditVariables,
     onEditOperationName: onEditOperationName,
+    headerEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled,
     query: parameters.query,
   };
   if (parameters.variables) {

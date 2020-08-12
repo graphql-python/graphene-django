@@ -246,7 +246,7 @@ class DjangoObjectType(ObjectType):
                 connection_class = Connection
 
             connection = connection_class.create_type(
-                "{}Connection".format(cls.__name__), node=cls
+                "{}Connection".format(options.get("name") or cls.__name__), node=cls
             )
 
         if connection is not None:

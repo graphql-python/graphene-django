@@ -9,6 +9,7 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
+from ..filter import DjangoFilterConnectionField
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
@@ -662,3 +663,28 @@ class TestDjangoObjectType:
             }
             """
         )
+
+
+@with_local_registry
+def test_django_objecttype_name_connection_propagation():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            name = "CustomReporterName"
+            filter_fields = ["email"]
+            interfaces = (Node,)
+
+    class Query(ObjectType):
+        reporter = Node.Field(Reporter)
+        reporters = DjangoFilterConnectionField(Reporter)
+
+    assert Reporter._meta.name == "CustomReporterName"
+    schema = str(Schema(query=Query))
+
+    assert "type CustomReporterName implements Node {" in schema
+    assert "type CustomReporterNameConnection {" in schema
+    assert "type CustomReporterNameEdge {" in schema
+
+    assert "type Reporter implements Node {" not in schema
+    assert "type ReporterConnection {" not in schema
+    assert "type ReporterEdge {" not in schema

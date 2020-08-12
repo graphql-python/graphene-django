@@ -26,9 +26,10 @@ from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
 
-from .compat import ArrayField, HStoreField, JSONField, RangeField
-from .fields import DjangoConnectionField, DjangoListField
+from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
+from .fields import DjangoListField, DjangoConnectionField
 from .settings import graphene_settings
+from .utils import import_single_dispatch
 from .utils.str_converters import to_const
 
 
@@ -296,8 +297,9 @@ def convert_postgres_array_to_list(field, registry=None):
 
 
 @convert_django_field.register(HStoreField)
+@convert_django_field.register(PGJSONField)
 @convert_django_field.register(JSONField)
-def convert_postgres_field_to_string(field, registry=None):
+def convert_pg_and_json_field_to_string(field, registry=None):
     return JSONString(
         description=get_django_field_description(field), required=not field.null
     )
