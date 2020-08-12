@@ -29,7 +29,6 @@ from graphql.pyutils import register_description
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .settings import graphene_settings
-from .utils import import_single_dispatch
 from .utils.str_converters import to_const
 
 
