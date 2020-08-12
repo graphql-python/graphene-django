@@ -35,9 +35,6 @@ else:
         )
     )
 
-pytestmark.append(pytest.mark.django_db)
-
-
 if DJANGO_FILTER_INSTALLED:
 
     class ArticleNode(DjangoObjectType):
@@ -55,8 +52,6 @@ if DJANGO_FILTER_INSTALLED:
         class Meta:
             model = Pet
             interfaces = (Node,)
-
-    # schema = Schema()
 
 
 def get_args(field):
@@ -182,7 +177,7 @@ def test_filter_shortcut_filterset_context():
     }
     """
     schema = Schema(query=Query)
-    result = schema.execute(query, context=context())
+    result = schema.execute(query, context_value=context())
     assert not result.errors
 
     assert len(result.data["contextArticles"]["edges"]) == 1
@@ -405,6 +400,114 @@ def test_global_id_field_relation():
     assert id_filter.field_class == GlobalIDFormField
 
 
+def test_global_id_field_relation_with_filter():
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ["first_name", "articles"]
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filter_fields = ["headline", "reporter"]
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    r1 = Reporter.objects.create(first_name="r1", last_name="r1", email="r1@test.com")
+    r2 = Reporter.objects.create(first_name="r2", last_name="r2", email="r2@test.com")
+    Article.objects.create(
+        headline="a1",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r1,
+        editor=r1,
+    )
+    Article.objects.create(
+        headline="a2",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r2,
+        editor=r2,
+    )
+
+    # Query articles created by the reporter `r1`
+    query = """
+    query {
+        allArticles (reporter: "UmVwb3J0ZXJGaWx0ZXJOb2RlOjE=") {
+            edges {
+                node {
+                    id
+                }
+            }
+        }
+    }
+    """
+    schema = Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    # We should only get back a single article
+    assert len(result.data["allArticles"]["edges"]) == 1
+
+
+def test_global_id_field_relation_with_filter_not_valid_id():
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ["first_name", "articles"]
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filter_fields = ["headline", "reporter"]
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    r1 = Reporter.objects.create(first_name="r1", last_name="r1", email="r1@test.com")
+    r2 = Reporter.objects.create(first_name="r2", last_name="r2", email="r2@test.com")
+    Article.objects.create(
+        headline="a1",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r1,
+        editor=r1,
+    )
+    Article.objects.create(
+        headline="a2",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r2,
+        editor=r2,
+    )
+
+    # Filter by the global ID that does not exist
+    query = """
+    query {
+        allArticles (reporter: "fake_global_id") {
+            edges {
+                node {
+                    id
+                }
+            }
+        }
+    }
+    """
+    schema = Schema(query=Query)
+    result = schema.execute(query)
+    assert "Invalid ID specified." in result.errors[0].message
+
+
 def test_global_id_multiple_field_implicit():
     field = DjangoFilterConnectionField(ReporterNode, fields=["pets"])
     filterset_class = field.filterset_class
@@ -610,58 +713,6 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
-def test_should_query_filter_node_double_limit_raises():
-    class ReporterFilter(FilterSet):
-        limit = NumberFilter(method="filter_limit")
-
-        def filter_limit(self, queryset, name, value):
-            return queryset[:value]
-
-        class Meta:
-            model = Reporter
-            fields = ["first_name"]
-
-    class ReporterType(DjangoObjectType):
-        class Meta:
-            model = Reporter
-            interfaces = (Node,)
-
-    class Query(ObjectType):
-        all_reporters = DjangoFilterConnectionField(
-            ReporterType, filterset_class=ReporterFilter
-        )
-
-        def resolve_all_reporters(self, info, **args):
-            return Reporter.objects.order_by("a_choice")[:2]
-
-    Reporter.objects.create(
-        first_name="Bob", last_name="Doe", email="bobdoe@example.com", a_choice=2
-    )
-    Reporter.objects.create(
-        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
-    )
-
-    schema = Schema(query=Query)
-    query = """
-        query NodeFilteringQuery {
-            allReporters(limit: 1) {
-                edges {
-                    node {
-                        id
-                        firstName
-                    }
-                }
-            }
-        }
-    """
-
-    result = schema.execute(query)
-    assert len(result.errors) == 1
-    assert str(result.errors[0]) == (
-        "Received two sliced querysets (high mark) in the connection, please slice only in one."
-    )
-
-
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -723,7 +774,7 @@ def test_order_by_is_perserved():
     assert reverse_result.data == reverse_expected
 
 
-def test_annotation_is_perserved():
+def test_annotation_is_preserved():
     class ReporterType(DjangoObjectType):
         full_name = String()
 
@@ -764,6 +815,86 @@ def test_annotation_is_perserved():
 
     result = schema.execute(query)
 
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_annotation_with_only():
+    class ReporterType(DjangoObjectType):
+        full_name = String()
+
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterType)
+
+        def resolve_all_reporters(self, info, **args):
+            return Reporter.objects.only("first_name", "last_name").annotate(
+                full_name=Concat(
+                    "first_name", Value(" "), "last_name", output_field=TextField()
+                )
+            )
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+
+    schema = Schema(query=Query)
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        fullName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"fullName": "John Doe"}}]}}
+
+    result = schema.execute(query)
+
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_node_get_queryset_is_called():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ()
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset.filter(first_name="b")
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType, reverse_order=Boolean()
+        )
+
+    Reporter.objects.create(first_name="b")
+    Reporter.objects.create(first_name="a")
+
+    schema = Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(first: 10) {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {"allReporters": {"edges": [{"node": {"firstName": "b"}}]}}
+
+    result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
 
@@ -815,6 +946,58 @@ def test_integer_field_filter_type():
 
         type Query {
           pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+        }
+    """
+    )
+
+
+def test_other_filter_types():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+            interfaces = (Node,)
+            filter_fields = {"age": ["exact", "isnull", "lt"]}
+            fields = ("age",)
+
+    class Query(ObjectType):
+        pets = DjangoFilterConnectionField(PetType)
+
+    schema = Schema(query=Query)
+
+    assert str(schema) == dedent(
+        """\
+        schema {
+          query: Query
+        }
+
+        interface Node {
+          id: ID!
+        }
+
+        type PageInfo {
+          hasNextPage: Boolean!
+          hasPreviousPage: Boolean!
+          startCursor: String
+          endCursor: String
+        }
+
+        type PetType implements Node {
+          age: Int!
+          id: ID!
+        }
+
+        type PetTypeConnection {
+          pageInfo: PageInfo!
+          edges: [PetTypeEdge]!
+        }
+
+        type PetTypeEdge {
+          node: PetType
+          cursor: String!
+        }
+
+        type Query {
+          pets(before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
     """
     )

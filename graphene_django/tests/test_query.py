@@ -1,15 +1,15 @@
-import base64
 import datetime
+import base64
 
-import graphene
 import pytest
 from django.db import models
 from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
-from graphene.relay import Node
+from graphql_relay import to_global_id
 from py.test import raises
 
-from graphql_relay import to_global_id
+import graphene
+from graphene.relay import Node
 
 from ..compat import JSONField, MissingType
 from ..fields import DjangoConnectionField
@@ -17,8 +17,6 @@ from ..settings import graphene_settings
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
 from .models import Article, CNNReporter, Film, FilmDetails, Reporter
-
-pytestmark = pytest.mark.django_db
 
 
 def test_should_query_only_fields():
@@ -50,6 +48,31 @@ def test_should_query_simplelazy_objects():
 
         def resolve_reporter(self, info):
             return SimpleLazyObject(lambda: Reporter(id=1))
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query {
+          reporter {
+            id
+          }
+        }
+    """
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == {"reporter": {"id": "1"}}
+
+
+def test_should_query_wrapped_simplelazy_objects():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            fields = ("id",)
+
+    class Query(graphene.ObjectType):
+        reporter = graphene.Field(ReporterType)
+
+        def resolve_reporter(self, info):
+            return SimpleLazyObject(lambda: SimpleLazyObject(lambda: Reporter(id=1)))
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -146,9 +169,6 @@ def test_should_query_postgres_fields():
 
 
 def test_should_node():
-    # reset_global_registry()
-    # Node._meta.registry = get_global_registry()
-
     class ReporterNode(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -587,7 +607,7 @@ def test_should_query_node_multiple_filtering():
     assert result.data == expected
 
 
-def test_should_enforce_first_or_last():
+def test_should_enforce_first_or_last(graphene_settings):
     graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = True
 
     class ReporterType(DjangoObjectType):
@@ -626,7 +646,7 @@ def test_should_enforce_first_or_last():
     assert result.data == expected
 
 
-def test_should_error_if_first_is_greater_than_max():
+def test_should_error_if_first_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -636,6 +656,8 @@ def test_should_error_if_first_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -664,10 +686,8 @@ def test_should_error_if_first_is_greater_than_max():
     )
     assert result.data == expected
 
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
-
-def test_should_error_if_last_is_greater_than_max():
+def test_should_error_if_last_is_greater_than_max(graphene_settings):
     graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 100
 
     class ReporterType(DjangoObjectType):
@@ -677,6 +697,8 @@ def test_should_error_if_last_is_greater_than_max():
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 100
 
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
@@ -704,8 +726,6 @@ def test_should_error_if_last_is_greater_than_max():
         "exceeds the limit of 100 records."
     )
     assert result.data == expected
-
-    graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST = False
 
 
 def test_should_not_error_if_last_and_first_not_greater_than_max():
@@ -974,7 +994,7 @@ def test_should_query_connectionfields_with_manager():
     schema = graphene.Schema(query=Query)
     query = """
         query ReporterLastQuery {
-            allReporters(first: 2) {
+            allReporters(first: 1) {
                 edges {
                     node {
                         id
@@ -1237,6 +1257,134 @@ def test_should_resolve_get_queryset_connectionfields():
     assert result.data == expected
 
 
+def test_connection_should_limit_after_to_list_length():
+    reporter_1 = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    reporter_2 = Reporter.objects.create(
+        first_name="Some", last_name="Guy", email="someguy@cnn.com", a_choice=1
+    )
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($after: String) {
+            allReporters(first: 1 after: $after) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    after = base64.b64encode(b"arrayconnection:10").decode()
+    result = schema.execute(query, variable_values=dict(after=after))
+    expected = {"allReporters": {"edges": []}}
+    assert not result.errors
+    assert result.data == expected
+
+
+REPORTERS = [
+    dict(
+        first_name="First {}".format(i),
+        last_name="Last {}".format(i),
+        email="johndoe+{}@example.com".format(i),
+        a_choice=1,
+    )
+    for i in range(6)
+]
+
+
+def test_should_return_max_limit(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query AllReporters {
+            allReporters {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 4
+
+
+def test_should_have_next_page(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+    db_reporters = Reporter.objects.all()
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query AllReporters($first: Int, $after: String) {
+            allReporters(first: $first, after: $after) {
+                pageInfo {
+                    hasNextPage
+                    endCursor
+                }
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query, variable_values={})
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 4
+    assert result.data["allReporters"]["pageInfo"]["hasNextPage"]
+
+    last_result = result.data["allReporters"]["pageInfo"]["endCursor"]
+    result2 = schema.execute(query, variable_values=dict(first=4, after=last_result))
+    assert not result2.errors
+    assert len(result2.data["allReporters"]["edges"]) == 2
+    assert not result2.data["allReporters"]["pageInfo"]["hasNextPage"]
+    gql_reporters = (
+        result.data["allReporters"]["edges"] + result2.data["allReporters"]["edges"]
+    )
+
+    assert {to_global_id("ReporterType", reporter.id) for reporter in db_reporters} == {
+        gql_reporter["node"]["id"] for gql_reporter in gql_reporters
+    }
+
+
 def test_should_preserve_prefetch_related(django_assert_num_queries):
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -1286,3 +1434,55 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     with django_assert_num_queries(3) as captured:
         result = schema.execute(query)
     assert not result.errors
+
+
+def test_should_preserve_annotations():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (graphene.relay.Node,)
+
+    class FilmType(DjangoObjectType):
+        reporters = DjangoConnectionField(ReporterType)
+        reporters_count = graphene.Int()
+
+        class Meta:
+            model = Film
+            interfaces = (graphene.relay.Node,)
+
+    class Query(graphene.ObjectType):
+        films = DjangoConnectionField(FilmType)
+
+        def resolve_films(root, info):
+            qs = Film.objects.prefetch_related("reporters")
+            return qs.annotate(reporters_count=models.Count("reporters"))
+
+    r1 = Reporter.objects.create(first_name="Dave", last_name="Smith")
+    r2 = Reporter.objects.create(first_name="Jane", last_name="Doe")
+
+    f1 = Film.objects.create()
+    f1.reporters.set([r1, r2])
+    f2 = Film.objects.create()
+    f2.reporters.set([r2])
+
+    query = """
+        query {
+            films {
+                edges {
+                    node {
+                        reportersCount
+                    }
+                }
+            }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors, str(result)
+
+    expected = {
+        "films": {
+            "edges": [{"node": {"reportersCount": 2}}, {"node": {"reportersCount": 1}}]
+        }
+    }
+    assert result.data == expected, str(result.data)

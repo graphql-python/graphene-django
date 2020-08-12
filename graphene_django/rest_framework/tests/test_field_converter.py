@@ -10,7 +10,9 @@ from ..serializer_converter import convert_serializer_field
 from ..types import DictType
 
 
-def _get_type(rest_framework_field, is_input=True, **kwargs):
+def _get_type(
+    rest_framework_field, is_input=True, convert_choices_to_enum=True, **kwargs
+):
     # prevents the following error:
     # AssertionError: The `source` argument is not meaningful when applied to a `child=` field.
     # Remove `source=` from the field declaration.
@@ -21,7 +23,9 @@ def _get_type(rest_framework_field, is_input=True, **kwargs):
 
     field = rest_framework_field(**kwargs)
 
-    return convert_serializer_field(field, is_input=is_input)
+    return convert_serializer_field(
+        field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum
+    )
 
 
 def assert_conversion(rest_framework_field, graphene_field, **kwargs):
@@ -60,8 +64,27 @@ def test_should_url_convert_string():
     assert_conversion(serializers.URLField, graphene.String)
 
 
-def test_should_choice_convert_string():
-    assert_conversion(serializers.ChoiceField, graphene.String, choices=[])
+def test_should_choice_convert_enum():
+    field = assert_conversion(
+        serializers.ChoiceField,
+        graphene.Enum,
+        choices=[("h", "Hello"), ("w", "World")],
+        source="word",
+    )
+    assert field._meta.enum.__members__["H"].value == "h"
+    assert field._meta.enum.__members__["H"].description == "Hello"
+    assert field._meta.enum.__members__["W"].value == "w"
+    assert field._meta.enum.__members__["W"].description == "World"
+
+
+def test_should_choice_convert_string_if_enum_disabled():
+    assert_conversion(
+        serializers.ChoiceField,
+        graphene.String,
+        choices=[("h", "Hello"), ("w", "World")],
+        source="word",
+        convert_choices_to_enum=False,
+    )
 
 
 def test_should_base_field_convert_string():
@@ -174,7 +197,7 @@ def test_should_file_convert_string():
 
 
 def test_should_filepath_convert_string():
-    assert_conversion(serializers.FilePathField, graphene.String, path="/")
+    assert_conversion(serializers.FilePathField, graphene.Enum, path="/")
 
 
 def test_should_ip_convert_string():
@@ -189,9 +212,9 @@ def test_should_json_convert_jsonstring():
     assert_conversion(serializers.JSONField, graphene.types.json.JSONString)
 
 
-def test_should_multiplechoicefield_convert_to_list_of_string():
+def test_should_multiplechoicefield_convert_to_list_of_enum():
     field = assert_conversion(
         serializers.MultipleChoiceField, graphene.List, choices=[1, 2, 3]
     )
 
-    assert field.of_type == graphene.String
+    assert issubclass(field.of_type, graphene.Enum)

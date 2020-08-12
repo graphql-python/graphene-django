@@ -35,9 +35,15 @@ def construct_fields(
 
     fields = OrderedDict()
     for name, field in _model_fields:
-        is_not_in_only = only_fields and name not in only_fields
+        is_not_in_only = (
+            only_fields is not None
+            and only_fields != ALL_FIELDS
+            and name not in only_fields
+        )
         # is_already_created = name in options.fields
-        is_excluded = name in exclude_fields  # or is_already_created
+        is_excluded = (
+            exclude_fields is not None and name in exclude_fields
+        )  # or is_already_created
         # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
         is_no_backref = str(name).endswith("+")
         if is_not_in_only or is_excluded or is_no_backref:
@@ -62,6 +68,71 @@ def construct_fields(
     return fields
 
 
+def validate_fields(type_, model, fields, only_fields, exclude_fields):
+    # Validate the given fields against the model's fields and custom fields
+    all_field_names = set(fields.keys())
+    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
+    for name in only_fields or ():
+        if name in all_field_names:
+            continue
+
+        if hasattr(model, name):
+            warnings.warn(
+                (
+                    'Field name "{field_name}" matches an attribute on Django model "{app_label}.{object_name}" '
+                    "but it's not a model field so Graphene cannot determine what type it should be. "
+                    'Either define the type of the field on DjangoObjectType "{type_}" or remove it from the "fields" list.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
+                )
+            )
+
+        else:
+            warnings.warn(
+                (
+                    'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
+                )
+            )
+
+    # Validate exclude fields
+    for name in exclude_fields or ():
+        if name in all_field_names:
+            # Field is a custom field
+            warnings.warn(
+                (
+                    'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
+                    'Either remove the custom field or remove the field from the "exclude" list.'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
+                )
+            )
+        else:
+            if not hasattr(model, name):
+                warnings.warn(
+                    (
+                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
+                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
+                    ).format(
+                        field_name=name,
+                        app_label=model._meta.app_label,
+                        object_name=model._meta.object_name,
+                        type_=type_,
+                    )
+                )
+
+
 class DjangoObjectTypeOptions(ObjectTypeOptions):
     model = None  # type: Model
     registry = None  # type: Registry
@@ -78,10 +149,10 @@ class DjangoObjectType(ObjectType):
         model=None,
         registry=None,
         skip_registry=False,
-        only_fields=(),  # deprecated in favour of `fields`
-        fields=(),
-        exclude_fields=(),  # deprecated in favour of `exclude`
-        exclude=(),
+        only_fields=None,  # deprecated in favour of `fields`
+        fields=None,
+        exclude_fields=None,  # deprecated in favour of `exclude`
+        exclude=None,
         filter_fields=None,
         filterset_class=None,
         connection=None,
@@ -136,9 +207,6 @@ class DjangoObjectType(ObjectType):
                 "Got %s." % type(fields).__name__
             )
 
-        if fields == ALL_FIELDS:
-            fields = None
-
         # Alias exclude_fields -> exclude
         if exclude_fields and exclude:
             raise Exception("Can't set both exclude_fields and exclude")
@@ -171,7 +239,7 @@ class DjangoObjectType(ObjectType):
                 connection_class = Connection
 
             connection = connection_class.create_type(
-                "{}Connection".format(cls.__name__), node=cls
+                "{}Connection".format(options.get("name") or cls.__name__), node=cls
             )
 
         if connection is not None:
@@ -193,6 +261,9 @@ class DjangoObjectType(ObjectType):
             _meta=_meta, interfaces=interfaces, **options
         )
 
+        # Validate fields
+        validate_fields(cls, model, _meta.fields, fields, exclude)
+
         if not skip_registry:
             registry.register(cls)
 
@@ -201,12 +272,9 @@ class DjangoObjectType(ObjectType):
 
     @classmethod
     def is_type_of(cls, root, info):
-        if isinstance(root, SimpleLazyObject):
-            root._setup()
-            root = root._wrapped
         if isinstance(root, cls):
             return True
-        if not is_valid_django_model(type(root)):
+        if not is_valid_django_model(root.__class__):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
         if cls._meta.model._meta.proxy:

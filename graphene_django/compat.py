@@ -8,8 +8,14 @@ try:
     from django.contrib.postgres.fields import (
         ArrayField,
         HStoreField,
-        JSONField,
+        JSONField as PGJSONField,
         RangeField,
     )
 except ImportError:
-    ArrayField, HStoreField, JSONField, RangeField = (MissingType,) * 4
+    ArrayField, HStoreField, PGJSONField, RangeField = (MissingType,) * 4
+
+try:
+    # JSONField is only available from Django 3.1
+    from django.db.models import JSONField
+except ImportError:
+    JSONField = MissingType

@@ -13,9 +13,9 @@ back to the defaults.
 """
 from __future__ import unicode_literals
 
+import six
 from django.conf import settings
 from django.test.signals import setting_changed
-from django.utils import six
 
 try:
     import importlib  # Available in Python 3.1+
@@ -36,6 +36,15 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": False,
+    # Set to True to enable v3 naming convention for choice field Enum's
+    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": False,
+    "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
+    # Use a separate path for handling subscriptions.
+    "SUBSCRIPTION_PATH": None,
+    # By default GraphiQL headers editor tab is enabled, set to False to hide it
+    # This sets headerEditorEnabled GraphiQL option, for details go to
+    # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
+    "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
 }
 
 if settings.DEBUG:

@@ -1,5 +1,7 @@
+from collections import OrderedDict
 from django.db import models
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
+from django.utils.module_loading import import_string
 
 from graphene import (
     ID,
@@ -18,18 +20,20 @@ from graphene import (
     Time,
 )
 from graphene.types.json import JSONString
-from graphene.utils.str_converters import to_camel_case, to_const
+from graphene.utils.str_converters import to_camel_case
 from graphql import assert_valid_name
 
-from .compat import ArrayField, HStoreField, JSONField, RangeField
+from .settings import graphene_settings
+from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .utils import import_single_dispatch
+from .utils.str_converters import to_const
 
 singledispatch = import_single_dispatch()
 
 
 def convert_choice_name(name):
-    name = to_const(force_text(name))
+    name = to_const(force_str(name))
     try:
         assert_valid_name(name)
     except AssertionError:
@@ -39,6 +43,8 @@ def convert_choice_name(name):
 
 def get_choices(choices):
     converted_names = []
+    if isinstance(choices, OrderedDict):
+        choices = choices.items()
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
             for choice in get_choices(help_text):
@@ -52,6 +58,44 @@ def get_choices(choices):
             yield name, value, description
 
 
+def convert_choices_to_named_enum_with_descriptions(name, choices):
+    choices = list(get_choices(choices))
+    named_choices = [(c[0], c[1]) for c in choices]
+    named_choices_descriptions = {c[0]: c[2] for c in choices}
+
+    class EnumWithDescriptionsType(object):
+        @property
+        def description(self):
+            return named_choices_descriptions[self.name]
+
+    return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+
+
+def generate_enum_name(django_model_meta, field):
+    if graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME:
+        # Try and import custom function
+        custom_func = import_string(
+            graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME
+        )
+        name = custom_func(field)
+    elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING is True:
+        name = "{app_label}{object_name}{field_name}Choices".format(
+            app_label=to_camel_case(django_model_meta.app_label.title()),
+            object_name=django_model_meta.object_name,
+            field_name=to_camel_case(field.name.title()),
+        )
+    else:
+        name = to_camel_case("{}_{}".format(django_model_meta.object_name, field.name))
+    return name
+
+
+def convert_choice_field_to_enum(field, name=None):
+    if name is None:
+        name = generate_enum_name(field.model._meta, field)
+    choices = field.choices
+    return convert_choices_to_named_enum_with_descriptions(name, choices)
+
+
 def convert_django_field_with_choices(
     field, registry=None, convert_choices_to_enum=True
 ):
@@ -61,18 +105,7 @@ def convert_django_field_with_choices(
             return converted
     choices = getattr(field, "choices", None)
     if choices and convert_choices_to_enum:
-        meta = field.model._meta
-        name = to_camel_case("{}_{}".format(meta.object_name, field.name))
-        choices = list(get_choices(choices))
-        named_choices = [(c[0], c[1]) for c in choices]
-        named_choices_descriptions = {c[0]: c[2] for c in choices}
-
-        class EnumWithDescriptionsType(object):
-            @property
-            def description(self):
-                return named_choices_descriptions[self.name]
-
-        enum = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+        enum = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)
         converted = enum(description=field.help_text, required=required)
     else:
@@ -120,13 +153,9 @@ def convert_field_to_int(field, registry=None):
     return Int(description=field.help_text, required=not field.null)
 
 
+@convert_django_field.register(models.NullBooleanField)
 @convert_django_field.register(models.BooleanField)
 def convert_field_to_boolean(field, registry=None):
-    return NonNull(Boolean, description=field.help_text)
-
-
-@convert_django_field.register(models.NullBooleanField)
-def convert_field_to_nullboolean(field, registry=None):
     return Boolean(description=field.help_text, required=not field.null)
 
 
@@ -227,21 +256,30 @@ def convert_field_to_djangomodel(field, registry=None):
 
 @convert_django_field.register(ArrayField)
 def convert_postgres_array_to_list(field, registry=None):
-    base_type = convert_django_field(field.base_field)
-    if not isinstance(base_type, (List, NonNull)):
-        base_type = type(base_type)
-    return List(base_type, description=field.help_text, required=not field.null)
+    inner_type = convert_django_field(field.base_field)
+    if not isinstance(inner_type, (List, NonNull)):
+        inner_type = (
+            NonNull(type(inner_type))
+            if inner_type.kwargs["required"]
+            else type(inner_type)
+        )
+    return List(inner_type, description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(HStoreField)
+@convert_django_field.register(PGJSONField)
 @convert_django_field.register(JSONField)
-def convert_posgres_field_to_string(field, registry=None):
+def convert_pg_and_json_field_to_string(field, registry=None):
     return JSONString(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(RangeField)
-def convert_posgres_range_to_string(field, registry=None):
+def convert_postgres_range_to_string(field, registry=None):
     inner_type = convert_django_field(field.base_field)
     if not isinstance(inner_type, (List, NonNull)):
-        inner_type = type(inner_type)
+        inner_type = (
+            NonNull(type(inner_type))
+            if inner_type.kwargs["required"]
+            else type(inner_type)
+        )
     return List(inner_type, description=field.help_text, required=not field.null)

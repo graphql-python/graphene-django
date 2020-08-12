@@ -9,11 +9,10 @@ from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
 
 from .. import registry
+from ..filter import DjangoFilterConnectionField
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
-
-registry.reset_global_registry()
 
 
 class Reporter(DjangoObjectType):
@@ -196,7 +195,6 @@ type RootQuery {
 def with_local_registry(func):
     def inner(*args, **kwargs):
         old = registry.get_global_registry()
-        registry.reset_global_registry()
         try:
             retval = func(*args, **kwargs)
         except Exception as e:
@@ -231,6 +229,17 @@ def test_django_objecttype_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_empty():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            fields = ()
+
+    fields = list(Reporter._meta.fields.keys())
+    assert fields == []
 
 
 @with_local_registry
@@ -315,7 +324,79 @@ def test_django_objecttype_fields_exclude_type_checking():
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
-                fields = "foo"
+                exclude = "foo"
+
+
+@with_local_registry
+def test_django_objecttype_fields_exist_on_model():
+    with pytest.warns(UserWarning, match=r"Field name .* doesn't exist"):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "foo", "email"]
+
+    with pytest.warns(
+        UserWarning,
+        match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
+    ) as record:
+
+        class Reporter2(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "some_method", "email"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(None) as record:
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                fields = ["first_name", "custom_field", "email"]
+
+    assert len(record) == 0
+
+
+@with_local_registry
+def test_django_objecttype_exclude_fields_exist_on_model():
+    with pytest.warns(
+        UserWarning,
+        match=r"Django model .* does not have a field or attribute named .*",
+    ):
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["foo"]
+
+    # Don't warn if selecting a custom field
+    with pytest.warns(
+        UserWarning,
+        match=r"Excluding the custom field .* on DjangoObjectType .* has no effect.",
+    ):
+
+        class Reporter3(DjangoObjectType):
+            custom_field = String()
+
+            class Meta:
+                model = ReporterModel
+                exclude = ["custom_field"]
+
+    # Don't warn on exclude fields
+    with pytest.warns(None) as record:
+
+        class Reporter4(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                exclude = ["email", "first_name"]
+
+    assert len(record) == 0
+
+
+def custom_enum_name(field):
+    return "CustomEnum{}".format(field.name.title())
 
 
 class TestDjangoObjectType:
@@ -424,3 +505,104 @@ class TestDjangoObjectType:
         }
         """
         )
+
+    def test_django_objecttype_convert_choices_enum_naming_collisions(
+        self, PetModel, graphene_settings
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V3_NAMING = True
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: TestsPetModelKindChoices!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+
+        enum TestsPetModelKindChoices {
+          CAT
+          DOG
+        }
+        """
+        )
+
+    def test_django_objecttype_choices_custom_enum_name(
+        self, PetModel, graphene_settings
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME = (
+            "graphene_django.tests.test_types.custom_enum_name"
+        )
+
+        class PetModelKind(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = ["id", "kind"]
+
+        class Query(ObjectType):
+            pet = Field(PetModelKind)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+        schema {
+          query: Query
+        }
+
+        enum CustomEnumKind {
+          CAT
+          DOG
+        }
+
+        type PetModelKind {
+          id: ID!
+          kind: CustomEnumKind!
+        }
+
+        type Query {
+          pet: PetModelKind
+        }
+        """
+        )
+
+
+@with_local_registry
+def test_django_objecttype_name_connection_propagation():
+    class Reporter(DjangoObjectType):
+        class Meta:
+            model = ReporterModel
+            name = "CustomReporterName"
+            filter_fields = ["email"]
+            interfaces = (Node,)
+
+    class Query(ObjectType):
+        reporter = Node.Field(Reporter)
+        reporters = DjangoFilterConnectionField(Reporter)
+
+    assert Reporter._meta.name == "CustomReporterName"
+    schema = str(Schema(query=Query))
+
+    assert "type CustomReporterName implements Node {" in schema
+    assert "type CustomReporterNameConnection {" in schema
+    assert "type CustomReporterNameEdge {" in schema
+
+    assert "type Reporter implements Node {" not in schema
+    assert "type ReporterConnection {" not in schema
+    assert "type ReporterEdge {" not in schema

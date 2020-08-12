@@ -1,13 +1,10 @@
-import graphene
-import pytest
 from django.db import models
-from graphene import Schema
 from rest_framework import serializers
 
+import graphene
+from graphene import Schema
 from graphene_django import DjangoObjectType
 from graphene_django.rest_framework.mutation import SerializerMutation
-
-pytestmark = pytest.mark.django_db
 
 
 class MyFakeChildModel(models.Model):

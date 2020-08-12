@@ -20,7 +20,7 @@ Let's use a simple example model.
 Limiting Field Access
 ---------------------
 
-To limit fields in a GraphQL query simply use the ``only_fields`` meta attribute.
+To limit fields in a GraphQL query simply use the ``fields`` meta attribute.
 
 .. code:: python
 
@@ -31,10 +31,10 @@ To limit fields in a GraphQL query simply use the ``only_fields`` meta attribute
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            only_fields = ('title', 'content')
+            fields = ('title', 'content')
             interfaces = (relay.Node, )
 
-conversely you can use ``exclude_fields`` meta attribute.
+conversely you can use ``exclude`` meta attribute.
 
 .. code:: python
 
@@ -45,7 +45,7 @@ conversely you can use ``exclude_fields`` meta attribute.
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            exclude_fields = ('published', 'owner')
+            exclude = ('published', 'owner')
             interfaces = (relay.Node, )
 
 Queryset Filtering On Lists
@@ -84,7 +84,7 @@ with the context argument.
 
         def resolve_my_posts(self, info):
             # context will reference to the Django request
-            if not info.context.user.is_authenticated():
+            if not info.context.user.is_authenticated:
                 return Post.objects.none()
             else:
                 return Post.objects.filter(owner=info.context.user)
@@ -133,7 +133,7 @@ method to your ``DjangoObjectType``.
     class PostNode(DjangoObjectType):
         class Meta:
             model = Post
-            only_fields = ('title', 'content')
+            fields = ('title', 'content')
             interfaces = (relay.Node, )
 
         @classmethod
@@ -166,7 +166,7 @@ To restrict users from accessing the GraphQL API page the standard Django LoginR
 
 After this, you can use the new ``PrivateGraphQLView`` in the project's URL Configuration file ``url.py``:
 
-For Django 1.9 and below:
+For Django 1.11:
 
 .. code:: python
 
