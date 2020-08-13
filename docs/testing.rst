@@ -16,7 +16,12 @@ Usage:
 
     from graphene_django.utils.testing import GraphQLTestCase
 
+    from my_fancy.schema import schema
+
+
     class MyFancyTestCase(GraphQLTestCase):
+        GRAPHQL_SCHEMA = schema
+
         def test_some_query(self):
             response = self.query(
                 '''
