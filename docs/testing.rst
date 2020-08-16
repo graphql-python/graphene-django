@@ -102,7 +102,7 @@ To use pytest define a simple fixture using the query helper below
 
         # Test you query using the client_query fixture
         def test_some_query(client_query):
-            response = graphql_query(
+            response = client_query(
                 '''
                 query {
                     myModel {
