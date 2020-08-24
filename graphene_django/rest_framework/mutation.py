@@ -66,6 +66,7 @@ class SerializerMutation(ClientIDMutation):
         only_fields=(),
         exclude_fields=(),
         convert_choices_to_enum=True,
+        _meta=None,
         **options
     ):
 
@@ -99,7 +100,8 @@ class SerializerMutation(ClientIDMutation):
             convert_choices_to_enum=convert_choices_to_enum,
         )
 
-        _meta = SerializerMutationOptions(cls)
+        if not _meta:
+            _meta = SerializerMutationOptions(cls)
         _meta.lookup_field = lookup_field
         _meta.model_operations = model_operations
         _meta.serializer_class = serializer_class
