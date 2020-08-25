@@ -36,7 +36,8 @@ def fields_for_serializer(
                 name in exclude_fields,
                 field.write_only
                 and not is_input,  # don't show write_only fields in Query
-                field.read_only and is_input
+                field.read_only
+                and is_input
                 and lookup_field != name,  # don't show read_only fields in Input
             ]
         )
