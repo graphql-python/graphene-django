@@ -103,7 +103,7 @@ class GraphQLTestCase(TestCase):
             graphql_url=self.GRAPHQL_URL,
         )
 
-    def assertResponseNoErrors(self, resp):
+    def assertResponseNoErrors(self, resp, msg=None):
         """
         Assert that the call went through correctly. 200 means the syntax is ok, if there are no `errors`,
         the call was fine.
@@ -111,12 +111,12 @@ class GraphQLTestCase(TestCase):
         """
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
-        self.assertNotIn("errors", list(content.keys()))
+        self.assertNotIn("errors", list(content.keys()), msg)
 
-    def assertResponseHasErrors(self, resp):
+    def assertResponseHasErrors(self, resp, msg=None):
         """
         Assert that the call was failing. Take care: Even with errors, GraphQL returns status 200!
         :resp HttpResponse: Response
         """
         content = json.loads(resp.content)
-        self.assertIn("errors", list(content.keys()))
+        self.assertIn("errors", list(content.keys()), msg)
