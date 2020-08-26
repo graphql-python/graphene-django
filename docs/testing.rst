@@ -90,6 +90,7 @@ To use pytest define a simple fixture using the query helper below
 .. code:: python
 
         # Create a fixture using the graphql_query helper and `client` fixture from `pytest-django`.
+        import json
         import pytest
         from graphene_django.utils.testing import graphql_query
 
