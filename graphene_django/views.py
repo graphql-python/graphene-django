@@ -328,8 +328,8 @@ class GraphQLView(View):
                 "operation_name": operation_name,
                 "context_value": self.get_context(request),
                 "middleware": self.get_middleware(request),
-                **extra_options,
             }
+            options.update(extra_options)
 
             if operation_type == "mutation" and (
                 graphene_settings.ATOMIC_MUTATIONS is True
