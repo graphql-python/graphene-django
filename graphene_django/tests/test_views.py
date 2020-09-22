@@ -864,7 +864,7 @@ def test_model_form_mutation_multiple_creation_invalid_non_atomic(client):
         graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
-@patch("rest_framework.views.transaction.set_rollback")
+@patch("graphene_django.utils.utils.transaction.set_rollback")
 def test_query_errors_atomic_request(set_rollback_mock, client):
     old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
@@ -883,7 +883,7 @@ def test_query_errors_atomic_request(set_rollback_mock, client):
         graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
-@patch("rest_framework.views.transaction.set_rollback")
+@patch("graphene_django.utils.utils.transaction.set_rollback")
 def test_query_errors_non_atomic(set_rollback_mock, client):
     old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]

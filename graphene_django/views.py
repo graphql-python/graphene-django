@@ -18,9 +18,8 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.execution.middleware import MiddlewareManager
 
-from rest_framework.views import set_rollback
-
 from graphene_django.constants import MUTATION_ERRORS_FLAG
+from graphene_django.utils.utils import set_rollback
 
 from .settings import graphene_settings
 

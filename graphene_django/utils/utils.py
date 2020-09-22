@@ -1,7 +1,7 @@
 import inspect
 
 import six
-from django.db import models
+from django.db import connection, models, transaction
 from django.db.models.manager import Manager
 from django.utils.encoding import force_text
 from django.utils.functional import Promise
@@ -100,3 +100,9 @@ def import_single_dispatch():
         )
 
     return singledispatch
+
+
+def set_rollback():
+    atomic_requests = connection.settings_dict.get("ATOMIC_REQUESTS", False)
+    if atomic_requests and connection.in_atomic_block:
+        transaction.set_rollback(True)
