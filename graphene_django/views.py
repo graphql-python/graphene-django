@@ -17,6 +17,10 @@ from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.execution.middleware import MiddlewareManager
 
+from rest_framework.views import set_rollback
+
+from graphene_django.constants import MUTATION_ERRORS_FLAG
+
 from .settings import graphene_settings
 
 
@@ -203,11 +207,15 @@ class GraphQLView(View):
             request, data, query, variables, operation_name, show_graphiql
         )
 
+        if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+            set_rollback()
+
         status_code = 200
         if execution_result:
             response = {}
 
             if execution_result.errors:
+                set_rollback()
                 response["errors"] = [
                     self.format_error(e) for e in execution_result.errors
                 ]

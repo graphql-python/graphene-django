@@ -229,3 +229,29 @@ This argument is also sent back to the client with the mutation result
 (you do not have to do anything). For services that manage
 a pool of many GraphQL requests in bulk, the ``clientIDMutation``
 allows you to match up a specific mutation with the response.
+
+
+
+Django Database Transactions
+----------------------------
+
+Django gives you a few ways to control how database transactions are managed.
+
+Tying transactions to HTTP requests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A common way to handle transactions in Django is to wrap each request in a transaction.
+Set ``ATOMIC_REQUESTS`` settings to ``True`` in the configuration of each database for
+which you want to enable this behavior.
+
+It works like this. Before calling ``GraphQLView`` Django starts a transaction. If the
+response is produced without problems, Django commits the transaction. If the view, a
+``DjangoFormMutation`` or a ``DjangoModelFormMutation`` produces an exception, Django
+rolls back the transaction.
+
+.. warning::
+
+    While the simplicity of this transaction model is appealing, it also makes it
+    inefficient when traffic increases. Opening a transaction for every request has some
+    overhead. The impact on performance depends on the query patterns of your application
+    and on how well your database handles locking.
