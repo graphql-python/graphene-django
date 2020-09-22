@@ -3,6 +3,7 @@ import json
 import re
 
 import six
+from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
@@ -320,14 +321,27 @@ class GraphQLView(View):
                 # executor is not a valid argument in all backends
                 extra_options["executor"] = self.executor
 
-            return document.execute(
-                root_value=self.get_root_value(request),
-                variable_values=variables,
-                operation_name=operation_name,
-                context_value=self.get_context(request),
-                middleware=self.get_middleware(request),
-                **extra_options
-            )
+            operation_type = document.get_operation_type(operation_name)
+            options = {
+                "root_value": self.get_root_value(request),
+                "variable_values": variables,
+                "operation_name": operation_name,
+                "context_value": self.get_context(request),
+                "middleware": self.get_middleware(request),
+                **extra_options,
+            }
+
+            if operation_type == "mutation" and (
+                graphene_settings.ATOMIC_MUTATIONS is True
+                or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+            ):
+                with transaction.atomic():
+                    result = document.execute(**options)
+                    if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+                        transaction.set_rollback(True)
+                return result
+
+            return document.execute(**options)
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 

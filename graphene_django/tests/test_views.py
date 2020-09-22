@@ -6,6 +6,8 @@ from mock import patch
 
 from django.db import connection
 
+from graphene_django.settings import graphene_settings
+
 from .models import Pet
 
 try:
@@ -567,9 +569,13 @@ def test_passes_request_into_context_request(client):
 
 
 def test_form_mutation_multiple_creation_invalid_atomic_request(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
         connection.settings_dict["ATOMIC_REQUESTS"] = True
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         query = """
         mutation PetMutations {
@@ -602,13 +608,109 @@ def test_form_mutation_multiple_creation_invalid_atomic_request(client):
         assert Pet.objects.count() == 0
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
-def test_form_mutation_multiple_creation_invalid_non_atomic_request(client):
+def test_form_mutation_multiple_creation_invalid_atomic_mutation_1(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = True
         connection.settings_dict["ATOMIC_REQUESTS"] = False
+        graphene_settings.ATOMIC_MUTATIONS = False
+
+        query = """
+        mutation PetMutations {
+            petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+                errors {
+                    field
+                    messages
+                }
+            }
+            petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+                errors {
+                    field
+                    messages
+                }
+            }
+        }
+        """
+
+        response = client.post(url_string(query=query))
+        content = response_json(response)
+
+        assert "errors" not in content
+
+        assert content["data"]["petFormMutation1"]["errors"] == [
+            {"field": "age", "messages": ["Too old"]}
+        ]
+
+        assert content["data"]["petFormMutation2"]["errors"] == []
+
+        assert Pet.objects.count() == 0
+
+    finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
+        connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
+
+
+def test_form_mutation_multiple_creation_invalid_atomic_mutation_2(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
+    old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
+    try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
+        connection.settings_dict["ATOMIC_REQUESTS"] = False
+        graphene_settings.ATOMIC_MUTATIONS = True
+
+        query = """
+        mutation PetMutations {
+            petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+                errors {
+                    field
+                    messages
+                }
+            }
+            petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+                errors {
+                    field
+                    messages
+                }
+            }
+        }
+        """
+
+        response = client.post(url_string(query=query))
+        content = response_json(response)
+
+        assert "errors" not in content
+
+        assert content["data"]["petFormMutation1"]["errors"] == [
+            {"field": "age", "messages": ["Too old"]}
+        ]
+
+        assert content["data"]["petFormMutation2"]["errors"] == []
+
+        assert Pet.objects.count() == 0
+
+    finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
+        connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
+
+
+def test_form_mutation_multiple_creation_invalid_non_atomic(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
+    old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
+    try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
+        connection.settings_dict["ATOMIC_REQUESTS"] = False
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         query = """
         mutation PetMutations {
@@ -645,13 +747,19 @@ def test_form_mutation_multiple_creation_invalid_non_atomic_request(client):
         assert pet.age == 0
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
 def test_model_form_mutation_multiple_creation_invalid_atomic_request(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
         connection.settings_dict["ATOMIC_REQUESTS"] = True
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         query = """
         mutation PetMutations {
@@ -693,13 +801,19 @@ def test_model_form_mutation_multiple_creation_invalid_atomic_request(client):
         assert Pet.objects.count() == 0
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
-def test_model_form_mutation_multiple_creation_invalid_non_atomic_request(client):
+def test_model_form_mutation_multiple_creation_invalid_non_atomic(client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
         connection.settings_dict["ATOMIC_REQUESTS"] = False
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         query = """
         mutation PetMutations {
@@ -745,30 +859,44 @@ def test_model_form_mutation_multiple_creation_invalid_non_atomic_request(client
         assert pet.age == 0
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
 @patch("rest_framework.views.transaction.set_rollback")
 def test_query_errors_atomic_request(set_rollback_mock, client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
         connection.settings_dict["ATOMIC_REQUESTS"] = True
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         client.get(url_string(query="force error"))
         set_rollback_mock.assert_called_once_with(True)
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations
 
 
 @patch("rest_framework.views.transaction.set_rollback")
-def test_query_errors_non_atomic_request(set_rollback_mock, client):
+def test_query_errors_non_atomic(set_rollback_mock, client):
+    old_atomic_mutations = connection.settings_dict.get("ATOMIC_MUTATIONS", False)
     old_atomic_requests = connection.settings_dict["ATOMIC_REQUESTS"]
+    old_graphene_atomic_mutations = graphene_settings.ATOMIC_MUTATIONS
     try:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = False
         connection.settings_dict["ATOMIC_REQUESTS"] = False
+        graphene_settings.ATOMIC_MUTATIONS = False
 
         client.get(url_string(query="force error"))
         set_rollback_mock.assert_not_called()
 
     finally:
+        connection.settings_dict["ATOMIC_MUTATIONS"] = old_atomic_mutations
         connection.settings_dict["ATOMIC_REQUESTS"] = old_atomic_requests
+        graphene_settings.ATOMIC_MUTATIONS = old_graphene_atomic_mutations

@@ -255,3 +255,95 @@ rolls back the transaction.
     inefficient when traffic increases. Opening a transaction for every request has some
     overhead. The impact on performance depends on the query patterns of your application
     and on how well your database handles locking.
+
+Check the next section for a better solution.
+
+Tying transactions to mutations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A mutation can contain multiple fields, just like a query. There's one important
+distinction between queries and mutations, other than the name:
+
+..
+
+    `While query fields are executed in parallel, mutation fields run in series, one
+    after the other.`
+
+This means that if we send two ``incrementCredits`` mutations in one request, the first
+is guaranteed to finish before the second begins, ensuring that we don't end up with a
+race condition with ourselves.
+
+On the other hand, if the first ``incrementCredits`` runs successfully but the second
+one does not, the operation cannot be retried as it is. That's why is a good idea to
+run all mutation fields in a transaction, to guarantee all occur or nothing occurs.
+
+To enable this behavior for all databases set the graphene ``ATOMIC_MUTATIONS`` settings
+to ``True`` in your settings file:
+
+.. code:: python
+
+    GRAPHENE = {
+        # ...
+        "ATOMIC_MUTATIONS": True,
+    }
+
+On the contrary, if you want to enable this behavior for a specific database, set
+``ATOMIC_MUTATIONS`` to ``True`` in your database settings:
+
+.. code:: python
+
+    DATABASES = {
+        "default": {
+            # ...
+            "ATOMIC_MUTATIONS": True,
+        },
+        # ...
+    }
+
+Now, given the following example mutation:
+
+.. code::
+
+    mutation IncreaseCreditsTwice {
+
+        increaseCredits1: increaseCredits(input: { amount: 10 }) {
+            balance
+            errors {
+                field
+                messages
+            }
+        }
+
+        increaseCredits2: increaseCredits(input: { amount: -1 }) {
+            balance
+            errors {
+                field
+                messages
+            }
+        }
+
+    }
+
+The server is going to return something like:
+
+.. code:: json
+
+    {
+        "data": {
+            "increaseCredits1": {
+                "balance": 10.0,
+                "errors": []
+            },
+            "increaseCredits2": {
+                "balance": null,
+                "errors": [
+                    {
+                        "field": "amount",
+                        "message": "Amount should be a positive number"
+                    }
+                ]
+            },
+        }
+    }
+
+But the balance will remain the same.
