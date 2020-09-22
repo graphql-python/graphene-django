@@ -321,7 +321,6 @@ class GraphQLView(View):
                 # executor is not a valid argument in all backends
                 extra_options["executor"] = self.executor
 
-            operation_type = document.get_operation_type(operation_name)
             options = {
                 "root_value": self.get_root_value(request),
                 "variable_values": variables,
@@ -331,6 +330,7 @@ class GraphQLView(View):
             }
             options.update(extra_options)
 
+            operation_type = document.get_operation_type(operation_name)
             if operation_type == "mutation" and (
                 graphene_settings.ATOMIC_MUTATIONS is True
                 or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
