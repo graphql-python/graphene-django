@@ -1214,7 +1214,6 @@ def test_should_have_next_page(graphene_settings):
 
 
 class TestBackwardPagination:
-
     def setup_schema(self, graphene_settings, max_limit):
         graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
         reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
@@ -1248,7 +1247,9 @@ class TestBackwardPagination:
         result = schema.execute(query_last)
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
-        assert [e["node"]["firstName"] for e in result.data["allReporters"]["edges"]] == ["First 3", "First 4", "First 5"]
+        assert [
+            e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
+        ] == ["First 3", "First 4", "First 5"]
 
         # Use a combination of first and last
         query_first_and_last = """
@@ -1266,7 +1267,9 @@ class TestBackwardPagination:
         result = schema.execute(query_first_and_last)
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
-        assert [e["node"]["firstName"] for e in result.data["allReporters"]["edges"]] == ["First 1", "First 2", "First 3"]
+        assert [
+            e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
+        ] == ["First 1", "First 2", "First 3"]
 
         # Use a combination of first and last and after
         query_first_last_and_after = """
@@ -1282,10 +1285,14 @@ class TestBackwardPagination:
         """
 
         after = base64.b64encode(b"arrayconnection:0").decode()
-        result = schema.execute(query_first_last_and_after, variable_values=dict(after=after))
+        result = schema.execute(
+            query_first_last_and_after, variable_values=dict(after=after)
+        )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
-        assert [e["node"]["firstName"] for e in result.data["allReporters"]["edges"]] == ["First 2", "First 3", "First 4"]
+        assert [
+            e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
+        ] == ["First 2", "First 3", "First 4"]
 
     def test_should_query(self, graphene_settings):
         """
