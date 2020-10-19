@@ -267,7 +267,7 @@ class TestDjangoListField:
         result = schema.execute(query)
 
         assert not result.errors
-        assert result.data == {"reporters": [{"firstName": "Tara"},]}
+        assert result.data == {"reporters": [{"firstName": "Tara"}]}
 
     def test_resolve_list(self):
         """Resolving a plain list should work (and not call get_queryset)"""
@@ -314,7 +314,7 @@ class TestDjangoListField:
         result = schema.execute(query)
 
         assert not result.errors
-        assert result.data == {"reporters": [{"firstName": "Debra"},]}
+        assert result.data == {"reporters": [{"firstName": "Debra"}]}
 
     def test_get_queryset_foreign_key(self):
         class Article(DjangoObjectType):
@@ -371,7 +371,7 @@ class TestDjangoListField:
         assert not result.errors
         assert result.data == {
             "reporters": [
-                {"firstName": "Tara", "articles": [{"headline": "Amazing news"},],},
+                {"firstName": "Tara", "articles": [{"headline": "Amazing news"}]},
                 {"firstName": "Debra", "articles": []},
             ]
         }
