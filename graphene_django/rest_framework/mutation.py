@@ -26,6 +26,7 @@ def fields_for_serializer(
     exclude_fields,
     is_input=False,
     convert_choices_to_enum=True,
+    lookup_field=None,
 ):
     fields = OrderedDict()
     for name, field in serializer.fields.items():
@@ -35,7 +36,9 @@ def fields_for_serializer(
                 name in exclude_fields,
                 field.write_only
                 and not is_input,  # don't show write_only fields in Query
-                field.read_only and is_input,  # don't show read_only fields in Input
+                field.read_only
+                and is_input
+                and lookup_field != name,  # don't show read_only fields in Input
             ]
         )
 
@@ -91,6 +94,7 @@ class SerializerMutation(ClientIDMutation):
             exclude_fields,
             is_input=True,
             convert_choices_to_enum=convert_choices_to_enum,
+            lookup_field=lookup_field,
         )
         output_fields = fields_for_serializer(
             serializer,
@@ -98,6 +102,7 @@ class SerializerMutation(ClientIDMutation):
             exclude_fields,
             is_input=False,
             convert_choices_to_enum=convert_choices_to_enum,
+            lookup_field=lookup_field,
         )
 
         if not _meta:
