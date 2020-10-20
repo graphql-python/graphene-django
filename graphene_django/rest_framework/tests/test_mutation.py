@@ -143,17 +143,20 @@ def test_write_only_field_using_extra_kwargs():
 
 def test_read_only_fields():
     class ReadOnlyFieldModelSerializer(serializers.ModelSerializer):
+        id = serializers.CharField(read_only=True)
         cool_name = serializers.CharField(read_only=True)
 
         class Meta:
             model = MyFakeModelWithPassword
-            fields = ["cool_name", "password"]
+            lookup_field = "id"
+            fields = ["id", "cool_name", "password"]
 
     class MyMutation(SerializerMutation):
         class Meta:
             serializer_class = ReadOnlyFieldModelSerializer
 
     assert "password" in MyMutation.Input._meta.fields
+    assert "id" in MyMutation.Input._meta.fields
     assert (
         "cool_name" not in MyMutation.Input._meta.fields
     ), "'cool_name' is read_only field and shouldn't be on arguments"
