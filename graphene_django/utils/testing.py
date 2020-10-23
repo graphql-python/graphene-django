@@ -45,7 +45,7 @@ def graphql_query(
     if variables:
         body["variables"] = variables
     if input_data:
-        if variables in body:
+        if "variables" in body:
             body["variables"]["input"] = input_data
         else:
             body["variables"] = {"input": input_data}
