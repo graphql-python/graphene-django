@@ -59,7 +59,7 @@ def get_args(field):
 
 
 def assert_arguments(field, *arguments):
-    ignore = ("after", "before", "first", "last", "order_by")
+    ignore = ("offset", "after", "before", "first", "last", "order_by")
     args = get_args(field)
     actual = [name for name in args if name not in ignore and not name.startswith("_")]
     assert set(arguments) == set(
@@ -945,7 +945,7 @@ def test_integer_field_filter_type():
         }
 
         type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
         }
     """
     )
@@ -997,7 +997,7 @@ def test_other_filter_types():
         }
 
         type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
     """
     )

@@ -1314,3 +1314,144 @@ def test_should_preserve_annotations():
         }
     }
     assert result.data == expected, str(result.data)
+
+
+def test_connection_should_enable_offset_filtering():
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    Reporter.objects.create(first_name="Some", last_name="Guy")
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query {
+            allReporters(first: 1, offset: 1) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    expected = {
+        "allReporters": {"edges": [{"node": {"firstName": "Some", "lastName": "Guy"}},]}
+    }
+    assert result.data == expected
+
+
+def test_connection_should_enable_offset_filtering_higher_than_max_limit(
+    graphene_settings,
+):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 2
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    Reporter.objects.create(first_name="Some", last_name="Guy")
+    Reporter.objects.create(first_name="Jane", last_name="Roe")
+    Reporter.objects.create(first_name="Some", last_name="Lady")
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query {
+            allReporters(first: 1, offset: 3) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [{"node": {"firstName": "Some", "lastName": "Lady"}},]
+        }
+    }
+    assert result.data == expected
+
+
+def test_connection_should_forbid_offset_filtering_with_before():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($before: String) {
+            allReporters(first: 1, before: $before, offset: 1) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+    before = base64.b64encode(b"arrayconnection:2").decode()
+    result = schema.execute(query, variable_values=dict(before=before))
+    expected_error = "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `allReporters` connection."
+    assert len(result.errors) == 1
+    assert result.errors[0].message == expected_error
+
+
+def test_connection_should_allow_offset_filtering_with_after():
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    Reporter.objects.create(first_name="Some", last_name="Guy")
+    Reporter.objects.create(first_name="Jane", last_name="Roe")
+    Reporter.objects.create(first_name="Some", last_name="Lady")
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($after: String) {
+            allReporters(first: 1, after: $after, offset: 1) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+
+    after = base64.b64encode(b"arrayconnection:0").decode()
+    result = schema.execute(query, variable_values=dict(after=after))
+    assert not result.errors
+    expected = {
+        "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
+    }
+    assert result.data == expected

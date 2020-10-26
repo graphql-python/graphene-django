@@ -172,7 +172,7 @@ type Reporter {
   pets: [Reporter!]!
   aChoice: ReporterAChoice
   reporterType: ReporterReporterType
-  articles(before: String, after: String, first: Int, last: Int): ArticleConnection!
+  articles(offset: Int, before: String, after: String, first: Int, last: Int): ArticleConnection!
 }
 
 enum ReporterAChoice {

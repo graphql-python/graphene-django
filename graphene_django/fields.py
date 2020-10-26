@@ -4,11 +4,13 @@ import six
 from django.db.models.query import QuerySet
 from graphql_relay.connection.arrayconnection import (
     connection_from_list_slice,
+    cursor_to_offset,
     get_offset_with_default,
+    offset_to_cursor,
 )
 from promise import Promise
 
-from graphene import NonNull
+from graphene import Int, NonNull
 from graphene.relay import ConnectionField, PageInfo
 from graphene.types import Field, List
 
@@ -81,6 +83,7 @@ class DjangoConnectionField(ConnectionField):
             "enforce_first_or_last",
             graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST,
         )
+        kwargs.setdefault("offset", Int())
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
@@ -131,6 +134,15 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def resolve_connection(cls, connection, args, iterable, max_limit=None):
+        # Remove the offset parameter and convert it to an after cursor.
+        offset = args.pop("offset", None)
+        after = args.get("after")
+        if offset:
+            if after:
+                offset += cursor_to_offset(after) + 1
+            # input offset starts at 1 while the graphene offset starts at 0
+            args["after"] = offset_to_cursor(offset - 1)
+
         iterable = maybe_queryset(iterable)
 
         if isinstance(iterable, QuerySet):
@@ -181,6 +193,8 @@ class DjangoConnectionField(ConnectionField):
     ):
         first = args.get("first")
         last = args.get("last")
+        offset = args.get("offset")
+        before = args.get("before")
 
         if enforce_first_or_last:
             assert first or last, (
@@ -199,6 +213,11 @@ class DjangoConnectionField(ConnectionField):
                     "Requesting {} records on the `{}` connection exceeds the `last` limit of {} records."
                 ).format(last, info.field_name, max_limit)
                 args["last"] = min(last, max_limit)
+
+        if offset is not None:
+            assert before is None, (
+                "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `{}` connection."
+            ).format(info.field_name)
 
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)
