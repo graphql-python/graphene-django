@@ -201,7 +201,7 @@ Extend the tuple of fields if you want to order by more than one field.
 
         order_by = OrderingFilter(
             fields=(
-                ('created_at', 'created_at'),
+                ('name', 'created_at'),
             )
         )
 
