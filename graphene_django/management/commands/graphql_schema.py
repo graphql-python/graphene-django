@@ -62,7 +62,7 @@ class Command(CommandArguments):
         schema_dict = {"data": schema.introspect()}
         if out == "-" or out == "-.json":
             self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
-        if out == "-.graphql":
+        elif out == "-.graphql":
             print(print_schema(schema))
         else:
             # Determine format
