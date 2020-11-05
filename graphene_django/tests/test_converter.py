@@ -164,8 +164,7 @@ def test_field_with_choices_convert_enum():
         class Meta:
             app_label = "test"
 
-    graphene_type = convert_django_field_with_choices(field)
-    assert isinstance(graphene_type, graphene.Enum)
+    graphene_type = convert_django_field_with_choices(field).type.of_type
     assert graphene_type._meta.name == "TranslatedModelLanguage"
     assert graphene_type._meta.enum.__members__["ES"].value == "es"
     assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
