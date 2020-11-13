@@ -44,7 +44,7 @@ class DjangoListField(Field):
         return self._underlying_type._meta.model
 
     def get_default_queryset(self):
-        return self.model._default_manager.get_queryset()
+        return self.model._default_manager  # .get_queryset()
 
     @staticmethod
     def list_resolver(
@@ -52,7 +52,7 @@ class DjangoListField(Field):
     ):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
-            queryset = default_queryset
+            queryset = maybe_queryset(default_queryset)
 
         if isinstance(queryset, QuerySet):
             # Pass queryset to the DjangoObjectType get_queryset method
