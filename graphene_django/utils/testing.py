@@ -111,7 +111,7 @@ class GraphQLTestCase(TestCase):
         """
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
-        self.assertNotIn("errors", list(content.keys()), msg)
+        self.assertNotIn("errors", list(content.keys()), msg or content)
 
     def assertResponseHasErrors(self, resp, msg=None):
         """
@@ -119,4 +119,4 @@ class GraphQLTestCase(TestCase):
         :resp HttpResponse: Response
         """
         content = json.loads(resp.content)
-        self.assertIn("errors", list(content.keys()), msg)
+        self.assertIn("errors", list(content.keys()), msg or content)
