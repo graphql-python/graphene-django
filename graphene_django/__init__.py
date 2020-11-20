@@ -1,6 +1,11 @@
+from .fields import DjangoConnectionField, DjangoListField
 from .types import DjangoObjectType
-from .fields import DjangoConnectionField
 
-__version__ = "2.8.2"
+__version__ = "2.13.0"
 
-__all__ = ["__version__", "DjangoObjectType", "DjangoConnectionField"]
+__all__ = [
+    "__version__",
+    "DjangoObjectType",
+    "DjangoListField",
+    "DjangoConnectionField",
+]

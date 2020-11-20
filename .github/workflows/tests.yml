@@ -1,0 +1,31 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 4
+      matrix:
+        django: ["1.11", "2.2", "3.0", "3.1"]
+        python-version: ["3.6", "3.7", "3.8"]
+        include:
+          - django: "1.11"
+            python-version: "2.7"
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install tox tox-gh-actions
+    - name: Test with tox
+      run: tox
+      env:
+        DJANGO: ${{ matrix.django }}
+        TOXENV: ${{ matrix.toxenv }}

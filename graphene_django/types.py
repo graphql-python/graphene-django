@@ -35,9 +35,15 @@ def construct_fields(
 
     fields = OrderedDict()
     for name, field in _model_fields:
-        is_not_in_only = only_fields and name not in only_fields
+        is_not_in_only = (
+            only_fields is not None
+            and only_fields != ALL_FIELDS
+            and name not in only_fields
+        )
         # is_already_created = name in options.fields
-        is_excluded = name in exclude_fields  # or is_already_created
+        is_excluded = (
+            exclude_fields is not None and name in exclude_fields
+        )  # or is_already_created
         # https://docs.djangoproject.com/en/1.10/ref/models/fields/#django.db.models.ForeignKey.related_query_name
         is_no_backref = str(name).endswith("+")
         if is_not_in_only or is_excluded or is_no_backref:
@@ -65,6 +71,7 @@ def construct_fields(
 def validate_fields(type_, model, fields, only_fields, exclude_fields):
     # Validate the given fields against the model's fields and custom fields
     all_field_names = set(fields.keys())
+    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
     for name in only_fields or ():
         if name in all_field_names:
             continue
@@ -142,10 +149,10 @@ class DjangoObjectType(ObjectType):
         model=None,
         registry=None,
         skip_registry=False,
-        only_fields=(),  # deprecated in favour of `fields`
-        fields=(),
-        exclude_fields=(),  # deprecated in favour of `exclude`
-        exclude=(),
+        only_fields=None,  # deprecated in favour of `fields`
+        fields=None,
+        exclude_fields=None,  # deprecated in favour of `exclude`
+        exclude=None,
         filter_fields=None,
         filterset_class=None,
         connection=None,
@@ -200,9 +207,6 @@ class DjangoObjectType(ObjectType):
                 "Got %s." % type(fields).__name__
             )
 
-        if fields == ALL_FIELDS:
-            fields = None
-
         # Alias exclude_fields -> exclude
         if exclude_fields and exclude:
             raise Exception("Can't set both exclude_fields and exclude")
@@ -235,7 +239,7 @@ class DjangoObjectType(ObjectType):
                 connection_class = Connection
 
             connection = connection_class.create_type(
-                "{}Connection".format(cls.__name__), node=cls
+                "{}Connection".format(options.get("name") or cls.__name__), node=cls
             )
 
         if connection is not None:
@@ -268,12 +272,9 @@ class DjangoObjectType(ObjectType):
 
     @classmethod
     def is_type_of(cls, root, info):
-        if isinstance(root, SimpleLazyObject):
-            root._setup()
-            root = root._wrapped
         if isinstance(root, cls):
             return True
-        if not is_valid_django_model(type(root)):
+        if not is_valid_django_model(root.__class__):
             raise Exception(('Received incompatible instance "{}".').format(root))
 
         if cls._meta.model._meta.proxy:

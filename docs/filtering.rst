@@ -1,7 +1,7 @@
 Filtering
 =========
 
-Graphene integrates with
+Graphene-Django integrates with
 `django-filter <https://django-filter.readthedocs.io/en/master/>`__ (2.x for
 Python 3 or 1.x for Python 2) to provide filtering of results. See the `usage
 documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
@@ -14,8 +14,17 @@ You will need to install it manually, which can be done as follows:
 
 .. code:: bash
 
-    # You'll need to django-filter
+    # You'll need to install django-filter
     pip install django-filter>=2
+    
+After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
+
+.. code:: python
+
+    INSTALLED_APPS = [
+        # ...
+        "django_filters",
+    ]
 
 Note: The techniques below are demoed in the `cookbook example
 app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
@@ -192,7 +201,7 @@ Extend the tuple of fields if you want to order by more than one field.
 
         order_by = OrderingFilter(
             fields=(
-                ('created_at', 'created_at'),
+                ('name', 'created_at'),
             )
         )
 

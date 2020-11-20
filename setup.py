@@ -26,10 +26,10 @@ tests_require = [
 
 
 dev_requires = [
-    "black==19.3b0",
-    "flake8==3.7.7",
-    "flake8-black==0.1.0",
-    "flake8-bugbear==19.3.0",
+    "black==19.10b0",
+    "flake8==3.7.9",
+    "flake8-black==0.1.1",
+    "flake8-bugbear==20.1.4",
 ] + tests_require
 
 setup(
@@ -48,13 +48,17 @@ setup(
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.4",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: PyPy",
+        "Framework :: Django",
+        "Framework :: Django :: 1.11",
+        "Framework :: Django :: 2.2",
+        "Framework :: Django :: 3.0",
     ],
     keywords="api graphql protocol rest relay graphene",
-    packages=find_packages(exclude=["tests"]),
+    packages=find_packages(exclude=["tests", "examples", "examples.*"]),
     install_requires=[
         "six>=1.10.0",
         "graphene>=2.1.7,<3",
@@ -62,6 +66,7 @@ setup(
         "Django>=1.11",
         "singledispatch>=3.4.0.3",
         "promise>=2.1",
+        "unidecode>=1.1.1,<2",
     ],
     setup_requires=["pytest-runner"],
     tests_require=tests_require,

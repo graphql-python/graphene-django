@@ -36,7 +36,8 @@ Simple example
         # The class attributes define the response of the mutation
         question = graphene.Field(QuestionType)
 
-        def mutate(self, info, text, id):
+        @classmethod
+        def mutate(cls, root, info, text, id):
             question = Question.objects.get(pk=id)
             question.text = text
             question.save()

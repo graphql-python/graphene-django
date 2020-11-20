@@ -35,9 +35,6 @@ else:
         )
     )
 
-pytestmark.append(pytest.mark.django_db)
-
-
 if DJANGO_FILTER_INSTALLED:
 
     class ArticleNode(DjangoObjectType):
@@ -62,7 +59,7 @@ def get_args(field):
 
 
 def assert_arguments(field, *arguments):
-    ignore = ("after", "before", "first", "last", "order_by")
+    ignore = ("offset", "after", "before", "first", "last", "order_by")
     args = get_args(field)
     actual = [name for name in args if name not in ignore and not name.startswith("_")]
     assert set(arguments) == set(
@@ -401,6 +398,114 @@ def test_global_id_field_relation():
     id_filter = filterset_class.base_filters["reporter"]
     assert isinstance(id_filter, GlobalIDFilter)
     assert id_filter.field_class == GlobalIDFormField
+
+
+def test_global_id_field_relation_with_filter():
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ["first_name", "articles"]
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filter_fields = ["headline", "reporter"]
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    r1 = Reporter.objects.create(first_name="r1", last_name="r1", email="r1@test.com")
+    r2 = Reporter.objects.create(first_name="r2", last_name="r2", email="r2@test.com")
+    Article.objects.create(
+        headline="a1",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r1,
+        editor=r1,
+    )
+    Article.objects.create(
+        headline="a2",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r2,
+        editor=r2,
+    )
+
+    # Query articles created by the reporter `r1`
+    query = """
+    query {
+        allArticles (reporter: "UmVwb3J0ZXJGaWx0ZXJOb2RlOjE=") {
+            edges {
+                node {
+                    id
+                }
+            }
+        }
+    }
+    """
+    schema = Schema(query=Query)
+    result = schema.execute(query)
+    assert not result.errors
+    # We should only get back a single article
+    assert len(result.data["allArticles"]["edges"]) == 1
+
+
+def test_global_id_field_relation_with_filter_not_valid_id():
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            filter_fields = ["first_name", "articles"]
+
+    class ArticleFilterNode(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            filter_fields = ["headline", "reporter"]
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(ReporterFilterNode)
+        all_articles = DjangoFilterConnectionField(ArticleFilterNode)
+        reporter = Field(ReporterFilterNode)
+        article = Field(ArticleFilterNode)
+
+    r1 = Reporter.objects.create(first_name="r1", last_name="r1", email="r1@test.com")
+    r2 = Reporter.objects.create(first_name="r2", last_name="r2", email="r2@test.com")
+    Article.objects.create(
+        headline="a1",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r1,
+        editor=r1,
+    )
+    Article.objects.create(
+        headline="a2",
+        pub_date=datetime.now(),
+        pub_date_time=datetime.now(),
+        reporter=r2,
+        editor=r2,
+    )
+
+    # Filter by the global ID that does not exist
+    query = """
+    query {
+        allArticles (reporter: "fake_global_id") {
+            edges {
+                node {
+                    id
+                }
+            }
+        }
+    }
+    """
+    schema = Schema(query=Query)
+    result = schema.execute(query)
+    assert "Invalid ID specified." in result.errors[0].message
 
 
 def test_global_id_multiple_field_implicit():
@@ -840,7 +945,7 @@ def test_integer_field_filter_type():
         }
 
         type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
         }
     """
     )
@@ -892,7 +997,7 @@ def test_other_filter_types():
         }
 
         type Query {
-          pets(before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
     """
     )
