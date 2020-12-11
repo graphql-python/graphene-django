@@ -19,14 +19,12 @@ from .registry import Registry, get_global_registry
 from .settings import graphene_settings
 from .utils import (
     DJANGO_FILTER_INSTALLED,
-    camelize,
     get_model_fields,
     is_valid_django_model,
 )
 
 if six.PY3:
     from typing import Type
-
 
 ALL_FIELDS = "__all__"
 
@@ -133,15 +131,27 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                 )
 
 
-def get_auth_resolver(name, permissions, resolver=None):
+def get_auth_resolver(
+    name, permissions, resolver=None, raise_exception=False, permission_classes=None
+):
     """
     Get middleware resolver to handle field permissions
     :param name: Field name
     :param permissions: List of permissions
     :param resolver: Field resolver
+    :param raise_exception: If True a PermissionDenied is raised
+    :param permission_classes: Permission for user
     :return: Middleware resolver to check permissions
     """
-    return partial(auth_resolver, resolver, permissions, name, None, False)
+    return partial(
+        auth_resolver,
+        resolver,
+        permissions,
+        name,
+        None,
+        raise_exception,
+        permission_classes=permission_classes,
+    )
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
@@ -173,6 +183,7 @@ class DjangoObjectType(ObjectType):
         convert_choices_to_enum=True,
         field_to_permission=None,
         permission_to_field=None,
+        permission_to_all_fields=None,
         _meta=None,
         **options
     ):
@@ -273,21 +284,26 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
-        field_permissions = cls.__get_field_permissions__(
-            field_to_permission, permission_to_field
-        )
-        if field_permissions:
-            cls.__set_as_nullable__(field_permissions, model, registry)
+        permission_classes = getattr(cls, "permission_classes", None)
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
+        )
+
+        field_permissions, fields_raise_exception = cls.__get_field_permissions__(
+            field_to_permission,
+            permission_to_field,
+            permission_to_all_fields,
+            permission_classes,
         )
 
         # Validate fields
         validate_fields(cls, model, _meta.fields, fields, exclude)
 
         if field_permissions:
-            cls.__set_permissions_resolvers__(field_permissions)
+            cls.__set_permissions_resolvers__(
+                field_permissions, fields_raise_exception, permission_classes
+            )
 
         cls.field_permissions = field_permissions
 
@@ -295,18 +311,44 @@ class DjangoObjectType(ObjectType):
             registry.register(cls)
 
     @classmethod
-    def __get_field_permissions__(cls, field_to_permission, permission_to_field):
+    def __get_field_permissions__(
+        cls,
+        field_to_permission,
+        permission_to_field,
+        permission_to_all_fields,
+        permission_classes,
+    ):
         """Combines permissions from meta"""
         permissions = field_to_permission if field_to_permission else {}
-        if permission_to_field:
-            perm_to_field = cls.__get_permission_to_fields__(permission_to_field)
-            for field, perms in perm_to_field.items():
-                if field in permissions:
-                    permissions[field] += perms
-                else:
-                    permissions[field] = perms
+        perm_to_field = cls.__get_permission_to_fields__(
+            permission_to_field if permission_to_field else {}
+        )
+        fields_raise_exception = {}
 
-        return permissions
+        for name, field in cls._meta.fields.items():
+            if name == "id":
+                continue
+
+            if permission_classes:
+                permissions[name] = ()
+
+            if name in perm_to_field:
+                if name in permissions:
+                    permissions[name] += perm_to_field[name]
+                else:
+                    permissions[name] = perm_to_field[name]
+
+            if permission_to_all_fields:
+                permissions[name] = tuple(
+                    set(permissions.get(name, ()) + permission_to_all_fields)
+                )
+
+            if name in permissions:
+                fields_raise_exception[name] = hasattr(field, "_type") and isinstance(
+                    field._type, NonNull
+                )
+
+        return permissions, fields_raise_exception
 
     @classmethod
     def __get_permission_to_fields__(cls, permission_to_field):
@@ -327,19 +369,41 @@ class DjangoObjectType(ObjectType):
         return permissions
 
     @classmethod
-    def __set_permissions_resolvers__(cls, permissions):
+    def __set_permissions_resolvers__(
+        cls, permissions, fields_raise_exception, permission_classes
+    ):
         """Set permission resolvers"""
         for field_name, field_permissions in permissions.items():
+            raise_exception = fields_raise_exception.get(field_name, False)
             attr = "resolve_{}".format(field_name)
             resolver = getattr(
                 cls._meta.fields[field_name], "resolver", None
             ) or getattr(cls, attr, None)
 
+            if not resolver:
+
+                for interface in cls._meta.interfaces:
+
+                    resolver = getattr(
+                        interface._meta.fields.get(field_name, None), "resolver", None
+                    ) or getattr(interface, attr, None)
+
+                    if resolver:
+                        break
+
             if not hasattr(field_permissions, "__iter__"):
                 field_permissions = tuple(field_permissions)
 
             setattr(
-                cls, attr, get_auth_resolver(field_name, field_permissions, resolver)
+                cls,
+                attr,
+                get_auth_resolver(
+                    field_name,
+                    field_permissions,
+                    resolver,
+                    raise_exception,
+                    permission_classes,
+                ),
             )
 
     @classmethod

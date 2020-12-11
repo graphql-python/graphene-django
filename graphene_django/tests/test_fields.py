@@ -5,7 +5,7 @@ import pytest
 from graphene import List, NonNull, ObjectType, Schema, String
 from mock import mock
 from unittest import TestCase
-from django.core.exceptions import PermissionDenied
+from graphene_django.utils.utils import PermissionDenied
 from graphene_django.fields import DjangoField, DataLoaderField
 from promise.dataloader import DataLoader
 from promise import Promise

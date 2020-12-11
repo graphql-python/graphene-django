@@ -3,11 +3,13 @@ from textwrap import dedent
 
 import pytest
 from django.db import models
+from django.test import TestCase
 from mock import patch
 
 from graphene import Interface, ObjectType, Schema, Connection, String, Field
 from graphene.relay import Node
 
+from graphene_django.utils.utils import PermissionDenied
 from .. import registry
 from ..settings import graphene_settings
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
@@ -581,7 +583,9 @@ def extra_field_resolver(root, info, **kwargs):
 class PermissionArticle(DjangoObjectType):
     """Basic Type to test"""
 
-    class Meta(object):
+    extra_field = Field(String, resolver=extra_field_resolver)
+
+    class Meta:
         """Meta Class"""
 
         field_to_permission = {
@@ -593,85 +597,81 @@ class PermissionArticle(DjangoObjectType):
         }
         model = ArticleModel
 
-    extra_field = Field(String, resolver=extra_field_resolver)
-
     def resolve_headline(self, info, **kwargs):
         return "headline"
 
 
-def test_django_permissions():
-    expected = {
-        "headline": ("content_type.permission1", "content_type.permission3"),
-        "pub_date": ("content_type.permission2",),
-        "reporter": ("content_type.permission3",),
-        "extra_field": ("content_type.permission3",),
-    }
-    assert PermissionArticle.field_permissions == expected
+class PermissionTypesTests(TestCase):
+    def test_django_permissions(self):
+        expected = {
+            "headline": ("content_type.permission1", "content_type.permission3"),
+            "pub_date": ("content_type.permission2",),
+            "reporter": ("content_type.permission3",),
+            "extra_field": ("content_type.permission3",),
+        }
 
+        self.assertEqual(PermissionArticle.field_permissions, expected)
 
-def test_permission_resolver():
-    MyType = object()
+    def test_permission_resolver(self):
+        MyType = object()
 
-    class Viewer(object):
-        def has_perm(self, perm):
-            return perm == "content_type.permission3"
+        class Viewer(object):
+            def has_perm(self, perm):
+                return perm == "content_type.permission3"
 
-    class Info(object):
-        class Context(object):
-            user = Viewer()
+        class Info(object):
+            class Context(object):
+                user = Viewer()
 
-        context = Context()
+            context = Context()
 
-    resolved = PermissionArticle.resolve_headline(MyType, Info())
-    assert resolved == "headline"
+        resolved = PermissionArticle.resolve_headline(MyType, Info())
+        self.assertEqual(resolved, "headline")
 
+    def test_resolver_without_permission(self):
+        MyType = object()
 
-def test_resolver_without_permission():
-    MyType = object()
+        class Viewer(object):
+            def has_perm(self, perm):
+                return False
 
-    class Viewer(object):
-        def has_perm(self, perm):
-            return False
+        class Info(object):
+            class Context(object):
+                user = Viewer()
 
-    class Info(object):
-        class Context(object):
-            user = Viewer()
+            context = Context()
 
-        context = Context()
+        with self.assertRaises(PermissionDenied):
+            PermissionArticle.resolve_headline(MyType, Info())
 
-    resolved = PermissionArticle.resolve_headline(MyType, Info())
-    assert resolved is None
+    def test_permission_resolver_to_field(self):
+        MyType = object()
 
+        class Viewer(object):
+            def has_perm(self, perm):
+                return perm == "content_type.permission3"
 
-def test_permission_resolver_to_field():
-    MyType = object()
+        class Info(object):
+            class Context(object):
+                user = Viewer()
 
-    class Viewer(object):
-        def has_perm(self, perm):
-            return perm == "content_type.permission3"
+            context = Context()
 
-    class Info(object):
-        class Context(object):
-            user = Viewer()
+        resolved = PermissionArticle.resolve_extra_field(MyType, Info())
+        self.assertEqual(resolved, "extra field")
 
-        context = Context()
+    def test_resolver_to_field_without_permission(self):
+        MyType = object()
 
-    resolved = PermissionArticle.resolve_extra_field(MyType, Info())
-    assert resolved == "extra field"
+        class Viewer(object):
+            def has_perm(self, perm):
+                return perm != "content_type.permission3"
 
+        class Info(object):
+            class Context(object):
+                user = Viewer()
 
-def test_resolver_to_field_without_permission():
-    MyType = object()
+            context = Context()
 
-    class Viewer(object):
-        def has_perm(self, perm):
-            return perm != "content_type.permission3"
-
-    class Info(object):
-        class Context(object):
-            user = Viewer()
-
-        context = Context()
-
-    resolved = PermissionArticle.resolve_extra_field(MyType, Info())
-    assert resolved is None
+        resolved = PermissionArticle.resolve_extra_field(MyType, Info())
+        self.assertIsNone(resolved)
