@@ -67,6 +67,9 @@ class Reporter(models.Model):
     def some_method(self):
         return 123
 
+    class Meta:
+        ordering = ("id",)
+
 
 class CNNReporterManager(models.Manager):
     def get_queryset(self):

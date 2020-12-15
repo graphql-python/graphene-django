@@ -727,6 +727,58 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
     assert result.data == expected
 
 
+def test_should_return_last_page_if_more_than_max_limit(graphene_settings):
+    graphene_settings.RELAY_CONNECTION_MAX_LIMIT = 4
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    assert Query.all_reporters.max_limit == 4
+
+    reporters = [Reporter(**kwargs) for kwargs in REPORTERS]
+    Reporter.objects.bulk_create(reporters)
+
+    r = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    r2 = Reporter.objects.create(
+        first_name="Jane", last_name="Doe", email="janedoe@example.com", a_choice=2
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(last: 2) {
+                edges {
+                    node {
+                        id
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"id": to_global_id("ReporterType", r.id)}},
+                {"node": {"id": to_global_id("ReporterType", r2.id)}},
+            ]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert len(result.data["allReporters"]["edges"]) == 2
+    assert result.data == expected
+
+
 def test_should_query_promise_connectionfields():
     from promise import Promise
 
