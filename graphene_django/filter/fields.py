@@ -21,6 +21,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._fields = fields
         self._provided_filterset_class = filterset_class
         self._filterset_class = None
+        self._filtering_args = None
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
         super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
@@ -50,7 +51,11 @@ class DjangoFilterConnectionField(DjangoConnectionField):
 
     @property
     def filtering_args(self):
-        return get_filtering_args_from_filterset(self.filterset_class, self.node_type)
+        if not self._filtering_args:
+            self._filtering_args = get_filtering_args_from_filterset(
+                self.filterset_class, self.node_type
+            )
+        return self._filtering_args
 
     @classmethod
     def resolve_queryset(
