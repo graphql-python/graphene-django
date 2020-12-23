@@ -1,5 +1,5 @@
 import re
-from unidecode import unidecode
+from text_unidecode import unidecode
 
 
 def to_const(string):
