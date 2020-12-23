@@ -75,6 +75,39 @@ class TestDjangoListField:
             "reporters": [{"firstName": "Tara"}, {"firstName": "Debra"}]
         }
 
+    def test_list_field_queryset_is_not_cached(self):
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name",)
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        result = schema.execute(query)
+        assert not result.errors
+        assert result.data == {"reporters": []}
+
+        ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {
+            "reporters": [{"firstName": "Tara"}, {"firstName": "Debra"}]
+        }
+
     def test_override_resolver(self):
         class Reporter(DjangoObjectType):
             class Meta:
