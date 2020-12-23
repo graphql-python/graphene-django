@@ -1,6 +1,8 @@
 import graphene
 from graphene import ObjectType, Schema
 
+from .mutations import PetFormMutation, PetMutation
+
 
 class QueryRoot(ObjectType):
 
@@ -19,6 +21,8 @@ class QueryRoot(ObjectType):
 
 
 class MutationRoot(ObjectType):
+    pet_form_mutation = PetFormMutation.Field()
+    pet_mutation = PetMutation.Field()
     write_test = graphene.Field(QueryRoot)
 
     def resolve_write_test(self, info):
