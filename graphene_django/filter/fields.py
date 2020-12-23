@@ -3,6 +3,7 @@ from functools import partial
 
 from django.core.exceptions import ValidationError
 from graphene.types.argument import to_arguments
+from graphene.utils.str_converters import to_snake_case
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
 
@@ -61,12 +62,21 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     def resolve_queryset(
         cls, connection, iterable, info, args, filtering_args, filterset_class
     ):
+        def filter_kwargs():
+            kwargs = {}
+            for k, v in args.items():
+                if k in filtering_args:
+                    if k == "order_by":
+                        v = to_snake_case(v)
+                    kwargs[k] = v
+            return kwargs
+
         qs = super(DjangoFilterConnectionField, cls).resolve_queryset(
             connection, iterable, info, args
         )
-        filter_kwargs = {k: v for k, v in args.items() if k in filtering_args}
+
         filterset = filterset_class(
-            data=filter_kwargs, queryset=qs, request=info.context
+            data=filter_kwargs(), queryset=qs, request=info.context
         )
         if filterset.form.is_valid():
             return filterset.qs
