@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+import datetime
 
 import six
 from django.db import connection, transaction
@@ -53,6 +54,11 @@ def instantiate_middleware(middlewares):
             yield middleware()
             continue
         yield middleware
+
+
+def stringify_datetime(value):
+    if isinstance(value, datetime.datetime):
+        return value.__str__()
 
 
 class GraphQLView(View):
@@ -240,9 +246,15 @@ class GraphQLView(View):
 
     def json_encode(self, request, d, pretty=False):
         if not (self.pretty or pretty) and not request.GET.get("pretty"):
-            return json.dumps(d, separators=(",", ":"))
+            return json.dumps(d, separators=(",", ":"), default=stringify_datetime)
 
-        return json.dumps(d, sort_keys=True, indent=2, separators=(",", ": "))
+        return json.dumps(
+            d,
+            sort_keys=True,
+            indent=2,
+            separators=(",", ": "),
+            default=stringify_datetime,
+        )
 
     def parse_body(self, request):
         content_type = self.get_content_type(request)
