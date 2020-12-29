@@ -193,7 +193,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         if not instance:
             return kwargs
 
-        for field in kwargs.get("instance")._meta.fields:
+        for field in instance._meta.fields:
             if field.name not in kwargs["data"] and field.name != "id":
                 kwargs["data"][field.name] = getattr(instance, field.name)
         return kwargs
