@@ -189,13 +189,13 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
     @classmethod
     def get_form_kwargs(cls, root, info, **input):
         kwargs = super().get_form_kwargs(root, info, **input)
-        instance = kwargs.get('instance')
+        instance = kwargs.get("instance")
         if not instance:
             return kwargs
 
-        for field in kwargs.get('instance')._meta.fields:
-            if field.name not in kwargs['data'] and field.name != 'id':
-                kwargs['data'][field.name] = getattr(instance, field.name)
+        for field in kwargs.get("instance")._meta.fields:
+            if field.name not in kwargs["data"] and field.name != "id":
+                kwargs["data"][field.name] = getattr(instance, field.name)
         return kwargs
 
 
