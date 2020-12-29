@@ -242,6 +242,10 @@ def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
 
 
+def test_should_float_convert_decimal():
+    assert_conversion(models.DecimalField, graphene.Decimal)
+
+
 def test_should_manytomany_convert_connectionorlist():
     registry = Registry()
     dynamic_field = convert_django_field(Reporter._meta.local_many_to_many[0], registry)
