@@ -37,7 +37,8 @@ Simple example
         # The class attributes define the response of the mutation
         question = graphene.Field(QuestionType)
 
-        def mutate(self, info, text, id):
+        @classmethod
+        def mutate(cls, root, info, text, id):
             question = Question.objects.get(pk=id)
             question.text = text
             question.save()
@@ -231,3 +232,121 @@ This argument is also sent back to the client with the mutation result
 (you do not have to do anything). For services that manage
 a pool of many GraphQL requests in bulk, the ``clientIDMutation``
 allows you to match up a specific mutation with the response.
+
+
+
+Django Database Transactions
+----------------------------
+
+Django gives you a few ways to control how database transactions are managed.
+
+Tying transactions to HTTP requests
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A common way to handle transactions in Django is to wrap each request in a transaction.
+Set ``ATOMIC_REQUESTS`` settings to ``True`` in the configuration of each database for
+which you want to enable this behavior.
+
+It works like this. Before calling ``GraphQLView`` Django starts a transaction. If the
+response is produced without problems, Django commits the transaction. If the view, a
+``DjangoFormMutation`` or a ``DjangoModelFormMutation`` produces an exception, Django
+rolls back the transaction.
+
+.. warning::
+
+    While the simplicity of this transaction model is appealing, it also makes it
+    inefficient when traffic increases. Opening a transaction for every request has some
+    overhead. The impact on performance depends on the query patterns of your application
+    and on how well your database handles locking.
+
+Check the next section for a better solution.
+
+Tying transactions to mutations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A mutation can contain multiple fields, just like a query. There's one important
+distinction between queries and mutations, other than the name:
+
+..
+
+    `While query fields are executed in parallel, mutation fields run in series, one
+    after the other.`
+
+This means that if we send two ``incrementCredits`` mutations in one request, the first
+is guaranteed to finish before the second begins, ensuring that we don't end up with a
+race condition with ourselves.
+
+On the other hand, if the first ``incrementCredits`` runs successfully but the second
+one does not, the operation cannot be retried as it is. That's why is a good idea to
+run all mutation fields in a transaction, to guarantee all occur or nothing occurs.
+
+To enable this behavior for all databases set the graphene ``ATOMIC_MUTATIONS`` settings
+to ``True`` in your settings file:
+
+.. code:: python
+
+    GRAPHENE = {
+        # ...
+        "ATOMIC_MUTATIONS": True,
+    }
+
+On the contrary, if you want to enable this behavior for a specific database, set
+``ATOMIC_MUTATIONS`` to ``True`` in your database settings:
+
+.. code:: python
+
+    DATABASES = {
+        "default": {
+            # ...
+            "ATOMIC_MUTATIONS": True,
+        },
+        # ...
+    }
+
+Now, given the following example mutation:
+
+.. code::
+
+    mutation IncreaseCreditsTwice {
+
+        increaseCredits1: increaseCredits(input: { amount: 10 }) {
+            balance
+            errors {
+                field
+                messages
+            }
+        }
+
+        increaseCredits2: increaseCredits(input: { amount: -1 }) {
+            balance
+            errors {
+                field
+                messages
+            }
+        }
+
+    }
+
+The server is going to return something like:
+
+.. code:: json
+
+    {
+        "data": {
+            "increaseCredits1": {
+                "balance": 10.0,
+                "errors": []
+            },
+            "increaseCredits2": {
+                "balance": null,
+                "errors": [
+                    {
+                        "field": "amount",
+                        "message": "Amount should be a positive number"
+                    }
+                ]
+            },
+        }
+    }
+
+But the balance will remain the same.

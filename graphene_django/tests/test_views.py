@@ -2,6 +2,14 @@ import json
 
 import pytest
 
+from mock import patch
+
+from django.db import connection
+
+from graphene_django.settings import graphene_settings
+
+from .models import Pet
+
 try:
     from urllib import urlencode
 except ImportError:
@@ -562,3 +570,265 @@ def test_passes_request_into_context_request(client):
 
     assert response.status_code == 200
     assert response_json(response) == {"data": {"request": "testing"}}
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": True}
+)
+def test_form_mutation_multiple_creation_invalid_atomic_request(client):
+    query = """
+    mutation PetMutations {
+        petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+            errors {
+                field
+                messages
+            }
+        }
+        petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petFormMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petFormMutation2"]["errors"] == []
+
+    assert Pet.objects.count() == 0
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": True, "ATOMIC_REQUESTS": False}
+)
+def test_form_mutation_multiple_creation_invalid_atomic_mutation_1(client):
+    query = """
+    mutation PetMutations {
+        petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+            errors {
+                field
+                messages
+            }
+        }
+        petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petFormMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petFormMutation2"]["errors"] == []
+
+    assert Pet.objects.count() == 0
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", True)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": False}
+)
+def test_form_mutation_multiple_creation_invalid_atomic_mutation_2(client):
+    query = """
+    mutation PetMutations {
+        petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+            errors {
+                field
+                messages
+            }
+        }
+        petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petFormMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petFormMutation2"]["errors"] == []
+
+    assert Pet.objects.count() == 0
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": False}
+)
+def test_form_mutation_multiple_creation_invalid_non_atomic(client):
+    query = """
+    mutation PetMutations {
+        petFormMutation1: petFormMutation(input: { name: "Mia", age: 99 }) {
+            errors {
+                field
+                messages
+            }
+        }
+        petFormMutation2: petFormMutation(input: { name: "Enzo", age: 0 }) {
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petFormMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petFormMutation2"]["errors"] == []
+
+    assert Pet.objects.count() == 1
+
+    pet = Pet.objects.get()
+    assert pet.name == "Enzo"
+    assert pet.age == 0
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": True}
+)
+def test_model_form_mutation_multiple_creation_invalid_atomic_request(client):
+    query = """
+    mutation PetMutations {
+        petMutation1: petMutation(input: { name: "Mia", age: 99 }) {
+            pet {
+                name
+                age
+            }
+            errors {
+                field
+                messages
+            }
+        }
+        petMutation2: petMutation(input: { name: "Enzo", age: 0 }) {
+            pet {
+                name
+                age
+            }
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petMutation1"]["pet"] is None
+    assert content["data"]["petMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petMutation2"]["pet"] == {"name": "Enzo", "age": 0}
+
+    assert Pet.objects.count() == 0
+
+
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": False}
+)
+def test_model_form_mutation_multiple_creation_invalid_non_atomic(client):
+    query = """
+    mutation PetMutations {
+        petMutation1: petMutation(input: { name: "Mia", age: 99 }) {
+            pet {
+                name
+                age
+            }
+            errors {
+                field
+                messages
+            }
+        }
+        petMutation2: petMutation(input: { name: "Enzo", age: 0 }) {
+            pet {
+                name
+                age
+            }
+            errors {
+                field
+                messages
+            }
+        }
+    }
+    """
+
+    response = client.post(url_string(query=query))
+    content = response_json(response)
+
+    assert "errors" not in content
+
+    assert content["data"]["petMutation1"]["pet"] is None
+    assert content["data"]["petMutation1"]["errors"] == [
+        {"field": "age", "messages": ["Too old"]}
+    ]
+
+    assert content["data"]["petMutation2"]["pet"] == {"name": "Enzo", "age": 0}
+
+    assert Pet.objects.count() == 1
+
+    pet = Pet.objects.get()
+    assert pet.name == "Enzo"
+    assert pet.age == 0
+
+
+@patch("graphene_django.utils.utils.transaction.set_rollback")
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": True}
+)
+def test_query_errors_atomic_request(set_rollback_mock, client):
+    client.get(url_string(query="force error"))
+    set_rollback_mock.assert_called_once_with(True)
+
+
+@patch("graphene_django.utils.utils.transaction.set_rollback")
+@patch("graphene_django.settings.graphene_settings.ATOMIC_MUTATIONS", False)
+@patch.dict(
+    connection.settings_dict, {"ATOMIC_MUTATIONS": False, "ATOMIC_REQUESTS": False}
+)
+def test_query_errors_non_atomic(set_rollback_mock, client):
+    client.get(url_string(query="force error"))
+    set_rollback_mock.assert_not_called()

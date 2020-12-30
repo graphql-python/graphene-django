@@ -73,7 +73,7 @@ To learn how to extend the schema object for your project, read the basic tutori
 CSRF exempt
 -----------
 
-If have enabled `CSRF protection <https://docs.djangoproject.com/en/3.0/ref/csrf/>`_ in your Django app
+If you have enabled `CSRF protection <https://docs.djangoproject.com/en/3.0/ref/csrf/>`_ in your Django app
 you will find that it prevents your API clients from POSTing to the ``graphql`` endpoint. You can either
 update your API client to pass the CSRF token with each request (the Django docs have a guide on how to do that: https://docs.djangoproject.com/en/3.0/ref/csrf/#ajax) or you can exempt your Graphql endpoint from CSRF protection by wrapping the ``GraphQLView`` with the ``csrf_exempt``
 decorator:

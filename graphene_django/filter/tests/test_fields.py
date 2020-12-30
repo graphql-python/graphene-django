@@ -62,7 +62,7 @@ def get_args(field):
 
 
 def assert_arguments(field, *arguments):
-    ignore = ("after", "before", "first", "last", "order_by")
+    ignore = ("offset", "after", "before", "first", "last", "order_by")
     args = get_args(field)
     actual = [name for name in args if name not in ignore and not name.startswith("_")]
     assert set(arguments) == set(
@@ -733,6 +733,73 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
+def test_order_by():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType, filterset_class=ReporterFilter
+        )
+
+    Reporter.objects.create(first_name="b")
+    Reporter.objects.create(first_name="a")
+
+    schema = Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-firstName") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {
+        "allReporters": {
+            "edges": [{"node": {"firstName": "b"}}, {"node": {"firstName": "a"}}]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-first_name") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-firtsnaMe") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    result = schema.execute(query)
+    assert result.errors
+
+
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -939,7 +1006,7 @@ def test_integer_field_filter_type():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
+          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
         }
 
         type PetTypeConnection {
@@ -956,33 +1023,33 @@ def test_integer_field_filter_type():
         type PageInfo {
           \"""When paginating forwards, are there more items?\"""
           hasNextPage: Boolean!
-    
+
           \"""When paginating backwards, are there more items?\"""
           hasPreviousPage: Boolean!
-    
+
           \"""When paginating backwards, the cursor to continue.\"""
           startCursor: String
-    
+
           \"""When paginating forwards, the cursor to continue.\"""
           endCursor: String
         }
-    
+
         \"""A Relay edge containing a `PetType` and its cursor.\"""
         type PetTypeEdge {
           \"""The item at the end of the edge\"""
           node: PetType
-    
+
           \"""A cursor for use in pagination\"""
           cursor: String!
         }
-    
+
         type PetType implements Node {
           age: Int!
-    
+
           \"""The ID of the object\"""
           id: ID!
         }
-    
+
         \"""An object with an ID\"""
         interface Node {
           \"""The ID of the object\"""
@@ -1008,13 +1075,13 @@ def test_other_filter_types():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
+          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
         }
 
         type PetTypeConnection {
           \"""Pagination data for this connection.\"""
           pageInfo: PageInfo!
-          
+
           \"""Contains the nodes in this connection.\"""
           edges: [PetTypeEdge]!
         }
@@ -1040,14 +1107,14 @@ def test_other_filter_types():
         type PetTypeEdge {
           \"""The item at the end of the edge\"""
           node: PetType
-        
+
           \"""A cursor for use in pagination\"""
           cursor: String!
         }
 
         type PetType implements Node {
           age: Int!
-        
+
           \"""The ID of the object\"""
           id: ID!
         }
@@ -1129,10 +1196,9 @@ def test_filter_filterset_based_on_mixin():
 
     schema = Schema(query=Query)
 
-    query = (
-        """
-        query NodeFilteringQuery {
-            allArticles(viewer_Email_In: "%s") {
+    query = """
+        query NodeFilteringQuery ($email: String!) {
+            allArticles(viewer_Email_In: $email) {
                 edges {
                     node {
                         headline
@@ -1144,8 +1210,6 @@ def test_filter_filterset_based_on_mixin():
             }
         }
     """
-        % reporter_1.email
-    )
 
     expected = {
         "allArticles": {
@@ -1160,7 +1224,7 @@ def test_filter_filterset_based_on_mixin():
         }
     }
 
-    result = schema.execute(query)
+    result = schema.execute(query, variable_values={"email": reporter_1.email},)
 
     assert not result.errors
     assert result.data == expected

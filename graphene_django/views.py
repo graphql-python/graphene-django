@@ -2,6 +2,7 @@ import inspect
 import json
 import re
 
+from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
@@ -15,6 +16,9 @@ from graphql.execution import ExecutionResult
 
 from graphene import Schema
 from graphql.execution.middleware import MiddlewareManager
+
+from graphene_django.constants import MUTATION_ERRORS_FLAG
+from graphene_django.utils.utils import set_rollback
 
 from .settings import graphene_settings
 
@@ -90,6 +94,7 @@ class GraphQLView(View):
         pretty=False,
         batch=False,
         subscription_path=None,
+        execution_context_class=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -107,6 +112,7 @@ class GraphQLView(View):
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
+        self.execution_context_class = execution_context_class
         if subscription_path is None:
             self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
@@ -190,17 +196,21 @@ class GraphQLView(View):
             request, data, query, variables, operation_name, show_graphiql
         )
 
+        if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+            set_rollback()
+
         status_code = 200
         if execution_result:
             response = {}
 
             if execution_result.errors:
+                set_rollback()
                 response["errors"] = [
                     self.format_error(e) for e in execution_result.errors
                 ]
 
             if execution_result.errors and any(
-                not e.path for e in execution_result.errors
+                not getattr(e, "path", None) for e in execution_result.errors
             ):
                 status_code = 400
             else:
@@ -297,14 +307,39 @@ class GraphQLView(View):
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
 
-        return self.schema.execute(
-            source=query,
-            root_value=self.get_root_value(request),
-            variable_values=variables,
-            operation_name=operation_name,
-            context_value=self.get_context(request),
-            middleware=self.get_middleware(request),
-        )
+        try:
+            extra_options = {}
+            if self.execution_context_class:
+                extra_options["execution_context_class"] = self.execution_context_class
+
+            options = {
+                "source": query,
+                "root_value": self.get_root_value(request),
+                "variable_values": variables,
+                "operation_name": operation_name,
+                "context_value": self.get_context(request),
+                "middleware": self.get_middleware(request),
+            }
+            options.update(extra_options)
+
+            operation_ast = get_operation_ast(document, operation_name)
+            if (
+                operation_ast
+                and operation_ast.operation == OperationType.MUTATION
+                and (
+                    graphene_settings.ATOMIC_MUTATIONS is True
+                    or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+                )
+            ):
+                with transaction.atomic():
+                    result = self.schema.execute(**options)
+                    if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+                        transaction.set_rollback(True)
+                return result
+
+            return self.schema.execute(**options)
+        except Exception as e:
+            return ExecutionResult(errors=[e])
 
     @classmethod
     def can_display_graphiql(cls, request, data):

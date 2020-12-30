@@ -21,7 +21,7 @@ class ReporterFilter(django_filters.FilterSet):
         model = Reporter
         fields = ["first_name", "last_name", "email", "pets"]
 
-    order_by = OrderingFilter(fields=("pub_date",))
+    order_by = OrderingFilter(fields=("first_name",))
 
 
 class PetFilter(django_filters.FilterSet):
