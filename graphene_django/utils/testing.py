@@ -1,6 +1,7 @@
 import json
+import warnings
 
-from django.test import TestCase, Client
+from django.test import Client, TestCase
 
 DEFAULT_GRAPHQL_URL = "/graphql/"
 
@@ -96,6 +97,15 @@ class GraphQLTestCase(TestCase):
             client=self.client,
             graphql_url=self.GRAPHQL_URL,
         )
+
+    @property
+    def _client(self):
+        warnings.warn(
+            "Using `_client` is deprecated in favour of `client`.",
+            PendingDeprecationWarning,
+            stacklevel=2,
+        )
+        return self.client
 
     def assertResponseNoErrors(self, resp, msg=None):
         """
