@@ -94,6 +94,7 @@ class GraphQLView(View):
         pretty=False,
         batch=False,
         subscription_path=None,
+        execution_context_class=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -111,6 +112,7 @@ class GraphQLView(View):
         self.pretty = self.pretty or pretty
         self.graphiql = self.graphiql or graphiql
         self.batch = self.batch or batch
+        self.execution_context_class = execution_context_class
         if subscription_path is None:
             self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
@@ -307,10 +309,8 @@ class GraphQLView(View):
 
         try:
             extra_options = {}
-            if getattr(self, "executor", None):
-                # We only include it optionally since
-                # executor is not a valid argument in all backends
-                extra_options["executor"] = self.executor
+            if self.execution_context_class:
+                extra_options["execution_context_class"] = self.execution_context_class
 
             options = {
                 "source": query,

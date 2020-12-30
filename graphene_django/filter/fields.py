@@ -66,7 +66,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             kwargs = {}
             for k, v in args.items():
                 if k in filtering_args:
-                    if k == "order_by":
+                    if k == "order_by" and v is not None:
                         v = to_snake_case(v)
                     kwargs[k] = v
             return kwargs

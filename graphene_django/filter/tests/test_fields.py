@@ -1224,7 +1224,7 @@ def test_filter_filterset_based_on_mixin():
         }
     }
 
-    result = schema.execute(query, variable_values={"email": reporter_1.email})
+    result = schema.execute(query, variable_values={"email": reporter_1.email},)
 
     assert not result.errors
     assert result.data == expected
