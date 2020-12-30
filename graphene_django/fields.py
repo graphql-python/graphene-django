@@ -3,11 +3,13 @@ from functools import partial
 from django.db.models.query import QuerySet
 from graphql_relay.connection.arrayconnection import (
     connection_from_array_slice,
+    cursor_to_offset,
     get_offset_with_default,
+    offset_to_cursor,
 )
 from promise import Promise
 
-from graphene import NonNull
+from graphene import Int, NonNull
 from graphene.relay import ConnectionField
 from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
@@ -41,16 +43,16 @@ class DjangoListField(Field):
     def model(self):
         return self._underlying_type._meta.model
 
-    def get_default_queryset(self):
-        return self.model._default_manager.get_queryset()
+    def get_manager(self):
+        return self.model._default_manager
 
     @staticmethod
     def list_resolver(
-        django_object_type, resolver, default_queryset, root, info, **args
+        django_object_type, resolver, default_manager, root, info, **args
     ):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
-            queryset = default_queryset
+            queryset = maybe_queryset(default_manager)
 
         if isinstance(queryset, QuerySet):
             # Pass queryset to the DjangoObjectType get_queryset method
@@ -64,10 +66,7 @@ class DjangoListField(Field):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
         return partial(
-            self.list_resolver,
-            django_object_type,
-            parent_resolver,
-            self.get_default_queryset(),
+            self.list_resolver, django_object_type, parent_resolver, self.get_manager(),
         )
 
 
@@ -81,6 +80,7 @@ class DjangoConnectionField(ConnectionField):
             "enforce_first_or_last",
             graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST,
         )
+        kwargs.setdefault("offset", Int())
         super(DjangoConnectionField, self).__init__(*args, **kwargs)
 
     @property
@@ -131,18 +131,24 @@ class DjangoConnectionField(ConnectionField):
 
     @classmethod
     def resolve_connection(cls, connection, args, iterable, max_limit=None):
+        # Remove the offset parameter and convert it to an after cursor.
+        offset = args.pop("offset", None)
+        after = args.get("after")
+        if offset:
+            if after:
+                offset += cursor_to_offset(after) + 1
+            # input offset starts at 1 while the graphene offset starts at 0
+            args["after"] = offset_to_cursor(offset - 1)
+
         iterable = maybe_queryset(iterable)
 
         if isinstance(iterable, QuerySet):
             list_length = iterable.count()
-            list_slice_length = (
-                min(max_limit, list_length) if max_limit is not None else list_length
-            )
         else:
             list_length = len(iterable)
-            list_slice_length = (
-                min(max_limit, list_length) if max_limit is not None else list_length
-            )
+        list_slice_length = (
+            min(max_limit, list_length) if max_limit is not None else list_length
+        )
 
         # If after is higher than list_length, connection_from_list_slice
         # would try to do a negative slicing which makes django throw an
@@ -150,7 +156,10 @@ class DjangoConnectionField(ConnectionField):
         after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
 
         if max_limit is not None and args.get("first", None) == None:
-            args["first"] = max_limit
+            if args.get("last", None) != None:
+                after = list_length - args["last"]
+            else:
+                args["first"] = max_limit
 
         connection = connection_from_array_slice(
             iterable[after:],
@@ -181,6 +190,8 @@ class DjangoConnectionField(ConnectionField):
     ):
         first = args.get("first")
         last = args.get("last")
+        offset = args.get("offset")
+        before = args.get("before")
 
         if enforce_first_or_last:
             assert first or last, (
@@ -199,6 +210,11 @@ class DjangoConnectionField(ConnectionField):
                     "Requesting {} records on the `{}` connection exceeds the `last` limit of {} records."
                 ).format(last, info.field_name, max_limit)
                 args["last"] = min(last, max_limit)
+
+        if offset is not None:
+            assert before is None, (
+                "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `{}` connection."
+            ).format(info.field_name)
 
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)

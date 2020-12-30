@@ -45,7 +45,7 @@ def graphql_query(
     if variables:
         body["variables"] = variables
     if input_data:
-        if variables in body:
+        if "variables" in body:
             body["variables"]["input"] = input_data
         else:
             body["variables"] = {"input": input_data}
@@ -105,20 +105,20 @@ class GraphQLTestCase(TestCase):
             graphql_url=self.GRAPHQL_URL,
         )
 
-    def assertResponseNoErrors(self, resp):
+    def assertResponseNoErrors(self, resp, msg=None):
         """
         Assert that the call went through correctly. 200 means the syntax is ok, if there are no `errors`,
         the call was fine.
         :resp HttpResponse: Response
         """
-        self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
-        self.assertNotIn("errors", list(content.keys()))
+        self.assertEqual(resp.status_code, 200, msg or content)
+        self.assertNotIn("errors", list(content.keys()), msg or content)
 
-    def assertResponseHasErrors(self, resp):
+    def assertResponseHasErrors(self, resp, msg=None):
         """
         Assert that the call was failing. Take care: Even with errors, GraphQL returns status 200!
         :resp HttpResponse: Response
         """
         content = json.loads(resp.content)
-        self.assertIn("errors", list(content.keys()))
+        self.assertIn("errors", list(content.keys()), msg or content)

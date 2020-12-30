@@ -76,6 +76,11 @@ def convert_form_field_to_id_list(field):
     return List(ID, required=field.required)
 
 
+@convert_form_field.register(forms.MultipleChoiceField)
+def convert_form_field_to_string_list(field):
+    return List(String, required=field.required)
+
+
 @convert_form_field.register(forms.DateField)
 def convert_form_field_to_date(field):
     return Date(description=get_form_field_description(field), required=field.required)

@@ -44,6 +44,7 @@ DEFAULTS = {
     # This sets headerEditorEnabled GraphiQL option, for details go to
     # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
+    "ATOMIC_MUTATIONS": False,
 }
 
 if settings.DEBUG:

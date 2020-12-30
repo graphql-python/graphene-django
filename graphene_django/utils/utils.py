@@ -1,6 +1,6 @@
 import inspect
 
-from django.db import models
+from django.db import connection, models, transaction
 from django.db.models.manager import Manager
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
@@ -76,3 +76,32 @@ def get_model_fields(model):
 
 def is_valid_django_model(model):
     return inspect.isclass(model) and issubclass(model, models.Model)
+
+
+def import_single_dispatch():
+    try:
+        from functools import singledispatch
+    except ImportError:
+        singledispatch = None
+
+    if not singledispatch:
+        try:
+            from singledispatch import singledispatch
+        except ImportError:
+            pass
+
+    if not singledispatch:
+        raise Exception(
+            "It seems your python version does not include "
+            "functools.singledispatch. Please install the 'singledispatch' "
+            "package. More information here: "
+            "https://pypi.python.org/pypi/singledispatch"
+        )
+
+    return singledispatch
+
+
+def set_rollback():
+    atomic_requests = connection.settings_dict.get("ATOMIC_REQUESTS", False)
+    if atomic_requests and connection.in_atomic_block:
+        transaction.set_rollback(True)

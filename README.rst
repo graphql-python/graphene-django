@@ -114,8 +114,8 @@ Contributing
 See `CONTRIBUTING.md <CONTRIBUTING.md>`__.
 
 .. |Graphene Logo| image:: http://graphene-python.org/favicon.png
-.. |Build Status| image:: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master
-   :target: https://travis-ci.org/graphql-python/graphene-django
+.. |Build Status| image:: https://github.com/graphql-python/graphene-django/workflows/Tests/badge.svg
+   :target: https://github.com/graphql-python/graphene-django/actions
 .. |PyPI version| image:: https://badge.fury.io/py/graphene-django.svg
    :target: https://badge.fury.io/py/graphene-django
 .. |Coverage Status| image:: https://coveralls.io/repos/graphql-python/graphene-django/badge.svg?branch=master&service=github
