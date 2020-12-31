@@ -3,7 +3,7 @@ import datetime
 from py.test import raises
 from rest_framework import serializers
 
-from graphene import Field, ResolveInfo
+from graphene import Field, ResolveInfo, NonNull, String
 from graphene.types.inputobjecttype import InputObjectType
 
 from ...types import DjangoObjectType
@@ -96,6 +96,26 @@ def test_exclude_fields():
     assert "errors" in MyMutation._meta.fields
     assert "cool_name" in MyMutation.Input._meta.fields
     assert "created" not in MyMutation.Input._meta.fields
+
+def test_model_serializer_required_fields():    
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer            
+
+    assert "cool_name" in MyMutation.Input._meta.fields          
+    assert MyMutation.Input._meta.fields['cool_name'].type == NonNull(String)
+
+'''
+The same test as previous, but with 'cool_name' in `optional_fields` 
+'''
+def test_model_serializer_optional_fields():    
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer
+            optional_fields = ('cool_name')      
+
+    assert "cool_name" in MyMutation.Input._meta.fields          
+    assert MyMutation.Input._meta.fields['cool_name'].type == String
 
 
 def test_write_only_field():
