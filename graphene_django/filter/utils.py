@@ -19,6 +19,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
     model = filterset_class._meta.model
     for name, filter_field in six.iteritems(filterset_class.base_filters):
         form_field = None
+        filter_type = filter_field.lookup_expr
 
         if name in filterset_class.declared_filters:
             # Get the filter field from the explicitly declared filter
@@ -27,7 +28,6 @@ def get_filtering_args_from_filterset(filterset_class, type):
         else:
             # Get the filter field with no explicit type declaration
             model_field = get_model_field(model, filter_field.field_name)
-            filter_type = filter_field.lookup_expr
             if filter_type != "isnull" and hasattr(model_field, "formfield"):
                 form_field = model_field.formfield(
                     required=filter_field.extra.get("required", False)
@@ -40,10 +40,11 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
             field = convert_form_field(form_field)
 
-            if filter_type in ["in", "range"]:
-                # Replace CSV filters (`in`, `range`) argument type to be a list of the same type as the field.
-                # See comments in `replace_csv_filters` method for more details.
-                field = List(field.get_type())
+        if filter_type in ["in", "range"]:
+            # Replace CSV filters (`in`, `range`) argument type to be a list of
+            # the same type as the field.  See comments in
+            # `replace_csv_filters` method for more details.
+            field = List(field.get_type())
 
         field_type = field.Argument()
         field_type.description = filter_field.label
@@ -79,10 +80,7 @@ def replace_csv_filters(filterset_class):
     """
     for name, filter_field in six.iteritems(filterset_class.base_filters):
         filter_type = filter_field.lookup_expr
-        if (
-            filter_type in ["in", "range"]
-            and name not in filterset_class.declared_filters
-        ):
+        if filter_type in ["in", "range"]:
             assert isinstance(filter_field, BaseCSVFilter)
             filterset_class.base_filters[name] = Filter(
                 field_name=filter_field.field_name,
