@@ -20,6 +20,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
+    "psycopg2-binary",
     "django-filter>=2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
