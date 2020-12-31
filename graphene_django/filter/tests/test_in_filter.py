@@ -1,9 +1,11 @@
 import pytest
 
+from django_filters import FilterSet
+from django_filters import rest_framework as filters
 from graphene import ObjectType, Schema
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
-from graphene_django.tests.models import Pet
+from graphene_django.tests.models import Pet, Person
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
@@ -28,8 +30,27 @@ class PetNode(DjangoObjectType):
         }
 
 
+class PersonFilterSet(FilterSet):
+    class Meta:
+        model = Person
+        fields = {}
+
+    names = filters.BaseInFilter(method="filter_names")
+
+    def filter_names(self, qs, name, value):
+        return qs.filter(name__in=value)
+
+
+class PersonNode(DjangoObjectType):
+    class Meta:
+        model = Person
+        interfaces = (Node,)
+        filterset_class = PersonFilterSet
+
+
 class Query(ObjectType):
     pets = DjangoFilterConnectionField(PetNode)
+    people = DjangoFilterConnectionField(PersonNode)
 
 
 def test_string_in_filter():
@@ -58,6 +79,33 @@ def test_string_in_filter():
     assert result.data["pets"]["edges"] == [
         {"node": {"name": "Brutus"}},
         {"node": {"name": "Jojo, the rabbit"}},
+    ]
+
+
+def test_string_in_filter_with_filterset_class():
+    """Test in filter on a string field with a custom filterset class."""
+    Person.objects.create(name="John")
+    Person.objects.create(name="Michael")
+    Person.objects.create(name="Angela")
+
+    schema = Schema(query=Query)
+
+    query = """
+    query {
+        people (names: ["John", "Michael"]) {
+            edges {
+                node {
+                    name
+                }
+            }
+        }
+    }
+    """
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["people"]["edges"] == [
+        {"node": {"name": "John"}},
+        {"node": {"name": "Michael"}},
     ]
 
 

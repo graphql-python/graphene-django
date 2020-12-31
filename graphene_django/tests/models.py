@@ -6,6 +6,10 @@ from django.utils.translation import gettext_lazy as _
 CHOICES = ((1, "this"), (2, _("that")))
 
 
+class Person(models.Model):
+    name = models.CharField(max_length=30)
+
+
 class Pet(models.Model):
     name = models.CharField(max_length=30)
     age = models.PositiveIntegerField()
