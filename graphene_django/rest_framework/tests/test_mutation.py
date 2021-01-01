@@ -111,7 +111,7 @@ def test_model_serializer_optional_fields():
     class MyMutation(SerializerMutation):
         class Meta:
             serializer_class = MyModelSerializer
-            optional_fields = "cool_name"
+            optional_fields = ("cool_name",)
 
     assert "cool_name" in MyMutation.Input._meta.fields
     assert MyMutation.Input._meta.fields["cool_name"].type == String
