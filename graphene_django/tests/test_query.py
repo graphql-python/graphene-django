@@ -11,7 +11,7 @@ from py.test import raises
 import graphene
 from graphene.relay import Node
 
-from ..compat import JSONField, MissingType
+from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
@@ -114,7 +114,7 @@ def test_should_query_well():
     assert result.data == expected
 
 
-@pytest.mark.skipif(JSONField is MissingType, reason="RangeField should exist")
+@pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
 def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
         IntegerRangeField,
