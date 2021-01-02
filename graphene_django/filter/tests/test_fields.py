@@ -671,7 +671,7 @@ def test_should_query_filter_node_limit():
     schema = Schema(query=Query)
     query = """
         query NodeFilteringQuery {
-            allReporters(limit: 1) {
+            allReporters(limit: "1") {
                 edges {
                     node {
                         id
