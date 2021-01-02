@@ -1,11 +1,22 @@
 from django import forms
 from django.core.exceptions import ImproperlyConfigured
 
-from graphene import ID, Boolean, Float, Int, List, String, UUID, Date, DateTime, Time
+from graphene import (
+    Boolean,
+    Date,
+    DateTime,
+    Decimal,
+    Float,
+    ID,
+    Int,
+    List,
+    String,
+    Time,
+    UUID,
+)
 
 from .forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from ..utils import import_single_dispatch
-
 
 singledispatch = import_single_dispatch()
 
@@ -52,6 +63,10 @@ def convert_form_field_to_nullboolean(field):
 
 
 @convert_form_field.register(forms.DecimalField)
+def convert_field_to_decimal(field):
+    return Decimal(description=field.help_text, required=field.required)
+
+
 @convert_form_field.register(forms.FloatField)
 def convert_form_field_to_float(field):
     return Float(description=field.help_text, required=field.required)
