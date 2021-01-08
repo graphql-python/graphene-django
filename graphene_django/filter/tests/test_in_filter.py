@@ -157,20 +157,19 @@ def test_int_in_filter():
     ]
 
 
-def test_int_range_filter():
+def test_in_filter_with_empty_list():
     """
-    Test in filter on an integer field.
+    Check that using a in filter with an empty list provided as input returns no objects.
     """
     Pet.objects.create(name="Brutus", age=12)
     Pet.objects.create(name="Mimi", age=8)
-    Pet.objects.create(name="Jojo, the rabbit", age=3)
     Pet.objects.create(name="Picotin", age=5)
 
     schema = Schema(query=Query)
 
     query = """
     query {
-        pets (age_Range: [4, 9]) {
+        pets (name_In: []) {
             edges {
                 node {
                     name
@@ -181,7 +180,4 @@ def test_int_range_filter():
     """
     result = schema.execute(query)
     assert not result.errors
-    assert result.data["pets"]["edges"] == [
-        {"node": {"name": "Mimi"}},
-        {"node": {"name": "Picotin"}},
-    ]
+    assert len(result.data["pets"]["edges"]) == 0
