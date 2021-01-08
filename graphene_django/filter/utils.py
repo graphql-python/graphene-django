@@ -4,6 +4,7 @@ from django_filters.utils import get_model_field
 from django_filters.filters import Filter, BaseCSVFilter
 
 from .filterset import custom_filterset_factory, setup_filterset
+from .filters import InFilter, RangeFilter
 
 
 def get_filtering_args_from_filterset(filterset_class, type):
@@ -78,9 +79,20 @@ def replace_csv_filters(filterset_class):
     """
     for name, filter_field in list(filterset_class.base_filters.items()):
         filter_type = filter_field.lookup_expr
-        if filter_type in ["in", "range"]:
+        if filter_type == "in":
             assert isinstance(filter_field, BaseCSVFilter)
-            filterset_class.base_filters[name] = Filter(
+            filterset_class.base_filters[name] = InFilter(
+                field_name=filter_field.field_name,
+                lookup_expr=filter_field.lookup_expr,
+                label=filter_field.label,
+                method=filter_field.method,
+                exclude=filter_field.exclude,
+                **filter_field.extra
+            )
+
+        if filter_type == "range":
+            assert isinstance(filter_field, BaseCSVFilter)
+            filterset_class.base_filters[name] = RangeFilter(
                 field_name=filter_field.field_name,
                 lookup_expr=filter_field.lookup_expr,
                 label=filter_field.label,
