@@ -102,12 +102,25 @@ class GraphQLTestCase(TestCase):
 
     @property
     def _client(self):
+        pass
+
+    @_client.getter
+    def _client(self):
         warnings.warn(
             "Using `_client` is deprecated in favour of `client`.",
             PendingDeprecationWarning,
             stacklevel=2,
         )
         return self.client
+
+    @_client.setter
+    def _client(self, client):
+        warnings.warn(
+            "Using `_client` is deprecated in favour of `client`.",
+            PendingDeprecationWarning,
+            stacklevel=2,
+        )
+        self.client = client
 
     def assertResponseNoErrors(self, resp, msg=None):
         """
