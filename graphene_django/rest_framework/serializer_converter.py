@@ -115,8 +115,12 @@ def convert_serializer_field_to_bool(field):
     return graphene.Boolean
 
 
-@get_graphene_type_from_serializer_field.register(serializers.FloatField)
 @get_graphene_type_from_serializer_field.register(serializers.DecimalField)
+def convert_serializer_field_to_decimal(field):
+    return graphene.Decimal
+
+
+@get_graphene_type_from_serializer_field.register(serializers.FloatField)
 def convert_serializer_field_to_float(field):
     return graphene.Float
 

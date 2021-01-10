@@ -242,7 +242,7 @@ def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
 
 
-def test_should_float_convert_decimal():
+def test_should_decimal_convert_decimal():
     assert_conversion(models.DecimalField, graphene.Decimal)
 
 
