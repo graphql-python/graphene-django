@@ -3,6 +3,7 @@ import json
 import re
 
 import six
+from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
@@ -16,6 +17,9 @@ from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
 from graphql.type.schema import GraphQLSchema
 from graphql.execution.middleware import MiddlewareManager
+
+from graphene_django.constants import MUTATION_ERRORS_FLAG
+from graphene_django.utils.utils import set_rollback
 
 from .settings import graphene_settings
 
@@ -203,11 +207,15 @@ class GraphQLView(View):
             request, data, query, variables, operation_name, show_graphiql
         )
 
+        if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+            set_rollback()
+
         status_code = 200
         if execution_result:
             response = {}
 
             if execution_result.errors:
+                set_rollback()
                 response["errors"] = [
                     self.format_error(e) for e in execution_result.errors
                 ]
@@ -312,14 +320,27 @@ class GraphQLView(View):
                 # executor is not a valid argument in all backends
                 extra_options["executor"] = self.executor
 
-            return document.execute(
-                root_value=self.get_root_value(request),
-                variable_values=variables,
-                operation_name=operation_name,
-                context_value=self.get_context(request),
-                middleware=self.get_middleware(request),
-                **extra_options
-            )
+            options = {
+                "root_value": self.get_root_value(request),
+                "variable_values": variables,
+                "operation_name": operation_name,
+                "context_value": self.get_context(request),
+                "middleware": self.get_middleware(request),
+            }
+            options.update(extra_options)
+
+            operation_type = document.get_operation_type(operation_name)
+            if operation_type == "mutation" and (
+                graphene_settings.ATOMIC_MUTATIONS is True
+                or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+            ):
+                with transaction.atomic():
+                    result = document.execute(**options)
+                    if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
+                        transaction.set_rollback(True)
+                return result
+
+            return document.execute(**options)
         except Exception as e:
             return ExecutionResult(errors=[e], invalid=True)
 

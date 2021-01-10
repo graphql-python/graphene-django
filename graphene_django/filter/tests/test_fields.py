@@ -713,6 +713,73 @@ def test_should_query_filter_node_limit():
     assert result.data == expected
 
 
+def test_order_by():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+
+    class Query(ObjectType):
+        all_reporters = DjangoFilterConnectionField(
+            ReporterType, filterset_class=ReporterFilter
+        )
+
+    Reporter.objects.create(first_name="b")
+    Reporter.objects.create(first_name="a")
+
+    schema = Schema(query=Query)
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-firstName") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    expected = {
+        "allReporters": {
+            "edges": [{"node": {"firstName": "b"}}, {"node": {"firstName": "a"}}]
+        }
+    }
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-first_name") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+    query = """
+        query NodeFilteringQuery {
+            allReporters(orderBy: "-firtsnaMe") {
+                edges {
+                    node {
+                        firstName
+                    }
+                }
+            }
+        }
+    """
+    result = schema.execute(query)
+    assert result.errors
+
+
 def test_order_by_is_perserved():
     class ReporterType(DjangoObjectType):
         class Meta:

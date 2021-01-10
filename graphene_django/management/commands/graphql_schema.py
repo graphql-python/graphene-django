@@ -60,8 +60,10 @@ class Command(CommandArguments):
 
     def get_schema(self, schema, out, indent):
         schema_dict = {"data": schema.introspect()}
-        if out == "-":
+        if out == "-" or out == "-.json":
             self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
+        elif out == "-.graphql":
+            self.stdout.write(print_schema(schema))
         else:
             # Determine format
             _, file_extension = os.path.splitext(out)

@@ -3,13 +3,13 @@
 
 A [Django](https://www.djangoproject.com/) integration for [Graphene](http://graphene-python.org/).
 
-[![travis][travis-image]][travis-url]
+[![build][build-image]][build-url]
 [![pypi][pypi-image]][pypi-url]
 [![Anaconda-Server Badge][conda-image]][conda-url]
 [![coveralls][coveralls-image]][coveralls-url]
 
-[travis-image]: https://travis-ci.org/graphql-python/graphene-django.svg?branch=master&style=flat
-[travis-url]: https://travis-ci.org/graphql-python/graphene-django
+[build-image]: https://github.com/graphql-python/graphene-django/workflows/Tests/badge.svg
+[build-url]: https://github.com/graphql-python/graphene-django/actions
 [pypi-image]: https://img.shields.io/pypi/v/graphene-django.svg?style=flat
 [pypi-url]: https://pypi.org/project/graphene-django/
 [coveralls-image]: https://coveralls.io/repos/github/graphql-python/graphene-django/badge.svg?branch=master
@@ -108,6 +108,11 @@ To learn more check out the following [examples](examples/):
 
 * **Schema with Filtering**: [Cookbook example](examples/cookbook)
 * **Relay Schema**: [Starwars Relay example](examples/starwars)
+
+
+## GraphQL testing clients
+ - [Firecamp](https://firecamp.io/graphql)
+ - [GraphiQL](https://github.com/graphql/graphiql)
 
 
 ## Contributing

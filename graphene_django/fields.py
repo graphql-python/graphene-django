@@ -43,16 +43,16 @@ class DjangoListField(Field):
     def model(self):
         return self._underlying_type._meta.model
 
-    def get_default_queryset(self):
-        return self.model._default_manager.get_queryset()
+    def get_manager(self):
+        return self.model._default_manager
 
     @staticmethod
     def list_resolver(
-        django_object_type, resolver, default_queryset, root, info, **args
+        django_object_type, resolver, default_manager, root, info, **args
     ):
         queryset = maybe_queryset(resolver(root, info, **args))
         if queryset is None:
-            queryset = default_queryset
+            queryset = maybe_queryset(default_manager)
 
         if isinstance(queryset, QuerySet):
             # Pass queryset to the DjangoObjectType get_queryset method
@@ -66,10 +66,7 @@ class DjangoListField(Field):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
         return partial(
-            self.list_resolver,
-            django_object_type,
-            parent_resolver,
-            self.get_default_queryset(),
+            self.list_resolver, django_object_type, parent_resolver, self.get_manager(),
         )
 
 
@@ -147,14 +144,11 @@ class DjangoConnectionField(ConnectionField):
 
         if isinstance(iterable, QuerySet):
             list_length = iterable.count()
-            list_slice_length = (
-                min(max_limit, list_length) if max_limit is not None else list_length
-            )
         else:
             list_length = len(iterable)
-            list_slice_length = (
-                min(max_limit, list_length) if max_limit is not None else list_length
-            )
+        list_slice_length = (
+            min(max_limit, list_length) if max_limit is not None else list_length
+        )
 
         # If after is higher than list_length, connection_from_list_slice
         # would try to do a negative slicing which makes django throw an
@@ -162,7 +156,11 @@ class DjangoConnectionField(ConnectionField):
         after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
 
         if max_limit is not None and "first" not in args:
-            args["first"] = max_limit
+            if "last" in args:
+                args["first"] = list_length
+                list_slice_length = list_length
+            else:
+                args["first"] = max_limit
 
         connection = connection_from_list_slice(
             iterable[after:],
