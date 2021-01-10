@@ -5,7 +5,6 @@ from django.db import models
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
-from graphql import assert_valid_name
 
 from graphene import (
     ID,
