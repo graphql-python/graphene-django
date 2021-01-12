@@ -1,10 +1,11 @@
 from collections import OrderedDict
-from functools import singledispatch
+from functools import singledispatch, partial, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
+
 from graphene import (
     ID,
     UUID,
@@ -22,6 +23,7 @@ from graphene import (
     Time,
     Decimal,
 )
+from graphene.types.resolver import get_default_resolver
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
@@ -31,6 +33,24 @@ from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .settings import graphene_settings
 from .utils.str_converters import to_const
+
+
+class BlankValueField(Field):
+    def get_resolver(self, parent_resolver):
+        resolver = self.resolver or parent_resolver
+
+        # create custom resolver
+        def blank_field_wrapper(func):
+            @wraps(func)
+            def wrapped_resolver(*args, **kwargs):
+                return_value = func(*args, **kwargs)
+                if return_value == "":
+                    return None
+                return return_value
+
+            return wrapped_resolver
+
+        return blank_field_wrapper(resolver)
 
 
 def convert_choice_name(name):
@@ -71,7 +91,8 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
         def description(self):
             return str(named_choices_descriptions[self.name])
 
-    return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return_type = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return return_type
 
 
 def generate_enum_name(django_model_meta, field):
@@ -108,11 +129,12 @@ def convert_django_field_with_choices(
             return converted
     choices = getattr(field, "choices", None)
     if choices and convert_choices_to_enum:
-        enum = convert_choice_field_to_enum(field)
+        EnumCls = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)
-        converted = enum(
+
+        converted = EnumCls(
             description=get_django_field_description(field), required=required
-        )
+        ).mount_as(BlankValueField)
     else:
         converted = convert_django_field(field, registry)
     if registry is not None:
