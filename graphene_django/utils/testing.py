@@ -1,7 +1,7 @@
 import json
 import warnings
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, TransactionTestCase
 
 DEFAULT_GRAPHQL_URL = "/graphql/"
 
