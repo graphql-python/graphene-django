@@ -145,6 +145,6 @@ class GraphQLTestCase(GraphQLTestMixin, TestCase):
     pass
 
 
-class GraphQLTransactionTestCase(GraphQLTestMixin, TransactionTestCase)
+class GraphQLTransactionTestCase(GraphQLTestMixin, TransactionTestCase):
     pass
 
