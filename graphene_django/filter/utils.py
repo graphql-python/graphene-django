@@ -42,7 +42,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             field = convert_form_field(form_field)
 
         if filter_type in {"in", "range", "contains", "overlap"}:
-            # Replace CSV filters (`in`, `range`) argument type to be a list of
+            # Replace CSV filters (`in`, `range`, `contains`, `overlap`) argument type to be a list of
             # the same type as the field.  See comments in
             # `replace_csv_filters` method for more details.
             field = graphene.List(field.get_type())
@@ -71,7 +71,7 @@ def get_filterset_class(filterset_class, **meta):
 
 def replace_csv_filters(filterset_class):
     """
-    Replace the "in" and "range" filters (that are not explicitly declared) to not be BaseCSVFilter (BaseInFilter, BaseRangeFilter) objects anymore
+    Replace the "in", "contains", "overlap" and "range" filters (that are not explicitly declared) to not be BaseCSVFilter (BaseInFilter, BaseRangeFilter) objects anymore
     but regular Filter objects that simply use the input value as filter argument on the queryset.
 
     This is because those BaseCSVFilter are expecting a string as input with comma separated value but with GraphQl we
