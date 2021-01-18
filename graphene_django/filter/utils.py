@@ -1,6 +1,6 @@
 import six
 
-from graphene import List
+import graphene
 
 from django_filters.utils import get_model_field
 from django_filters.filters import Filter, BaseCSVFilter
@@ -41,11 +41,11 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
             field = convert_form_field(form_field)
 
-        if filter_type in ["in", "range"]:
+        if filter_type in {"in", "range", "contains", "overlap"}:
             # Replace CSV filters (`in`, `range`) argument type to be a list of
             # the same type as the field.  See comments in
             # `replace_csv_filters` method for more details.
-            field = List(field.get_type())
+            field = graphene.List(field.get_type())
 
         field_type = field.Argument()
         field_type.description = filter_field.label
@@ -81,8 +81,7 @@ def replace_csv_filters(filterset_class):
     """
     for name, filter_field in six.iteritems(filterset_class.base_filters):
         filter_type = filter_field.lookup_expr
-        if filter_type == "in":
-            assert isinstance(filter_field, BaseCSVFilter)
+        if filter_type in {"in", "contains", "overlap"}:
             filterset_class.base_filters[name] = InFilter(
                 field_name=filter_field.field_name,
                 lookup_expr=filter_field.lookup_expr,
@@ -92,8 +91,7 @@ def replace_csv_filters(filterset_class):
                 **filter_field.extra
             )
 
-        if filter_type == "range":
-            assert isinstance(filter_field, BaseCSVFilter)
+        elif filter_type == "range":
             filterset_class.base_filters[name] = RangeFilter(
                 field_name=filter_field.field_name,
                 lookup_expr=filter_field.lookup_expr,
