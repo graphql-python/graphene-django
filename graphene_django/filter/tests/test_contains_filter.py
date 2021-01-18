@@ -6,7 +6,7 @@ from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_multiple(Event, Query):
+def test_string_contains_multiple(Query):
     """
     Test contains filter on a string field.
     """
@@ -32,7 +32,7 @@ def test_string_contains_multiple(Event, Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_one(Event, Query):
+def test_string_contains_one(Query):
     """
     Test contains filter on a string field.
     """
@@ -59,7 +59,7 @@ def test_string_contains_one(Event, Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_none(Event, Query):
+def test_string_contains_none(Query):
     """
     Test contains filter on a string field.
     """
