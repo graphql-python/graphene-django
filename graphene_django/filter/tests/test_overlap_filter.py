@@ -6,7 +6,7 @@ from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_overlap_multiple(Event, Query):
+def test_string_overlap_multiple(Query):
     """
     Test overlap filter on a string field.
     """
@@ -34,7 +34,7 @@ def test_string_overlap_multiple(Event, Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_overlap_one(Event, Query):
+def test_string_overlap_one(Query):
     """
     Test overlap filter on a string field.
     """
@@ -61,7 +61,7 @@ def test_string_overlap_one(Event, Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_overlap_none(Event, Query):
+def test_string_overlap_none(Query):
     """
     Test overlap filter on a string field.
     """
