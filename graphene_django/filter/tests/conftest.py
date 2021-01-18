@@ -24,6 +24,9 @@ else:
     )
 
 
+STORE = {"events": []}
+
+
 @pytest.fixture
 def Event():
     class Event(models.Model):
@@ -78,27 +81,28 @@ def Query(Event, EventType):
                 Event(name="Ballet", tags=["concert", "dance"],),
             ]
 
+            STORE["events"] = events
+
             m_queryset = MagicMock(spec=QuerySet)
             m_queryset.model = Event
 
             def filter_events(**kwargs):
-                nonlocal events
                 if "tags__contains" in kwargs:
-                    events = list(
+                    STORE["events"] = list(
                         filter(
                             lambda e: set(kwargs["tags__contains"]).issubset(
                                 set(e.tags)
                             ),
-                            events,
+                            STORE["events"],
                         )
                     )
                 if "tags__overlap" in kwargs:
-                    events = list(
+                    STORE["events"] = list(
                         filter(
                             lambda e: not set(kwargs["tags__overlap"]).isdisjoint(
                                 set(e.tags)
                             ),
-                            events,
+                            STORE["events"],
                         )
                     )
 
@@ -107,18 +111,17 @@ def Query(Event, EventType):
                 return m_queryset
 
             def mock_queryset_none(*args, **kwargs):
-                nonlocal events
-                events = []
+                STORE["events"] = []
                 return m_queryset
 
             def mock_queryset_count(*args, **kwargs):
-                return len(events)
+                return len(STORE["events"])
 
             m_queryset.all.return_value = m_queryset
             m_queryset.filter.side_effect = mock_queryset_filter
             m_queryset.none.side_effect = mock_queryset_none
             m_queryset.count.side_effect = mock_queryset_count
-            m_queryset.__getitem__.side_effect = events.__getitem__
+            m_queryset.__getitem__.side_effect = STORE["events"].__getitem__
 
             return m_queryset
 
