@@ -1,4 +1,4 @@
-from graphene import List
+import graphene
 
 from django_filters.utils import get_model_field
 from django_filters.filters import Filter, BaseCSVFilter
@@ -39,11 +39,11 @@ def get_filtering_args_from_filterset(filterset_class, type):
 
             field = convert_form_field(form_field)
 
-        if filter_type in ["in", "range"]:
-            # Replace CSV filters (`in`, `range`) argument type to be a list of
+        if filter_type in {"in", "range", "contains", "overlap"}:
+            # Replace CSV filters (`in`, `range`, `contains`, `overlap`) argument type to be a list of
             # the same type as the field.  See comments in
             # `replace_csv_filters` method for more details.
-            field = List(field.get_type())
+            field = graphene.List(field.get_type())
 
         field_type = field.Argument()
         field_type.description = str(filter_field.label) if filter_field.label else None
@@ -69,7 +69,7 @@ def get_filterset_class(filterset_class, **meta):
 
 def replace_csv_filters(filterset_class):
     """
-    Replace the "in" and "range" filters (that are not explicitly declared) to not be BaseCSVFilter (BaseInFilter, BaseRangeFilter) objects anymore
+    Replace the "in", "contains", "overlap" and "range" filters (that are not explicitly declared) to not be BaseCSVFilter (BaseInFilter, BaseRangeFilter) objects anymore
     but regular Filter objects that simply use the input value as filter argument on the queryset.
 
     This is because those BaseCSVFilter are expecting a string as input with comma separated value but with GraphQl we
@@ -79,8 +79,7 @@ def replace_csv_filters(filterset_class):
     """
     for name, filter_field in list(filterset_class.base_filters.items()):
         filter_type = filter_field.lookup_expr
-        if filter_type == "in":
-            assert isinstance(filter_field, BaseCSVFilter)
+        if filter_type in {"in", "contains", "overlap"}:
             filterset_class.base_filters[name] = InFilter(
                 field_name=filter_field.field_name,
                 lookup_expr=filter_field.lookup_expr,
@@ -90,8 +89,7 @@ def replace_csv_filters(filterset_class):
                 **filter_field.extra
             )
 
-        if filter_type == "range":
-            assert isinstance(filter_field, BaseCSVFilter)
+        elif filter_type == "range":
             filterset_class.base_filters[name] = RangeFilter(
                 field_name=filter_field.field_name,
                 lookup_expr=filter_field.lookup_expr,
