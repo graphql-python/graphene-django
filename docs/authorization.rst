@@ -48,6 +48,28 @@ conversely you can use ``exclude`` meta attribute.
             exclude = ('published', 'owner')
             interfaces = (relay.Node, )
 
+
+Another pattern is to have a resolve method act as a gatekeeper, returning None
+if the client isn't allowed to see the data.
+
+.. code:: python
+
+    from graphene import relay
+    from graphene_django.types import DjangoObjectType
+    from .models import Post
+
+    class PostNode(DjangoObjectType):
+        class Meta:
+            model = Post
+            fields = ('title', 'content', 'owner')
+            interfaces = (relay.Node, )
+
+        def resolve_owner(self, info):
+            if info.context.user.is_anonymous():
+                return None
+            return self.owner
+
+
 Queryset Filtering On Lists
 ---------------------------
 
