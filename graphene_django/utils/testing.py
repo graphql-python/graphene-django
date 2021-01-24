@@ -3,7 +3,7 @@ import warnings
 
 from django.test import Client, TestCase
 
-DEFAULT_GRAPHQL_URL = "/graphql/"
+from graphene_django.settings import graphene_settings
 
 
 def graphql_query(
@@ -38,7 +38,7 @@ def graphql_query(
     if client is None:
         client = Client()
     if not graphql_url:
-        graphql_url = DEFAULT_GRAPHQL_URL
+        graphql_url = graphene_settings.TESTING_ENDPOINT
 
     body = {"query": query}
     if operation_name:
@@ -67,7 +67,7 @@ class GraphQLTestCase(TestCase):
     """
 
     # URL to graphql endpoint
-    GRAPHQL_URL = DEFAULT_GRAPHQL_URL
+    GRAPHQL_URL = graphene_settings.TESTING_ENDPOINT
 
     def query(
         self, query, operation_name=None, input_data=None, variables=None, headers=None
