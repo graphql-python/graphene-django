@@ -51,7 +51,3 @@ def test_graphql_test_case_imports_endpoint():
     """
 
     assert GraphQLTestCase.GRAPHQL_URL == graphene_settings.TESTING_ENDPOINT
-
-
-
-    
