@@ -33,20 +33,14 @@ class PetNode(DjangoObjectType):
 class PersonFilterSet(FilterSet):
     class Meta:
         model = Person
-        fields = {}
+        fields = {"name": ["in"]}
 
-    names = filters.BaseInFilter(method="filter_names")
-
-    def filter_names(self, qs, name, value):
-        return qs.filter(name__in=value)
-
-
+    
 class PersonNode(DjangoObjectType):
     class Meta:
         model = Person
         interfaces = (Node,)
         filterset_class = PersonFilterSet
-
 
 class Query(ObjectType):
     pets = DjangoFilterConnectionField(PetNode)
@@ -92,7 +86,7 @@ def test_string_in_filter_with_filterset_class():
 
     query = """
     query {
-        people (names: ["John", "Michael"]) {
+        people (name_In: ["John", "Michael"]) {
             edges {
                 node {
                     name

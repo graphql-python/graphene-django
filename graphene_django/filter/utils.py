@@ -79,23 +79,24 @@ def replace_csv_filters(filterset_class):
     """
     for name, filter_field in list(filterset_class.base_filters.items()):
         filter_type = filter_field.lookup_expr
-        if name not in filterset_class.declared_filters:
-            if filter_type in {"in", "contains", "overlap"}:
-                filterset_class.base_filters[name] = InFilter(
-                    field_name=filter_field.field_name,
-                    lookup_expr=filter_field.lookup_expr,
-                    label=filter_field.label,
-                    method=filter_field.method,
-                    exclude=filter_field.exclude,
-                    **filter_field.extra
-                )
+        if name in filterset_class.declared_filters:
+            continue
+        if filter_type in {"in", "contains", "overlap"}:
+            filterset_class.base_filters[name] = InFilter(
+                field_name=filter_field.field_name,
+                lookup_expr=filter_field.lookup_expr,
+                label=filter_field.label,
+                method=filter_field.method,
+                exclude=filter_field.exclude,
+                **filter_field.extra
+            )
 
-            elif filter_type == "range":
-                filterset_class.base_filters[name] = RangeFilter(
-                    field_name=filter_field.field_name,
-                    lookup_expr=filter_field.lookup_expr,
-                    label=filter_field.label,
-                    method=filter_field.method,
-                    exclude=filter_field.exclude,
-                    **filter_field.extra
-                )
+        elif filter_type == "range":
+            filterset_class.base_filters[name] = RangeFilter(
+                field_name=filter_field.field_name,
+                lookup_expr=filter_field.lookup_expr,
+                label=filter_field.label,
+                method=filter_field.method,
+                exclude=filter_field.exclude,
+                **filter_field.extra
+            )
