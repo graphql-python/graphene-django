@@ -35,12 +35,13 @@ class PersonFilterSet(FilterSet):
         model = Person
         fields = {"name": ["in"]}
 
-    
+
 class PersonNode(DjangoObjectType):
     class Meta:
         model = Person
         interfaces = (Node,)
         filterset_class = PersonFilterSet
+
 
 class Query(ObjectType):
     pets = DjangoFilterConnectionField(PetNode)
