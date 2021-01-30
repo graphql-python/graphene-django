@@ -50,7 +50,7 @@ conversely you can use ``exclude`` meta attribute.
 
 
 Another pattern is to have a resolve method act as a gatekeeper, returning None
-if the client isn't allowed to see the data.
+or raising an exception if the client isn't allowed to see the data.
 
 .. code:: python
 
@@ -65,7 +65,10 @@ if the client isn't allowed to see the data.
             interfaces = (relay.Node, )
 
         def resolve_owner(self, info):
-            if info.context.user.is_anonymous():
+            user = info.context.user
+            if user.is_anonymous:
+                raise PermissionDenied("Please login")
+            if not user.is_staff:
                 return None
             return self.owner
 
