@@ -45,7 +45,7 @@ DEFAULTS = {
     # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
     "ATOMIC_MUTATIONS": False,
-    "TESTING_ENDPOINT": "/graphql"
+    "TESTING_ENDPOINT": "/graphql",
 }
 
 if settings.DEBUG:

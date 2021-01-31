@@ -5,6 +5,7 @@ from ...tests.test_types import with_local_registry
 from ...settings import graphene_settings
 from django.test import Client
 
+
 @with_local_registry
 def test_graphql_test_case_deprecated_client_getter():
     """
