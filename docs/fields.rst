@@ -80,4 +80,6 @@ published and have a title:
 DjangoConnectionField
 ---------------------
 
-*TODO*
+``DjangoConnectionField`` acts similarly to ``DjangoListField`` but returns a
+paginated connection following the `relay spec <https://relay.dev/graphql/connections.htm>`__
+The field supports the following arguments: `first`, `last`, `offset`, `after` & `before`.
