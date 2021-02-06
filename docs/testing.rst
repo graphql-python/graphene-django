@@ -152,6 +152,3 @@ To use pytest define a simple fixture using the query helper below
 
             content = json.loads(response.content)
             assert 'errors' not in content
-
-
-Running Transaction
