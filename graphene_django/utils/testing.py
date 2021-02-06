@@ -147,4 +147,3 @@ class GraphQLTestCase(GraphQLTestMixin, TestCase):
 
 class GraphQLTransactionTestCase(GraphQLTestMixin, TransactionTestCase):
     pass
-
