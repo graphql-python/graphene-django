@@ -254,7 +254,24 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type, description=field.help_text, required=not field.null)
+        class CustomField(Field):
+            def get_resolver(self, parent_resolver):
+                """
+                Implements a custom resolver which go through the `get_node` method to insure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super(CustomField, self).get_resolver(parent_resolver)
+
+                def custom_resolver(root, info, **args):
+                    fk_obj = resolver(root, info, **args)
+                    if fk_obj is None:
+                        return None
+                    else:
+                        return _type.get_node(info, fk_obj.pk)
+
+                return custom_resolver
+
+        return CustomField(_type, description=field.help_text, required=not field.null)
 
     return Dynamic(dynamic_type)
 

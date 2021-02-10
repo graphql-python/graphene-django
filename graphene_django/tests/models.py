@@ -13,6 +13,9 @@ class Person(models.Model):
 class Pet(models.Model):
     name = models.CharField(max_length=30)
     age = models.PositiveIntegerField()
+    owner = models.ForeignKey(
+        "Person", null=True, blank=True, on_delete=models.CASCADE, related_name="pets"
+    )
 
 
 class FilmDetails(models.Model):
@@ -91,8 +94,8 @@ class CNNReporter(Reporter):
 
 class Article(models.Model):
     headline = models.CharField(max_length=100)
-    pub_date = models.DateField()
-    pub_date_time = models.DateTimeField()
+    pub_date = models.DateField(auto_now_add=True)
+    pub_date_time = models.DateTimeField(auto_now_add=True)
     reporter = models.ForeignKey(
         Reporter, on_delete=models.CASCADE, related_name="articles"
     )
