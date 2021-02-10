@@ -101,14 +101,14 @@ def test_range_filter_with_invalid_input():
     # Empty list
     result = schema.execute(query, variables={"rangeValue": []})
     assert len(result.errors) == 1
-    assert result.errors[0].message == f"['{expected_error}']"
+    assert result.errors[0].message == expected_error
 
     # Only one item in the list
     result = schema.execute(query, variables={"rangeValue": [1]})
     assert len(result.errors) == 1
-    assert result.errors[0].message == f"['{expected_error}']"
+    assert result.errors[0].message == expected_error
 
     # More than 2 items in the list
     result = schema.execute(query, variables={"rangeValue": [1, 2, 3]})
     assert len(result.errors) == 1
-    assert result.errors[0].message == f"['{expected_error}']"
+    assert result.errors[0].message == expected_error
