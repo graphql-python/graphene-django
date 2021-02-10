@@ -1735,6 +1735,7 @@ def test_should_query_nullable_foreign_key():
             }
         }
     """
+
     result = schema.execute(query_pet, variables={"name": "Stray dog"})
     assert not result.errors
     assert result.data["pet"] == {
