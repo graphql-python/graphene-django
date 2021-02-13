@@ -9,6 +9,7 @@ import graphene
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
+from graphene_django.filter import ArrayFilter, ListFilter
 
 from ...compat import ArrayField
 
@@ -32,27 +33,37 @@ def Event():
     class Event(models.Model):
         name = models.CharField(max_length=50)
         tags = ArrayField(models.CharField(max_length=50))
+        tag_ids = ArrayField(models.IntegerField())
+        random_field = ArrayField(models.BooleanField())
 
     return Event
 
 
 @pytest.fixture
 def EventFilterSet(Event):
-
-    from django.contrib.postgres.forms import SimpleArrayField
-
-    class ArrayFilter(filters.Filter):
-        base_field_class = SimpleArrayField
-
     class EventFilterSet(FilterSet):
         class Meta:
             model = Event
             fields = {
-                "name": ["exact"],
+                "name": ["exact", "contains"],
             }
 
+        # Those are actually usable with our Query fixture bellow
         tags__contains = ArrayFilter(field_name="tags", lookup_expr="contains")
         tags__overlap = ArrayFilter(field_name="tags", lookup_expr="overlap")
+        tags = ArrayFilter(field_name="tags", lookup_expr="exact")
+
+        # Those are actually not usable and only to check type declarations
+        tags_ids__contains = ArrayFilter(field_name="tag_ids", lookup_expr="contains")
+        tags_ids__overlap = ArrayFilter(field_name="tag_ids", lookup_expr="overlap")
+        tags_ids = ArrayFilter(field_name="tag_ids", lookup_expr="exact")
+        random_field__contains = ArrayFilter(
+            field_name="random_field", lookup_expr="contains"
+        )
+        random_field__overlap = ArrayFilter(
+            field_name="random_field", lookup_expr="overlap"
+        )
+        random_field = ArrayFilter(field_name="random_field", lookup_expr="exact")
 
     return EventFilterSet
 
@@ -70,6 +81,11 @@ def EventType(Event, EventFilterSet):
 
 @pytest.fixture
 def Query(Event, EventType):
+    """
+    Note that we have to use a custom resolver to replicate the arrayfield filter behavior as
+    we are running unit tests in sqlite which does not have ArrayFields.
+    """
+
     class Query(graphene.ObjectType):
         events = DjangoFilterConnectionField(EventType)
 
@@ -79,6 +95,7 @@ def Query(Event, EventType):
                 Event(name="Live Show", tags=["concert", "music", "rock"],),
                 Event(name="Musical", tags=["movie", "music"],),
                 Event(name="Ballet", tags=["concert", "dance"],),
+                Event(name="Speech", tags=[],),
             ]
 
             STORE["events"] = events
@@ -105,6 +122,13 @@ def Query(Event, EventType):
                             STORE["events"],
                         )
                     )
+                if "tags__exact" in kwargs:
+                    STORE["events"] = list(
+                        filter(
+                            lambda e: set(kwargs["tags__exact"]) == set(e.tags),
+                            STORE["events"],
+                        )
+                    )
 
             def mock_queryset_filter(*args, **kwargs):
                 filter_events(**kwargs)
@@ -121,7 +145,9 @@ def Query(Event, EventType):
             m_queryset.filter.side_effect = mock_queryset_filter
             m_queryset.none.side_effect = mock_queryset_none
             m_queryset.count.side_effect = mock_queryset_count
-            m_queryset.__getitem__.side_effect = STORE["events"].__getitem__
+            m_queryset.__getitem__.side_effect = lambda index: STORE[
+                "events"
+            ].__getitem__(index)
 
             return m_queryset
 

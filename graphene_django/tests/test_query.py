@@ -412,6 +412,7 @@ def test_should_query_node_filtering():
             model = Article
             interfaces = (Node,)
             filter_fields = ("lang",)
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -534,6 +535,7 @@ def test_should_query_node_multiple_filtering():
             model = Article
             interfaces = (Node,)
             filter_fields = ("lang", "headline")
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
