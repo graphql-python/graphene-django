@@ -25,11 +25,13 @@ def schema():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class ArticleType(DjangoObjectType):
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = {
                 "lang": ["exact", "in"],
                 "reporter__a_choice": ["exact", "in"],
@@ -122,23 +124,37 @@ def test_filter_enum_field_schema_type(schema):
     schema_str = str(schema)
 
     assert (
-        """type ArticleType implements Node {
+        '''type ArticleType implements Node {
+  """The ID of the object"""
   id: ID!
   headline: String!
   pubDate: Date!
   pubDateTime: DateTime!
   reporter: ReporterType!
   editor: ReporterType!
-  lang: ArticleLang!
-  importance: ArticleImportance
-}"""
+
+  """Language"""
+  lang: TestsArticleLangChoices!
+  importance: TestsArticleImportanceChoices
+}'''
         in schema_str
     )
 
-    assert (
-        """type Query {
-  allReporters(offset: Int, before: String, after: String, first: Int, last: Int): ReporterTypeConnection
-  allArticles(offset: Int, before: String, after: String, first: Int, last: Int, lang: ArticleLang, lang_In: [ArticleLang], reporter_AChoice: ReporterAChoice, reporter_AChoice_In: [ReporterAChoice]): ArticleTypeConnection
-}"""
-        in schema_str
+    filters = {
+        "offset": "Int",
+        "before": "String",
+        "after": "String",
+        "first": "Int",
+        "last": "Int",
+        "lang": "TestsArticleLangChoices",
+        "lang_In": "[TestsArticleLangChoices]",
+        "reporter_AChoice": "TestsReporterAChoiceChoices",
+        "reporter_AChoice_In": "[TestsReporterAChoiceChoices]",
+    }
+    filters_str = ", ".join(
+        [
+            f"{filter_field}: {gql_type} = null"
+            for filter_field, gql_type in filters.items()
+        ]
     )
+    assert f"  allArticles({filters_str}): ArticleTypeConnection\n" in schema_str

@@ -739,6 +739,7 @@ def test_order_by():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(ObjectType):
         all_reporters = DjangoFilterConnectionField(
@@ -1236,6 +1237,7 @@ def test_filter_string_contains():
         class Meta:
             model = Person
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = {"name": ["exact", "in", "contains", "icontains"]}
 
     class Query(ObjectType):

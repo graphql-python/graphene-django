@@ -28,19 +28,15 @@ else:
 STORE = {"events": []}
 
 
-@pytest.fixture
-def Event():
-    class Event(models.Model):
-        name = models.CharField(max_length=50)
-        tags = ArrayField(models.CharField(max_length=50))
-        tag_ids = ArrayField(models.IntegerField())
-        random_field = ArrayField(models.BooleanField())
-
-    return Event
+class Event(models.Model):
+    name = models.CharField(max_length=50)
+    tags = ArrayField(models.CharField(max_length=50))
+    tag_ids = ArrayField(models.IntegerField())
+    random_field = ArrayField(models.BooleanField())
 
 
 @pytest.fixture
-def EventFilterSet(Event):
+def EventFilterSet():
     class EventFilterSet(FilterSet):
         class Meta:
             model = Event
@@ -69,18 +65,19 @@ def EventFilterSet(Event):
 
 
 @pytest.fixture
-def EventType(Event, EventFilterSet):
+def EventType(EventFilterSet):
     class EventType(DjangoObjectType):
         class Meta:
             model = Event
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = EventFilterSet
 
     return EventType
 
 
 @pytest.fixture
-def Query(Event, EventType):
+def Query(EventType):
     """
     Note that we have to use a custom resolver to replicate the arrayfield filter behavior as
     we are running unit tests in sqlite which does not have ArrayFields.

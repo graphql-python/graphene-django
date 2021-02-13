@@ -29,6 +29,7 @@ def query():
         class Meta:
             model = Pet
             interfaces = (Node,)
+            fields = "__all__"
             filter_fields = {
                 "id": ["exact", "in"],
                 "name": ["exact", "in"],
@@ -39,6 +40,7 @@ def query():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
             # choice filter using enum
             filter_fields = {"reporter_type": ["exact", "in"]}
 
@@ -46,12 +48,14 @@ def query():
         class Meta:
             model = Article
             interfaces = (Node,)
+            fields = "__all__"
             filterset_class = ArticleFilter
 
     class FilmNode(DjangoObjectType):
         class Meta:
             model = Film
             interfaces = (Node,)
+            fields = "__all__"
             # choice filter not using enum
             filter_fields = {
                 "genre": ["exact", "in"],
@@ -77,6 +81,7 @@ def query():
             model = Person
             interfaces = (Node,)
             filterset_class = PersonFilterSet
+            fields = "__all__"
 
     class Query(ObjectType):
         pets = DjangoFilterConnectionField(PetNode)

@@ -89,19 +89,41 @@ def test_array_field_filter_schema_type(Query):
     schema_str = str(schema)
 
     assert (
-        """type EventType implements Node {
+        '''type EventType implements Node {
+  """The ID of the object"""
   id: ID!
   name: String!
   tags: [String!]!
   tagIds: [Int!]!
   randomField: [Boolean!]!
-}"""
+}'''
         in schema_str
     )
 
+    filters = {
+        "offset": "Int",
+        "before": "String",
+        "after": "String",
+        "first": "Int",
+        "last": "Int",
+        "name": "String",
+        "name_Contains": "String",
+        "tags_Contains": "[String!]",
+        "tags_Overlap": "[String!]",
+        "tags": "[String!]",
+        "tagsIds_Contains": "[Int!]",
+        "tagsIds_Overlap": "[Int!]",
+        "tagsIds": "[Int!]",
+        "randomField_Contains": "[Boolean!]",
+        "randomField_Overlap": "[Boolean!]",
+        "randomField": "[Boolean!]",
+    }
+    filters_str = ", ".join(
+        [
+            f"{filter_field}: {gql_type} = null"
+            for filter_field, gql_type in filters.items()
+        ]
+    )
     assert (
-        """type Query {
-  events(offset: Int, before: String, after: String, first: Int, last: Int, name: String, name_Contains: String, tags_Contains: [String!], tags_Overlap: [String!], tags: [String!], tagsIds_Contains: [Int!], tagsIds_Overlap: [Int!], tagsIds: [Int!], randomField_Contains: [Boolean!], randomField_Overlap: [Boolean!], randomField: [Boolean!]): EventTypeConnection
-}"""
-        in schema_str
+        f"type Query {{\n  events({filters_str}): EventTypeConnection\n}}" in schema_str
     )
