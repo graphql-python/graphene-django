@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from functools import singledispatch, partial, wraps
+from functools import singledispatch, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
