@@ -5,7 +5,7 @@ import pytest
 
 from graphene import List, NonNull, ObjectType, Schema, String
 
-from ..fields import DjangoListField
+from ..fields import DjangoListField, DjangoInstanceField
 from ..types import DjangoObjectType
 from .models import Article as ArticleModel
 from .models import Reporter as ReporterModel
@@ -301,6 +301,149 @@ class TestDjangoListField:
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Tara"}]}
+
+    def test_get_queryset_filter_instance(self):
+        """Resolving prefilter list to get instance"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        class Query(ObjectType):
+            reporter = DjangoInstanceField(
+                Reporter,
+                unique_fields=("first_name",),
+                first_name=String(required=True),
+            )
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporter(firstName: "Tara") {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporter": {"firstName": "Tara"}}
+
+    def test_get_queryset_filter_instance_null(self):
+        """Resolving prefilter list with no results"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        class Query(ObjectType):
+            reporter = DjangoInstanceField(
+                Reporter,
+                unique_fields=("first_name",),
+                first_name=String(required=True),
+            )
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporter(firstName: "Debra") {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporter": None}
+
+    def test_get_queryset_filter_instance_plain(self):
+        """Resolving a plain object should work (and not call get_queryset)"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        class Query(ObjectType):
+            reporter = DjangoInstanceField(Reporter, first_name=String(required=True))
+
+            def resolve_reporter(_, info, first_name):
+                return ReporterModel.objects.get(first_name=first_name)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporter(firstName: "Debra") {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporter": {"firstName": "Debra"}}
 
     def test_resolve_list(self):
         """Resolving a plain list should work (and not call get_queryset)"""

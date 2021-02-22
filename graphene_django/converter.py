@@ -30,7 +30,7 @@ from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
-from .fields import DjangoListField, DjangoConnectionField
+from .fields import DjangoListField, DjangoConnectionField, DjangoInstanceField
 from .settings import graphene_settings
 from .utils.str_converters import to_const
 
@@ -297,10 +297,11 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        return DjangoInstanceField(
             _type,
             description=get_django_field_description(field),
             required=not field.null,
+            is_foreign_key=True,
         )
 
     return Dynamic(dynamic_type)
