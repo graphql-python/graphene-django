@@ -114,6 +114,33 @@ def test_django_objecttype_with_custom_meta():
     assert isinstance(Article._meta, ArticleTypeOptions)
 
 
+def test_django_objecttype_with_custom_meta_fields():
+    class ArticleTypeOptions(DjangoObjectTypeOptions):
+        """Article Type Options with extra fields"""
+
+        fields = {"headline_with_lang": String()}
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, **options):
+            options.setdefault("_meta", ArticleTypeOptions(cls))
+            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+
+    class Article(ArticleType):
+        class Meta:
+            model = ArticleModel
+            fields = "__all__"
+
+    headline_with_lang_field = Article._meta.fields.get("headline_with_lang")
+
+    assert isinstance(Article._meta, ArticleTypeOptions)
+    assert headline_with_lang_field is not None
+    assert isinstance(headline_with_lang_field, String)
+
+
 def test_schema_representation():
     expected = dedent(
         """\
@@ -276,6 +303,81 @@ def test_django_objecttype_only_fields():
 
     fields = list(Reporter._meta.fields.keys())
     assert fields == ["id", "email", "films"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_custom_meta_fields():
+    class ArticleTypeOptions(DjangoObjectTypeOptions):
+        """Article Type Options with extra fields"""
+
+        fields = {"headline_with_lang": String()}
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, **options):
+            options.setdefault("_meta", ArticleTypeOptions(cls))
+            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+
+    class Article(ArticleType):
+        class Meta:
+            model = ArticleModel
+            fields = ("editor", "lang", "importance")
+
+    fields = list(Article._meta.fields.keys())
+    assert fields == ["editor", "lang", "importance"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_custom_meta_fields_include():
+    class ArticleTypeOptions(DjangoObjectTypeOptions):
+        """Article Type Options with extra fields"""
+
+        fields = {"headline_with_lang": String()}
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, **options):
+            options.setdefault("_meta", ArticleTypeOptions(cls))
+            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+
+    class Article(ArticleType):
+        class Meta:
+            model = ArticleModel
+            fields = ("headline_with_lang", "editor", "lang", "importance")
+
+    fields = list(Article._meta.fields.keys())
+    assert fields == ["headline_with_lang", "editor", "lang", "importance"]
+
+
+@with_local_registry
+def test_django_objecttype_fields_custom_meta_fields_all():
+    class ArticleTypeOptions(DjangoObjectTypeOptions):
+        """Article Type Options with extra fields"""
+
+        fields = {"headline_with_lang": String()}
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, **options):
+            options.setdefault("_meta", ArticleTypeOptions(cls))
+            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+
+    class Article(ArticleType):
+        class Meta:
+            model = ArticleModel
+            fields = "__all__"
+
+    fields = list(Article._meta.fields.keys())
+    assert len(fields) == len(ArticleModel._meta.get_fields()) + 1
 
 
 @with_local_registry

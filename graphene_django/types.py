@@ -256,13 +256,26 @@ class DjangoObjectType(ObjectType):
 
         if not _meta:
             _meta = DjangoObjectTypeOptions(cls)
+        elif _meta.fields:
+            # Exclude previous meta fields that are not in fields or are in exclude
+            only_fields = fields is not None and fields != ALL_FIELDS
+            exclude_fields = exclude is not None
+            if only_fields or exclude_fields:
+                for name in list(_meta.fields.keys()):
+                    if (only_fields and name not in fields) or (
+                        exclude_fields and name in exclude
+                    ):
+                        _meta.fields.pop(name)
 
         _meta.model = model
         _meta.registry = registry
         _meta.filter_fields = filter_fields
         _meta.filterset_class = filterset_class
-        _meta.fields = django_fields
         _meta.connection = connection
+        if _meta.fields:
+            _meta.fields.update(django_fields)
+        else:
+            _meta.fields = django_fields
 
         super(DjangoObjectType, cls).__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
