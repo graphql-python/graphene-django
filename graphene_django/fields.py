@@ -61,12 +61,13 @@ class DjangoListField(Field):
         return queryset
 
     def wrap_resolve(self, parent_resolver):
+        resolver = super(DjangoListField, self).wrap_resolve(parent_resolver)
         _type = self.type
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
         return partial(
-            self.list_resolver, django_object_type, parent_resolver, self.get_manager(),
+            self.list_resolver, django_object_type, resolver, self.get_manager(),
         )
 
 
