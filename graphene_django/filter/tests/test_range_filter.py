@@ -25,6 +25,7 @@ class PetNode(DjangoObjectType):
     class Meta:
         model = Pet
         interfaces = (Node,)
+        fields = "__all__"
         filter_fields = {
             "name": ["exact", "in"],
             "age": ["exact", "in", "range"],

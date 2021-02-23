@@ -2,10 +2,29 @@ from collections import OrderedDict
 from functools import partial
 
 from django.core.exceptions import ValidationError
+
+from graphene.types.enum import EnumType
 from graphene.types.argument import to_arguments
 from graphene.utils.str_converters import to_snake_case
+
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
+
+
+def convert_enum(data):
+    """
+    Check if the data is a enum option (or potentially nested list of enum option)
+    and convert it to its value.
+
+    This method is used to pre-process the data for the filters as they can take an
+    graphene.Enum as argument, but filters (from django_filters) expect a simple value.
+    """
+    if isinstance(data, list):
+        return [convert_enum(item) for item in data]
+    if isinstance(type(data), EnumType):
+        return data.value
+    else:
+        return data
 
 
 class DjangoFilterConnectionField(DjangoConnectionField):
@@ -43,8 +62,8 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             if self._extra_filter_meta:
                 meta.update(self._extra_filter_meta)
 
-            filterset_class = self._provided_filterset_class or (
-                self.node_type._meta.filterset_class
+            filterset_class = (
+                self._provided_filterset_class or self.node_type._meta.filterset_class
             )
             self._filterset_class = get_filterset_class(filterset_class, **meta)
 
@@ -68,7 +87,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                 if k in filtering_args:
                     if k == "order_by" and v is not None:
                         v = to_snake_case(v)
-                    kwargs[k] = v
+                    kwargs[k] = convert_enum(v)
             return kwargs
 
         qs = super(DjangoFilterConnectionField, cls).resolve_queryset(
@@ -78,7 +97,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         filterset = filterset_class(
             data=filter_kwargs(), queryset=qs, request=info.context
         )
-        if filterset.form.is_valid():
+        if filterset.is_valid():
             return filterset.qs
         raise ValidationError(filterset.form.errors.as_json())
 

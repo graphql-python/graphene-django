@@ -35,7 +35,7 @@ from .utils.str_converters import to_const
 
 
 class BlankValueField(Field):
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         resolver = self.resolver or parent_resolver
 
         # create custom resolver

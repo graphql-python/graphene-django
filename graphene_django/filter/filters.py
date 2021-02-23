@@ -2,6 +2,7 @@ from django.core.exceptions import ValidationError
 from django.forms import Field
 
 from django_filters import Filter, MultipleChoiceFilter
+from django_filters.constants import EMPTY_VALUES
 
 from graphql_relay.node.node import from_global_id
 
@@ -31,14 +32,15 @@ class GlobalIDMultipleChoiceFilter(MultipleChoiceFilter):
         return super(GlobalIDMultipleChoiceFilter, self).filter(qs, gids)
 
 
-class InFilter(Filter):
+class ListFilter(Filter):
     """
-    Filter for a list of value using the `__in` Django filter.
+    Filter that takes a list of value as input.
+    It is for example used for `__in` filters.
     """
 
     def filter(self, qs, value):
         """
-        Override the default filter class to check first weather the list is
+        Override the default filter class to check first whether the list is
         empty or not.
         This needs to be done as in this case we expect to get an empty output
         (if not an exclude filter) but django_filter consider an empty list
@@ -73,3 +75,27 @@ class RangeField(Field):
 
 class RangeFilter(Filter):
     field_class = RangeField
+
+
+class ArrayFilter(Filter):
+    """
+    Filter made for PostgreSQL ArrayField.
+    """
+
+    def filter(self, qs, value):
+        """
+        Override the default filter class to check first whether the list is
+        empty or not.
+        This needs to be done as in this case we expect to get the filter applied with
+        an empty list since it's a valid value but django_filter consider an empty list
+        to be an empty input value (see `EMPTY_VALUES`) meaning that
+        the filter does not need to be applied (hence returning the original
+        queryset).
+        """
+        if value in EMPTY_VALUES and value != []:
+            return qs
+        if self.distinct:
+            qs = qs.distinct()
+        lookup = "%s__%s" % (self.field_name, self.lookup_expr)
+        qs = self.get_method(qs)(**{lookup: value})
+        return qs

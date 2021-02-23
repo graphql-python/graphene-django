@@ -10,7 +10,7 @@ class ArticleFilter(django_filters.FilterSet):
         fields = {
             "headline": ["exact", "icontains"],
             "pub_date": ["gt", "lt", "exact"],
-            "reporter": ["exact"],
+            "reporter": ["exact", "in"],
         }
 
     order_by = OrderingFilter(fields=("pub_date",))

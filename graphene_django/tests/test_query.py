@@ -421,6 +421,7 @@ def test_should_query_node_filtering():
             interfaces = (Node,)
             fields = "__all__"
             filter_fields = ("lang",)
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -546,6 +547,7 @@ def test_should_query_node_multiple_filtering():
             interfaces = (Node,)
             fields = "__all__"
             filter_fields = ("lang", "headline")
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1251,6 +1253,7 @@ class TestBackwardPagination:
             class Meta:
                 model = Reporter
                 interfaces = (Node,)
+                fields = "__all__"
 
         class Query(graphene.ObjectType):
             all_reporters = DjangoConnectionField(ReporterType)
@@ -1455,6 +1458,7 @@ def test_connection_should_enable_offset_filtering():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1494,6 +1498,7 @@ def test_connection_should_enable_offset_filtering_higher_than_max_limit(
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1527,6 +1532,7 @@ def test_connection_should_forbid_offset_filtering_with_before():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1561,6 +1567,7 @@ def test_connection_should_allow_offset_filtering_with_after():
         class Meta:
             model = Reporter
             interfaces = (Node,)
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)

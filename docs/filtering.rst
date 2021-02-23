@@ -258,3 +258,46 @@ with this set up, you can now order the users under group:
         }
       }
     }
+
+
+PostgreSQL `ArrayField`
+-----------------------
+
+Graphene provides an easy to implement filters on `ArrayField` as they are not natively supported by django_filters:
+
+.. code:: python
+
+    from django.db import models
+    from django_filters import FilterSet, OrderingFilter
+    from graphene_django.filter import ArrayFilter
+
+    class Event(models.Model):
+        name = models.CharField(max_length=50)
+        tags = ArrayField(models.CharField(max_length=50))
+
+    class EventFilterSet(FilterSet):
+        class Meta:
+            model = Event
+            fields = {
+                "name": ["exact", "contains"],
+            }
+
+        tags__contains = ArrayFilter(field_name="tags", lookup_expr="contains")
+        tags__overlap = ArrayFilter(field_name="tags", lookup_expr="overlap")
+        tags = ArrayFilter(field_name="tags", lookup_expr="exact")
+
+    class EventType(DjangoObjectType):
+        class Meta:
+            model = Event
+            interfaces = (Node,)
+            filterset_class = EventFilterSet
+
+with this set up, you can now filter events by tags:
+
+.. code::
+
+    query {
+      events(tags_Overlap: ["concert", "festival"]) {
+        name
+      }
+    }

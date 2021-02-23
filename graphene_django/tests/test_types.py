@@ -671,6 +671,7 @@ def test_django_objecttype_name_connection_propagation():
         class Meta:
             model = ReporterModel
             name = "CustomReporterName"
+            fields = "__all__"
             filter_fields = ["email"]
             interfaces = (Node,)
 
