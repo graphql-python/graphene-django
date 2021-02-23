@@ -55,7 +55,7 @@ class Command(CommandArguments):
             json.dump(schema_dict, outfile, indent=indent, sort_keys=True)
 
     def save_graphql_file(self, out, schema):
-        with open(out, "w") as outfile:
+        with open(out, "w", encoding="utf-8") as outfile:
             outfile.write(print_schema(schema.graphql_schema))
 
     def get_schema(self, schema, out, indent):
