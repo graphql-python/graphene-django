@@ -123,8 +123,8 @@
     if (operationType === "subscription") {
       return {
         subscribe: function (observer) {
-          subscriptionClient.request(graphQLParams).subscribe(observer);
           activeSubscription = subscriptionClient;
+          return subscriptionClient.request(graphQLParams, opts).subscribe(observer);
         },
       };
     } else {
