@@ -408,3 +408,95 @@ class TestDjangoListField:
                 {"firstName": "Debra", "articles": []},
             ]
         }
+
+    def test_resolve_list_external_resolver(self):
+        """Resolving a plain list from external resolver should work (and not call get_queryset)"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        def resolve_reporters(_, info):
+            return [ReporterModel.objects.get(first_name="Debra")]
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter, resolver=resolve_reporters)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Debra"}]}
+
+    def test_get_queryset_filter_external_resolver(self):
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        def resolve_reporters(_, info):
+            return ReporterModel.objects.all()
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter, resolver=resolve_reporters)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Tara"}]}
