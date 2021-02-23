@@ -1590,21 +1590,22 @@ def test_connection_should_allow_offset_filtering_with_after():
 
 
 def test_should_query_django_objecttype_fields_custom_meta():
-    class ArticleTypeOptions(DjangoObjectTypeOptions):
-        """Article Type Options with extra fields"""
-
-        fields = yank_fields_from_attrs(
-            {"headline_with_lang": graphene.String()}, _as=graphene.Field,
-        )
-
     class ArticleBaseType(DjangoObjectType):
         class Meta:
             abstract = True
 
         @classmethod
-        def __init_subclass_with_meta__(cls, **options):
-            options.setdefault("_meta", ArticleTypeOptions(cls))
-            super(ArticleBaseType, cls).__init_subclass_with_meta__(**options)
+        def __init_subclass_with_meta__(cls, _meta=None, **options):
+            if _meta is None:
+                _meta = DjangoObjectTypeOptions(cls)
+
+            _meta.fields = yank_fields_from_attrs(
+                {"headline_with_lang": graphene.String()}, _as=graphene.Field,
+            )
+
+            super(ArticleBaseType, cls).__init_subclass_with_meta__(
+                _meta=_meta, **options
+            )
 
     class ArticleCustomType(ArticleBaseType):
         class Meta:
