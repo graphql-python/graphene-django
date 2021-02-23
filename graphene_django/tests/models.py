@@ -26,7 +26,7 @@ class Film(models.Model):
     genre = models.CharField(
         max_length=2,
         help_text="Genre",
-        choices=[("do", "Documentary"), ("ot", "Other")],
+        choices=[("do", "Documentary"), ("ac", "Action"), ("ot", "Other")],
         default="ot",
     )
     reporters = models.ManyToManyField("Reporter", related_name="films")
@@ -91,8 +91,8 @@ class CNNReporter(Reporter):
 
 class Article(models.Model):
     headline = models.CharField(max_length=100)
-    pub_date = models.DateField()
-    pub_date_time = models.DateTimeField()
+    pub_date = models.DateField(auto_now_add=True)
+    pub_date_time = models.DateTimeField(auto_now_add=True)
     reporter = models.ForeignKey(
         Reporter, on_delete=models.CASCADE, related_name="articles"
     )
