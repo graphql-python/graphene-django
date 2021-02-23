@@ -1,7 +1,7 @@
 import json
 import warnings
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, TransactionTestCase
 
 DEFAULT_GRAPHQL_URL = "/graphql/"
 
@@ -63,7 +63,7 @@ def graphql_query(
     return resp
 
 
-class GraphQLTestCase(TestCase):
+class GraphQLTestMixin(object):
     """
     Based on: https://www.sam.today/blog/testing-graphql-with-graphene-django/
     """
@@ -143,3 +143,11 @@ class GraphQLTestCase(TestCase):
         """
         content = json.loads(resp.content)
         self.assertIn("errors", list(content.keys()), msg or content)
+
+
+class GraphQLTestCase(GraphQLTestMixin, TestCase):
+    pass
+
+
+class GraphQLTransactionTestCase(GraphQLTestMixin, TransactionTestCase):
+    pass
