@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from functools import singledispatch, partial, wraps
+from functools import singledispatch, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -23,7 +23,6 @@ from graphene import (
     Time,
     Decimal,
 )
-from graphene.types.resolver import get_default_resolver
 from graphene.types.json import JSONString
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
