@@ -297,7 +297,15 @@ class DjangoInstanceField(Field):
         queryset = None
         unique_filter = {}
         if is_foreign_key:
-            pk = getattr(root, "{}_id".format(info.field_name))
+            pk_name = "{}_id".format(info.field_name)
+            pk = None
+            if hasattr(root, pk_name):
+                pk = getattr(root, pk_name)
+            else:
+                fk_obj = getattr(root, info.field_name)
+                if fk_obj:
+                    pk = fk_obj.pk
+
             if pk is not None:
                 unique_filter["pk"] = pk
                 unique_fields = ()
