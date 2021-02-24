@@ -230,23 +230,6 @@ def convert_time_to_string(field, registry=None):
     )
 
 
-@convert_django_field.register(models.OneToOneRel)
-def convert_onetoone_field_to_djangomodel(field, registry=None):
-    model = field.related_model
-
-    def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        if not _type:
-            return
-
-        # We do this for a bug in Django 1.8, where null attr
-        # is not available in the OneToOneRel instance
-        null = getattr(field, "null", True)
-        return Field(_type, required=not null)
-
-    return Dynamic(dynamic_type)
-
-
 @convert_django_field.register(models.ManyToManyField)
 @convert_django_field.register(models.ManyToManyRel)
 @convert_django_field.register(models.ManyToOneRel)
