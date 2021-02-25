@@ -1285,7 +1285,6 @@ def test_only_custom_filters():
 
         some_filter = OrderingFilter(fields=("name",))
 
-
     class ReporterFilterNode(DjangoObjectType):
         class Meta:
             model = Reporter
