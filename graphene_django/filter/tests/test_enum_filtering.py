@@ -147,6 +147,10 @@ def test_filter_enum_field_schema_type(schema):
         "reporter_AChoice_In": "[ReporterAChoice]",
     }
 
-    all_articles_filters = schema_str.split("  allArticles(")[1].split("): ArticleTypeConnection\n")[0].split(", ")
+    all_articles_filters = (
+        schema_str.split("  allArticles(")[1]
+        .split("): ArticleTypeConnection\n")[0]
+        .split(", ")
+    )
     for filter_field, gql_type in filters.items():
         assert "{}: {}".format(filter_field, gql_type) in all_articles_filters
