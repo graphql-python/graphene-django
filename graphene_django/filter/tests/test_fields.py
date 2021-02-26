@@ -16,7 +16,7 @@ pytestmark = []
 
 if DJANGO_FILTER_INSTALLED:
     import django_filters
-    from django_filters import FilterSet, NumberFilter
+    from django_filters import FilterSet, NumberFilter, OrderingFilter
 
     from graphene_django.filter import (
         GlobalIDFilter,
@@ -1275,3 +1275,22 @@ def test_filter_string_contains():
     assert result.data == {
         "people": {"edges": [{"node": {"name": "Joe"}}, {"node": {"name": "Bob"}},]}
     }
+
+
+def test_only_custom_filters():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = []
+
+        some_filter = OrderingFilter(fields=("name",))
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            fields = "__all__"
+            filterset_class = ReporterFilter
+
+    field = DjangoFilterConnectionField(ReporterFilterNode)
+    assert_arguments(field, "some_filter")
