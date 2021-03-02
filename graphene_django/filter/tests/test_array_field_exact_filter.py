@@ -81,6 +81,7 @@ def test_array_field_exact_empty_list(Query):
     ]
 
 
+@pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
 def test_array_field_filter_schema_type(Query):
     """
     Check that the type in the filter is an array field like on the object type.
