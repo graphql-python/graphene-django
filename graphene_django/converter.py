@@ -69,7 +69,11 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
         def description(self):
             return named_choices_descriptions[self.name]
 
-    return Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    if named_choices == []:
+        # Python 2.7 doesn't handle enums with lists with zero entries, but works okay with empty sets
+        named_choices = set()
+
+    return Enum(name, named_choices, type=EnumWithDescriptionsType)
 
 
 def generate_enum_name(django_model_meta, field):

@@ -135,10 +135,22 @@ def test_filter_enum_field_schema_type(schema):
         in schema_str
     )
 
-    assert (
-        """type Query {
-  allReporters(offset: Int, before: String, after: String, first: Int, last: Int): ReporterTypeConnection
-  allArticles(offset: Int, before: String, after: String, first: Int, last: Int, lang: ArticleLang, lang_In: [ArticleLang], reporter_AChoice: ReporterAChoice, reporter_AChoice_In: [ReporterAChoice]): ArticleTypeConnection
-}"""
-        in schema_str
+    filters = {
+        "offset": "Int",
+        "before": "String",
+        "after": "String",
+        "first": "Int",
+        "last": "Int",
+        "lang": "ArticleLang",
+        "lang_In": "[ArticleLang]",
+        "reporter_AChoice": "ReporterAChoice",
+        "reporter_AChoice_In": "[ReporterAChoice]",
+    }
+
+    all_articles_filters = (
+        schema_str.split("  allArticles(")[1]
+        .split("): ArticleTypeConnection\n")[0]
+        .split(", ")
     )
+    for filter_field, gql_type in filters.items():
+        assert "{}: {}".format(filter_field, gql_type) in all_articles_filters

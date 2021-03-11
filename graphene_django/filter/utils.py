@@ -39,6 +39,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
     registry = type._meta.registry
     for name, filter_field in six.iteritems(filterset_class.base_filters):
         filter_type = filter_field.lookup_expr
+        required = filter_field.extra.get("required", False)
         field_type = None
         form_field = None
 
@@ -49,8 +50,6 @@ def get_filtering_args_from_filterset(filterset_class, type):
             or isinstance(filter_field, ArrayFilter)
         ):
             # Get the filter field for filters that are no explicitly declared.
-
-            required = filter_field.extra.get("required", False)
             if filter_type == "isnull":
                 field = graphene.Boolean(required=required)
             else:
