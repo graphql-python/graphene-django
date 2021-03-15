@@ -156,8 +156,8 @@ class DjangoConnectionField(ConnectionField):
         # AssertionError
         after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
 
-        if max_limit is not None and args.get("first", None) == None:
-            if args.get("last", None) != None:
+        if max_limit is not None and args.get("first", None) is None:
+            if args.get("last", None) is not None:
                 after = list_length - args["last"]
             else:
                 args["first"] = max_limit

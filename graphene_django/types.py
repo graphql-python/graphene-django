@@ -2,10 +2,8 @@ import warnings
 from collections import OrderedDict
 from typing import Type
 
-from django.db.models import Model
-from django.utils.functional import SimpleLazyObject
-
 import graphene
+from django.db.models import Model
 from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
@@ -20,7 +18,6 @@ from .utils import (
     get_model_fields,
     is_valid_django_model,
 )
-
 
 ALL_FIELDS = "__all__"
 
@@ -108,12 +105,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                 (
                     'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
                     'Either remove the custom field or remove the field from the "exclude" list.'
-                ).format(
-                    field_name=name,
-                    app_label=model._meta.app_label,
-                    object_name=model._meta.object_name,
-                    type_=type_,
-                )
+                ).format(field_name=name, type_=type_)
             )
         else:
             if not hasattr(model, name):

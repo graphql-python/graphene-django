@@ -1,7 +1,6 @@
 import itertools
 
 from django.db import models
-from django_filters import Filter, MultipleChoiceFilter
 from django_filters.filterset import BaseFilterSet, FilterSet
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
