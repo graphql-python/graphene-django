@@ -4,7 +4,6 @@ from typing import Type
 
 import graphene
 from django.db.models import Model
-from graphene import Field
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -224,7 +223,7 @@ class DjangoObjectType(ObjectType):
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
-            _as=Field,
+            _as=graphene.Field,
         )
 
         if use_connection is None and interfaces:
