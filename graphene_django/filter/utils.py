@@ -1,12 +1,9 @@
 import graphene
-
 from django import forms
+from django_filters.utils import get_model_field
 
-from django_filters.utils import get_model_field, get_field_parts
-from django_filters.filters import Filter, BaseCSVFilter
-
-from .filterset import custom_filterset_factory, setup_filterset
 from .filters import ArrayFilter, ListFilter, RangeFilter
+from .filterset import custom_filterset_factory, setup_filterset
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
 

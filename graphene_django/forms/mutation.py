@@ -14,10 +14,6 @@ from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.constants import MUTATION_ERRORS_FLAG
 from graphene_django.registry import get_global_registry
 
-
-from django.core.exceptions import ValidationError
-from django.db import connection
-
 from ..types import ErrorType
 from .converter import convert_form_field
 
