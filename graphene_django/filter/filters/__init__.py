@@ -1,5 +1,5 @@
 import warnings
-from ..utils import DJANGO_FILTER_INSTALLED
+from ...utils import DJANGO_FILTER_INSTALLED
 
 if not DJANGO_FILTER_INSTALLED:
     warnings.warn(
@@ -8,15 +8,11 @@ if not DJANGO_FILTER_INSTALLED:
         ImportWarning,
     )
 else:
-    from .fields import DjangoFilterConnectionField
-    from .filters import (
-        ArrayFilter,
-        GlobalIDFilter,
-        GlobalIDMultipleChoiceFilter,
-        ListFilter,
-        RangeFilter,
-        TypedFilter,
-    )
+    from .array_filter import ArrayFilter
+    from .global_id_filter import GlobalIDFilter, GlobalIDMultipleChoiceFilter
+    from .list_filter import ListFilter
+    from .range_filter import RangeFilter
+    from .typed_filter import TypedFilter
 
     __all__ = [
         "DjangoFilterConnectionField",

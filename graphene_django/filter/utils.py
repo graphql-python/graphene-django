@@ -1,8 +1,8 @@
 import graphene
 from django import forms
-from django_filters.utils import get_model_field
-
-from .filters import ArrayFilter, ListFilter, RangeFilter
+from django_filters.utils import get_model_field, get_field_parts
+from django_filters.filters import Filter, BaseCSVFilter
+from .filters import ArrayFilter, ListFilter, RangeFilter, TypedFilter
 from .filterset import custom_filterset_factory, setup_filterset
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
@@ -39,58 +39,62 @@ def get_filtering_args_from_filterset(filterset_class, type):
         form_field = None
 
         if (
-            name not in filterset_class.declared_filters
-            or isinstance(filter_field, ListFilter)
-            or isinstance(filter_field, RangeFilter)
-            or isinstance(filter_field, ArrayFilter)
+            isinstance(filter_field, TypedFilter)
+            and filter_field.input_type is not None
         ):
-            # Get the filter field for filters that are no explicitly declared.
-            if filter_type == "isnull":
-                field = graphene.Boolean(required=required)
-            else:
-                model_field = get_model_field(model, filter_field.field_name)
+            # First check if the filter input type has been explicitely given
+            field_type = filter_field.input_type
+        else:
+            if name not in filterset_class.declared_filters or isinstance(
+                filter_field, TypedFilter
+            ):
+                # Get the filter field for filters that are no explicitly declared.
+                if filter_type == "isnull":
+                    field = graphene.Boolean(required=required)
+                else:
+                    model_field = get_model_field(model, filter_field.field_name)
 
-                # Get the form field either from:
-                #  1. the formfield corresponding to the model field
-                #  2. the field defined on filter
-                if hasattr(model_field, "formfield"):
-                    form_field = model_field.formfield(required=required)
-                if not form_field:
-                    form_field = filter_field.field
+                    # Get the form field either from:
+                    #  1. the formfield corresponding to the model field
+                    #  2. the field defined on filter
+                    if hasattr(model_field, "formfield"):
+                        form_field = model_field.formfield(required=required)
+                    if not form_field:
+                        form_field = filter_field.field
 
-                # First try to get the matching field type from the GraphQL DjangoObjectType
-                if model_field:
-                    if (
-                        isinstance(form_field, forms.ModelChoiceField)
-                        or isinstance(form_field, forms.ModelMultipleChoiceField)
-                        or isinstance(form_field, GlobalIDMultipleChoiceField)
-                        or isinstance(form_field, GlobalIDFormField)
-                    ):
-                        # Foreign key have dynamic types and filtering on a foreign key actually means filtering on its ID.
-                        field_type = get_field_type(
-                            registry, model_field.related_model, "id"
-                        )
-                    else:
-                        field_type = get_field_type(
-                            registry, model_field.model, model_field.name
-                        )
+                    # First try to get the matching field type from the GraphQL DjangoObjectType
+                    if model_field:
+                        if (
+                            isinstance(form_field, forms.ModelChoiceField)
+                            or isinstance(form_field, forms.ModelMultipleChoiceField)
+                            or isinstance(form_field, GlobalIDMultipleChoiceField)
+                            or isinstance(form_field, GlobalIDFormField)
+                        ):
+                            # Foreign key have dynamic types and filtering on a foreign key actually means filtering on its ID.
+                            field_type = get_field_type(
+                                registry, model_field.related_model, "id"
+                            )
+                        else:
+                            field_type = get_field_type(
+                                registry, model_field.model, model_field.name
+                            )
 
-        if not field_type:
-            # Fallback on converting the form field either because:
-            #  - it's an explicitly declared filters
-            #  - we did not manage to get the type from the model type
-            form_field = form_field or filter_field.field
-            field_type = convert_form_field(form_field)
+            if not field_type:
+                # Fallback on converting the form field either because:
+                #  - it's an explicitly declared filters
+                #  - we did not manage to get the type from the model type
+                form_field = form_field or filter_field.field
+                field_type = convert_form_field(form_field).get_type()
 
-        if isinstance(filter_field, ListFilter) or isinstance(
-            filter_field, RangeFilter
-        ):
-            # Replace InFilter/RangeFilter filters (`in`, `range`) argument type to be a list of
-            # the same type as the field. See comments in `replace_csv_filters` method for more details.
-            field_type = graphene.List(field_type.get_type())
+            if isinstance(filter_field, ListFilter) or isinstance(
+                filter_field, RangeFilter
+            ):
+                # Replace InFilter/RangeFilter filters (`in`, `range`) argument type to be a list of
+                # the same type as the field. See comments in `replace_csv_filters` method for more details.
+                field_type = graphene.List(field_type)
 
         args[name] = graphene.Argument(
-            field_type.get_type(), description=filter_field.label, required=required,
+            field_type, description=filter_field.label, required=required,
         )
 
     return args
