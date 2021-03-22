@@ -15,7 +15,7 @@ You will need to install it manually, which can be done as follows:
 
     # You'll need to install django-filter
     pip install django-filter>=2
-    
+
 After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
 
 .. code:: python
@@ -307,7 +307,7 @@ with this set up, you can now filter events by tags:
 `TypedFilter`
 -------------
 
-Sometimes you the automatic detection of the filter input type is not satisfactory for what you are trying to achieve.
+Sometimes the automatic detection of the filter input type is not satisfactory for what you are trying to achieve.
 You can then explicitly specify the input type you want for your filter by using a `TypedFilter`:
 
 .. code:: python
