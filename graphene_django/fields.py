@@ -247,3 +247,105 @@ class DjangoConnectionField(ConnectionField):
 
     def get_queryset_resolver(self):
         return self.resolve_queryset
+
+
+class DjangoInstanceField(Field):
+    def __init__(self, _type, *args, **kwargs):
+        from .types import DjangoObjectType
+
+        self.unique_fields = kwargs.pop("unique_fields", ("id",))
+        self.is_foreign_key = kwargs.pop("is_foreign_key", False)
+
+        assert not isinstance(
+            self.unique_fields, list
+        ), "unique_fields argument needs to be a list"
+
+        if isinstance(_type, NonNull):
+            _type = _type.of_type
+
+        super(DjangoInstanceField, self).__init__(_type, *args, **kwargs)
+
+        assert issubclass(
+            self._underlying_type, DjangoObjectType
+        ), "DjangoInstanceField only accepts DjangoObjectType types"
+
+    @property
+    def _underlying_type(self):
+        _type = self._type
+        while hasattr(_type, "of_type"):
+            _type = _type.of_type
+        return _type
+
+    @property
+    def model(self):
+        return self._underlying_type._meta.model
+
+    def get_manager(self):
+        return self.model._default_manager
+
+    @staticmethod
+    def instance_resolver(
+        django_object_type,
+        unique_fields,
+        resolver,
+        default_manager,
+        is_foreign_key,
+        root,
+        info,
+        **args
+    ):
+
+        queryset = None
+        unique_filter = {}
+        if is_foreign_key:
+            pk_name = "{}_id".format(info.field_name)
+            pk = None
+            if hasattr(root, pk_name):
+                pk = getattr(root, pk_name)
+            else:
+                fk_obj = getattr(root, info.field_name)
+                if fk_obj:
+                    pk = fk_obj.pk
+
+            if pk is not None:
+                unique_filter["pk"] = pk
+                unique_fields = ()
+            else:
+                return None
+        else:
+            queryset = maybe_queryset(resolver(root, info, **args))
+
+        if queryset is None:
+            queryset = maybe_queryset(default_manager)
+
+        if isinstance(queryset, QuerySet):
+            # Pass queryset to the DjangoObjectType get_queryset method
+            queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
+            for field in unique_fields:
+                key = field if field != "id" else "pk"
+                value = args.get(field)
+
+                if value is not None:
+                    unique_filter[key] = value
+
+            assert len(unique_filter.keys()) > 0, (
+                "You need to model unique arguments. The declared unique fields are: {}."
+            ).format(", ".join(unique_fields))
+
+            try:
+                return queryset.get(**unique_filter)
+            except django_object_type._meta.model.DoesNotExist:
+                return None
+
+        return queryset
+
+    def wrap_resolve(self, parent_resolver):
+        resolver = super(DjangoInstanceField, self).wrap_resolve(parent_resolver)
+        return partial(
+            self.instance_resolver,
+            self._underlying_type,
+            self.unique_fields,
+            resolver,
+            self.get_manager(),
+            self.is_foreign_key,
+        )

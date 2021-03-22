@@ -29,7 +29,7 @@ from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
-from .fields import DjangoListField, DjangoConnectionField
+from .fields import DjangoListField, DjangoConnectionField, DjangoInstanceField
 from .settings import graphene_settings
 from .utils.str_converters import to_const
 
@@ -229,23 +229,6 @@ def convert_time_to_string(field, registry=None):
     )
 
 
-@convert_django_field.register(models.OneToOneRel)
-def convert_onetoone_field_to_djangomodel(field, registry=None):
-    model = field.related_model
-
-    def dynamic_type():
-        _type = registry.get_type_for_model(model)
-        if not _type:
-            return
-
-        # We do this for a bug in Django 1.8, where null attr
-        # is not available in the OneToOneRel instance
-        null = getattr(field, "null", True)
-        return Field(_type, required=not null)
-
-    return Dynamic(dynamic_type)
-
-
 @convert_django_field.register(models.ManyToManyField)
 @convert_django_field.register(models.ManyToManyRel)
 @convert_django_field.register(models.ManyToOneRel)
@@ -288,6 +271,7 @@ def convert_field_to_list_or_connection(field, registry=None):
 
 @convert_django_field.register(models.OneToOneField)
 @convert_django_field.register(models.ForeignKey)
+@convert_django_field.register(models.OneToOneRel)
 def convert_field_to_djangomodel(field, registry=None):
     model = field.related_model
 
@@ -296,10 +280,16 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        if isinstance(field, models.OneToOneRel):
+            description = get_django_field_description(field.field)
+        else:
+            description = get_django_field_description(field)
+
+        return DjangoInstanceField(
             _type,
-            description=get_django_field_description(field),
+            description=description,
             required=not field.null,
+            is_foreign_key=True,
         )
 
     return Dynamic(dynamic_type)

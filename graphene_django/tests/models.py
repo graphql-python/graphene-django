@@ -13,6 +13,9 @@ class Person(models.Model):
 class Pet(models.Model):
     name = models.CharField(max_length=30)
     age = models.PositiveIntegerField()
+    owner = models.ForeignKey(
+        "Person", on_delete=models.CASCADE, null=True, blank=True, related_name="pets"
+    )
 
 
 class FilmDetails(models.Model):
