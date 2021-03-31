@@ -84,6 +84,7 @@ class GraphQLView(View):
     pretty = False
     batch = False
     subscription_path = None
+    execution_context_class = None
 
     def __init__(
         self,
