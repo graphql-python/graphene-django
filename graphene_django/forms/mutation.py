@@ -101,7 +101,10 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def perform_mutate(cls, form, info):
-        form.save()
+        if hasattr(form, "save"):
+            # `save` method won't exist on plain Django forms, but this mutation can
+            # in theory be used with `ModelForm`s as well and we do want to save them.
+            form.save()
         return cls(errors=[], **form.cleaned_data)
 
 
