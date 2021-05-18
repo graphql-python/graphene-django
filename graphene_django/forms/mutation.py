@@ -111,9 +111,12 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 class DjangoModelDjangoFormMutationOptions(DjangoFormMutationOptions):
     model = None
     return_field_name = None
+    input_field_name = None
 
 
 class DjangoModelFormMutation(BaseDjangoFormMutation):
+    _DEFAULT_INPUT_FIELD_NAME = "input"
+
     class Meta:
         abstract = True
 
@@ -127,6 +130,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         return_field_name=None,
         only_fields=(),
         exclude_fields=(),
+        input_field_name=_DEFAULT_INPUT_FIELD_NAME,
         **options
     ):
 
@@ -166,6 +170,17 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
+        cls.input_field_name = input_field_name
+        if cls.input_field_name != cls._DEFAULT_INPUT_FIELD_NAME:
+            cls._meta.arguments[cls.input_field_name] = cls._meta.arguments.pop(
+                cls._DEFAULT_INPUT_FIELD_NAME
+            )
+
+    @classmethod
+    def mutate(cls, root, info, **kwargs):
+        if cls.input_field_name != cls._DEFAULT_INPUT_FIELD_NAME:
+            kwargs[cls._DEFAULT_INPUT_FIELD_NAME] = kwargs.pop(cls.input_field_name)
+        return super(DjangoModelFormMutation, cls).mutate(root, info, **kwargs)
 
     @classmethod
     def mutate_and_get_payload(cls, root, info, **input):
