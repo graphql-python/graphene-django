@@ -72,7 +72,7 @@ class GraphQLTestMixin(object):
     GRAPHQL_URL = DEFAULT_GRAPHQL_URL
 
     def query(
-        self, query, operation_name=None, input_data=None, variables=None, headers=None
+        self, query, operation_name=None, input_data=None, variables=None, headers=None, graphql_url=DEFAULT_GRAPHQL_URL
     ):
         """
         Args:
@@ -101,7 +101,7 @@ class GraphQLTestMixin(object):
             variables=variables,
             headers=headers,
             client=self.client,
-            graphql_url=self.GRAPHQL_URL,
+            graphql_url=graphql_url,
         )
 
     @property
