@@ -158,7 +158,8 @@ class DjangoConnectionField(ConnectionField):
 
         if max_limit is not None and args.get("first", None) is None:
             if args.get("last", None) is not None:
-                after = list_length - args["last"]
+                if args.get("before", None) is None:
+                    after = list_length - args["last"]
             else:
                 args["first"] = max_limit
 
