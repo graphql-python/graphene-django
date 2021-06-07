@@ -175,10 +175,8 @@ def convert_field_to_id(field, registry=None):
 if hasattr(models, "SmallAutoField"):
 
     @convert_django_field.register(models.SmallAutoField)
-    def convert_field_to_id(field, registry=None):
-        return ID(
-            description=get_django_field_description(field), required=not field.null
-        )
+    def convert_field_small_to_id(field, registry=None):
+        return convert_field_to_id(field, registry)
 
 
 @convert_django_field.register(models.UUIDField)
