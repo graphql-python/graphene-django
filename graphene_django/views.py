@@ -339,7 +339,7 @@ class GraphQLView(View):
                 return result
 
             return self.schema.execute(**options)
-        except Exception as e:
+        except GraphQLError as e:
             return ExecutionResult(errors=[e])
 
     @classmethod
