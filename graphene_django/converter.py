@@ -166,9 +166,17 @@ def convert_field_to_string(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigAutoField)
 @convert_django_field.register(models.AutoField)
 def convert_field_to_id(field, registry=None):
     return ID(description=get_django_field_description(field), required=not field.null)
+
+
+if hasattr(models, "SmallAutoField"):
+
+    @convert_django_field.register(models.SmallAutoField)
+    def convert_field_small_to_id(field, registry=None):
+        return convert_field_to_id(field, registry)
 
 
 @convert_django_field.register(models.UUIDField)

@@ -111,6 +111,15 @@ def test_should_auto_convert_id():
     assert_conversion(models.AutoField, graphene.ID, primary_key=True)
 
 
+def test_should_big_auto_convert_id():
+    assert_conversion(models.BigAutoField, graphene.ID, primary_key=True)
+
+
+def test_should_small_auto_convert_id():
+    if hasattr(models, "SmallAutoField"):
+        assert_conversion(models.SmallAutoField, graphene.ID, primary_key=True)
+
+
 def test_should_uuid_convert_id():
     assert_conversion(models.UUIDField, graphene.UUID)
 
