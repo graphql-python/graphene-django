@@ -77,6 +77,19 @@ Add ingredients as INSTALLED_APPS:
         "cookbook.ingredients",
     ]
 
+Ensure Django >= 3.2 automatic AppConfig discovery works by adding ``cookbook.`` prefix to ``name = 'ingredients'`` config:
+
+.. code:: python
+
+    # cookbook/apps.py
+
+    from django.apps import AppConfig
+
+
+    class IngredientsConfig(AppConfig):
+        default_auto_field = 'django.db.models.BigAutoField'
+        name = 'cookbook.ingredients'
+
 
 Don't forget to create & run migrations:
 
