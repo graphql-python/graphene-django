@@ -1,6 +1,7 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
+from django.db.models import Count
 from graphql_relay.connection.arrayconnection import (
     connection_from_array_slice,
     cursor_to_offset,
@@ -144,7 +145,7 @@ class DjangoConnectionField(ConnectionField):
         iterable = maybe_queryset(iterable)
 
         if isinstance(iterable, QuerySet):
-            list_length = iterable.count()
+            list_length = iterable.aggregate(Count('pk'))['pk__count']
         else:
             list_length = len(iterable)
         list_slice_length = (
