@@ -9,6 +9,8 @@ from graphene.types import Field, InputField
 from graphene.types.mutation import MutationOptions
 from graphene.types.objecttype import yank_fields_from_attrs
 
+from graphql_relay import from_global_id
+
 from ..types import ErrorType
 from .serializer_converter import convert_serializer_field
 
@@ -125,9 +127,16 @@ class SerializerMutation(ClientIDMutation):
 
         if model_class:
             if "update" in cls._meta.model_operations and lookup_field in input:
-                instance = get_object_or_404(
-                    model_class, **{lookup_field: input[lookup_field]}
-                )
+                if 'client_mutation_id' in input:
+                    global_id = input.pop("client_mutation_id", None)
+                    node_type, global_pk = from_global_id(global_id)
+                    instance = get_object_or_404(
+                        model_class, **{lookup_field: global_pk}
+                    )
+                 else:
+                    instance = get_object_or_404(
+                        model_class, **{lookup_field: input[lookup_field]}
+                    )
                 partial = True
             elif "create" in cls._meta.model_operations:
                 instance = None
