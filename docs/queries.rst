@@ -418,29 +418,29 @@ the core graphene pages for more information on customizing the Relay experience
 You can now execute queries like:
 
 
-.. code:: python
+.. code:: graphql
 
     {
         questions (first: 2, after: "YXJyYXljb25uZWN0aW9uOjEwNQ==") {
             pageInfo {
-            startCursor
-            endCursor
-            hasNextPage
-            hasPreviousPage
+                startCursor
+                endCursor
+                hasNextPage
+                hasPreviousPage
             }
             edges {
-            cursor
-            node {
-                id
-                question_text
-            }
+                cursor
+                node {
+                    id
+                    question_text
+                }
             }
         }
     }
 
 Which returns:
 
-.. code:: python
+.. code:: json
 
     {
         "data": {
