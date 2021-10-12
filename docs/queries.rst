@@ -313,7 +313,7 @@ Additionally, Resolvers will receive **any arguments declared in the field defin
             bar=graphene.Int()
         )
 
-        def resolve_question(root, info, foo, bar):
+        def resolve_question(root, info, foo=None, bar=None):
             # If `foo` or `bar` are declared in the GraphQL query they will be here, else None.
             return Question.objects.filter(foo=foo, bar=bar).first()
 
@@ -336,12 +336,12 @@ of Django's ``HTTPRequest`` in your resolve methods, such as checking for authen
     class Query(graphene.ObjectType):
         questions = graphene.List(QuestionType)
 
-    def resolve_questions(root, info):
-        # See if a user is authenticated
-        if info.context.user.is_authenticated():
-            return Question.objects.all()
-        else:
-            return Question.objects.none()
+        def resolve_questions(root, info):
+            # See if a user is authenticated
+            if info.context.user.is_authenticated():
+                return Question.objects.all()
+            else:
+                return Question.objects.none()
 
 
 DjangoObjectTypes
