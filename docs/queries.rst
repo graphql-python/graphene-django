@@ -151,7 +151,7 @@ For example the following ``Model`` and ``DjangoObjectType``:
 
 Results in the following GraphQL schema definition:
 
-.. code::
+.. code:: graphql
 
    type Pet {
      id: ID!
@@ -178,7 +178,7 @@ You can disable this automatic conversion by setting
             fields = ("id", "kind",)
             convert_choices_to_enum = False
 
-.. code::
+.. code:: graphql
 
   type Pet {
     id: ID!
