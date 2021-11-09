@@ -122,7 +122,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
-    model = None  # type: Model
+    model = None  # type: Type[Model]
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
 
