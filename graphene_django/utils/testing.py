@@ -3,7 +3,7 @@ import warnings
 
 from django.test import Client, TestCase, TransactionTestCase
 
-DEFAULT_GRAPHQL_URL = "/graphql/"
+DEFAULT_GRAPHQL_URL = "/graphql"
 
 
 def graphql_query(
