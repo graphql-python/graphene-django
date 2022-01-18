@@ -5,7 +5,7 @@ import pytest
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
 
-from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
+from graphene import Argument, Boolean, Decimal, Field, ObjectType, Schema, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
@@ -401,7 +401,7 @@ def test_filterset_descriptions():
     field = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleIdFilter)
     max_time = field.args["max_time"]
     assert isinstance(max_time, Argument)
-    assert max_time.type == Float
+    assert max_time.type == Decimal
     assert max_time.description == "The maximum time"
 
 
