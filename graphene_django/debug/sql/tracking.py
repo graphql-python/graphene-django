@@ -51,7 +51,7 @@ def unwrap_cursor(connection):
         del connection._graphene_cursor
 
 
-class ExceptionCursorWrapper(object):
+class ExceptionCursorWrapper:
     """
     Wraps a cursor and raises an exception on any operation.
     Used in Templates panel.
@@ -64,7 +64,7 @@ class ExceptionCursorWrapper(object):
         raise SQLQueryTriggered()
 
 
-class NormalCursorWrapper(object):
+class NormalCursorWrapper:
     """
     Wraps a cursor and logs queries.
     """

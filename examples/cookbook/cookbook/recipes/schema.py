@@ -23,7 +23,7 @@ class RecipeIngredientNode(DjangoObjectType):
         }
 
 
-class Query(object):
+class Query:
     recipe = Node.Field(RecipeNode)
     all_recipes = DjangoFilterConnectionField(RecipeNode)
 

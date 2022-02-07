@@ -14,7 +14,7 @@ class IngredientType(DjangoObjectType):
         model = Ingredient
 
 
-class Query(object):
+class Query:
     category = graphene.Field(CategoryType, id=graphene.Int(), name=graphene.String())
     all_categories = graphene.List(CategoryType)
 

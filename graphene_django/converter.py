@@ -64,7 +64,7 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-    class EnumWithDescriptionsType(object):
+    class EnumWithDescriptionsType:
         @property
         def description(self):
             return named_choices_descriptions[self.name]

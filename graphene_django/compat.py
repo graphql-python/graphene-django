@@ -1,4 +1,4 @@
-class MissingType(object):
+class MissingType:
     pass
 
 

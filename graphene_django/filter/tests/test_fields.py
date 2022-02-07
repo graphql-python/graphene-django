@@ -163,7 +163,7 @@ def test_filter_shortcut_filterset_context():
         editor=r2,
     )
 
-    class context(object):
+    class context:
         reporter = r2
 
     query = """
