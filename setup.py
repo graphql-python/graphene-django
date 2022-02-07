@@ -19,8 +19,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
-    "django-filter<2;python_version<'3'",
-    "django-filter>=2;python_version>='3'",
+    "django-filter>=2",
     "pytest-django>=3.3.2",
 ] + rest_framework_require
 
@@ -45,10 +44,7 @@ setup(
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
         "Topic :: Software Development :: Libraries",
-        "Programming Language :: Python :: 2",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: Implementation :: PyPy",
