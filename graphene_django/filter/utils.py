@@ -1,5 +1,3 @@
-import six
-
 import graphene
 
 from django import forms
