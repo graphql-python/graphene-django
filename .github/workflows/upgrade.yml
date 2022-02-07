@@ -1,0 +1,29 @@
+# https://github.com/pre-commit/action
+
+name: "upgrade the code"
+
+on:
+  push:
+    branches:
+      - master
+  pull_request: ~
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.4.0
+      name: Checkout
+
+    - uses: actions/setup-python@v2.3.1
+      name: Install Python
+
+    - uses: pre-commit/action@v2.0.3
+      name: pyupgrade (3.7)
+      with:
+        extra_args: pyupgrade --all-files
+
+    - uses: pre-commit/action@v2.0.3
+      name: django-upgrade (2.2)
+      with:
+        extra_args: django-upgrade --all-files
