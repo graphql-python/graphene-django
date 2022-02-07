@@ -138,7 +138,7 @@ def test_filter_shortcut_filterset_context():
 
         @property
         def qs(self):
-            qs = super(ArticleContextFilter, self).qs
+            qs = super().qs
             return qs.filter(reporter=self.request.reporter)
 
     class Query(ObjectType):

@@ -25,7 +25,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._filtering_args = None
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
-        super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
+        super().__init__(type, *args, **kwargs)
 
     @property
     def args(self):
@@ -71,7 +71,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                     kwargs[k] = v
             return kwargs
 
-        qs = super(DjangoFilterConnectionField, cls).resolve_queryset(
+        qs = super().resolve_queryset(
             connection, iterable, info, args
         )
 

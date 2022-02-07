@@ -99,7 +99,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-        super(DjangoFormMutation, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 
@@ -164,7 +164,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 

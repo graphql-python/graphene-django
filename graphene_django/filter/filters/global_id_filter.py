@@ -17,7 +17,7 @@ class GlobalIDFilter(Filter):
         _id = None
         if value is not None:
             _, _id = from_global_id(value)
-        return super(GlobalIDFilter, self).filter(qs, _id)
+        return super().filter(qs, _id)
 
 
 class GlobalIDMultipleChoiceFilter(MultipleChoiceFilter):
@@ -25,4 +25,4 @@ class GlobalIDMultipleChoiceFilter(MultipleChoiceFilter):
 
     def filter(self, qs, value):
         gids = [from_global_id(v)[1] for v in value]
-        return super(GlobalIDMultipleChoiceFilter, self).filter(qs, gids)
+        return super().filter(qs, gids)

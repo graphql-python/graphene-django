@@ -255,7 +255,7 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
-        super(DjangoObjectType, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
 

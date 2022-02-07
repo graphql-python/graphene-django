@@ -102,7 +102,7 @@ def test_django_objecttype_with_custom_meta():
         @classmethod
         def __init_subclass_with_meta__(cls, **options):
             options.setdefault("_meta", ArticleTypeOptions(cls))
-            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+            super().__init_subclass_with_meta__(**options)
 
     class Article(ArticleType):
         class Meta:
