@@ -109,6 +109,7 @@ class NormalCursorWrapper:
             alias = getattr(self.db, "alias", "default")
             conn = self.db.connection
             vendor = getattr(conn, "vendor", "unknown")
+            sql_str = sql.decode(errors="ignore") if isinstance(sql, bytes) else sql
 
             params = {
                 "vendor": vendor,
@@ -122,7 +123,7 @@ class NormalCursorWrapper:
                 "start_time": start_time,
                 "stop_time": stop_time,
                 "is_slow": duration > 10,
-                "is_select": sql.lower().strip().startswith("select"),
+                "is_select": sql_str.lower().strip().startswith("select"),
             }
 
             if vendor == "postgresql":
