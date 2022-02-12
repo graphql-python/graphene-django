@@ -27,7 +27,7 @@ After installing ``django-filter`` you'll need to add the application in the ``s
     ]
 
 Note: The techniques below are demoed in the `cookbook example
-app <https://github.com/graphql-python/graphene-django/tree/main/examples/cookbook>`__.
+app <https://github.com/graphql-python/graphene-django/tree/v2/examples/cookbook>`__.
 
 Filterable fields
 -----------------
