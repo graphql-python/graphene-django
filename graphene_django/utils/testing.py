@@ -19,7 +19,7 @@ def graphql_query(
     Args:
         query (string)              - GraphQL query to run
         operation_name (string)     - If the query is a mutation or named query, you must
-                                      supply the op_name.  For annon queries ("{ ... }"),
+                                      supply the operation_name.  For annon queries ("{ ... }"),
                                       should be None (default).
         input_data (dict)           - If provided, the $input variable in GraphQL will be set
                                       to this value. If both ``input_data`` and ``variables``,
@@ -78,7 +78,7 @@ class GraphQLTestMixin(object):
         Args:
             query (string)    - GraphQL query to run
             operation_name (string)  - If the query is a mutation or named query, you must
-                                supply the op_name.  For annon queries ("{ ... }"),
+                                supply the operation_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
                                 to this value. If both ``input_data`` and ``variables``,
@@ -89,7 +89,7 @@ class GraphQLTestMixin(object):
             headers (dict)    - If provided, the headers in POST request to GRAPHQL_URL
                                 will be set to this value. Keys should be prepended with
                                 "HTTP_" (e.g. to specify the "Authorization" HTTP header,
-                                use "HTTP_AUTHORIZATION" as the key).       
+                                use "HTTP_AUTHORIZATION" as the key).
 
         Returns:
             Response object from client

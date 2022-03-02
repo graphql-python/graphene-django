@@ -27,7 +27,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myModel'
+                operation_name='myModel'
             )
 
             content = json.loads(response.content)
@@ -48,7 +48,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myModel',
+                operation_name='myModel',
                 variables={'id': 1}
             )
 
@@ -72,7 +72,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myMutation',
+                operation_name='myMutation',
                 input_data={'my_field': 'foo', 'other_field': 'bar'}
             )
 
@@ -107,7 +107,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myMutation',
+                operation_name='myMutation',
                 input_data={'my_field': 'foo', 'other_field': 'bar'}
             )
 
@@ -147,7 +147,7 @@ To use pytest define a simple fixture using the query helper below
                     }
                 }
                 ''',
-                op_name='myModel'
+                operation_name='myModel'
             )
 
             content = json.loads(response.content)
