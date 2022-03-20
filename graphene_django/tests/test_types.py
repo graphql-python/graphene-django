@@ -183,7 +183,7 @@ def test_schema_representation():
           pets: [Reporter!]!
           aChoice: TestsReporterAChoiceChoices
           reporterType: TestsReporterReporterTypeChoices
-          articles(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
+          articles(offset: Int, before: String, after: String, first: Int, last: Int): ArticleConnection!
         }
 
         \"""An enumeration.\"""
