@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+from traceback import print_tb
 
 from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
@@ -53,6 +54,20 @@ def instantiate_middleware(middlewares):
         yield middleware
 
 
+class ExceptionLoggingExecutionContext(ExecutionContext):
+
+    """An execution context which logs exceptions."""
+
+    def handle_field_error(
+        self,
+        error: GraphQLError,
+        return_type,
+    ) -> None:
+
+        print_tb(error.original_error.__traceback__)
+        return super().handle_field_error(error, return_type)
+
+
 class GraphQLView(View):
     graphiql_template = "graphene/graphiql.html"
 
@@ -94,7 +109,7 @@ class GraphQLView(View):
         pretty=False,
         batch=False,
         subscription_path=None,
-        execution_context_class=None,
+        execution_context_class=ExceptionLoggingExecutionContext,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
