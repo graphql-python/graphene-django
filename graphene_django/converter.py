@@ -24,6 +24,7 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
@@ -186,10 +187,14 @@ def convert_field_to_uuid(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigIntegerField)
+def convert_big_int_field(field, registry=None):
+    return BigInt(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.PositiveIntegerField)
 @convert_django_field.register(models.PositiveSmallIntegerField)
 @convert_django_field.register(models.SmallIntegerField)
-@convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
     return Int(description=get_django_field_description(field), required=not field.null)
