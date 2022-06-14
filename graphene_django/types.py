@@ -252,6 +252,7 @@ class DjangoObjectType(ObjectType):
         _meta.filterset_class = filterset_class
         _meta.fields = django_fields
         _meta.connection = connection
+        _meta.convert_choices_to_enum = convert_choices_to_enum
 
         super().__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
