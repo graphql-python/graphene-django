@@ -98,7 +98,7 @@ def test_typed_filter_schema(schema):
     )
 
     for filter_field, gql_type in filters.items():
-        assert "{}: {} = null".format(filter_field, gql_type) in all_articles_filters
+        assert "{}: {}".format(filter_field, gql_type) in all_articles_filters
 
 
 def test_typed_filters_work(schema):

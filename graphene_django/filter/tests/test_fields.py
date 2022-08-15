@@ -1008,7 +1008,7 @@ def test_integer_field_filter_type():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
         }
 
         type PetTypeConnection {
@@ -1056,8 +1056,7 @@ def test_integer_field_filter_type():
         interface Node {
           \"""The ID of the object\"""
           id: ID!
-        }
-    """
+        }"""
     )
 
 
@@ -1077,7 +1076,7 @@ def test_other_filter_types():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
 
         type PetTypeConnection {
@@ -1125,8 +1124,7 @@ def test_other_filter_types():
         interface Node {
           \"""The ID of the object\"""
           id: ID!
-        }
-        """
+        }"""
     )
 
 

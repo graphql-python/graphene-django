@@ -53,6 +53,5 @@ def test_generate_graphql_file_on_call_graphql_schema():
         """\
         type Query {
           hi: String
-        }
-    """
+        }"""
     )

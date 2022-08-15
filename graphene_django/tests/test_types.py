@@ -183,7 +183,7 @@ def test_schema_representation():
           pets: [Reporter!]!
           aChoice: TestsReporterAChoiceChoices
           reporterType: TestsReporterReporterTypeChoices
-          articles(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
+          articles(offset: Int, before: String, after: String, first: Int, last: Int): ArticleConnection!
         }
 
         \"""An enumeration.\"""
@@ -244,8 +244,7 @@ def test_schema_representation():
             \"""The ID of the object\"""
             id: ID!
           ): Node
-        }
-        """
+        }"""
     )
     assert str(schema) == expected
 
@@ -525,8 +524,7 @@ class TestDjangoObjectType:
               id: ID!
               kind: String!
               cuteness: Int!
-            }
-            """
+            }"""
         )
 
     def test_django_objecttype_convert_choices_enum_list(self, PetModel):
@@ -560,8 +558,7 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }
-            """
+            }"""
         )
 
     def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
@@ -586,8 +583,7 @@ class TestDjangoObjectType:
               id: ID!
               kind: String!
               cuteness: Int!
-            }
-            """
+            }"""
         )
 
     def test_django_objecttype_convert_choices_enum_naming_collisions(
@@ -621,8 +617,7 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }
-            """
+            }"""
         )
 
     def test_django_objecttype_choices_custom_enum_name(
@@ -660,8 +655,7 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }
-            """
+            }"""
         )
 
 
