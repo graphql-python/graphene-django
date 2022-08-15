@@ -152,9 +152,6 @@ def test_filter_enum_field_schema_type(schema):
         "reporter_AChoice_In": "[TestsReporterAChoiceChoices]",
     }
     filters_str = ", ".join(
-        [
-            f"{filter_field}: {gql_type} = null"
-            for filter_field, gql_type in filters.items()
-        ]
+        [f"{filter_field}: {gql_type}" for filter_field, gql_type in filters.items()]
     )
     assert f"  allArticles({filters_str}): ArticleTypeConnection\n" in schema_str
