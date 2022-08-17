@@ -115,5 +115,9 @@ class Article(models.Model):
     def __str__(self):  # __unicode__ on Python 2
         return self.headline
 
+    @property
+    def headline_with_lang(self):
+        return "{} - {}".format(self.lang, self.headline)
+
     class Meta:
         ordering = ("headline",)

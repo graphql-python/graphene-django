@@ -10,10 +10,11 @@ from py.test import raises
 
 import graphene
 from graphene.relay import Node
+from graphene.types.utils import yank_fields_from_attrs
 
 from ..compat import IntegerRangeField, MissingType
-from ..fields import DjangoConnectionField
-from ..types import DjangoObjectType
+from ..fields import DjangoConnectionField, DjangoListField
+from ..types import DjangoObjectType, DjangoObjectTypeOptions
 from ..utils import DJANGO_FILTER_INSTALLED
 from .models import Article, CNNReporter, Film, FilmDetails, Reporter
 
@@ -1591,5 +1592,84 @@ def test_connection_should_allow_offset_filtering_with_after():
     assert not result.errors
     expected = {
         "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
+    }
+    assert result.data == expected
+
+
+def test_should_query_django_objecttype_fields_custom_meta():
+    class ArticleBaseType(DjangoObjectType):
+        class Meta:
+            abstract = True
+
+        @classmethod
+        def __init_subclass_with_meta__(cls, _meta=None, **options):
+            if _meta is None:
+                _meta = DjangoObjectTypeOptions(cls)
+
+            _meta.fields = yank_fields_from_attrs(
+                {"headline_with_lang": graphene.String()}, _as=graphene.Field,
+            )
+
+            super(ArticleBaseType, cls).__init_subclass_with_meta__(
+                _meta=_meta, **options
+            )
+
+    class ArticleCustomType(ArticleBaseType):
+        class Meta:
+            model = Article
+            fields = (
+                "headline",
+                "lang",
+                "headline_with_lang",
+            )
+
+    class Query(graphene.ObjectType):
+        all_articles = DjangoListField(ArticleCustomType)
+
+    r = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    Article.objects.create(
+        headline="Article Node 1",
+        pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
+        reporter=r,
+        editor=r,
+        lang="es",
+    )
+    Article.objects.create(
+        headline="Article Node 2",
+        pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
+        reporter=r,
+        editor=r,
+        lang="en",
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query GetAllArticles {
+            allArticles {
+                headline
+                lang
+                headlineWithLang
+            }
+        }
+    """
+    result = schema.execute(query)
+    assert not result.errors
+    expected = {
+        "allArticles": [
+            {
+                "headline": "Article Node 1",
+                "lang": "ES",
+                "headlineWithLang": "es - Article Node 1",
+            },
+            {
+                "headline": "Article Node 2",
+                "lang": "EN",
+                "headlineWithLang": "en - Article Node 2",
+            },
+        ]
     }
     assert result.data == expected
