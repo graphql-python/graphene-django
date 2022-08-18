@@ -1,5 +1,5 @@
 default_language_version:
-  python: python3.8
+  python: python3.10
 repos:
 -   repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
