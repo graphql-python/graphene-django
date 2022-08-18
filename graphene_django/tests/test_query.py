@@ -1444,7 +1444,11 @@ def test_connection_should_enable_offset_filtering():
     result = schema.execute(query)
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Some", "lastName": "Guy"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+            ]
+        }
     }
     assert result.data == expected
 
@@ -1484,7 +1488,9 @@ def test_connection_should_enable_offset_filtering_higher_than_max_limit(
     assert not result.errors
     expected = {
         "allReporters": {
-            "edges": [{"node": {"firstName": "Some", "lastName": "Lady"}},]
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
         }
     }
     assert result.data == expected
@@ -1551,6 +1557,10 @@ def test_connection_should_allow_offset_filtering_with_after():
     result = schema.execute(query, variable_values=dict(after=after))
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+            ]
+        }
     }
     assert result.data == expected

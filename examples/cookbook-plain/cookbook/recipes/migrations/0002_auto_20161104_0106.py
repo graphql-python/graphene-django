@@ -8,18 +8,26 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('recipes', '0001_initial'),
+        ("recipes", "0001_initial"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='recipeingredient',
-            old_name='recipes',
-            new_name='recipe',
+            model_name="recipeingredient",
+            old_name="recipes",
+            new_name="recipe",
         ),
         migrations.AlterField(
-            model_name='recipeingredient',
-            name='unit',
-            field=models.CharField(choices=[(b'unit', b'Units'), (b'kg', b'Kilograms'), (b'l', b'Litres'), (b'st', b'Shots')], max_length=20),
+            model_name="recipeingredient",
+            name="unit",
+            field=models.CharField(
+                choices=[
+                    (b"unit", b"Units"),
+                    (b"kg", b"Kilograms"),
+                    (b"l", b"Litres"),
+                    (b"st", b"Shots"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

@@ -66,7 +66,10 @@ class DjangoListField(Field):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
         return partial(
-            self.list_resolver, django_object_type, parent_resolver, self.get_manager(),
+            self.list_resolver,
+            django_object_type,
+            parent_resolver,
+            self.get_manager(),
         )
 
 

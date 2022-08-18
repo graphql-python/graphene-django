@@ -1208,13 +1208,23 @@ def test_filter_string_contains():
     result = schema.execute(query, variables={"filter": "Ja"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Jack"}}, {"node": {"name": "Jane"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Jack"}},
+                {"node": {"name": "Jane"}},
+            ]
+        }
     }
 
     result = schema.execute(query, variables={"filter": "o"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Joe"}}, {"node": {"name": "Bob"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Joe"}},
+                {"node": {"name": "Bob"}},
+            ]
+        }
     }
 
 

@@ -374,16 +374,28 @@ def test_enum_in_filter(query):
     """
 
     Reporter.objects.create(
-        first_name="John", last_name="Doe", email="john@doe.com", reporter_type=1
+        first_name="John",
+        last_name="Doe",
+        email="john@doe.com",
+        reporter_type=1,
     )
     Reporter.objects.create(
-        first_name="Jean", last_name="Bon", email="jean@bon.com", reporter_type=2
+        first_name="Jean",
+        last_name="Bon",
+        email="jean@bon.com",
+        reporter_type=2,
     )
     Reporter.objects.create(
-        first_name="Jane", last_name="Doe", email="jane@doe.com", reporter_type=2
+        first_name="Jane",
+        last_name="Doe",
+        email="jane@doe.com",
+        reporter_type=2,
     )
     Reporter.objects.create(
-        first_name="Jack", last_name="Black", email="jack@black.com", reporter_type=None
+        first_name="Jack",
+        last_name="Black",
+        email="jack@black.com",
+        reporter_type=None,
     )
 
     schema = Schema(query=query)
