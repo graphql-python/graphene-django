@@ -26,7 +26,7 @@ tests_require = [
 
 
 dev_requires = [
-    "black==19.10b0",
+    "black==22.6.0",
     "flake8>=5,<6",
     "flake8-black==0.3.3",
     "flake8-bugbear==22.7.1",
