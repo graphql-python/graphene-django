@@ -1593,3 +1593,78 @@ def test_connection_should_allow_offset_filtering_with_after():
         "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
     }
     assert result.data == expected
+
+
+def test_connection_should_succeed_if_last_higher_than_number_of_objects():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            fields = "__all__"
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($last: Int) {
+            allReporters(last: $last) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query, variable_values=dict(last=2))
+    assert not result.errors
+    expected = {"allReporters": {"edges": []}}
+    assert result.data == expected
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    Reporter.objects.create(first_name="Some", last_name="Guy")
+    Reporter.objects.create(first_name="Jane", last_name="Roe")
+    Reporter.objects.create(first_name="Some", last_name="Lady")
+
+    result = schema.execute(query, variable_values=dict(last=2))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
+
+    result = schema.execute(query, variable_values=dict(last=4))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "John", "lastName": "Doe"}},
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
+
+    result = schema.execute(query, variable_values=dict(last=20))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "John", "lastName": "Doe"}},
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
