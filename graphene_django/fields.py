@@ -146,36 +146,38 @@ class DjangoConnectionField(ConnectionField):
         iterable = maybe_queryset(iterable)
 
         if isinstance(iterable, QuerySet):
-            list_length = iterable.count()
+            array_length = iterable.count()
         else:
-            list_length = len(iterable)
-        list_slice_length = (
-            min(max_limit, list_length) if max_limit is not None else list_length
+            array_length = len(iterable)
+        array_slice_length = (
+            min(max_limit, array_length) if max_limit is not None else array_length
         )
 
         # If after is higher than list_length, connection_from_list_slice
         # would try to do a negative slicing which makes django throw an
         # AssertionError
-        after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
+        slice_start = min(
+            get_offset_with_default(args.get("after"), -1) + 1, array_length
+        )
 
         if max_limit is not None and args.get("first", None) is None:
             if args.get("last", None) is not None:
-                after = list_length - args["last"]
+                slice_start = max(array_length - args["last"], 0)
             else:
                 args["first"] = max_limit
 
         connection = connection_from_array_slice(
-            iterable[after:],
+            iterable[slice_start:],
             args,
-            slice_start=after,
-            array_length=list_length,
-            array_slice_length=list_slice_length,
+            slice_start=slice_start,
+            array_length=array_length,
+            array_slice_length=array_slice_length,
             connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
             page_info_type=page_info_adapter,
         )
         connection.iterable = iterable
-        connection.length = list_length
+        connection.length = array_length
         return connection
 
     @classmethod
