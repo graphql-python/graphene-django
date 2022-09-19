@@ -59,9 +59,9 @@ setup(
     keywords="api graphql protocol rest relay graphene",
     packages=find_packages(exclude=["tests", "examples", "examples.*"]),
     install_requires=[
-        "graphene>=3.0,<4",
+        "graphene @ git+https://github.com/graphql-python/graphene.git@ee1ff975d71f6590eb6933d76d12054c9839774a#egg=graphene",
         "graphql-core>=3.1.0,<4",
-        "graphql-relay>=3.1.1,<4",
+        "graphql-relay @ git+https://github.com/loft-orbital/graphql-relay-py.git@loft-v3.2.0-1#egg=graphql-relay",
         "Django>=3.2",
         "promise>=2.1",
         "text-unidecode",
