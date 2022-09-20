@@ -1243,6 +1243,7 @@ def test_should_have_next_page(graphene_settings):
     }
 
 
+@pytest.mark.parametrize("max_limit", [100, 4])
 class TestBackwardPagination:
     def setup_schema(self, graphene_settings, max_limit):
         graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
@@ -1261,8 +1262,8 @@ class TestBackwardPagination:
         schema = graphene.Schema(query=Query)
         return schema
 
-    def do_queries(self, schema):
-        # Simply last 3
+    def test_query_last(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_last = """
             query {
                 allReporters(last: 3) {
@@ -1282,7 +1283,8 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 3", "First 4", "First 5"]
 
-        # Use a combination of first and last
+    def test_query_first_and_last(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_first_and_last = """
             query {
                 allReporters(first: 4, last: 3) {
@@ -1302,7 +1304,8 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 1", "First 2", "First 3"]
 
-        # Use a combination of first and last and after
+    def test_query_first_last_and_after(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_first_last_and_after = """
             query queryAfter($after: String) {
                 allReporters(first: 4, last: 3, after: $after) {
@@ -1317,7 +1320,8 @@ class TestBackwardPagination:
 
         after = base64.b64encode(b"arrayconnection:0").decode()
         result = schema.execute(
-            query_first_last_and_after, variable_values=dict(after=after)
+            query_first_last_and_after,
+            variable_values=dict(after=after),
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
@@ -1325,20 +1329,35 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 2", "First 3", "First 4"]
 
-    def test_should_query(self, graphene_settings):
+    def test_query_last_and_before(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
+        query_first_last_and_after = """
+            query queryAfter($before: String) {
+                allReporters(last: 1, before: $before) {
+                    edges {
+                        node {
+                            firstName
+                        }
+                    }
+                }
+            }
         """
-        Backward pagination should work as expected
-        """
-        schema = self.setup_schema(graphene_settings, max_limit=100)
-        self.do_queries(schema)
 
-    def test_should_query_with_low_max_limit(self, graphene_settings):
-        """
-        When doing backward pagination (using last) in combination with a max limit higher than the number of objects
-        we should really retrieve the last ones.
-        """
-        schema = self.setup_schema(graphene_settings, max_limit=4)
-        self.do_queries(schema)
+        result = schema.execute(
+            query_first_last_and_after,
+        )
+        assert not result.errors
+        assert len(result.data["allReporters"]["edges"]) == 1
+        assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 5"
+
+        before = base64.b64encode(b"arrayconnection:5").decode()
+        result = schema.execute(
+            query_first_last_and_after,
+            variable_values=dict(before=before),
+        )
+        assert not result.errors
+        assert len(result.data["allReporters"]["edges"]) == 1
+        assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 4"
 
 
 def test_should_preserve_prefetch_related(django_assert_num_queries):
