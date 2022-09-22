@@ -152,22 +152,24 @@ class DjangoConnectionField(ConnectionField):
             array_length = iterable.count()
         else:
             array_length = len(iterable)
-        array_slice_length = (
-            min(max_limit, array_length) if max_limit is not None else array_length
-        )
 
-        # If after is higher than list_length, connection_from_list_slice
+        # If after is higher than array_length, connection_from_array_slice
         # would try to do a negative slicing which makes django throw an
         # AssertionError
         slice_start = min(
-            get_offset_with_default(args.get("after"), -1) + 1, array_length
+            get_offset_with_default(args.get("after"), -1) + 1,
+            array_length,
         )
+        array_slice_length = array_length - slice_start
 
-        if max_limit is not None and args.get("first", None) is None:
-            if args.get("last", None) is not None:
-                slice_start = max(array_length - args["last"], 0)
-            else:
-                args["first"] = max_limit
+        # Impose the maximum limit via the `first` field if neither first or last are already provided
+        # (note that if any of them is provided they must be under max_limit otherwise an error is raised).
+        if (
+            max_limit is not None
+            and args.get("first", None) is None
+            and args.get("last", None) is None
+        ):
+            args["first"] = max_limit
 
         connection = connection_from_array_slice(
             iterable[slice_start:],
