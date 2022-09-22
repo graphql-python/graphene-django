@@ -30,7 +30,7 @@ def convert_enum(data):
 class DjangoFilterConnectionField(DjangoConnectionField):
     def __init__(
         self,
-        type,
+        type_,
         fields=None,
         order_by=None,
         extra_filter_meta=None,
@@ -44,7 +44,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._filtering_args = None
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
-        super(DjangoFilterConnectionField, self).__init__(type, *args, **kwargs)
+        super(DjangoFilterConnectionField, self).__init__(type_, *args, **kwargs)
 
     @property
     def args(self):
