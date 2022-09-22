@@ -10,6 +10,7 @@ from graphene import NonNull
 from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import Date, DateTime, Time
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 
 from ..compat import (
     ArrayField,
@@ -140,8 +141,8 @@ def test_should_small_integer_convert_int():
     assert_conversion(models.SmallIntegerField, graphene.Int)
 
 
-def test_should_big_integer_convert_int():
-    assert_conversion(models.BigIntegerField, graphene.Int)
+def test_should_big_integer_convert_big_int():
+    assert_conversion(models.BigIntegerField, BigInt)
 
 
 def test_should_integer_convert_int():
