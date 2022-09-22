@@ -103,15 +103,9 @@ def test_typed_filter_schema(schema):
 
 def test_typed_filters_work(schema):
     reporter = Reporter.objects.create(first_name="John", last_name="Doe", email="")
-    Article.objects.create(
-        headline="A", reporter=reporter, editor=reporter, lang="es",
-    )
-    Article.objects.create(
-        headline="B", reporter=reporter, editor=reporter, lang="es",
-    )
-    Article.objects.create(
-        headline="C", reporter=reporter, editor=reporter, lang="en",
-    )
+    Article.objects.create(headline="A", reporter=reporter, editor=reporter, lang="es")
+    Article.objects.create(headline="B", reporter=reporter, editor=reporter, lang="es")
+    Article.objects.create(headline="C", reporter=reporter, editor=reporter, lang="en")
 
     query = "query { articles (lang_In: [ES]) { edges { node { headline } } } }"
 

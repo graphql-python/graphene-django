@@ -1224,7 +1224,7 @@ def test_filter_filterset_based_on_mixin():
         }
     }
 
-    result = schema.execute(query, variable_values={"email": reporter_1.email},)
+    result = schema.execute(query, variable_values={"email": reporter_1.email})
 
     assert not result.errors
     assert result.data == expected
@@ -1265,13 +1265,23 @@ def test_filter_string_contains():
     result = schema.execute(query, variables={"filter": "Ja"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Jack"}}, {"node": {"name": "Jane"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Jack"}},
+                {"node": {"name": "Jane"}},
+            ]
+        }
     }
 
     result = schema.execute(query, variables={"filter": "o"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Joe"}}, {"node": {"name": "Bob"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Joe"}},
+                {"node": {"name": "Bob"}},
+            ]
+        }
     }
 
 
