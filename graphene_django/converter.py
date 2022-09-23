@@ -24,6 +24,7 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
@@ -186,10 +187,14 @@ def convert_field_to_uuid(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigIntegerField)
+def convert_big_int_field(field, registry=None):
+    return BigInt(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.PositiveIntegerField)
 @convert_django_field.register(models.PositiveSmallIntegerField)
 @convert_django_field.register(models.SmallIntegerField)
-@convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
     return Int(description=get_django_field_description(field), required=not field.null)
@@ -205,7 +210,9 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 def convert_field_to_decimal(field, registry=None):
-    return Decimal(description=field.help_text, required=not field.null)
+    return Decimal(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.FloatField)
@@ -301,7 +308,24 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                """
+                Implements a custom resolver which go through the `get_node` method to insure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super().wrap_resolve(parent_resolver)
+
+                def custom_resolver(root, info, **args):
+                    fk_obj = resolver(root, info, **args)
+                    if fk_obj is None:
+                        return None
+                    else:
+                        return _type.get_node(info, fk_obj.pk)
+
+                return custom_resolver
+
+        return CustomField(
             _type,
             description=get_django_field_description(field),
             required=not field.null,

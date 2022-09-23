@@ -11,7 +11,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse, validate
 from graphql.error import GraphQLError
-from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
 
 from graphene import Schema
@@ -387,7 +386,7 @@ class GraphQLView(View):
     @staticmethod
     def format_error(error):
         if isinstance(error, GraphQLError):
-            return format_graphql_error(error)
+            return error.formatted
 
         return {"message": str(error)}
 
