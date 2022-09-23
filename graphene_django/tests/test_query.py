@@ -15,7 +15,7 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Reporter
+from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter
 
 
 def test_should_query_only_fields():
@@ -251,8 +251,8 @@ def test_should_node():
 
 
 def test_should_query_onetoone_fields():
-    film = Film(id=1)
-    film_details = FilmDetails(id=1, film=film)
+    film = Film.objects.create(id=1)
+    film_details = FilmDetails.objects.create(id=1, film=film)
 
     class FilmNode(DjangoObjectType):
         class Meta:
@@ -1697,3 +1697,67 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
+
+
+def test_should_query_nullable_foreign_key():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+
+    class PersonType(DjangoObjectType):
+        class Meta:
+            model = Person
+
+    class Query(graphene.ObjectType):
+        pet = graphene.Field(PetType, name=graphene.String(required=True))
+        person = graphene.Field(PersonType, name=graphene.String(required=True))
+
+        def resolve_pet(self, info, name):
+            return Pet.objects.filter(name=name).first()
+
+        def resolve_person(self, info, name):
+            return Person.objects.filter(name=name).first()
+
+    schema = graphene.Schema(query=Query)
+
+    person = Person.objects.create(name="Jane")
+    pets = [
+        Pet.objects.create(name="Stray dog", age=1),
+        Pet.objects.create(name="Jane's dog", owner=person, age=1),
+    ]
+
+    query_pet = """
+        query getPet($name: String!) {
+            pet(name: $name) {
+                owner {
+                    name
+                }
+            }
+        }
+    """
+    result = schema.execute(query_pet, variables={"name": "Stray dog"})
+    assert not result.errors
+    assert result.data["pet"] == {
+        "owner": None,
+    }
+
+    result = schema.execute(query_pet, variables={"name": "Jane's dog"})
+    assert not result.errors
+    assert result.data["pet"] == {
+        "owner": {"name": "Jane"},
+    }
+
+    query_owner = """
+        query getOwner($name: String!) {
+            person(name: $name) {
+                pets {
+                    name
+                }
+            }
+        }
+    """
+    result = schema.execute(query_owner, variables={"name": "Jane"})
+    assert not result.errors
+    assert result.data["person"] == {
+        "pets": [{"name": "Jane's dog"}],
+    }
