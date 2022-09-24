@@ -1,12 +1,14 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-from graphql_relay.connection.arrayconnection import (
+
+from graphql_relay import (
     connection_from_array_slice,
     cursor_to_offset,
     get_offset_with_default,
     offset_to_cursor,
 )
+
 from promise import Promise
 
 from graphene import Int, NonNull
@@ -61,12 +63,16 @@ class DjangoListField(Field):
         return queryset
 
     def wrap_resolve(self, parent_resolver):
+        resolver = super(DjangoListField, self).wrap_resolve(parent_resolver)
         _type = self.type
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
         return partial(
-            self.list_resolver, django_object_type, parent_resolver, self.get_manager(),
+            self.list_resolver,
+            django_object_type,
+            resolver,
+            self.get_manager(),
         )
 
 
@@ -143,36 +149,40 @@ class DjangoConnectionField(ConnectionField):
         iterable = maybe_queryset(iterable)
 
         if isinstance(iterable, QuerySet):
-            list_length = iterable.count()
+            array_length = iterable.count()
         else:
-            list_length = len(iterable)
-        list_slice_length = (
-            min(max_limit, list_length) if max_limit is not None else list_length
-        )
+            array_length = len(iterable)
 
-        # If after is higher than list_length, connection_from_list_slice
+        # If after is higher than array_length, connection_from_array_slice
         # would try to do a negative slicing which makes django throw an
         # AssertionError
-        after = min(get_offset_with_default(args.get("after"), -1) + 1, list_length)
+        slice_start = min(
+            get_offset_with_default(args.get("after"), -1) + 1,
+            array_length,
+        )
+        array_slice_length = array_length - slice_start
 
-        if max_limit is not None and args.get("first", None) == None:
-            if args.get("last", None) != None:
-                after = list_length - args["last"]
-            else:
-                args["first"] = max_limit
+        # Impose the maximum limit via the `first` field if neither first or last are already provided
+        # (note that if any of them is provided they must be under max_limit otherwise an error is raised).
+        if (
+            max_limit is not None
+            and args.get("first", None) is None
+            and args.get("last", None) is None
+        ):
+            args["first"] = max_limit
 
         connection = connection_from_array_slice(
-            iterable[after:],
+            iterable[slice_start:],
             args,
-            slice_start=after,
-            array_length=list_length,
-            array_slice_length=list_slice_length,
+            slice_start=slice_start,
+            array_length=array_length,
+            array_slice_length=array_slice_length,
             connection_type=partial(connection_adapter, connection),
             edge_type=connection.Edge,
             page_info_type=page_info_adapter,
         )
         connection.iterable = iterable
-        connection.length = list_length
+        connection.length = array_length
         return connection
 
     @classmethod

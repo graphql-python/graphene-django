@@ -2,11 +2,8 @@ import warnings
 from collections import OrderedDict
 from typing import Type
 
-from django.db.models import Model
-from django.utils.functional import SimpleLazyObject
-
 import graphene
-from graphene import Field
+from django.db.models import Model
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -20,7 +17,6 @@ from .utils import (
     get_model_fields,
     is_valid_django_model,
 )
-
 
 ALL_FIELDS = "__all__"
 
@@ -108,12 +104,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                 (
                     'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
                     'Either remove the custom field or remove the field from the "exclude" list.'
-                ).format(
-                    field_name=name,
-                    app_label=model._meta.app_label,
-                    object_name=model._meta.object_name,
-                    type_=type_,
-                )
+                ).format(field_name=name, type_=type_)
             )
         else:
             if not hasattr(model, name):
@@ -131,7 +122,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
-    model = None  # type: Model
+    model = None  # type: Type[Model]
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
 
@@ -225,14 +216,14 @@ class DjangoObjectType(ObjectType):
                 "Creating a DjangoObjectType without either the `fields` "
                 "or the `exclude` option is deprecated. Add an explicit `fields "
                 "= '__all__'` option on DjangoObjectType {class_name} to use all "
-                "fields".format(class_name=cls.__name__,),
+                "fields".format(class_name=cls.__name__),
                 DeprecationWarning,
                 stacklevel=2,
             )
 
         django_fields = yank_fields_from_attrs(
             construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
-            _as=Field,
+            _as=graphene.Field,
         )
 
         if use_connection is None and interfaces:

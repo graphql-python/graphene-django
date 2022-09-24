@@ -6,16 +6,16 @@ from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_multiple(Query):
+def test_array_field_overlap_multiple(Query):
     """
-    Test contains filter on a string field.
+    Test overlap filter on a array field of string.
     """
 
     schema = Schema(query=Query)
 
     query = """
     query {
-        events (tags_Contains: ["concert", "music"]) {
+        events (tags_Overlap: ["concert", "music"]) {
             edges {
                 node {
                     name
@@ -28,20 +28,22 @@ def test_string_contains_multiple(Query):
     assert not result.errors
     assert result.data["events"]["edges"] == [
         {"node": {"name": "Live Show"}},
+        {"node": {"name": "Musical"}},
+        {"node": {"name": "Ballet"}},
     ]
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_one(Query):
+def test_array_field_overlap_one(Query):
     """
-    Test contains filter on a string field.
+    Test overlap filter on a array field of string.
     """
 
     schema = Schema(query=Query)
 
     query = """
     query {
-        events (tags_Contains: ["music"]) {
+        events (tags_Overlap: ["music"]) {
             edges {
                 node {
                     name
@@ -59,16 +61,16 @@ def test_string_contains_one(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_string_contains_none(Query):
+def test_array_field_overlap_empty_list(Query):
     """
-    Test contains filter on a string field.
+    Test overlap filter on a array field of string.
     """
 
     schema = Schema(query=Query)
 
     query = """
     query {
-        events (tags_Contains: []) {
+        events (tags_Overlap: []) {
             edges {
                 node {
                     name

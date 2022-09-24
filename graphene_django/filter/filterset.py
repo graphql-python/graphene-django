@@ -1,7 +1,6 @@
 import itertools
 
 from django.db import models
-from django_filters import Filter, MultipleChoiceFilter
 from django_filters.filterset import BaseFilterSet, FilterSet
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
@@ -19,8 +18,8 @@ GRAPHENE_FILTER_SET_OVERRIDES = {
 
 
 class GrapheneFilterSetMixin(BaseFilterSet):
-    """ A django_filters.filterset.BaseFilterSet with default filter overrides
-    to handle global IDs """
+    """A django_filters.filterset.BaseFilterSet with default filter overrides
+    to handle global IDs"""
 
     FILTER_DEFAULTS = dict(
         itertools.chain(
@@ -30,8 +29,7 @@ class GrapheneFilterSetMixin(BaseFilterSet):
 
 
 def setup_filterset(filterset_class):
-    """ Wrap a provided filterset in Graphene-specific functionality
-    """
+    """Wrap a provided filterset in Graphene-specific functionality"""
     return type(
         "Graphene{}".format(filterset_class.__name__),
         (filterset_class, GrapheneFilterSetMixin),
@@ -40,8 +38,7 @@ def setup_filterset(filterset_class):
 
 
 def custom_filterset_factory(model, filterset_base_class=FilterSet, **meta):
-    """ Create a filterset for the given model using the provided meta data
-    """
+    """Create a filterset for the given model using the provided meta data"""
     meta.update({"model": model})
     meta_class = type(str("Meta"), (object,), meta)
     filterset = type(

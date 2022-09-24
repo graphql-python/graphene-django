@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from functools import singledispatch, partial, wraps
+from functools import singledispatch, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -23,8 +23,8 @@ from graphene import (
     Time,
     Decimal,
 )
-from graphene.types.resolver import get_default_resolver
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
@@ -36,7 +36,7 @@ from .utils.str_converters import to_const
 
 
 class BlankValueField(Field):
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         resolver = self.resolver or parent_resolver
 
         # create custom resolver
@@ -167,9 +167,17 @@ def convert_field_to_string(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigAutoField)
 @convert_django_field.register(models.AutoField)
 def convert_field_to_id(field, registry=None):
     return ID(description=get_django_field_description(field), required=not field.null)
+
+
+if hasattr(models, "SmallAutoField"):
+
+    @convert_django_field.register(models.SmallAutoField)
+    def convert_field_small_to_id(field, registry=None):
+        return convert_field_to_id(field, registry)
 
 
 @convert_django_field.register(models.UUIDField)
@@ -179,10 +187,14 @@ def convert_field_to_uuid(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigIntegerField)
+def convert_big_int_field(field, registry=None):
+    return BigInt(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.PositiveIntegerField)
 @convert_django_field.register(models.PositiveSmallIntegerField)
 @convert_django_field.register(models.SmallIntegerField)
-@convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
     return Int(description=get_django_field_description(field), required=not field.null)
@@ -198,7 +210,9 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 def convert_field_to_decimal(field, registry=None):
-    return Decimal(description=field.help_text, required=not field.null)
+    return Decimal(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.FloatField)
@@ -239,10 +253,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        # We do this for a bug in Django 1.8, where null attr
-        # is not available in the OneToOneRel instance
-        null = getattr(field, "null", True)
-        return Field(_type, required=not null)
+        return Field(_type, required=not field.null)
 
     return Dynamic(dynamic_type)
 
@@ -297,7 +308,24 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                """
+                Implements a custom resolver which go through the `get_node` method to insure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super().wrap_resolve(parent_resolver)
+
+                def custom_resolver(root, info, **args):
+                    fk_obj = resolver(root, info, **args)
+                    if fk_obj is None:
+                        return None
+                    else:
+                        return _type.get_node(info, fk_obj.pk)
+
+                return custom_resolver
+
+        return CustomField(
             _type,
             description=get_django_field_description(field),
             required=not field.null,

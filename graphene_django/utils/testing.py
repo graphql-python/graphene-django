@@ -1,10 +1,10 @@
 import json
 import warnings
 
-from django.test import Client, TestCase
+from django.test import Client, TestCase, TransactionTestCase
 
 from graphene_django.settings import graphene_settings
-
+DEFAULT_GRAPHQL_URL = "/graphql"
 
 def graphql_query(
     query,
@@ -19,7 +19,7 @@ def graphql_query(
     Args:
         query (string)              - GraphQL query to run
         operation_name (string)     - If the query is a mutation or named query, you must
-                                      supply the op_name.  For annon queries ("{ ... }"),
+                                      supply the operation_name.  For annon queries ("{ ... }"),
                                       should be None (default).
         input_data (dict)           - If provided, the $input variable in GraphQL will be set
                                       to this value. If both ``input_data`` and ``variables``,
@@ -28,7 +28,9 @@ def graphql_query(
         variables (dict)            - If provided, the "variables" field in GraphQL will be
                                       set to this value.
         headers (dict)              - If provided, the headers in POST request to GRAPHQL_URL
-                                      will be set to this value.
+                                      will be set to this value. Keys should be prepended with
+                                      "HTTP_" (e.g. to specify the "Authorization" HTTP header,
+                                      use "HTTP_AUTHORIZATION" as the key).
         client (django.test.Client) - Test client. Defaults to django.test.Client.
         graphql_url (string)        - URL to graphql endpoint. Defaults to "/graphql".
 
@@ -61,7 +63,7 @@ def graphql_query(
     return resp
 
 
-class GraphQLTestCase(TestCase):
+class GraphQLTestMixin(object):
     """
     Based on: https://www.sam.today/blog/testing-graphql-with-graphene-django/
     """
@@ -76,7 +78,7 @@ class GraphQLTestCase(TestCase):
         Args:
             query (string)    - GraphQL query to run
             operation_name (string)  - If the query is a mutation or named query, you must
-                                supply the op_name.  For annon queries ("{ ... }"),
+                                supply the operation_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
                                 to this value. If both ``input_data`` and ``variables``,
@@ -85,7 +87,9 @@ class GraphQLTestCase(TestCase):
             variables (dict)  - If provided, the "variables" field in GraphQL will be
                                 set to this value.
             headers (dict)    - If provided, the headers in POST request to GRAPHQL_URL
-                                will be set to this value.
+                                will be set to this value. Keys should be prepended with
+                                "HTTP_" (e.g. to specify the "Authorization" HTTP header,
+                                use "HTTP_AUTHORIZATION" as the key).
 
         Returns:
             Response object from client
@@ -139,3 +143,11 @@ class GraphQLTestCase(TestCase):
         """
         content = json.loads(resp.content)
         self.assertIn("errors", list(content.keys()), msg or content)
+
+
+class GraphQLTestCase(GraphQLTestMixin, TestCase):
+    pass
+
+
+class GraphQLTransactionTestCase(GraphQLTestMixin, TransactionTestCase):
+    pass

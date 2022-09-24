@@ -16,10 +16,7 @@ from __future__ import unicode_literals
 from django.conf import settings
 from django.test.signals import setting_changed
 
-try:
-    import importlib  # Available in Python 3.1+
-except ImportError:
-    from django.utils import importlib  # Will be removed in Django 1.9
+import importlib  # Available in Python 3.1+
 
 
 # Copied shamelessly from Django REST Framework

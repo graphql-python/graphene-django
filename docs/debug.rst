@@ -4,7 +4,7 @@ Django Debug Middleware
 You can debug your GraphQL queries in a similar way to
 `django-debug-toolbar <https://django-debug-toolbar.readthedocs.org/>`__,
 but outputting in the results in GraphQL response as fields, instead of
-the graphical HTML interface.
+the graphical HTML interface. Exceptions with their stack traces are also exposed.
 
 For that, you will need to add the plugin in your graphene schema.
 
@@ -62,6 +62,10 @@ the GraphQL request, like:
       _debug {
         sql {
           rawSql
+        }
+        exceptions {
+          message
+          stack
         }
       }
     }

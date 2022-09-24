@@ -28,7 +28,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myModel'
+                operation_name='myModel'
             )
 
             content = json.loads(response.content)
@@ -49,7 +49,7 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myModel',
+                operation_name='myModel',
                 variables={'id': 1}
             )
 
@@ -73,7 +73,42 @@ Usage:
                     }
                 }
                 ''',
-                op_name='myMutation',
+                operation_name='myMutation',
+                input_data={'my_field': 'foo', 'other_field': 'bar'}
+            )
+
+            # This validates the status code and if you get errors
+            self.assertResponseNoErrors(response)
+
+            # Add some more asserts if you like
+            ...
+
+
+For testing mutations that are executed within a transaction you should subclass `GraphQLTransactionTestCase`
+
+Usage:
+
+.. code:: python
+
+    import json
+
+    from graphene_django.utils.testing import GraphQLTransactionTestCase
+
+    class MyFancyTransactionTestCase(GraphQLTransactionTestCase):
+
+        def test_some_mutation_that_executes_within_a_transaction(self):
+            response = self.query(
+                '''
+                mutation myMutation($input: MyMutationInput!) {
+                    myMutation(input: $input) {
+                        my-model {
+                            id
+                            name
+                        }
+                    }
+                }
+                ''',
+                operation_name='myMutation',
                 input_data={'my_field': 'foo', 'other_field': 'bar'}
             )
 
@@ -113,7 +148,7 @@ To use pytest define a simple fixture using the query helper below
                     }
                 }
                 ''',
-                op_name='myModel'
+                operation_name='myModel'
             )
 
             content = json.loads(response.content)

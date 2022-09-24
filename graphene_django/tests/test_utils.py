@@ -83,6 +83,6 @@ def client_query(client):
 
 
 def test_pytest_fixture_usage(client_query):
-    response = graphql_query("query { test }")
+    response = client_query("query { test }")
     content = json.loads(response.content)
     assert content == {"data": {"test": "Hello World"}}

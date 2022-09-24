@@ -272,3 +272,42 @@ def test_should_query_connectionfilter(graphene_settings, max_limit):
     assert "COUNT" in result.data["_debug"]["sql"][0]["rawSql"]
     query = str(Reporter.objects.all()[:1].query)
     assert result.data["_debug"]["sql"][1]["rawSql"] == query
+
+
+def test_should_query_stack_trace():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            fields = "__all__"
+
+    class Query(graphene.ObjectType):
+        reporter = graphene.Field(ReporterType)
+        debug = graphene.Field(DjangoDebug, name="_debug")
+
+        def resolve_reporter(self, info, **args):
+            raise Exception("caught stack trace")
+
+    query = """
+        query ReporterQuery {
+          reporter {
+            lastName
+          }
+          _debug {
+            exceptions {
+              message
+              stack
+            }
+          }
+        }
+    """
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(
+        query, context_value=context(), middleware=[DjangoDebugMiddleware()]
+    )
+    assert result.errors
+    assert len(result.data["_debug"]["exceptions"])
+    debug_exception = result.data["_debug"]["exceptions"][0]
+    assert debug_exception["stack"].count("\n") > 1
+    assert "test_query.py" in debug_exception["stack"]
+    assert debug_exception["message"] == "caught stack trace"

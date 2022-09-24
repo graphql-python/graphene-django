@@ -2,8 +2,8 @@ Filtering
 =========
 
 Graphene integrates with
-`django-filter <https://django-filter.readthedocs.io/en/master/>`__ to provide filtering of results.
-See the `usage documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+`django-filter <https://django-filter.readthedocs.io/en/main/>`__ to provide filtering of results.
+See the `usage documentation <https://django-filter.readthedocs.io/en/main/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
 This filtering is automatically available when implementing a ``relay.Node``.
@@ -15,7 +15,7 @@ You will need to install it manually, which can be done as follows:
 
     # You'll need to install django-filter
     pip install django-filter>=2
-    
+
 After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
 
 .. code:: python
@@ -26,7 +26,7 @@ After installing ``django-filter`` you'll need to add the application in the ``s
     ]
 
 Note: The techniques below are demoed in the `cookbook example
-app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
+app <https://github.com/graphql-python/graphene-django/tree/main/examples/cookbook>`__.
 
 Filterable fields
 -----------------
@@ -34,7 +34,7 @@ Filterable fields
 The ``filter_fields`` parameter is used to specify the fields which can
 be filtered upon. The value specified here is passed directly to
 ``django-filter``, so see the `filtering
-documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.io/en/main/guide/usage.html#the-filter>`__
 for full details on the range of options available.
 
 For example:
@@ -192,7 +192,7 @@ in unison  with the ``filter_fields`` parameter:
         all_animals = DjangoFilterConnectionField(AnimalNode)
 
 
-The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/master/guide/usage.html#request-based-filtering>`__
+The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/main/guide/usage.html#request-based-filtering>`__
 in a ``django_filters.FilterSet`` instance. You can use this to customize your
 filters to be context-dependent. We could modify the ``AnimalFilter`` above to
 pre-filter animals owned by the authenticated user (set in ``context.user``).
@@ -258,3 +258,86 @@ with this set up, you can now order the users under group:
         }
       }
     }
+
+
+PostgreSQL `ArrayField`
+-----------------------
+
+Graphene provides an easy to implement filters on `ArrayField` as they are not natively supported by django_filters:
+
+.. code:: python
+
+    from django.db import models
+    from django_filters import FilterSet, OrderingFilter
+    from graphene_django.filter import ArrayFilter
+
+    class Event(models.Model):
+        name = models.CharField(max_length=50)
+        tags = ArrayField(models.CharField(max_length=50))
+
+    class EventFilterSet(FilterSet):
+        class Meta:
+            model = Event
+            fields = {
+                "name": ["exact", "contains"],
+            }
+
+        tags__contains = ArrayFilter(field_name="tags", lookup_expr="contains")
+        tags__overlap = ArrayFilter(field_name="tags", lookup_expr="overlap")
+        tags = ArrayFilter(field_name="tags", lookup_expr="exact")
+
+    class EventType(DjangoObjectType):
+        class Meta:
+            model = Event
+            interfaces = (Node,)
+            fields = "__all__"
+            filterset_class = EventFilterSet
+
+with this set up, you can now filter events by tags:
+
+.. code::
+
+    query {
+      events(tags_Overlap: ["concert", "festival"]) {
+        name
+      }
+    }
+
+
+`TypedFilter`
+-------------
+
+Sometimes the automatic detection of the filter input type is not satisfactory for what you are trying to achieve.
+You can then explicitly specify the input type you want for your filter by using a `TypedFilter`:
+
+.. code:: python
+
+    from django.db import models
+    from django_filters import FilterSet, OrderingFilter
+    import graphene
+    from graphene_django.filter import TypedFilter
+
+    class Event(models.Model):
+        name = models.CharField(max_length=50)
+
+    class EventFilterSet(FilterSet):
+        class Meta:
+            model = Event
+            fields = {
+                "name": ["exact", "contains"],
+            }
+
+        only_first = TypedFilter(input_type=graphene.Boolean, method="only_first_filter")
+
+        def only_first_filter(self, queryset, _name, value):
+            if value:
+                return queryset[:1]
+            else:
+                return queryset
+
+    class EventType(DjangoObjectType):
+        class Meta:
+            model = Event
+            interfaces = (Node,)
+            fields = "__all__"
+            filterset_class = EventFilterSet

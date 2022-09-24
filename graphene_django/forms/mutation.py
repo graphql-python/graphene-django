@@ -14,10 +14,6 @@ from graphene.types.utils import yank_fields_from_attrs
 from graphene_django.constants import MUTATION_ERRORS_FLAG
 from graphene_django.registry import get_global_registry
 
-
-from django.core.exceptions import ValidationError
-from django.db import connection
-
 from ..types import ErrorType
 from .converter import convert_form_field
 
@@ -105,7 +101,10 @@ class DjangoFormMutation(BaseDjangoFormMutation):
 
     @classmethod
     def perform_mutate(cls, form, info):
-        form.save()
+        if hasattr(form, "save"):
+            # `save` method won't exist on plain Django forms, but this mutation can
+            # in theory be used with `ModelForm`s as well and we do want to save them.
+            form.save()
         return cls(errors=[], **form.cleaned_data)
 
 
@@ -118,7 +117,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
     class Meta:
         abstract = True
 
-    errors = graphene.List(ErrorType)
+    errors = graphene.List(graphene.NonNull(ErrorType), required=True)
 
     @classmethod
     def __init_subclass_with_meta__(
