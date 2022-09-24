@@ -114,7 +114,9 @@ class TestShouldCallGetQuerySetOnForeignKey:
         """
 
         result = self.schema.execute(
-            query, variables={"id": self.reporter.id}, context_value={"admin": True},
+            query,
+            variables={"id": self.reporter.id},
+            context_value={"admin": True},
         )
         assert not result.errors
         assert result.data == {"reporter": {"firstName": "Jane"}}
@@ -149,7 +151,9 @@ class TestShouldCallGetQuerySetOnForeignKey:
         """
 
         result = self.schema.execute(
-            query, variables={"id": self.articles[0].id}, context_value={"admin": True},
+            query,
+            variables={"id": self.articles[0].id},
+            context_value={"admin": True},
         )
         assert not result.errors
         assert result.data["article"] == {
@@ -170,7 +174,9 @@ class TestShouldCallGetQuerySetOnForeignKey:
         """
 
         result = self.schema.execute(
-            query, variables={"id": self.reporter.id}, context_value={"admin": True},
+            query,
+            variables={"id": self.reporter.id},
+            context_value={"admin": True},
         )
         assert not result.errors
         assert result.data["reporter"] == {
