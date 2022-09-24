@@ -41,6 +41,7 @@ DEFAULTS = {
     # This sets headerEditorEnabled GraphiQL option, for details go to
     # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
+    "GRAPHIQL_SHOULD_PERSIST_HEADERS": False,
     "ATOMIC_MUTATIONS": False,
 }
 
