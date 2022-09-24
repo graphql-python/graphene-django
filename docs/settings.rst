@@ -221,3 +221,22 @@ Default: ``/graphql``
    GRAPHENE = {
       'TESTING_ENDPOINT': '/customEndpoint'
    }
+
+
+``GRAPHIQL_SHOULD_PERSIST_HEADERS``
+---------------------
+
+Set to ``True`` if you want to persist GraphiQL headers after refreshing the page.
+
+This setting is passed to ``shouldPersistHeaders`` GraphiQL options, for details refer to GraphiQLDocs_.
+
+.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
+
+
+Default: ``False``
+
+.. code:: python
+
+   GRAPHENE = {
+      'GRAPHIQL_SHOULD_PERSIST_HEADERS': False,
+   }
