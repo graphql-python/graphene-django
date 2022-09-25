@@ -4,7 +4,9 @@ import warnings
 from django.test import Client, TestCase, TransactionTestCase
 
 from graphene_django.settings import graphene_settings
+
 DEFAULT_GRAPHQL_URL = "/graphql"
+
 
 def graphql_query(
     query,
