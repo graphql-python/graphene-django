@@ -12,7 +12,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse, validate
 from graphql.error import GraphQLError
-from graphql.execution import ExecutionResult
+from graphql.execution import ExecutionResult, ExecutionContext
 
 from graphene import Schema
 from graphql.execution.middleware import MiddlewareManager
