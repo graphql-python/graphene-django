@@ -28,7 +28,7 @@ class DjangoListField(Field):
             _type = _type.of_type
 
         # Django would never return a Set of None  vvvvvvv
-        super(DjangoListField, self).__init__(List(NonNull(_type)), *args, **kwargs)
+        super().__init__(List(NonNull(_type)), *args, **kwargs)
 
         assert issubclass(
             self._underlying_type, DjangoObjectType
@@ -63,7 +63,7 @@ class DjangoListField(Field):
         return queryset
 
     def wrap_resolve(self, parent_resolver):
-        resolver = super(DjangoListField, self).wrap_resolve(parent_resolver)
+        resolver = super().wrap_resolve(parent_resolver)
         _type = self.type
         if isinstance(_type, NonNull):
             _type = _type.of_type
@@ -87,7 +87,7 @@ class DjangoConnectionField(ConnectionField):
             graphene_settings.RELAY_CONNECTION_ENFORCE_FIRST_OR_LAST,
         )
         kwargs.setdefault("offset", Int())
-        super(DjangoConnectionField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def type(self):

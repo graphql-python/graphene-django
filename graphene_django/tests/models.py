@@ -1,5 +1,3 @@
-from __future__ import absolute_import
-
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -37,7 +35,7 @@ class Film(models.Model):
 
 class DoeReporterManager(models.Manager):
     def get_queryset(self):
-        return super(DoeReporterManager, self).get_queryset().filter(last_name="Doe")
+        return super().get_queryset().filter(last_name="Doe")
 
 
 class Reporter(models.Model):
@@ -57,7 +55,7 @@ class Reporter(models.Model):
     )
 
     def __str__(self):  # __unicode__ on Python 2
-        return "%s %s" % (self.first_name, self.last_name)
+        return f"{self.first_name} {self.last_name}"
 
     def __init__(self, *args, **kwargs):
         """
@@ -67,7 +65,7 @@ class Reporter(models.Model):
         when a CNNReporter is pulled from the database, it is still
         of type Reporter. This was added to test proxy model support.
         """
-        super(Reporter, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.reporter_type == 2:  # quick and dirty way without enums
             self.__class__ = CNNReporter
 
@@ -77,7 +75,7 @@ class Reporter(models.Model):
 
 class CNNReporterManager(models.Manager):
     def get_queryset(self):
-        return super(CNNReporterManager, self).get_queryset().filter(reporter_type=2)
+        return super().get_queryset().filter(reporter_type=2)
 
 
 class CNNReporter(Reporter):

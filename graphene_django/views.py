@@ -26,7 +26,7 @@ class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
         self.response = response
         self.message = message = message or response.content.decode()
-        super(HttpError, self).__init__(message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
 def get_accepted_content_types(request):

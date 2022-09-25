@@ -63,7 +63,7 @@ def graphql_query(
     return resp
 
 
-class GraphQLTestMixin(object):
+class GraphQLTestMixin:
     """
     Based on: https://www.sam.today/blog/testing-graphql-with-graphene-django/
     """

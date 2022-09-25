@@ -1151,9 +1151,9 @@ def test_connection_should_limit_after_to_list_length():
 
 REPORTERS = [
     dict(
-        first_name="First {}".format(i),
-        last_name="Last {}".format(i),
-        email="johndoe+{}@example.com".format(i),
+        first_name=f"First {i}",
+        last_name=f"Last {i}",
+        email=f"johndoe+{i}@example.com",
         a_choice=1,
     )
     for i in range(6)
