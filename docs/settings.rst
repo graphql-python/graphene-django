@@ -189,7 +189,7 @@ Default: ``None``
 
 
 ``GRAPHIQL_HEADER_EDITOR_ENABLED``
----------------------
+----------------------------------
 
 GraphiQL starting from version 1.0.0 allows setting custom headers in similar fashion to query variables.
 
@@ -206,6 +206,20 @@ Default: ``True``
 
    GRAPHENE = {
       'GRAPHIQL_HEADER_EDITOR_ENABLED': True,
+   }
+
+
+``TESTING_ENDPOINT``
+--------------------
+
+Define the graphql endpoint url used for the `GraphQLTestCase` class.
+
+Default: ``/graphql``
+
+.. code:: python
+
+   GRAPHENE = {
+      'TESTING_ENDPOINT': '/customEndpoint'
    }
 
 

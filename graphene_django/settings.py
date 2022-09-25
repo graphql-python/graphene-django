@@ -43,6 +43,7 @@ DEFAULTS = {
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
     "GRAPHIQL_SHOULD_PERSIST_HEADERS": False,
     "ATOMIC_MUTATIONS": False,
+    "TESTING_ENDPOINT": "/graphql",
 }
 
 if settings.DEBUG:

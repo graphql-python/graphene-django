@@ -6,7 +6,8 @@ Using unittest
 
 If you want to unittest your API calls derive your test case from the class `GraphQLTestCase`.
 
-Your endpoint is set through the `GRAPHQL_URL` attribute on `GraphQLTestCase`. The default endpoint is `GRAPHQL_URL = "/graphql/"`.
+The default endpoint for testing is `/graphql`. You can override this in the `settings <https://docs.graphene-python.org/projects/django/en/latest/settings/#testing-endpoint>`__.
+
 
 Usage:
 
