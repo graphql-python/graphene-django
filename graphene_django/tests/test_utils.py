@@ -54,7 +54,7 @@ def test_graphql_test_case_operation_name(post_mock):
     tc._pre_setup()
     tc.setUpClass()
     tc.query("query { }", operation_name="QueryName")
-    body = json.loads(post_mock.call_args.args[1])
+    body = json.loads(post_mock.call_args[0][1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
         "operationName",
@@ -66,7 +66,7 @@ def test_graphql_test_case_operation_name(post_mock):
 @patch("graphene_django.utils.testing.Client.post")
 def test_graphql_query_case_operation_name(post_mock):
     graphql_query("query { }", operation_name="QueryName")
-    body = json.loads(post_mock.call_args.args[1])
+    body = json.loads(post_mock.call_args[0][1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
         "operationName",
