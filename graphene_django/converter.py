@@ -26,7 +26,12 @@ from graphene import (
 from graphene.types.json import JSONString
 from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
-from graphql import GraphQLError, assert_name
+from graphql import GraphQLError
+try:
+    from graphql import assert_name
+except ImportError:
+    # Support for older versions of graphql
+    from graphql import assert_valid_name as assert_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
