@@ -26,7 +26,13 @@ from graphene import (
 from graphene.types.json import JSONString
 from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
-from graphql import GraphQLError, assert_valid_name
+from graphql import GraphQLError
+
+try:
+    from graphql import assert_name
+except ImportError:
+    # Support for older versions of graphql
+    from graphql import assert_valid_name as assert_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
@@ -56,7 +62,7 @@ class BlankValueField(Field):
 def convert_choice_name(name):
     name = to_const(force_str(name))
     try:
-        assert_valid_name(name)
+        assert_name(name)
     except GraphQLError:
         name = "A_%s" % name
     return name
@@ -311,17 +317,19 @@ def convert_field_to_djangomodel(field, registry=None):
         class CustomField(Field):
             def wrap_resolve(self, parent_resolver):
                 """
-                Implements a custom resolver which go through the `get_node` method to insure that
+                Implements a custom resolver which go through the `get_node` method to ensure that
                 it goes through the `get_queryset` method of the DjangoObjectType.
                 """
                 resolver = super().wrap_resolve(parent_resolver)
 
                 def custom_resolver(root, info, **args):
                     fk_obj = resolver(root, info, **args)
-                    if fk_obj is None:
-                        return None
-                    else:
-                        return _type.get_node(info, fk_obj.pk)
+                    if not isinstance(fk_obj, model):
+                        # In case the resolver is a custom one that overwrites
+                        # the default Django resolver
+                        # This happens, for example, when using custom awaitable resolvers.
+                        return fk_obj
+                    return _type.get_node(info, fk_obj.pk)
 
                 return custom_resolver
 
