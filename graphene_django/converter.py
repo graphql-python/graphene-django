@@ -27,6 +27,7 @@ from graphene.types.json import JSONString
 from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError
+
 try:
     from graphql import assert_name
 except ImportError:
