@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from django.core import management
 from io import StringIO
-from mock import mock_open, patch
+from unittest.mock import mock_open, patch
 
 from graphene import ObjectType, Schema, String
 

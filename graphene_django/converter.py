@@ -74,8 +74,7 @@ def get_choices(choices):
         choices = choices.items()
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
-            for choice in get_choices(help_text):
-                yield choice
+            yield from get_choices(help_text)
         else:
             name = convert_choice_name(value)
             while name in converted_names:
@@ -92,7 +91,7 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-    class EnumWithDescriptionsType(object):
+    class EnumWithDescriptionsType:
         @property
         def description(self):
             return str(named_choices_descriptions[self.name])
@@ -109,7 +108,7 @@ def generate_enum_name(django_model_meta, field):
         )
         name = custom_func(field)
     elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V2_NAMING is True:
-        name = to_camel_case("{}_{}".format(django_model_meta.object_name, field.name))
+        name = to_camel_case(f"{django_model_meta.object_name}_{field.name}")
     else:
         name = "{app_label}{object_name}{field_name}Choices".format(
             app_label=to_camel_case(django_model_meta.app_label.title()),
@@ -155,7 +154,9 @@ def get_django_field_description(field):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
+        "Don't know how to convert the Django field {} ({})".format(
+            field, field.__class__
+        )
     )
 
 

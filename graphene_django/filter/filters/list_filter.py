@@ -23,4 +23,4 @@ class ListFilter(TypedFilter):
             else:
                 return qs.none()
         else:
-            return super(ListFilter, self).filter(qs, value)
+            return super().filter(qs, value)

@@ -22,6 +22,6 @@ class ArrayFilter(TypedFilter):
             return qs
         if self.distinct:
             qs = qs.distinct()
-        lookup = "%s__%s" % (self.field_name, self.lookup_expr)
+        lookup = f"{self.field_name}__{self.lookup_expr}"
         qs = self.get_method(qs)(**{lookup: value})
         return qs

@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from mock import patch
+from unittest.mock import patch
 
 from django.db import connection
 
@@ -507,7 +507,7 @@ def test_handles_invalid_json_bodies(client):
 
 def test_handles_django_request_error(client, monkeypatch):
     def mocked_read(*args):
-        raise IOError("foo-bar")
+        raise OSError("foo-bar")
 
     monkeypatch.setattr("django.http.request.HttpRequest.read", mocked_read)
 

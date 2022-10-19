@@ -11,7 +11,6 @@ This module provides the `graphene_settings` object, that is used to access
 Graphene settings, checking for user settings first, then falling
 back to the defaults.
 """
-from __future__ import unicode_literals
 
 from django.conf import settings
 from django.test.signals import setting_changed
@@ -78,7 +77,7 @@ def import_from_string(val, setting_name):
         module = importlib.import_module(module_path)
         return getattr(module, class_name)
     except (ImportError, AttributeError) as e:
-        msg = "Could not import '%s' for Graphene setting '%s'. %s: %s." % (
+        msg = "Could not import '{}' for Graphene setting '{}'. {}: {}.".format(
             val,
             setting_name,
             e.__class__.__name__,
@@ -87,7 +86,7 @@ def import_from_string(val, setting_name):
         raise ImportError(msg)
 
 
-class GrapheneSettings(object):
+class GrapheneSettings:
     """
     A settings object, that allows API settings to be accessed as properties.
     For example:

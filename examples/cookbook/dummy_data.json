@@ -1,1 +1,302 @@
-[{"model": "auth.user", "pk": 1, "fields": {"password": "pbkdf2_sha256$24000$0SgBlSlnbv5c$ijVQipm2aNDlcrTL8Qi3SVNHphTm4HIsDfUi4kn9tog=", "last_login": "2016-11-04T00:46:58Z", "is_superuser": true, "username": "admin", "first_name": "", "last_name": "", "email": "asdf@example.com", "is_staff": true, "is_active": true, "date_joined": "2016-11-03T18:24:40Z", "groups": [], "user_permissions": []}}, {"model": "recipes.recipe", "pk": 1, "fields": {"title": "Cheerios With a Shot of Vermouth", "instructions": "https://xkcd.com/720/"}}, {"model": "recipes.recipe", "pk": 2, "fields": {"title": "Quail Eggs in Whipped Cream and MSG", "instructions": "https://xkcd.com/720/"}}, {"model": "recipes.recipe", "pk": 3, "fields": {"title": "Deep Fried Skittles", "instructions": "https://xkcd.com/720/"}}, {"model": "recipes.recipe", "pk": 4, "fields": {"title": "Newt ala Doritos", "instructions": "https://xkcd.com/720/"}}, {"model": "recipes.recipe", "pk": 5, "fields": {"title": "Fruit Salad", "instructions": "Chop up and add together"}}, {"model": "recipes.recipeingredient", "pk": 1, "fields": {"recipes": 5, "ingredient": 9, "amount": 1.0, "unit": "unit"}}, {"model": "recipes.recipeingredient", "pk": 2, "fields": {"recipes": 5, "ingredient": 10, "amount": 2.0, "unit": "unit"}}, {"model": "recipes.recipeingredient", "pk": 3, "fields": {"recipes": 5, "ingredient": 7, "amount": 3.0, "unit": "unit"}}, {"model": "recipes.recipeingredient", "pk": 4, "fields": {"recipes": 5, "ingredient": 8, "amount": 4.0, "unit": "unit"}}, {"model": "recipes.recipeingredient", "pk": 5, "fields": {"recipes": 4, "ingredient": 5, "amount": 1.0, "unit": "kg"}}, {"model": "recipes.recipeingredient", "pk": 6, "fields": {"recipes": 4, "ingredient": 6, "amount": 2.0, "unit": "l"}}, {"model": "recipes.recipeingredient", "pk": 7, "fields": {"recipes": 3, "ingredient": 4, "amount": 1.0, "unit": "unit"}}, {"model": "recipes.recipeingredient", "pk": 8, "fields": {"recipes": 2, "ingredient": 2, "amount": 1.0, "unit": "kg"}}, {"model": "recipes.recipeingredient", "pk": 9, "fields": {"recipes": 2, "ingredient": 11, "amount": 2.0, "unit": "l"}}, {"model": "recipes.recipeingredient", "pk": 10, "fields": {"recipes": 2, "ingredient": 12, "amount": 3.0, "unit": "st"}}, {"model": "recipes.recipeingredient", "pk": 11, "fields": {"recipes": 1, "ingredient": 1, "amount": 1.0, "unit": "kg"}}, {"model": "recipes.recipeingredient", "pk": 12, "fields": {"recipes": 1, "ingredient": 3, "amount": 1.0, "unit": "st"}}, {"model": "ingredients.category", "pk": 1, "fields": {"name": "fruit"}}, {"model": "ingredients.category", "pk": 3, "fields": {"name": "xkcd"}}, {"model": "ingredients.ingredient", "pk": 1, "fields": {"name": "Cheerios", "notes": "this is a note", "category": 3}}, {"model": "ingredients.ingredient", "pk": 2, "fields": {"name": "Quail Eggs", "notes": "has more notes", "category": 3}}, {"model": "ingredients.ingredient", "pk": 3, "fields": {"name": "Vermouth", "notes": "", "category": 3}}, {"model": "ingredients.ingredient", "pk": 4, "fields": {"name": "Skittles", "notes": "", "category": 3}}, {"model": "ingredients.ingredient", "pk": 5, "fields": {"name": "Newt", "notes": "Braised and Confuesd", "category": 3}}, {"model": "ingredients.ingredient", "pk": 6, "fields": {"name": "Doritos", "notes": "Crushed", "category": 3}}, {"model": "ingredients.ingredient", "pk": 7, "fields": {"name": "Apple", "notes": "", "category": 1}}, {"model": "ingredients.ingredient", "pk": 8, "fields": {"name": "Orange", "notes": "", "category": 1}}, {"model": "ingredients.ingredient", "pk": 9, "fields": {"name": "Banana", "notes": "", "category": 1}}, {"model": "ingredients.ingredient", "pk": 10, "fields": {"name": "Grapes", "notes": "", "category": 1}}, {"model": "ingredients.ingredient", "pk": 11, "fields": {"name": "Whipped Cream", "notes": "", "category": 3}}, {"model": "ingredients.ingredient", "pk": 12, "fields": {"name": "MSG", "notes": "", "category": 3}}]
+[
+  {
+    "fields": {
+      "date_joined": "2016-11-03T18:24:40Z",
+      "email": "asdf@example.com",
+      "first_name": "",
+      "groups": [],
+      "is_active": true,
+      "is_staff": true,
+      "is_superuser": true,
+      "last_login": "2016-11-04T00:46:58Z",
+      "last_name": "",
+      "password": "pbkdf2_sha256$24000$0SgBlSlnbv5c$ijVQipm2aNDlcrTL8Qi3SVNHphTm4HIsDfUi4kn9tog=",
+      "user_permissions": [],
+      "username": "admin"
+    },
+    "model": "auth.user",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "instructions": "https://xkcd.com/720/",
+      "title": "Cheerios With a Shot of Vermouth"
+    },
+    "model": "recipes.recipe",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "instructions": "https://xkcd.com/720/",
+      "title": "Quail Eggs in Whipped Cream and MSG"
+    },
+    "model": "recipes.recipe",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "instructions": "https://xkcd.com/720/",
+      "title": "Deep Fried Skittles"
+    },
+    "model": "recipes.recipe",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "instructions": "https://xkcd.com/720/",
+      "title": "Newt ala Doritos"
+    },
+    "model": "recipes.recipe",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "instructions": "Chop up and add together",
+      "title": "Fruit Salad"
+    },
+    "model": "recipes.recipe",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 9,
+      "recipes": 5,
+      "unit": "unit"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "amount": 2.0,
+      "ingredient": 10,
+      "recipes": 5,
+      "unit": "unit"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "amount": 3.0,
+      "ingredient": 7,
+      "recipes": 5,
+      "unit": "unit"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "amount": 4.0,
+      "ingredient": 8,
+      "recipes": 5,
+      "unit": "unit"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 5,
+      "recipes": 4,
+      "unit": "kg"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "amount": 2.0,
+      "ingredient": 6,
+      "recipes": 4,
+      "unit": "l"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 6
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 4,
+      "recipes": 3,
+      "unit": "unit"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 7
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 2,
+      "recipes": 2,
+      "unit": "kg"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 8
+  },
+  {
+    "fields": {
+      "amount": 2.0,
+      "ingredient": 11,
+      "recipes": 2,
+      "unit": "l"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 9
+  },
+  {
+    "fields": {
+      "amount": 3.0,
+      "ingredient": 12,
+      "recipes": 2,
+      "unit": "st"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 10
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 1,
+      "recipes": 1,
+      "unit": "kg"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 11
+  },
+  {
+    "fields": {
+      "amount": 1.0,
+      "ingredient": 3,
+      "recipes": 1,
+      "unit": "st"
+    },
+    "model": "recipes.recipeingredient",
+    "pk": 12
+  },
+  {
+    "fields": {
+      "name": "fruit"
+    },
+    "model": "ingredients.category",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "name": "xkcd"
+    },
+    "model": "ingredients.category",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Cheerios",
+      "notes": "this is a note"
+    },
+    "model": "ingredients.ingredient",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Quail Eggs",
+      "notes": "has more notes"
+    },
+    "model": "ingredients.ingredient",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Vermouth",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 3
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Skittles",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 4
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Newt",
+      "notes": "Braised and Confuesd"
+    },
+    "model": "ingredients.ingredient",
+    "pk": 5
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Doritos",
+      "notes": "Crushed"
+    },
+    "model": "ingredients.ingredient",
+    "pk": 6
+  },
+  {
+    "fields": {
+      "category": 1,
+      "name": "Apple",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 7
+  },
+  {
+    "fields": {
+      "category": 1,
+      "name": "Orange",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 8
+  },
+  {
+    "fields": {
+      "category": 1,
+      "name": "Banana",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 9
+  },
+  {
+    "fields": {
+      "category": 1,
+      "name": "Grapes",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 10
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "Whipped Cream",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 11
+  },
+  {
+    "fields": {
+      "category": 3,
+      "name": "MSG",
+      "notes": ""
+    },
+    "model": "ingredients.ingredient",
+    "pk": 12
+  }
+]

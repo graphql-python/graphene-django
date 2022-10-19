@@ -67,7 +67,7 @@ def assert_arguments(field, *arguments):
     actual = [name for name in args if name not in ignore and not name.startswith("_")]
     assert set(arguments) == set(
         actual
-    ), "Expected arguments ({}) did not match actual ({})".format(arguments, actual)
+    ), f"Expected arguments ({arguments}) did not match actual ({actual})"
 
 
 def assert_orderable(field):
@@ -141,7 +141,7 @@ def test_filter_shortcut_filterset_context():
 
         @property
         def qs(self):
-            qs = super(ArticleContextFilter, self).qs
+            qs = super().qs
             return qs.filter(reporter=self.request.reporter)
 
     class Query(ObjectType):
@@ -166,7 +166,7 @@ def test_filter_shortcut_filterset_context():
         editor=r2,
     )
 
-    class context(object):
+    class context:
         reporter = r2
 
     query = """

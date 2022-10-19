@@ -95,7 +95,7 @@ class DjangoFormMutation(BaseDjangoFormMutation):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-        super(DjangoFormMutation, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 
@@ -127,7 +127,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         return_field_name=None,
         only_fields=(),
         exclude_fields=(),
-        **options
+        **options,
     ):
 
         if not form_class:
@@ -147,7 +147,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         registry = get_global_registry()
         model_type = registry.get_type_for_model(model)
         if not model_type:
-            raise Exception("No type registered for model: {}".format(model.__name__))
+            raise Exception(f"No type registered for model: {model.__name__}")
 
         if not return_field_name:
             model_name = model.__name__
@@ -163,7 +163,7 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-        super(DjangoModelFormMutation, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 

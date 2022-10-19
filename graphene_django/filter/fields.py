@@ -44,7 +44,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         self._filtering_args = None
         self._extra_filter_meta = extra_filter_meta
         self._base_args = None
-        super(DjangoFilterConnectionField, self).__init__(type_, *args, **kwargs)
+        super().__init__(type_, *args, **kwargs)
 
     @property
     def args(self):
@@ -90,9 +90,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
                     kwargs[k] = convert_enum(v)
             return kwargs
 
-        qs = super(DjangoFilterConnectionField, cls).resolve_queryset(
-            connection, iterable, info, args
-        )
+        qs = super().resolve_queryset(connection, iterable, info, args)
 
         filterset = filterset_class(
             data=filter_kwargs(), queryset=qs, request=info.context

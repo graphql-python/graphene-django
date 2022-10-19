@@ -73,16 +73,12 @@ class Command(CommandArguments):
             elif file_extension == ".json":
                 self.save_json_file(out, schema_dict, indent)
             else:
-                raise CommandError(
-                    'Unrecognised file format "{}"'.format(file_extension)
-                )
+                raise CommandError(f'Unrecognised file format "{file_extension}"')
 
             style = getattr(self, "style", None)
             success = getattr(style, "SUCCESS", lambda x: x)
 
-            self.stdout.write(
-                success("Successfully dumped GraphQL schema to {}".format(out))
-            )
+            self.stdout.write(success(f"Successfully dumped GraphQL schema to {out}"))
 
     def handle(self, *args, **options):
         options_schema = options.get("schema")

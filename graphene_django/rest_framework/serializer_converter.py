@@ -72,7 +72,7 @@ def convert_serializer_to_input_type(serializer_class):
         for name, field in serializer.fields.items()
     }
     ret_type = type(
-        "{}Input".format(serializer.__class__.__name__),
+        f"{serializer.__class__.__name__}Input",
         (graphene.InputObjectType,),
         items,
     )

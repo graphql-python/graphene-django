@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 from django.db import models
-from mock import patch
+from unittest.mock import patch
 
 from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
@@ -104,7 +104,7 @@ def test_django_objecttype_with_custom_meta():
         @classmethod
         def __init_subclass_with_meta__(cls, **options):
             options.setdefault("_meta", ArticleTypeOptions(cls))
-            super(ArticleType, cls).__init_subclass_with_meta__(**options)
+            super().__init_subclass_with_meta__(**options)
 
     class Article(ArticleType):
         class Meta:
@@ -484,7 +484,7 @@ def test_django_objecttype_neither_fields_nor_exclude():
 
 
 def custom_enum_name(field):
-    return "CustomEnum{}".format(field.name.title())
+    return f"CustomEnum{field.name.title()}"
 
 
 class TestDjangoObjectType:

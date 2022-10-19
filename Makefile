@@ -13,7 +13,7 @@ tests:
 
 .PHONY: format ## Format code
 format:
-	black --exclude "/migrations/" graphene_django examples setup.py
+	black graphene_django examples setup.py
 
 .PHONY: lint ## Lint code
 lint:

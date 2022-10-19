@@ -85,8 +85,8 @@ Make sure the app name in ``cookbook.ingredients.apps.IngredientsConfig`` is set
     # cookbook/ingredients/apps.py
 
     from django.apps import AppConfig
-    
-    
+
+
     class IngredientsConfig(AppConfig):
         default_auto_field = 'django.db.models.BigAutoField'
         name = 'cookbook.ingredients'
