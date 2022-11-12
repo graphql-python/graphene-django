@@ -43,6 +43,14 @@ DEFAULTS = {
     "GRAPHIQL_SHOULD_PERSIST_HEADERS": False,
     "ATOMIC_MUTATIONS": False,
     "TESTING_ENDPOINT": "/graphql",
+    "GRAPHIQL_VERSION": "1.4.7",
+    "GRAPHIQL_VERSION_JS_SRI": (
+        "sha384-sDK9xvE5fVRiyOv5lVbh5UuWUMkwvU3G67VYzLX2G1WMIeQ7fKOLCmeKnzfrukdv"
+    ),
+    "GRAPHIQL_VERSION_CSS_SRI": (
+        "sha384-1YHEU+Xy8hlKYAZ26WTz+JQEPMM6i/Mx5m8umMkSZChlzSYmq7RqyCyRbGqrILVZ"
+    ),
+
 }
 
 if settings.DEBUG:

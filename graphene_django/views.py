@@ -66,9 +66,9 @@ class GraphQLView(View):
     react_dom_sri = "sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0="
 
     # The GraphiQL React app.
-    graphiql_version = "1.4.1"  # "1.0.3"
-    graphiql_sri = "sha256-JUMkXBQWZMfJ7fGEsTXalxVA10lzKOS9loXdLjwZKi4="  # "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
-    graphiql_css_sri = "sha256-Md3vdR7PDzWyo/aGfsFVF4tvS5/eAUWuIsg9QHUusCY="  # "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
+    graphiql_version = graphene_settings.GRAPHIQL_VERSION
+    graphiql_sri = graphene_settings.GRAPHIQL_VERSION_JS_SRI
+    graphiql_css_sri = graphene_settings.GRAPHIQL_VERSION_CSS_SRI
 
     # The websocket transport library for subscriptions.
     subscriptions_transport_ws_version = "0.9.18"
