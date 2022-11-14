@@ -50,7 +50,6 @@ DEFAULTS = {
     "GRAPHIQL_VERSION_CSS_SRI": (
         "sha384-1YHEU+Xy8hlKYAZ26WTz+JQEPMM6i/Mx5m8umMkSZChlzSYmq7RqyCyRbGqrILVZ"
     ),
-
 }
 
 if settings.DEBUG:
