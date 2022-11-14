@@ -1,4 +1,4 @@
-from py.test import raises
+from pytest import raises
 
 from ..registry import Registry
 from ..types import DjangoObjectType

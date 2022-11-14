@@ -1,5 +1,5 @@
 from django import forms
-from py.test import raises
+from pytest import raises
 
 from graphene import (
     Boolean,

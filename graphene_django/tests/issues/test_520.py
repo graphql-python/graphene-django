@@ -8,8 +8,8 @@ import graphene
 
 from graphene import Field, ResolveInfo
 from graphene.types.inputobjecttype import InputObjectType
-from py.test import raises
-from py.test import mark
+from pytest import raises
+from pytest import mark
 from rest_framework import serializers
 
 from ...types import DjangoObjectType
