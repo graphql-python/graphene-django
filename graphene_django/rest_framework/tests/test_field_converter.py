@@ -3,7 +3,7 @@ import copy
 import graphene
 from django.db import models
 from graphene import InputObjectType
-from py.test import raises
+from pytest import raises
 from rest_framework import serializers
 
 from ..serializer_converter import convert_serializer_field

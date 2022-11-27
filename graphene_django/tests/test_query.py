@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
 from graphql_relay import to_global_id
-from py.test import raises
+from pytest import raises
 
 import graphene
 from graphene.relay import Node
