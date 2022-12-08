@@ -5,6 +5,14 @@ The ``graphene-django`` project does not currently support GraphQL subscriptions
 several community-driven modules for adding subscription support, and the provided GraphiQL interface supports
 running subscription operations over a websocket.
 
+## Using Native Asynchronous Django
+
+`Graphene Luna <https://github.com/cognitive-space/graphene-luna>` uses Django's built in asynchronous support to
+create GraphQL subscriptions. Luna supports ``graphene-django`` version 3.0+. Luna allows you to you to quickly and
+easily setup subscriptions in Django.
+
+## Using Django Channels
+
 To implement websocket-based support for GraphQL subscriptions, you’ll need to do the following:
 
 1. Install and configure `django-channels <https://channels.readthedocs.io/en/latest/installation.html>`_.
