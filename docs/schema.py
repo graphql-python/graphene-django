@@ -1,60 +1,57 @@
-  import graphene
+import graphene
 
-  from graphene_django.types import DjangoObjectType
+from graphene_django.types import DjangoObjectType
 
-  from cookbook.ingredients.models import Category, Ingredient
-
-
-  class CategoryType(DjangoObjectType):
-      class Meta:
-          model = Category
-          fields = '__all__'
+from cookbook.ingredients.models import Category, Ingredient
 
 
-  class IngredientType(DjangoObjectType):
-      class Meta:
-          model = Ingredient
-          fields = '__all__'
+class CategoryType(DjangoObjectType):
+    class Meta:
+        model = Category
+        fields = "__all__"
 
 
-  class Query(object):
-      category = graphene.Field(CategoryType,
-                                id=graphene.Int(),
-                                name=graphene.String())
-      all_categories = graphene.List(CategoryType)
+class IngredientType(DjangoObjectType):
+    class Meta:
+        model = Ingredient
+        fields = "__all__"
 
 
-      ingredient = graphene.Field(IngredientType,
-                                  id=graphene.Int(),
-                                  name=graphene.String())
-      all_ingredients = graphene.List(IngredientType)
+class Query:
+    category = graphene.Field(CategoryType, id=graphene.Int(), name=graphene.String())
+    all_categories = graphene.List(CategoryType)
 
-      def resolve_all_categories(self, info, **kwargs):
-          return Category.objects.all()
+    ingredient = graphene.Field(
+        IngredientType, id=graphene.Int(), name=graphene.String()
+    )
+    all_ingredients = graphene.List(IngredientType)
 
-      def resolve_all_ingredients(self, info, **kwargs):
-          return Ingredient.objects.all()
+    def resolve_all_categories(self, info, **kwargs):
+        return Category.objects.all()
 
-      def resolve_category(self, info, **kwargs):
-          id = kwargs.get('id')
-          name = kwargs.get('name')
+    def resolve_all_ingredients(self, info, **kwargs):
+        return Ingredient.objects.all()
 
-          if id is not None:
-              return Category.objects.get(pk=id)
+    def resolve_category(self, info, **kwargs):
+        id = kwargs.get("id")
+        name = kwargs.get("name")
 
-          if name is not None:
-              return Category.objects.get(name=name)
+        if id is not None:
+            return Category.objects.get(pk=id)
 
-          return None
+        if name is not None:
+            return Category.objects.get(name=name)
 
-      def resolve_ingredient(self, info, **kwargs):
-          id = kwargs.get('id')
-          name = kwargs.get('name')
+        return None
 
-          if id is not None:
-              return Ingredient.objects.get(pk=id)
+    def resolve_ingredient(self, info, **kwargs):
+        id = kwargs.get("id")
+        name = kwargs.get("name")
 
-          if name is not None:
-              return Ingredient.objects.get(name=name)
+        if id is not None:
+            return Ingredient.objects.get(pk=id)
 
-          return None
+        if name is not None:
+            return Ingredient.objects.get(name=name)
+
+        return None

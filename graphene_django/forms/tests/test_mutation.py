@@ -1,7 +1,7 @@
 import pytest
 from django import forms
 from django.core.exceptions import ValidationError
-from py.test import raises
+from pytest import raises
 
 from graphene import Field, ObjectType, Schema, String
 from graphene_django import DjangoObjectType

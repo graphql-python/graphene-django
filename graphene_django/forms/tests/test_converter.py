@@ -1,11 +1,12 @@
 from django import forms
-from py.test import raises
+from pytest import raises
 
 import graphene
 from graphene import (
     String,
     Int,
     Boolean,
+    Decimal,
     Float,
     ID,
     UUID,
@@ -97,8 +98,8 @@ def test_should_float_convert_float():
     assert_conversion(forms.FloatField, Float)
 
 
-def test_should_decimal_convert_float():
-    assert_conversion(forms.DecimalField, Float)
+def test_should_decimal_convert_decimal():
+    assert_conversion(forms.DecimalField, Decimal)
 
 
 def test_should_multiple_choice_convert_list():

@@ -198,7 +198,7 @@ For Django 2.2 and above:
 
     urlpatterns = [
       # some other urls
-      path('graphql', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+      path('graphql/', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 .. _LoginRequiredMixin: https://docs.djangoproject.com/en/dev/topics/auth/default/#the-loginrequired-mixin

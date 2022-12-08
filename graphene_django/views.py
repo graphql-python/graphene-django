@@ -11,7 +11,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse, validate
 from graphql.error import GraphQLError
-from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
 
 from graphene import Schema
@@ -27,7 +26,7 @@ class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
         self.response = response
         self.message = message = message or response.content.decode()
-        super(HttpError, self).__init__(message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
 def get_accepted_content_types(request):
@@ -163,6 +162,7 @@ class GraphQLView(View):
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
+                    graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
                 )
 
             if self.batch:
@@ -387,7 +387,7 @@ class GraphQLView(View):
     @staticmethod
     def format_error(error):
         if isinstance(error, GraphQLError):
-            return format_graphql_error(error)
+            return error.formatted
 
         return {"message": str(error)}
 

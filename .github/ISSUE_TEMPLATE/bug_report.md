@@ -27,8 +27,8 @@ a github repo, https://repl.it or similar (you can use this template as a starti
 
 
 * **Please tell us about your environment:**
-  
-  - Version: 
-  - Platform: 
+
+  - Version:
+  - Platform:
 
 * **Other information** (e.g. detailed explanation, stacktraces, related issues, suggestions how to fix, links for us to have context, eg. stackoverflow)

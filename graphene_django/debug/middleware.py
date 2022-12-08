@@ -7,7 +7,7 @@ from .exception.formating import wrap_exception
 from .types import DjangoDebug
 
 
-class DjangoDebugContext(object):
+class DjangoDebugContext:
     def __init__(self):
         self.debug_promise = None
         self.promises = []
@@ -46,7 +46,7 @@ class DjangoDebugContext(object):
             unwrap_cursor(connection)
 
 
-class DjangoDebugMiddleware(object):
+class DjangoDebugMiddleware:
     def resolve(self, next, root, info, **args):
         context = info.context
         django_debug = getattr(context, "django_debug", None)
