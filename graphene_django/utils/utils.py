@@ -38,17 +38,23 @@ def camelize(data):
 
 
 def get_reverse_fields(model, local_field_names):
-    for name, attr in model.__dict__.items():
-        # Don't duplicate any local fields
-        if name in local_field_names:
-            continue
+    model_ancestry = [model]
+    # Include proxy models when getting related fields
+    if model._meta.proxy:
+        model_ancestry.append(model._meta.proxy_for_model)
 
-        # "rel" for FK and M2M relations and "related" for O2O Relations
-        related = getattr(attr, "rel", None) or getattr(attr, "related", None)
-        if isinstance(related, models.ManyToOneRel):
-            yield (name, related)
-        elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
-            yield (name, related)
+    for _model in model_ancestry:
+        for name, attr in _model.__dict__.items():
+            # Don't duplicate any local fields
+            if name in local_field_names:
+                continue
+
+            # "rel" for FK and M2M relations and "related" for O2O Relations
+            related = getattr(attr, "rel", None) or getattr(attr, "related", None)
+            if isinstance(related, models.ManyToOneRel):
+                yield (name, related)
+            elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
+                yield (name, related)
 
 
 def maybe_queryset(value):

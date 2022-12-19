@@ -4,8 +4,8 @@ import pytest
 from django.utils.translation import gettext_lazy
 from unittest.mock import patch
 
-from ..utils import camelize, get_model_fields, GraphQLTestCase
-from .models import Film, Reporter
+from ..utils import camelize, get_model_fields, get_reverse_fields, GraphQLTestCase
+from .models import Film, Reporter, CNNReporter
 from ..utils.testing import graphql_query
 
 
@@ -17,6 +17,13 @@ def test_get_model_fields_no_duplication():
     film_fields = get_model_fields(Film)
     film_name_set = {field[0] for field in film_fields}
     assert len(film_fields) == len(film_name_set)
+
+
+def test_get_reverse_fields_includes_proxied_models():
+    reporter_fields = get_reverse_fields(Reporter, [])
+    cnn_reporter_fields = get_reverse_fields(CNNReporter, [])
+
+    assert len(list(reporter_fields)) == len(list(cnn_reporter_fields))
 
 
 def test_camelize():

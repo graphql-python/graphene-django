@@ -1067,6 +1067,110 @@ def test_proxy_model_support():
     assert result.data == expected
 
 
+def test_proxy_model_support_reverse_relationships():
+    """
+    This test asserts that we can query reverse relationships for all Reporters and proxied Reporters.
+    """
+
+    class FilmType(DjangoObjectType):
+        class Meta:
+            model = Film
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class CNNReporterType(DjangoObjectType):
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    film = Film.objects.create(genre="do")
+
+    reporter = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    cnn_reporter = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    film.reporters.add(cnn_reporter)
+    film.save()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        cnn_reporters = DjangoConnectionField(CNNReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+            cnnReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", reporter.id),
+                        "films": [],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
+            ]
+        },
+        "cnnReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+    }
+
+    result = schema.execute(query)
+    assert result.data == expected
+
+
 def test_should_resolve_get_queryset_connectionfields():
     reporter_1 = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
