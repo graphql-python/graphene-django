@@ -122,7 +122,7 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
-    model = None  # type: Model
+    model = None  # type: Type[Model]
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
 
@@ -168,10 +168,8 @@ class DjangoObjectType(ObjectType):
 
         if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
             raise Exception(
-                (
-                    "Can only set filter_fields or filterset_class if "
-                    "Django-Filter is installed"
-                )
+                "Can only set filter_fields or filterset_class if "
+                "Django-Filter is installed"
             )
 
         assert not (fields and exclude), (
@@ -216,7 +214,7 @@ class DjangoObjectType(ObjectType):
                 "Creating a DjangoObjectType without either the `fields` "
                 "or the `exclude` option is deprecated. Add an explicit `fields "
                 "= '__all__'` option on DjangoObjectType {class_name} to use all "
-                "fields".format(class_name=cls.__name__,),
+                "fields".format(class_name=cls.__name__),
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -228,7 +226,7 @@ class DjangoObjectType(ObjectType):
 
         if use_connection is None and interfaces:
             use_connection = any(
-                (issubclass(interface, Node) for interface in interfaces)
+                issubclass(interface, Node) for interface in interfaces
             )
 
         if use_connection and not connection:
@@ -255,7 +253,7 @@ class DjangoObjectType(ObjectType):
         _meta.fields = django_fields
         _meta.connection = connection
 
-        super(DjangoObjectType, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
         )
 

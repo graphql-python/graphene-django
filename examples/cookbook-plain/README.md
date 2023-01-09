@@ -14,7 +14,7 @@ whole Graphene repository:
 ```bash
 # Get the example project code
 git clone https://github.com/graphql-python/graphene-django.git
-cd graphene-django/examples/cookbook
+cd graphene-django/examples/cookbook-plain
 ```
 
 It is good idea (but not required) to create a virtual environment

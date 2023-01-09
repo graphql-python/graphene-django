@@ -6,4 +6,4 @@ def test_to_const():
 
 
 def test_to_const_unicode():
-    assert to_const(u"Skoða þetta unicode stöff") == "SKODA_THETTA_UNICODE_STOFF"
+    assert to_const("Skoða þetta unicode stöff") == "SKODA_THETTA_UNICODE_STOFF"

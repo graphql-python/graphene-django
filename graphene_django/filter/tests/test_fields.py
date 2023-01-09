@@ -5,7 +5,7 @@ import pytest
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
 
-from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
+from graphene import Argument, Boolean, Decimal, Field, ObjectType, Schema, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
@@ -67,7 +67,7 @@ def assert_arguments(field, *arguments):
     actual = [name for name in args if name not in ignore and not name.startswith("_")]
     assert set(arguments) == set(
         actual
-    ), "Expected arguments ({}) did not match actual ({})".format(arguments, actual)
+    ), f"Expected arguments ({arguments}) did not match actual ({actual})"
 
 
 def assert_orderable(field):
@@ -141,7 +141,7 @@ def test_filter_shortcut_filterset_context():
 
         @property
         def qs(self):
-            qs = super(ArticleContextFilter, self).qs
+            qs = super().qs
             return qs.filter(reporter=self.request.reporter)
 
     class Query(ObjectType):
@@ -166,7 +166,7 @@ def test_filter_shortcut_filterset_context():
         editor=r2,
     )
 
-    class context(object):
+    class context:
         reporter = r2
 
     query = """
@@ -401,7 +401,7 @@ def test_filterset_descriptions():
     field = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleIdFilter)
     max_time = field.args["max_time"]
     assert isinstance(max_time, Argument)
-    assert max_time.type == Float
+    assert max_time.type == Decimal
     assert max_time.description == "The maximum time"
 
 
@@ -1008,7 +1008,7 @@ def test_integer_field_filter_type():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int): PetTypeConnection
         }
 
         type PetTypeConnection {
@@ -1056,8 +1056,7 @@ def test_integer_field_filter_type():
         interface Node {
           \"""The ID of the object\"""
           id: ID!
-        }
-    """
+        }"""
     )
 
 
@@ -1077,7 +1076,7 @@ def test_other_filter_types():
     assert str(schema) == dedent(
         """\
         type Query {
-          pets(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null, age: Int = null, age_Isnull: Boolean = null, age_Lt: Int = null): PetTypeConnection
+          pets(offset: Int, before: String, after: String, first: Int, last: Int, age: Int, age_Isnull: Boolean, age_Lt: Int): PetTypeConnection
         }
 
         type PetTypeConnection {
@@ -1125,8 +1124,7 @@ def test_other_filter_types():
         interface Node {
           \"""The ID of the object\"""
           id: ID!
-        }
-        """
+        }"""
     )
 
 
@@ -1226,7 +1224,7 @@ def test_filter_filterset_based_on_mixin():
         }
     }
 
-    result = schema.execute(query, variable_values={"email": reporter_1.email},)
+    result = schema.execute(query, variable_values={"email": reporter_1.email})
 
     assert not result.errors
     assert result.data == expected
@@ -1267,13 +1265,23 @@ def test_filter_string_contains():
     result = schema.execute(query, variables={"filter": "Ja"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Jack"}}, {"node": {"name": "Jane"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Jack"}},
+                {"node": {"name": "Jane"}},
+            ]
+        }
     }
 
     result = schema.execute(query, variables={"filter": "o"})
     assert not result.errors
     assert result.data == {
-        "people": {"edges": [{"node": {"name": "Joe"}}, {"node": {"name": "Bob"}},]}
+        "people": {
+            "edges": [
+                {"node": {"name": "Joe"}},
+                {"node": {"name": "Bob"}},
+            ]
+        }
     }
 
 

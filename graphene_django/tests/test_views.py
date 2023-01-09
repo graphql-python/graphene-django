@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from mock import patch
+from unittest.mock import patch
 
 from django.db import connection
 
@@ -109,12 +109,10 @@ def test_reports_validation_errors(client):
             {
                 "message": "Cannot query field 'unknownOne' on type 'QueryRoot'.",
                 "locations": [{"line": 1, "column": 9}],
-                "path": None,
             },
             {
                 "message": "Cannot query field 'unknownTwo' on type 'QueryRoot'.",
                 "locations": [{"line": 1, "column": 21}],
-                "path": None,
             },
         ]
     }
@@ -135,8 +133,6 @@ def test_errors_when_missing_operation_name(client):
         "errors": [
             {
                 "message": "Must provide operation name if query contains multiple operations.",
-                "locations": None,
-                "path": None,
             }
         ]
     }
@@ -477,7 +473,6 @@ def test_handles_syntax_errors_caught_by_graphql(client):
             {
                 "locations": [{"column": 1, "line": 1}],
                 "message": "Syntax Error: Unexpected Name 'syntaxerror'.",
-                "path": None,
             }
         ]
     }
@@ -512,7 +507,7 @@ def test_handles_invalid_json_bodies(client):
 
 def test_handles_django_request_error(client, monkeypatch):
     def mocked_read(*args):
-        raise IOError("foo-bar")
+        raise OSError("foo-bar")
 
     monkeypatch.setattr("django.http.request.HttpRequest.read", mocked_read)
 

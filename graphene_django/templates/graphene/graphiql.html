@@ -46,6 +46,7 @@ add "&raw" to the end of the URL within a browser.
       subscriptionPath: "{{subscription_path}}",
     {% endif %}
       graphiqlHeaderEditorEnabled: {{ graphiql_header_editor_enabled|yesno:"true,false" }},
+      graphiqlShouldPersistHeaders: {{ graphiql_should_persist_headers|yesno:"true,false" }},
     };
   </script>
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>

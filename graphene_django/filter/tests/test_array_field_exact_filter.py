@@ -120,10 +120,7 @@ def test_array_field_filter_schema_type(Query):
         "randomField": "[Boolean!]",
     }
     filters_str = ", ".join(
-        [
-            f"{filter_field}: {gql_type} = null"
-            for filter_field, gql_type in filters.items()
-        ]
+        [f"{filter_field}: {gql_type}" for filter_field, gql_type in filters.items()]
     )
     assert (
         f"type Query {{\n  events({filters_str}): EventTypeConnection\n}}" in schema_str
