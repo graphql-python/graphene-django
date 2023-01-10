@@ -1160,7 +1160,6 @@ def test_model_inheritance_support_reverse_relationships():
         }
     """
 
-    import pdb; pdb.set_trace()
     expected = {
         "allReporters": {
             "edges": [
