@@ -15,7 +15,7 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter
+from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter, APNewsReporter
 
 
 def test_should_query_only_fields():
@@ -1067,9 +1067,9 @@ def test_proxy_model_support():
     assert result.data == expected
 
 
-def test_proxy_model_support_reverse_relationships():
+def test_model_inheritance_support_reverse_relationships():
     """
-    This test asserts that we can query reverse relationships for all Reporters and proxied Reporters.
+    This test asserts that we can query reverse relationships for all Reporters and proxied Reporters and multi table Reporters.
     """
 
     class FilmType(DjangoObjectType):
@@ -1090,6 +1090,13 @@ def test_proxy_model_support_reverse_relationships():
             interfaces = (Node,)
             use_connection = True
             fields = "__all__"
+    
+    class APNewsReporterType(DjangoObjectType):
+        class Meta:
+            model = APNewsReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
 
     film = Film.objects.create(genre="do")
 
@@ -1105,12 +1112,17 @@ def test_proxy_model_support_reverse_relationships():
         reporter_type=2,  # set this guy to be CNN
     )
 
-    film.reporters.add(cnn_reporter)
+    ap_news_reporter = APNewsReporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    film.reporters.add(cnn_reporter, ap_news_reporter)
     film.save()
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
         cnn_reporters = DjangoConnectionField(CNNReporterType)
+        ap_news_reporters = DjangoConnectionField(APNewsReporterType)
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -1135,9 +1147,20 @@ def test_proxy_model_support_reverse_relationships():
                     }
                 }
             }
+            apNewsReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
         }
     """
 
+    import pdb; pdb.set_trace()
     expected = {
         "allReporters": {
             "edges": [
@@ -1153,6 +1176,12 @@ def test_proxy_model_support_reverse_relationships():
                         "films": [{"id": f"{film.id}"}],
                     },
                 },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", ap_news_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
             ]
         },
         "cnnReporters": {
@@ -1160,6 +1189,16 @@ def test_proxy_model_support_reverse_relationships():
                 {
                     "node": {
                         "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+        "apNewsReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("APNewsReporterType", ap_news_reporter.id),
                         "films": [{"id": f"{film.id}"}],
                     }
                 }
