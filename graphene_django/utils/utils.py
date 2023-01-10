@@ -39,9 +39,10 @@ def camelize(data):
 
 def get_reverse_fields(model, local_field_names):
     model_ancestry = [model]
-    # Include proxy models when getting related fields
-    if model._meta.proxy:
-        model_ancestry.append(model._meta.proxy_for_model)
+
+    for base in model.__bases__:
+        if is_valid_django_model(base):
+            model_ancestry.append(base)
 
     for _model in model_ancestry:
         for name, attr in _model.__dict__.items():
