@@ -74,6 +74,7 @@ def test_django_objecttype_map_correct_fields():
         "email",
         "pets",
         "a_choice",
+        "fans",
         "reporter_type",
     ]
     assert sorted(fields[-3:]) == ["apnewsreporter", "articles", "films"]

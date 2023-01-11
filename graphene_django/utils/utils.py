@@ -37,12 +37,21 @@ def camelize(data):
     return data
 
 
-def get_reverse_fields(model, local_field_names):
+def _get_model_ancestry(model):
     model_ancestry = [model]
 
     for base in model.__bases__:
-        if is_valid_django_model(base):
+        if is_valid_django_model(base) and getattr(base, "_meta", False):
             model_ancestry.append(base)
+    return model_ancestry
+
+
+def get_reverse_fields(model, local_field_names):
+    """
+    Searches through the model's ancestry and gets reverse relationships the models
+    Yields a tuple of (field.name, field)
+    """
+    model_ancestry = _get_model_ancestry(model)
 
     for _model in model_ancestry:
         for name, attr in _model.__dict__.items():
@@ -58,6 +67,24 @@ def get_reverse_fields(model, local_field_names):
                 yield (name, related)
 
 
+def get_local_fields(model):
+    """
+    Searches through the model's ancestry and gets the fields on the models
+    Returns a dict of {field.name: field}
+    """
+    model_ancestry = _get_model_ancestry(model)
+
+    local_fields_dict = {}
+    for _model in model_ancestry:
+        for field in sorted(
+            list(_model._meta.fields) + list(_model._meta.local_many_to_many)
+        ):
+            if field.name not in local_fields_dict:
+                local_fields_dict[field.name] = field
+    
+    return list(local_fields_dict.items())
+
+
 def maybe_queryset(value):
     if isinstance(value, Manager):
         value = value.get_queryset()
@@ -65,17 +92,14 @@ def maybe_queryset(value):
 
 
 def get_model_fields(model):
-    local_fields = [
-        (field.name, field)
-        for field in sorted(
-            list(model._meta.fields) + list(model._meta.local_many_to_many)
-        )
-    ]
-
-    # Make sure we don't duplicate local fields with "reverse" version
-    local_field_names = [field[0] for field in local_fields]
+    """
+    Gets all the fields and relationships on the Django model and its ancestry.
+    Prioritizes local fields and relationships over the reverse relationships of the same name
+    Returns a tuple of (field.name, field)
+    """
+    local_fields = get_local_fields(model)
+    local_field_names = {field[0] for field in local_fields}
     reverse_fields = get_reverse_fields(model, local_field_names)
-
     all_fields = local_fields + list(reverse_fields)
 
     return all_fields

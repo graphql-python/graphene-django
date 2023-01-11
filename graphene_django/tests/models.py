@@ -46,6 +46,7 @@ class Reporter(models.Model):
     a_choice = models.CharField(max_length=30, choices=CHOICES, blank=True)
     objects = models.Manager()
     doe_objects = DoeReporterManager()
+    fans = models.ManyToManyField(Person)
 
     reporter_type = models.IntegerField(
         "Reporter Type",
