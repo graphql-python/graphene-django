@@ -15,7 +15,16 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter, APNewsReporter
+from .models import (
+    Article,
+    CNNReporter,
+    Film,
+    FilmDetails,
+    Person,
+    Pet,
+    Reporter,
+    APNewsReporter,
+)
 
 
 def test_should_query_only_fields():
@@ -1076,7 +1085,7 @@ def test_model_inheritance_support_reverse_relationships():
         class Meta:
             model = Film
             fields = "__all__"
-    
+
     class ReporterType(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -1090,7 +1099,7 @@ def test_model_inheritance_support_reverse_relationships():
             interfaces = (Node,)
             use_connection = True
             fields = "__all__"
-    
+
     class APNewsReporterType(DjangoObjectType):
         class Meta:
             model = APNewsReporter
@@ -1213,7 +1222,7 @@ def test_model_inheritance_support_local_relationships():
     """
     This test asserts that we can query local relationships for all Reporters and proxied Reporters and multi table Reporters.
     """
-    
+
     class PersonType(DjangoObjectType):
         class Meta:
             model = Person
@@ -1232,7 +1241,7 @@ def test_model_inheritance_support_local_relationships():
             interfaces = (Node,)
             use_connection = True
             fields = "__all__"
-    
+
     class APNewsReporterType(DjangoObjectType):
         class Meta:
             model = APNewsReporter
@@ -1246,10 +1255,7 @@ def test_model_inheritance_support_local_relationships():
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
-    
-    reporter_fan = Person.objects.create(
-        name="Reporter Fan"
-    )
+    reporter_fan = Person.objects.create(name="Reporter Fan")
 
     reporter.fans.add(reporter_fan)
     reporter.save()
@@ -1261,18 +1267,14 @@ def test_model_inheritance_support_local_relationships():
         a_choice=1,
         reporter_type=2,  # set this guy to be CNN
     )
-    cnn_fan = Person.objects.create(
-        name="CNN Fan"
-    )
+    cnn_fan = Person.objects.create(name="CNN Fan")
     cnn_reporter.fans.add(cnn_fan)
     cnn_reporter.save()
 
     ap_news_reporter = APNewsReporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    ap_news_fan = Person.objects.create(
-        name="AP News Fan"
-    )
+    ap_news_fan = Person.objects.create(name="AP News Fan")
     ap_news_reporter.fans.add(ap_news_fan)
     ap_news_reporter.save()
 
@@ -1367,6 +1369,7 @@ def test_model_inheritance_support_local_relationships():
 
     result = schema.execute(query)
     assert result.data == expected
+
 
 def test_should_resolve_get_queryset_connectionfields():
     reporter_1 = Reporter.objects.create(

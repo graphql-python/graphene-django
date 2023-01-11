@@ -24,7 +24,11 @@ def test_get_reverse_fields_includes_proxied_models():
     cnn_reporter_fields = get_reverse_fields(CNNReporter, [])
     ap_news_reporter_fields = get_reverse_fields(APNewsReporter, [])
 
-    assert len(list(reporter_fields)) == len(list(cnn_reporter_fields)) == len(list(ap_news_reporter_fields))
+    assert (
+        len(list(reporter_fields))
+        == len(list(cnn_reporter_fields))
+        == len(list(ap_news_reporter_fields))
+    )
 
 
 def test_camelize():

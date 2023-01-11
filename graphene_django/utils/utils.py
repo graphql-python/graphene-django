@@ -81,7 +81,7 @@ def get_local_fields(model):
         ):
             if field.name not in local_fields_dict:
                 local_fields_dict[field.name] = field
-    
+
     return list(local_fields_dict.items())
 
 

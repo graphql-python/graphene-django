@@ -90,11 +90,13 @@ class CNNReporter(Reporter):
 
     objects = CNNReporterManager()
 
+
 class APNewsReporter(Reporter):
     """
     This class only inherits from Reporter for testing multi table inheritence
     similar to what you'd see in django-polymorphic
     """
+
     alias = models.CharField(max_length=30)
     objects = models.Manager()
 
