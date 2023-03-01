@@ -18,6 +18,7 @@ class SerializerMutationOptions(MutationOptions):
     model_class = None
     model_operations = ["create", "update"]
     serializer_class = None
+    optional_fields = ()
 
 
 def fields_for_serializer(
@@ -27,6 +28,7 @@ def fields_for_serializer(
     is_input=False,
     convert_choices_to_enum=True,
     lookup_field=None,
+    optional_fields=(),
 ):
     fields = OrderedDict()
     for name, field in serializer.fields.items():
@@ -44,9 +46,13 @@ def fields_for_serializer(
 
         if is_not_in_only or is_excluded:
             continue
+        is_optional = name in optional_fields
 
         fields[name] = convert_serializer_field(
-            field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum
+            field,
+            is_input=is_input,
+            convert_choices_to_enum=convert_choices_to_enum,
+            force_optional=is_optional,
         )
     return fields
 
@@ -70,6 +76,7 @@ class SerializerMutation(ClientIDMutation):
         exclude_fields=(),
         convert_choices_to_enum=True,
         _meta=None,
+        optional_fields=(),
         **options
     ):
 
@@ -95,6 +102,7 @@ class SerializerMutation(ClientIDMutation):
             is_input=True,
             convert_choices_to_enum=convert_choices_to_enum,
             lookup_field=lookup_field,
+            optional_fields=optional_fields,
         )
         output_fields = fields_for_serializer(
             serializer,

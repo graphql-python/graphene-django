@@ -6,13 +6,16 @@ try:
     # Postgres fields are only available in Django with psycopg2 installed
     # and we cannot have psycopg2 on PyPy
     from django.contrib.postgres.fields import (
+        IntegerRangeField,
         ArrayField,
         HStoreField,
         JSONField as PGJSONField,
         RangeField,
     )
 except ImportError:
-    ArrayField, HStoreField, PGJSONField, RangeField = (MissingType,) * 4
+    IntegerRangeField, ArrayField, HStoreField, PGJSONField, RangeField = (
+        MissingType,
+    ) * 5
 
 try:
     # JSONField is only available from Django 3.1

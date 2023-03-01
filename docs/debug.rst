@@ -3,7 +3,7 @@ Django Debug Middleware
 
 You can debug your GraphQL queries in a similar way to
 `django-debug-toolbar <https://django-debug-toolbar.readthedocs.org/>`__,
-but outputing in the results in GraphQL response as fields, instead of
+but outputting in the results in GraphQL response as fields, instead of
 the graphical HTML interface.
 
 For that, you will need to add the plugin in your graphene schema.
@@ -43,7 +43,7 @@ And in your ``settings.py``:
 Querying
 --------
 
-You can query it for outputing all the sql transactions that happened in
+You can query it for outputting all the sql transactions that happened in
 the GraphQL request, like:
 
 .. code::

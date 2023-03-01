@@ -14,11 +14,7 @@ test: tests  # Alias test -> tests
 
 .PHONY: format
 format:
-	black --exclude "/migrations/" graphene_django examples setup.py
-
-.PHONY: lint
-lint:
-	flake8 graphene_django examples
+	pre-commit run --all-files
 
 .PHONY: docs ## Generate docs
 docs: dev-setup

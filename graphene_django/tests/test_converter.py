@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import pytest
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from py.test import raises
 
 import graphene
@@ -240,6 +240,10 @@ def test_field_with_choices_convert_enum_false():
 
 def test_should_float_convert_float():
     assert_conversion(models.FloatField, graphene.Float)
+
+
+def test_should_decimal_convert_decimal():
+    assert_conversion(models.DecimalField, graphene.Decimal)
 
 
 def test_should_manytomany_convert_connectionorlist():

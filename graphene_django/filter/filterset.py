@@ -1,32 +1,11 @@
 import itertools
 
 from django.db import models
-from django_filters import Filter, MultipleChoiceFilter, VERSION
+from django_filters import VERSION
 from django_filters.filterset import BaseFilterSet, FilterSet
 from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
 
-from graphql_relay.node.node import from_global_id
-
-from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
-
-
-class GlobalIDFilter(Filter):
-    field_class = GlobalIDFormField
-
-    def filter(self, qs, value):
-        """ Convert the filter value to a primary key before filtering """
-        _id = None
-        if value is not None:
-            _, _id = from_global_id(value)
-        return super(GlobalIDFilter, self).filter(qs, _id)
-
-
-class GlobalIDMultipleChoiceFilter(MultipleChoiceFilter):
-    field_class = GlobalIDMultipleChoiceField
-
-    def filter(self, qs, value):
-        gids = [from_global_id(v)[1] for v in value]
-        return super(GlobalIDMultipleChoiceFilter, self).filter(qs, gids)
+from .filters import GlobalIDFilter, GlobalIDMultipleChoiceFilter
 
 
 GRAPHENE_FILTER_SET_OVERRIDES = {
@@ -40,8 +19,8 @@ GRAPHENE_FILTER_SET_OVERRIDES = {
 
 
 class GrapheneFilterSetMixin(BaseFilterSet):
-    """ A django_filters.filterset.BaseFilterSet with default filter overrides
-    to handle global IDs """
+    """A django_filters.filterset.BaseFilterSet with default filter overrides
+    to handle global IDs"""
 
     FILTER_DEFAULTS = dict(
         itertools.chain(
@@ -81,8 +60,7 @@ if VERSION[0] < 2:
 
 
 def setup_filterset(filterset_class):
-    """ Wrap a provided filterset in Graphene-specific functionality
-    """
+    """Wrap a provided filterset in Graphene-specific functionality"""
     return type(
         "Graphene{}".format(filterset_class.__name__),
         (filterset_class, GrapheneFilterSetMixin),
@@ -91,8 +69,7 @@ def setup_filterset(filterset_class):
 
 
 def custom_filterset_factory(model, filterset_base_class=FilterSet, **meta):
-    """ Create a filterset for the given model using the provided meta data
-    """
+    """Create a filterset for the given model using the provided meta data"""
     meta.update({"model": model})
     meta_class = type(str("Meta"), (object,), meta)
     filterset = type(

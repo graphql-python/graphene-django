@@ -51,7 +51,9 @@ def test_graphql_test_case_op_name(post_mock):
             pass
 
     tc = TestClass()
+    tc._pre_setup()
     tc.setUpClass()
+
     tc.query("query { }", op_name="QueryName")
     body = json.loads(post_mock.call_args.args[1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request

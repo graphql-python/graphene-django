@@ -287,7 +287,7 @@ Where "foo" is the name of the field declared in the ``Query`` object.
     class Query(graphene.ObjectType):
         foo = graphene.List(QuestionType)
 
-        def resolve_foo(root, info):
+        def resolve_foo(root, info, **kwargs):
             id = kwargs.get("id")
             return Question.objects.get(id)
 

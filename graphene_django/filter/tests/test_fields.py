@@ -5,18 +5,18 @@ import pytest
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
 
-from graphene import Argument, Boolean, Field, Float, ObjectType, Schema, String
+from graphene import Argument, Boolean, Decimal, Field, ObjectType, Schema, String
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.forms import GlobalIDFormField, GlobalIDMultipleChoiceField
-from graphene_django.tests.models import Article, Pet, Reporter
+from graphene_django.tests.models import Article, Person, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
 
 if DJANGO_FILTER_INSTALLED:
     import django_filters
-    from django_filters import FilterSet, NumberFilter
+    from django_filters import FilterSet, NumberFilter, OrderingFilter
 
     from graphene_django.filter import (
         GlobalIDFilter,
@@ -87,6 +87,7 @@ def test_filter_explicit_filterset_arguments():
         "pub_date__gt",
         "pub_date__lt",
         "reporter",
+        "reporter__in",
     )
 
 
@@ -388,7 +389,7 @@ def test_filterset_descriptions():
     field = DjangoFilterConnectionField(ArticleNode, filterset_class=ArticleIdFilter)
     max_time = field.args["max_time"]
     assert isinstance(max_time, Argument)
-    assert max_time.type == Float
+    assert max_time.type == Decimal
     assert max_time.description == "The maximum time"
 
 
@@ -671,12 +672,12 @@ def test_should_query_filter_node_limit():
     schema = Schema(query=Query)
     query = """
         query NodeFilteringQuery {
-            allReporters(limit: 1) {
+            allReporters(limit: "1") {
                 edges {
                     node {
                         id
                         firstName
-                        articles(lang: "es") {
+                        articles(lang: ES) {
                             edges {
                                 node {
                                     id
@@ -1085,7 +1086,7 @@ def test_filter_filterset_based_on_mixin():
 
             return filters
 
-        def filter_email_in(cls, queryset, name, value):
+        def filter_email_in(self, queryset, name, value):
             return queryset.filter(**{name: [value]})
 
     class NewArticleFilter(ArticleFilterMixin, ArticleFilter):
@@ -1171,3 +1172,76 @@ def test_filter_filterset_based_on_mixin():
 
     assert not result.errors
     assert result.data == expected
+
+
+def test_filter_string_contains():
+    class PersonType(DjangoObjectType):
+        class Meta:
+            model = Person
+            interfaces = (Node,)
+            filter_fields = {"name": ["exact", "in", "contains", "icontains"]}
+
+    class Query(ObjectType):
+        people = DjangoFilterConnectionField(PersonType)
+
+    schema = Schema(query=Query)
+
+    Person.objects.bulk_create(
+        [
+            Person(name="Jack"),
+            Person(name="Joe"),
+            Person(name="Jane"),
+            Person(name="Peter"),
+            Person(name="Bob"),
+        ]
+    )
+    query = """query nameContain($filter: String) {
+        people(name_Contains: $filter) {
+            edges {
+                node {
+                    name
+                }
+            }
+        }
+    }"""
+
+    result = schema.execute(query, variables={"filter": "Ja"})
+    assert not result.errors
+    assert result.data == {
+        "people": {
+            "edges": [
+                {"node": {"name": "Jack"}},
+                {"node": {"name": "Jane"}},
+            ]
+        }
+    }
+
+    result = schema.execute(query, variables={"filter": "o"})
+    assert not result.errors
+    assert result.data == {
+        "people": {
+            "edges": [
+                {"node": {"name": "Joe"}},
+                {"node": {"name": "Bob"}},
+            ]
+        }
+    }
+
+
+def test_only_custom_filters():
+    class ReporterFilter(FilterSet):
+        class Meta:
+            model = Reporter
+            fields = []
+
+        some_filter = OrderingFilter(fields=("name",))
+
+    class ReporterFilterNode(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            fields = "__all__"
+            filterset_class = ReporterFilter
+
+    field = DjangoFilterConnectionField(ReporterFilterNode)
+    assert_arguments(field, "some_filter")

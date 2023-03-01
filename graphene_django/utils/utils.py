@@ -3,7 +3,7 @@ import inspect
 import six
 from django.db import connection, models, transaction
 from django.db.models.manager import Manager
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import Promise
 
 from graphene.utils.str_converters import to_camel_case
@@ -26,7 +26,7 @@ def isiterable(value):
 
 def _camelize_django_str(s):
     if isinstance(s, Promise):
-        s = force_text(s)
+        s = force_str(s)
     return to_camel_case(s) if isinstance(s, six.string_types) else s
 
 

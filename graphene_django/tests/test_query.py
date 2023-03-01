@@ -11,7 +11,7 @@ from py.test import raises
 import graphene
 from graphene.relay import Node
 
-from ..compat import JSONField, MissingType
+from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
@@ -113,7 +113,7 @@ def test_should_query_well():
     assert result.data == expected
 
 
-@pytest.mark.skipif(JSONField is MissingType, reason="RangeField should exist")
+@pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
 def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
         IntegerRangeField,
@@ -412,6 +412,7 @@ def test_should_query_node_filtering():
             model = Article
             interfaces = (Node,)
             filter_fields = ("lang",)
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -534,6 +535,7 @@ def test_should_query_node_multiple_filtering():
             model = Article
             interfaces = (Node,)
             filter_fields = ("lang", "headline")
+            convert_choices_to_enum = False
 
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
@@ -1442,7 +1444,11 @@ def test_connection_should_enable_offset_filtering():
     result = schema.execute(query)
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Some", "lastName": "Guy"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+            ]
+        }
     }
     assert result.data == expected
 
@@ -1482,7 +1488,9 @@ def test_connection_should_enable_offset_filtering_higher_than_max_limit(
     assert not result.errors
     expected = {
         "allReporters": {
-            "edges": [{"node": {"firstName": "Some", "lastName": "Lady"}},]
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
         }
     }
     assert result.data == expected
@@ -1549,6 +1557,10 @@ def test_connection_should_allow_offset_filtering_with_after():
     result = schema.execute(query, variable_values=dict(after=after))
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+            ]
+        }
     }
     assert result.data == expected
