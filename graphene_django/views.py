@@ -11,7 +11,6 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse, validate
 from graphql.error import GraphQLError
-from graphql.error import format_error as format_graphql_error
 from graphql.execution import ExecutionResult
 
 from graphene import Schema
@@ -27,7 +26,7 @@ class HttpError(Exception):
     def __init__(self, response, message=None, *args, **kwargs):
         self.response = response
         self.message = message = message or response.content.decode()
-        super(HttpError, self).__init__(message, *args, **kwargs)
+        super().__init__(message, *args, **kwargs)
 
 
 def get_accepted_content_types(request):
@@ -58,23 +57,23 @@ class GraphQLView(View):
     graphiql_template = "graphene/graphiql.html"
 
     # Polyfill for window.fetch.
-    whatwg_fetch_version = "3.2.0"
-    whatwg_fetch_sri = "sha256-l6HCB9TT2v89oWbDdo2Z3j+PSVypKNLA/nqfzSbM8mo="
+    whatwg_fetch_version = "3.6.2"
+    whatwg_fetch_sri = "sha256-+pQdxwAcHJdQ3e/9S4RK6g8ZkwdMgFQuHvLuN5uyk5c="
 
     # React and ReactDOM.
-    react_version = "16.13.1"
-    react_sri = "sha256-yUhvEmYVhZ/GGshIQKArLvySDSh6cdmdcIx0spR3UP4="
-    react_dom_sri = "sha256-vFt3l+illeNlwThbDUdoPTqF81M8WNSZZZt3HEjsbSU="
+    react_version = "17.0.2"
+    react_sri = "sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8="
+    react_dom_sri = "sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0="
 
     # The GraphiQL React app.
-    graphiql_version = "1.0.3"
-    graphiql_sri = "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
-    graphiql_css_sri = "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
+    graphiql_version = "1.4.7"  # "1.0.3"
+    graphiql_sri = "sha256-cpZ8w9D/i6XdEbY/Eu7yAXeYzReVw0mxYd7OU3gUcsc="  # "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
+    graphiql_css_sri = "sha256-HADQowUuFum02+Ckkv5Yu5ygRoLllHZqg0TFZXY7NHI="  # "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
 
     # The websocket transport library for subscriptions.
-    subscriptions_transport_ws_version = "0.9.17"
+    subscriptions_transport_ws_version = "0.9.18"
     subscriptions_transport_ws_sri = (
-        "sha256-kCDzver8iRaIQ/SVlfrIwxaBQ/avXf9GQFJRLlErBnk="
+        "sha256-i0hAXd4PdJ/cHX3/8tIy/Q/qKiWr5WSTxMFuL9tACkw="
     )
 
     schema = None
@@ -84,6 +83,7 @@ class GraphQLView(View):
     pretty = False
     batch = False
     subscription_path = None
+    execution_context_class = None
 
     def __init__(
         self,
@@ -162,6 +162,7 @@ class GraphQLView(View):
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
+                    graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
                 )
 
             if self.batch:
@@ -386,7 +387,7 @@ class GraphQLView(View):
     @staticmethod
     def format_error(error):
         if isinstance(error, GraphQLError):
-            return format_graphql_error(error)
+            return error.formatted
 
         return {"message": str(error)}
 

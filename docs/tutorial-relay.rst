@@ -70,7 +70,7 @@ Let's get started with these models:
     class Ingredient(models.Model):
         name = models.CharField(max_length=100)
         notes = models.TextField()
-        category = models.ForeignKey(Category, related_name='ingredients')
+        category = models.ForeignKey(Category, related_name='ingredients', on_delete=models.CASCADE)
 
         def __str__(self):
             return self.name
@@ -151,7 +151,7 @@ Create ``cookbook/ingredients/schema.py`` and type the following:
             interfaces = (relay.Node, )
 
 
-    class Query(graphene.ObjectType):
+    class Query(ObjectType):
         category = relay.Node.Field(CategoryNode)
         all_categories = DjangoFilterConnectionField(CategoryNode)
 
@@ -281,7 +281,7 @@ from the command line.
     $ python ./manage.py runserver
 
     Performing system checks...
-    Django version 1.11, using settings 'cookbook.settings'
+    Django version 3.1.7, using settings 'cookbook.settings'
     Starting development server at http://127.0.0.1:8000/
     Quit the server with CONTROL-C.
 

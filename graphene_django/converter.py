@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from functools import singledispatch, partial, wraps
+from functools import singledispatch, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -23,10 +23,16 @@ from graphene import (
     Time,
     Decimal,
 )
-from graphene.types.resolver import get_default_resolver
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
-from graphql import GraphQLError, assert_valid_name
+from graphql import GraphQLError
+
+try:
+    from graphql import assert_name
+except ImportError:
+    # Support for older versions of graphql
+    from graphql import assert_valid_name as assert_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
@@ -36,7 +42,7 @@ from .utils.str_converters import to_const
 
 
 class BlankValueField(Field):
-    def get_resolver(self, parent_resolver):
+    def wrap_resolve(self, parent_resolver):
         resolver = self.resolver or parent_resolver
 
         # create custom resolver
@@ -56,7 +62,7 @@ class BlankValueField(Field):
 def convert_choice_name(name):
     name = to_const(force_str(name))
     try:
-        assert_valid_name(name)
+        assert_name(name)
     except GraphQLError:
         name = "A_%s" % name
     return name
@@ -68,8 +74,7 @@ def get_choices(choices):
         choices = choices.items()
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
-            for choice in get_choices(help_text):
-                yield choice
+            yield from get_choices(help_text)
         else:
             name = convert_choice_name(value)
             while name in converted_names:
@@ -86,7 +91,7 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-    class EnumWithDescriptionsType(object):
+    class EnumWithDescriptionsType:
         @property
         def description(self):
             return str(named_choices_descriptions[self.name])
@@ -103,7 +108,7 @@ def generate_enum_name(django_model_meta, field):
         )
         name = custom_func(field)
     elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V2_NAMING is True:
-        name = to_camel_case("{}_{}".format(django_model_meta.object_name, field.name))
+        name = to_camel_case(f"{django_model_meta.object_name}_{field.name}")
     else:
         name = "{app_label}{object_name}{field_name}Choices".format(
             app_label=to_camel_case(django_model_meta.app_label.title()),
@@ -149,7 +154,9 @@ def get_django_field_description(field):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
+        "Don't know how to convert the Django field {} ({})".format(
+            field, field.__class__
+        )
     )
 
 
@@ -167,9 +174,17 @@ def convert_field_to_string(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigAutoField)
 @convert_django_field.register(models.AutoField)
 def convert_field_to_id(field, registry=None):
     return ID(description=get_django_field_description(field), required=not field.null)
+
+
+if hasattr(models, "SmallAutoField"):
+
+    @convert_django_field.register(models.SmallAutoField)
+    def convert_field_small_to_id(field, registry=None):
+        return convert_field_to_id(field, registry)
 
 
 @convert_django_field.register(models.UUIDField)
@@ -179,10 +194,14 @@ def convert_field_to_uuid(field, registry=None):
     )
 
 
+@convert_django_field.register(models.BigIntegerField)
+def convert_big_int_field(field, registry=None):
+    return BigInt(description=field.help_text, required=not field.null)
+
+
 @convert_django_field.register(models.PositiveIntegerField)
 @convert_django_field.register(models.PositiveSmallIntegerField)
 @convert_django_field.register(models.SmallIntegerField)
-@convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
     return Int(description=get_django_field_description(field), required=not field.null)
@@ -198,7 +217,9 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 def convert_field_to_decimal(field, registry=None):
-    return Decimal(description=field.help_text, required=not field.null)
+    return Decimal(
+        description=get_django_field_description(field), required=not field.null
+    )
 
 
 @convert_django_field.register(models.FloatField)
@@ -239,10 +260,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        # We do this for a bug in Django 1.8, where null attr
-        # is not available in the OneToOneRel instance
-        null = getattr(field, "null", True)
-        return Field(_type, required=not null)
+        return Field(_type, required=not field.null)
 
     return Dynamic(dynamic_type)
 
@@ -297,7 +315,26 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                """
+                Implements a custom resolver which go through the `get_node` method to ensure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super().wrap_resolve(parent_resolver)
+
+                def custom_resolver(root, info, **args):
+                    fk_obj = resolver(root, info, **args)
+                    if not isinstance(fk_obj, model):
+                        # In case the resolver is a custom one that overwrites
+                        # the default Django resolver
+                        # This happens, for example, when using custom awaitable resolvers.
+                        return fk_obj
+                    return _type.get_node(info, fk_obj.pk)
+
+                return custom_resolver
+
+        return CustomField(
             _type,
             description=get_django_field_description(field),
             required=not field.null,

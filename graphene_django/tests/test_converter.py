@@ -3,13 +3,14 @@ from collections import namedtuple
 import pytest
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from py.test import raises
+from pytest import raises
 
 import graphene
 from graphene import NonNull
 from graphene.relay import ConnectionField, Node
 from graphene.types.datetime import Date, DateTime, Time
 from graphene.types.json import JSONString
+from graphene.types.scalars import BigInt
 
 from ..compat import (
     ArrayField,
@@ -111,6 +112,15 @@ def test_should_auto_convert_id():
     assert_conversion(models.AutoField, graphene.ID, primary_key=True)
 
 
+def test_should_big_auto_convert_id():
+    assert_conversion(models.BigAutoField, graphene.ID, primary_key=True)
+
+
+def test_should_small_auto_convert_id():
+    if hasattr(models, "SmallAutoField"):
+        assert_conversion(models.SmallAutoField, graphene.ID, primary_key=True)
+
+
 def test_should_uuid_convert_id():
     assert_conversion(models.UUIDField, graphene.UUID)
 
@@ -131,8 +141,8 @@ def test_should_small_integer_convert_int():
     assert_conversion(models.SmallIntegerField, graphene.Int)
 
 
-def test_should_big_integer_convert_int():
-    assert_conversion(models.BigIntegerField, graphene.Int)
+def test_should_big_integer_convert_big_int():
+    assert_conversion(models.BigIntegerField, BigInt)
 
 
 def test_should_integer_convert_int():

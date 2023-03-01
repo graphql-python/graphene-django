@@ -1,6 +1,6 @@
 import datetime
 
-from py.test import raises
+from pytest import raises
 from rest_framework import serializers
 
 from graphene import Field, ResolveInfo

@@ -16,7 +16,7 @@ class RecipeIngredientType(DjangoObjectType):
         fields = "__all__"
 
 
-class Query(object):
+class Query:
     recipe = graphene.Field(RecipeType, id=graphene.Int(), title=graphene.String())
     all_recipes = graphene.List(RecipeType)
 

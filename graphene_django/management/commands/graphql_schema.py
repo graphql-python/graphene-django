@@ -48,14 +48,14 @@ class CommandArguments(BaseCommand):
 class Command(CommandArguments):
     help = "Dump Graphene schema as a JSON or GraphQL file"
     can_import_settings = True
-    requires_system_checks = False
+    requires_system_checks = []
 
     def save_json_file(self, out, schema_dict, indent):
         with open(out, "w") as outfile:
             json.dump(schema_dict, outfile, indent=indent, sort_keys=True)
 
     def save_graphql_file(self, out, schema):
-        with open(out, "w") as outfile:
+        with open(out, "w", encoding="utf-8") as outfile:
             outfile.write(print_schema(schema.graphql_schema))
 
     def get_schema(self, schema, out, indent):
@@ -73,16 +73,12 @@ class Command(CommandArguments):
             elif file_extension == ".json":
                 self.save_json_file(out, schema_dict, indent)
             else:
-                raise CommandError(
-                    'Unrecognised file format "{}"'.format(file_extension)
-                )
+                raise CommandError(f'Unrecognised file format "{file_extension}"')
 
             style = getattr(self, "style", None)
             success = getattr(style, "SUCCESS", lambda x: x)
 
-            self.stdout.write(
-                success("Successfully dumped GraphQL schema to {}".format(out))
-            )
+            self.stdout.write(success(f"Successfully dumped GraphQL schema to {out}"))
 
     def handle(self, *args, **options):
         options_schema = options.get("schema")
