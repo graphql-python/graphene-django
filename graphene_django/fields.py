@@ -61,6 +61,13 @@ class DjangoListField(Field):
             # Pass queryset to the DjangoObjectType get_queryset method
             queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
 
+        try: 
+            get_running_loop()
+        except RuntimeError:
+                pass
+        else:
+            return queryset.aiterator()
+
         return queryset
 
     def wrap_resolve(self, parent_resolver):
@@ -231,26 +238,7 @@ class DjangoConnectionField(ConnectionField):
         # or a resolve_foo (does not accept queryset)
 
         iterable = resolver(root, info, **args)
-        if info.is_awaitable(iterable):
-            async def await_result():
-                queryset_or_list = await iterable
-                if queryset_or_list is None:
-                    queryset_or_list = default_manager
-
-                    if is_async(queryset_resolver):
-                    
-                        resolved = await sync_to_async(queryset_resolver)(connection, resolved, info, args)
-
-                    # TODO: create an async_resolve_connection which uses the new Django queryset async functions
-                    async_resolve_connection = sync_to_async(cls.resolve_connection)
-
-                    if is_awaitable(resolved):
-                        return async_resolve_connection(connection, args, await resolved, max_limit=max_limit)
-                    
-                    return async_resolve_connection(connection, args, resolved, max_limit=max_limit)
-            
-            return await_result()
-
+        
         if iterable is None:
             iterable = default_manager
         # thus the iterable gets refiltered by resolve_queryset
