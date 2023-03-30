@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from functools import singledispatch, wraps
+from asyncio import get_running_loop
 
 from django.db import models
 from django.utils.encoding import force_str
