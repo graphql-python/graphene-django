@@ -7,6 +7,8 @@ from graphene.types.enum import EnumType
 from graphene.types.argument import to_arguments
 from graphene.utils.str_converters import to_snake_case
 
+from asgiref.sync import sync_to_async
+
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class
 
@@ -91,6 +93,16 @@ class DjangoFilterConnectionField(DjangoConnectionField):
             return kwargs
 
         qs = super().resolve_queryset(connection, iterable, info, args)
+
+        if info.is_awaitable(qs):
+            async def filter_async():
+                filterset = filterset_class(
+                    data=filter_kwargs(), queryset=await qs, request=info.context
+                )
+                if await sync_to_async(filterset.is_valid)():
+                    return filterset.qs
+                raise ValidationError(filterset.form.errors.as_json())
+            return filter_async()
 
         filterset = filterset_class(
             data=filter_kwargs(), queryset=qs, request=info.context

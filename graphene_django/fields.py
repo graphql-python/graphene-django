@@ -239,6 +239,20 @@ class DjangoConnectionField(ConnectionField):
 
         iterable = resolver(root, info, **args)
         
+        if info.is_awaitable(iterable):
+            async def resolve_connection_async():
+                iterable = await iterable
+                if iterable is None:
+                    iterable = default_manager
+                ## This could also be async
+                iterable = queryset_resolver(connection, iterable, info, args)
+                
+                if info.is_awaitable(iterable):
+                    iterable = await iterable
+                
+                return await sync_to_async(cls.resolve_connection)(connection, args, iterable, max_limit=max_limit)
+            return resolve_connection_async()
+        
         if iterable is None:
             iterable = default_manager
         # thus the iterable gets refiltered by resolve_queryset
