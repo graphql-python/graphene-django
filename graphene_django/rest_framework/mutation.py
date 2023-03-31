@@ -2,6 +2,8 @@ from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
+from asyncio import get_running_loop
+from asgiref.sync import sync_to_async
 
 import graphene
 from graphene.relay.mutation import ClientIDMutation
@@ -151,6 +153,19 @@ class SerializerMutation(ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **input):
         kwargs = cls.get_serializer_kwargs(root, info, **input)
         serializer = cls._meta.serializer_class(**kwargs)
+
+        try: 
+            get_running_loop()
+        except RuntimeError:
+                pass
+        else:
+            async def perform_mutate_async():
+                if await sync_to_async(serializer.is_valid)():
+                    return await sync_to_async(cls.perform_mutate)(serializer, info)
+                else:
+                    errors = ErrorType.from_errors(serializer.errors)
+                    return cls(errors=errors)
+            return perform_mutate_async()
 
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
