@@ -485,7 +485,6 @@ class AsyncGraphQLView(GraphQLView):
         view._is_coroutine = coroutines._is_coroutine
         return view
 
-    @method_decorator(ensure_csrf_cookie)
     async def dispatch(self, request, *args, **kwargs):
         try:
             if request.method.lower() not in ("get", "post"):
