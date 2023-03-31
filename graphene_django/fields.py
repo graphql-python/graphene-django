@@ -240,7 +240,7 @@ class DjangoConnectionField(ConnectionField):
         iterable = resolver(root, info, **args)
         
         if info.is_awaitable(iterable):
-            async def resolve_connection_async():
+            async def resolve_connection_async(iterable):
                 iterable = await iterable
                 if iterable is None:
                     iterable = default_manager
@@ -251,7 +251,7 @@ class DjangoConnectionField(ConnectionField):
                     iterable = await iterable
                 
                 return await sync_to_async(cls.resolve_connection)(connection, args, iterable, max_limit=max_limit)
-            return resolve_connection_async()
+            return resolve_connection_async(iterable)
         
         if iterable is None:
             iterable = default_manager
