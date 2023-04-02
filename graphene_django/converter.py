@@ -265,8 +265,21 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         _type = registry.get_type_for_model(model)
         if not _type:
             return
+        
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                resolver = super().wrap_resolve(parent_resolver)
 
-        return Field(_type, required=not field.null)
+                try: 
+                    get_running_loop()
+                except RuntimeError:
+                    pass
+                else:
+                    resolver=sync_to_async(resolver)
+
+                return resolver
+
+        return CustomField(_type, required=not field.null)
 
     return Dynamic(dynamic_type)
 
