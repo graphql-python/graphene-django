@@ -303,7 +303,6 @@ class GraphQLView(View):
                         ),
                     )
                 )
-                
         try:
             extra_options = {}
             if self.execution_context_class:
