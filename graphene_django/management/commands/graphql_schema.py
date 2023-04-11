@@ -63,7 +63,7 @@ class Command(CommandArguments):
         if out == "-" or out == "-.json":
             self.stdout.write(json.dumps(schema_dict, indent=indent, sort_keys=True))
         elif out == "-.graphql":
-            self.stdout.write(print_schema(schema))
+            self.stdout.write(print_schema(schema.graphql_schema))
         else:
             # Determine format
             _, file_extension = os.path.splitext(out)
