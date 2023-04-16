@@ -358,7 +358,10 @@ def convert_field_to_djangomodel(field, registry=None):
                     if instance_from_get_node is None:
                         # no instance to return
                         return
-                    elif isinstance(resolver, functools.partial) and resolver.func is get_default_resolver():
+                    elif (
+                        isinstance(resolver, functools.partial) 
+                        and resolver.func is get_default_resolver()
+                    ):
                         return instance_from_get_node
                     elif resolver is not get_default_resolver():
                         # Default resolver is overriden
