@@ -359,7 +359,7 @@ def convert_field_to_djangomodel(field, registry=None):
                         # no instance to return
                         return
                     elif (
-                        isinstance(resolver, functools.partial) 
+                        isinstance(resolver, functools.partial)
                         and resolver.func is get_default_resolver()
                     ):
                         return instance_from_get_node
