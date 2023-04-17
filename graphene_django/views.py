@@ -76,6 +76,9 @@ class GraphQLView(View):
         "sha256-EZhvg6ANJrBsgLvLAa0uuHNLepLJVCFYS+xlb5U/bqw="
     )
 
+    graphiql_plugin_explorer_version = "0.1.15"
+    graphiql_plugin_explorer_sri = "sha256-3hUuhBXdXlfCj6RTeEkJFtEh/kUG+TCDASFpFPLrzvE="
+
     schema = None
     graphiql = False
     middleware = None
@@ -158,6 +161,8 @@ class GraphQLView(View):
                     graphiql_css_sri=self.graphiql_css_sri,
                     subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
+                    graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
+                    graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
