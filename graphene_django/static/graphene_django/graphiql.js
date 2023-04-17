@@ -5,7 +5,7 @@
   GraphiQL,
   React,
   ReactDOM,
-  SubscriptionsTransportWs,
+  graphqlWs,
   fetch,
   history,
   location,
@@ -52,8 +52,24 @@
 
   var fetchURL = locationQuery(otherParams);
 
-  // Defines a GraphQL fetcher using the fetch API.
-  function httpClient(graphQLParams, opts) {
+  // Derive the subscription URL. If the SUBSCRIPTION_URL setting is specified, uses that value. Otherwise
+  // assumes the current window location with an appropriate websocket protocol.
+  var subscribeURL =
+    location.origin.replace(/^http/, "ws") +
+    (GRAPHENE_SETTINGS.subscriptionPath || location.pathname);
+
+  function trueLambda() { return true; };
+
+  var fetcher = GraphiQL.createFetcher({
+    url: fetchURL,
+    wsClient: graphqlWs.createClient({
+      url: subscribeURL,
+      shouldRetry: trueLambda,
+      lazy: true,
+    })
+  })
+
+  function graphQLFetcher(graphQLParams, opts) {
     if (typeof opts === 'undefined') {
       opts = {};
     }
@@ -73,86 +89,9 @@
       headers['X-CSRFToken'] = csrftoken
     }
 
-    return fetch(fetchURL, {
-      method: "post",
-      headers: headers,
-      body: JSON.stringify(graphQLParams),
-      credentials: "include",
-    })
-      .then(function (response) {
-        return response.text();
-      })
-      .then(function (responseBody) {
-        try {
-          return JSON.parse(responseBody);
-        } catch (error) {
-          return responseBody;
-        }
-      });
-  }
+    opts.headers = headers
 
-  // Derive the subscription URL. If the SUBSCRIPTION_URL setting is specified, uses that value. Otherwise
-  // assumes the current window location with an appropriate websocket protocol.
-  var subscribeURL =
-    location.origin.replace(/^http/, "ws") +
-    (GRAPHENE_SETTINGS.subscriptionPath || location.pathname);
-
-  // Create a subscription client.
-  var subscriptionClient = new SubscriptionsTransportWs.SubscriptionClient(
-    subscribeURL,
-    {
-      // Reconnect after any interruptions.
-      reconnect: true,
-      // Delay socket initialization until the first subscription is started.
-      lazy: true,
-    },
-  );
-
-  // Keep a reference to the currently-active subscription, if available.
-  var activeSubscription = null;
-
-  // Define a GraphQL fetcher that can intelligently route queries based on the operation type.
-  function graphQLFetcher(graphQLParams, opts) {
-    var operationType = getOperationType(graphQLParams);
-
-    // If we're about to execute a new operation, and we have an active subscription,
-    // unsubscribe before continuing.
-    if (activeSubscription) {
-      activeSubscription.unsubscribe();
-      activeSubscription = null;
-    }
-
-    if (operationType === "subscription") {
-      return {
-        subscribe: function (observer) {
-          activeSubscription = subscriptionClient;
-          return subscriptionClient.request(graphQLParams, opts).subscribe(observer);
-        },
-      };
-    } else {
-      return httpClient(graphQLParams, opts);
-    }
-  }
-
-  // Determine the type of operation being executed for a given set of GraphQL parameters.
-  function getOperationType(graphQLParams) {
-    // Run a regex against the query to determine the operation type (query, mutation, subscription).
-    var operationRegex = new RegExp(
-      // Look for lines that start with an operation keyword, ignoring whitespace.
-      "^\\s*(query|mutation|subscription)\\s*" +
-        // The operation keyword should be followed by whitespace and the operationName in the GraphQL parameters (if available).
-        (graphQLParams.operationName ? ("\\s+" + graphQLParams.operationName) : "") +
-        // The line should eventually encounter an opening curly brace.
-        "[^\\{]*\\{",
-      // Enable multiline matching.
-      "m",
-    );
-    var match = operationRegex.exec(graphQLParams.query);
-    if (!match) {
-      return "query";
-    }
-
-    return match[1];
+    return fetcher(graphQLParams, opts)
   }
 
   // When the query and variables string is edited, update the URL bar so
@@ -177,7 +116,7 @@
     onEditQuery: onEditQuery,
     onEditVariables: onEditVariables,
     onEditOperationName: onEditOperationName,
-    headerEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled,
+    isHeadersEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled,
     shouldPersistHeaders: GRAPHENE_SETTINGS.graphiqlShouldPersistHeaders,
     query: parameters.query,
   };
@@ -199,7 +138,7 @@
   window.GraphiQL,
   window.React,
   window.ReactDOM,
-  window.SubscriptionsTransportWs,
+  window.graphqlWs,
   window.fetch,
   window.history,
   window.location,
