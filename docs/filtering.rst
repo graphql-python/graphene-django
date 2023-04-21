@@ -2,7 +2,7 @@ Filtering
 =========
 
 Graphene integrates with
-`django-filter <https://django-filter.readthedocs.io/en/main/>`__ to provide filtering of results.
+`django-filter <https://django-filter.readthedocs.io/en/stable/>`__ to provide filtering of results.
 See the `usage documentation <https://django-filter.readthedocs.io/en/main/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
