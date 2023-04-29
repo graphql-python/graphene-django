@@ -121,6 +121,10 @@ class TestShouldCallGetQuerySetOnForeignKey:
         assert not result.errors
         assert result.data == {"reporter": {"firstName": "Jane"}}
 
+    # TODO: This test is currently expected to fail because the logic it depended on has been
+    # removed, due to poor SQL performance and preventing query-optimization (see
+    # https://github.com/graphql-python/graphene-django/pull/1315/files#r1015659857)
+    @pytest.mark.xfail
     def test_get_queryset_called_on_foreignkey(self):
         # If a user tries to access a reporter through an article they should get our authorization error
         query = """
@@ -291,6 +295,10 @@ class TestShouldCallGetQuerySetOnForeignKeyNode:
         assert not result.errors
         assert result.data == {"reporter": {"firstName": "Jane"}}
 
+    # TODO: This test is currently expected to fail because the logic it depended on has been
+    # removed, due to poor SQL performance and preventing query-optimization (see
+    # https://github.com/graphql-python/graphene-django/pull/1315/files#r1015659857)
+    @pytest.mark.xfail
     def test_get_queryset_called_on_foreignkey(self):
         # If a user tries to access a reporter through an article they should get our authorization error
         query = """
