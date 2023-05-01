@@ -16,6 +16,12 @@ class TestShouldCallGetQuerySetOnForeignKey:
     Check that the get_queryset method is called in both forward and reversed direction
     of a foreignkey on types.
     (see issue #1111)
+
+    NOTE: For now, we do not expect this get_queryset method to be called for nested
+    objects, as the original attempt to do so prevented SQL query-optimization with
+    `select_related`/`prefetch_related` and caused N+1 queries. See discussions here
+    https://github.com/graphql-python/graphene-django/pull/1315/files#r1015659857
+    and here https://github.com/graphql-python/graphene-django/pull/1401.
     """
 
     @pytest.fixture(autouse=True)
@@ -120,73 +126,6 @@ class TestShouldCallGetQuerySetOnForeignKey:
         )
         assert not result.errors
         assert result.data == {"reporter": {"firstName": "Jane"}}
-
-    # TODO: This test is currently expected to fail because the logic it depended on has been
-    # removed, due to poor SQL performance and preventing query-optimization (see
-    # https://github.com/graphql-python/graphene-django/pull/1315/files#r1015659857)
-    @pytest.mark.xfail
-    def test_get_queryset_called_on_foreignkey(self):
-        # If a user tries to access a reporter through an article they should get our authorization error
-        query = """
-            query getArticle($id: ID!) {
-                article(id: $id) {
-                    headline
-                    reporter {
-                        firstName
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(query, variables={"id": self.articles[0].id})
-        assert len(result.errors) == 1
-        assert result.errors[0].message == "Not authorized to access reporters."
-
-        # An admin user should be able to get reporters through an article
-        query = """
-            query getArticle($id: ID!) {
-                article(id: $id) {
-                    headline
-                    reporter {
-                        firstName
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(
-            query,
-            variables={"id": self.articles[0].id},
-            context_value={"admin": True},
-        )
-        assert not result.errors
-        assert result.data["article"] == {
-            "headline": "A fantastic article",
-            "reporter": {"firstName": "Jane"},
-        }
-
-        # An admin user should not be able to access draft article through a reporter
-        query = """
-            query getReporter($id: ID!) {
-                reporter(id: $id) {
-                    firstName
-                    articles {
-                        headline
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(
-            query,
-            variables={"id": self.reporter.id},
-            context_value={"admin": True},
-        )
-        assert not result.errors
-        assert result.data["reporter"] == {
-            "firstName": "Jane",
-            "articles": [{"headline": "A fantastic article"}],
-        }
 
 
 class TestShouldCallGetQuerySetOnForeignKeyNode:
@@ -294,76 +233,3 @@ class TestShouldCallGetQuerySetOnForeignKeyNode:
         )
         assert not result.errors
         assert result.data == {"reporter": {"firstName": "Jane"}}
-
-    # TODO: This test is currently expected to fail because the logic it depended on has been
-    # removed, due to poor SQL performance and preventing query-optimization (see
-    # https://github.com/graphql-python/graphene-django/pull/1315/files#r1015659857)
-    @pytest.mark.xfail
-    def test_get_queryset_called_on_foreignkey(self):
-        # If a user tries to access a reporter through an article they should get our authorization error
-        query = """
-            query getArticle($id: ID!) {
-                article(id: $id) {
-                    headline
-                    reporter {
-                        firstName
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(
-            query, variables={"id": to_global_id("ArticleType", self.articles[0].id)}
-        )
-        assert len(result.errors) == 1
-        assert result.errors[0].message == "Not authorized to access reporters."
-
-        # An admin user should be able to get reporters through an article
-        query = """
-            query getArticle($id: ID!) {
-                article(id: $id) {
-                    headline
-                    reporter {
-                        firstName
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(
-            query,
-            variables={"id": to_global_id("ArticleType", self.articles[0].id)},
-            context_value={"admin": True},
-        )
-        assert not result.errors
-        assert result.data["article"] == {
-            "headline": "A fantastic article",
-            "reporter": {"firstName": "Jane"},
-        }
-
-        # An admin user should not be able to access draft article through a reporter
-        query = """
-            query getReporter($id: ID!) {
-                reporter(id: $id) {
-                    firstName
-                    articles {
-                        edges {
-                            node {
-                                headline
-                            }
-                        }
-                    }
-                }
-            }
-        """
-
-        result = self.schema.execute(
-            query,
-            variables={"id": to_global_id("ReporterType", self.reporter.id)},
-            context_value={"admin": True},
-        )
-        assert not result.errors
-        assert result.data["reporter"] == {
-            "firstName": "Jane",
-            "articles": {"edges": [{"node": {"headline": "A fantastic article"}}]},
-        }
