@@ -30,6 +30,7 @@ dev_requires = [
     "flake8==5.0.4",
     "flake8-black==0.3.3",
     "flake8-bugbear==22.9.11",
+    "pre-commit",
 ] + tests_require
 
 setup(

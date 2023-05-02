@@ -6,6 +6,7 @@ help:
 .PHONY: dev-setup ## Install development dependencies
 dev-setup:
 	pip install -e ".[dev]"
+	python -m pre_commit install
 
 .PHONY: tests ## Run unit tests
 tests:
