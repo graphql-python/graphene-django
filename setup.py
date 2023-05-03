@@ -14,7 +14,7 @@ rest_framework_require = ["djangorestframework>=3.6.3"]
 
 
 tests_require = [
-    "pytest>=7.1.3",
+    "pytest>=7.3.1",
     "pytest-cov",
     "pytest-random-order",
     "coveralls",
