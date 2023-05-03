@@ -26,10 +26,10 @@ tests_require = [
 
 
 dev_requires = [
-    "black==22.8.0",
-    "flake8==5.0.4",
-    "flake8-black==0.3.3",
-    "flake8-bugbear==22.9.11",
+    "black==23.3.0",
+    "flake8==6.0.0",
+    "flake8-black==0.3.6",
+    "flake8-bugbear==23.3.23",
     "pre-commit",
 ] + tests_require
 
