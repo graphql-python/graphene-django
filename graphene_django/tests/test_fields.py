@@ -1,5 +1,6 @@
 import datetime
-from django.db.models import Count
+import re
+from django.db.models import Count, Prefetch
 
 import pytest
 
@@ -7,8 +8,12 @@ from graphene import List, NonNull, ObjectType, Schema, String
 
 from ..fields import DjangoListField
 from ..types import DjangoObjectType
-from .models import Article as ArticleModel
-from .models import Reporter as ReporterModel
+from .models import (
+    Article as ArticleModel,
+    Film as FilmModel,
+    FilmDetails as FilmDetailsModel,
+    Reporter as ReporterModel,
+)
 
 
 class TestDjangoListField:
@@ -500,3 +505,145 @@ class TestDjangoListField:
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Tara"}]}
+
+    def test_select_related_and_prefetch_related_are_respected(
+        self, django_assert_num_queries
+    ):
+        class Article(DjangoObjectType):
+            class Meta:
+                model = ArticleModel
+                fields = ("headline", "editor", "reporter")
+
+        class Film(DjangoObjectType):
+            class Meta:
+                model = FilmModel
+                fields = ("genre", "details")
+
+        class FilmDetail(DjangoObjectType):
+            class Meta:
+                model = FilmDetailsModel
+                fields = ("location",)
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles", "films")
+
+        class Query(ObjectType):
+            articles = DjangoListField(Article)
+
+            @staticmethod
+            def resolve_articles(root, info):
+                # Optimize for querying associated editors and reporters, and the films and film
+                # details of those reporters. This is similar to what would happen using a library
+                # like https://github.com/tfoxy/graphene-django-optimizer for a query like the one
+                # below (albeit simplified and hardcoded here).
+                return ArticleModel.objects.select_related(
+                    "editor", "reporter"
+                ).prefetch_related(
+                    Prefetch(
+                        "reporter__films",
+                        queryset=FilmModel.objects.select_related("details"),
+                    ),
+                )
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                articles {
+                    headline
+
+                    editor {
+                        firstName
+                    }
+
+                    reporter {
+                        firstName
+
+                        films {
+                            genre
+
+                            details {
+                                location
+                            }
+                        }
+                    }
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        r2 = ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r2,
+        )
+        ArticleModel.objects.create(
+            headline="Not so good news",
+            reporter=r2,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        film1 = FilmModel.objects.create(genre="ac")
+        film2 = FilmModel.objects.create(genre="ot")
+        film3 = FilmModel.objects.create(genre="do")
+        FilmDetailsModel.objects.create(location="Hollywood", film=film1)
+        FilmDetailsModel.objects.create(location="Antarctica", film=film3)
+        r1.films.add(film1, film2)
+        r2.films.add(film3)
+
+        # We expect 2 queries to be performed based on the above resolver definition: one for all
+        # articles joined with the reporters model (for associated editors and reporters), and one
+        # for the films prefetch (which includes its `select_related` JOIN logic in its queryset)
+        with django_assert_num_queries(2) as captured:
+            result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {
+            "articles": [
+                {
+                    "headline": "Amazing news",
+                    "editor": {"firstName": "Debra"},
+                    "reporter": {
+                        "firstName": "Tara",
+                        "films": [
+                            {"genre": "AC", "details": {"location": "Hollywood"}},
+                            {"genre": "OT", "details": None},
+                        ],
+                    },
+                },
+                {
+                    "headline": "Not so good news",
+                    "editor": {"firstName": "Tara"},
+                    "reporter": {
+                        "firstName": "Debra",
+                        "films": [
+                            {"genre": "DO", "details": {"location": "Antarctica"}},
+                        ],
+                    },
+                },
+            ]
+        }
+
+        assert len(captured.captured_queries) == 2  # Sanity-check
+
+        # First we should have queried for all articles in a single query, joining on the reporters
+        # model (for the editors and reporters ForeignKeys)
+        assert re.match(
+            r'SELECT .* "tests_article" INNER JOIN "tests_reporter"',
+            captured.captured_queries[0]["sql"],
+        )
+
+        # Then we should have queried for all of the films of all reporters, joined with the film
+        # details for each film, using a single query
+        assert re.match(
+            r'SELECT .* FROM "tests_film" INNER JOIN "tests_film_reporters" .* LEFT OUTER JOIN "tests_filmdetails"',
+            captured.captured_queries[1]["sql"],
+        )
