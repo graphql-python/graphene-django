@@ -60,39 +60,26 @@
 
   function trueLambda() { return true; };
 
-  var fetcher = GraphiQL.createFetcher({
+  var headers = {};
+  var cookies = ("; " + document.cookie).split("; csrftoken=");
+  if (cookies.length == 2) {
+    csrftoken = cookies.pop().split(";").shift();
+  } else {
+    csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
+  }
+  if (csrftoken) {
+    headers['X-CSRFToken'] = csrftoken
+  }
+
+  var graphQLFetcher = GraphiQL.createFetcher({
     url: fetchURL,
     wsClient: graphqlWs.createClient({
       url: subscribeURL,
       shouldRetry: trueLambda,
       lazy: true,
-    })
+    }),
+    headers: headers
   })
-
-  function graphQLFetcher(graphQLParams, opts) {
-    if (typeof opts === 'undefined') {
-      opts = {};
-    }
-    var headers = opts.headers || {};
-    headers['Accept'] = headers['Accept'] || 'application/json';
-    headers['Content-Type'] = headers['Content-Type'] || 'application/json';
-
-    // Parse the cookie value for a CSRF token
-    var csrftoken;
-    var cookies = ("; " + document.cookie).split("; csrftoken=");
-    if (cookies.length == 2) {
-      csrftoken = cookies.pop().split(";").shift();
-    } else {
-      csrftoken = document.querySelector("[name=csrfmiddlewaretoken]").value;
-    }
-    if (csrftoken) {
-      headers['X-CSRFToken'] = csrftoken
-    }
-
-    opts.headers = headers
-
-    return fetcher(graphQLParams, opts)
-  }
 
   // When the query and variables string is edited, update the URL bar so
   // that it can be easily shared.
