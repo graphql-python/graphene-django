@@ -2,8 +2,8 @@ Filtering
 =========
 
 Graphene integrates with
-`django-filter <https://django-filter.readthedocs.io/en/master/>`__ to provide filtering of results.
-See the `usage documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+`django-filter <https://django-filter.readthedocs.io/en/stable/>`__ to provide filtering of results.
+See the `usage documentation <https://django-filter.readthedocs.io/en/stable/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``.
 
 This filtering is automatically available when implementing a ``relay.Node``.
@@ -26,7 +26,7 @@ After installing ``django-filter`` you'll need to add the application in the ``s
     ]
 
 Note: The techniques below are demoed in the `cookbook example
-app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
+app <https://github.com/graphql-python/graphene-django/tree/main/examples/cookbook>`__.
 
 Filterable fields
 -----------------
@@ -34,7 +34,7 @@ Filterable fields
 The ``filter_fields`` parameter is used to specify the fields which can
 be filtered upon. The value specified here is passed directly to
 ``django-filter``, so see the `filtering
-documentation <https://django-filter.readthedocs.io/en/master/guide/usage.html#the-filter>`__
+documentation <https://django-filter.readthedocs.io/en/main/guide/usage.html#the-filter>`__
 for full details on the range of options available.
 
 For example:
@@ -192,7 +192,7 @@ in unison  with the ``filter_fields`` parameter:
         all_animals = DjangoFilterConnectionField(AnimalNode)
 
 
-The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/master/guide/usage.html#request-based-filtering>`__
+The context argument is passed on as the `request argument <http://django-filter.readthedocs.io/en/main/guide/usage.html#request-based-filtering>`__
 in a ``django_filters.FilterSet`` instance. You can use this to customize your
 filters to be context-dependent. We could modify the ``AnimalFilter`` above to
 pre-filter animals owned by the authenticated user (set in ``context.user``).

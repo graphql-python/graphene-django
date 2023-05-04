@@ -72,7 +72,6 @@ class SerializerMutation(ClientIDMutation):
         _meta=None,
         **options
     ):
-
         if not serializer_class:
             raise Exception("serializer_class is required for the SerializerMutation")
 
@@ -114,7 +113,7 @@ class SerializerMutation(ClientIDMutation):
         _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
-        super(SerializerMutation, cls).__init_subclass_with_meta__(
+        super().__init_subclass_with_meta__(
             _meta=_meta, input_fields=input_fields, **options
         )
 

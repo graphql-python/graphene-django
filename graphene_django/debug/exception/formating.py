@@ -11,7 +11,7 @@ def wrap_exception(exception):
         exc_type=force_str(type(exception)),
         stack="".join(
             traceback.format_exception(
-                etype=type(exception), value=exception, tb=exception.__traceback__
+                exception, value=exception, tb=exception.__traceback__
             )
         ),
     )

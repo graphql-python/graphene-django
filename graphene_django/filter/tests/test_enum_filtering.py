@@ -54,13 +54,13 @@ def reporter_article_data():
         first_name="Jane", last_name="Doe", email="janedoe@example.com", a_choice=2
     )
     Article.objects.create(
-        headline="Article Node 1", reporter=john, editor=john, lang="es",
+        headline="Article Node 1", reporter=john, editor=john, lang="es"
     )
     Article.objects.create(
-        headline="Article Node 2", reporter=john, editor=john, lang="en",
+        headline="Article Node 2", reporter=john, editor=john, lang="en"
     )
     Article.objects.create(
-        headline="Article Node 3", reporter=jane, editor=jane, lang="en",
+        headline="Article Node 3", reporter=jane, editor=jane, lang="en"
     )
 
 
@@ -80,7 +80,13 @@ def test_filter_enum_on_connection(schema, reporter_article_data):
         }
     """
 
-    expected = {"allArticles": {"edges": [{"node": {"headline": "Article Node 1"}},]}}
+    expected = {
+        "allArticles": {
+            "edges": [
+                {"node": {"headline": "Article Node 1"}},
+            ]
+        }
+    }
 
     result = schema.execute(query)
     assert not result.errors
@@ -152,9 +158,6 @@ def test_filter_enum_field_schema_type(schema):
         "reporter_AChoice_In": "[TestsReporterAChoiceChoices]",
     }
     filters_str = ", ".join(
-        [
-            f"{filter_field}: {gql_type} = null"
-            for filter_field, gql_type in filters.items()
-        ]
+        [f"{filter_field}: {gql_type}" for filter_field, gql_type in filters.items()]
     )
     assert f"  allArticles({filters_str}): ArticleTypeConnection\n" in schema_str

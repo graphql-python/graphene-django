@@ -349,19 +349,19 @@ def test_fk_id_in_filter(query):
     schema = Schema(query=query)
 
     query = """
-    query {
-        articles (reporter_In: [%s, %s]) {
-            edges {
-                node {
+    query {{
+        articles (reporter_In: [{}, {}]) {{
+            edges {{
+                node {{
                     headline
-                    reporter {
+                    reporter {{
                         lastName
-                    }
-                }
-            }
-        }
-    }
-    """ % (
+                    }}
+                }}
+            }}
+        }}
+    }}
+    """.format(
         john_doe.id,
         jean_bon.id,
     )

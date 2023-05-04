@@ -72,7 +72,7 @@ def convert_serializer_to_input_type(serializer_class):
         for name, field in serializer.fields.items()
     }
     ret_type = type(
-        "{}Input".format(serializer.__class__.__name__),
+        f"{serializer.__class__.__name__}Input",
         (graphene.InputObjectType,),
         items,
     )
@@ -110,9 +110,13 @@ def convert_serializer_field_to_bool(field):
 
 
 @get_graphene_type_from_serializer_field.register(serializers.FloatField)
-@get_graphene_type_from_serializer_field.register(serializers.DecimalField)
 def convert_serializer_field_to_float(field):
     return graphene.Float
+
+
+@get_graphene_type_from_serializer_field.register(serializers.DecimalField)
+def convert_serializer_field_to_decimal(field):
+    return graphene.Decimal
 
 
 @get_graphene_type_from_serializer_field.register(serializers.DateTimeField)

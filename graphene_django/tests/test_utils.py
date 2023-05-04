@@ -2,7 +2,7 @@ import json
 
 import pytest
 from django.utils.translation import gettext_lazy
-from mock import patch
+from unittest.mock import patch
 
 from ..utils import camelize, get_model_fields, GraphQLTestCase
 from .models import Film, Reporter
@@ -11,11 +11,11 @@ from ..utils.testing import graphql_query
 
 def test_get_model_fields_no_duplication():
     reporter_fields = get_model_fields(Reporter)
-    reporter_name_set = set([field[0] for field in reporter_fields])
+    reporter_name_set = {field[0] for field in reporter_fields}
     assert len(reporter_fields) == len(reporter_name_set)
 
     film_fields = get_model_fields(Film)
-    film_name_set = set([field[0] for field in film_fields])
+    film_name_set = {field[0] for field in film_fields}
     assert len(film_fields) == len(film_name_set)
 
 
@@ -54,7 +54,7 @@ def test_graphql_test_case_operation_name(post_mock):
     tc._pre_setup()
     tc.setUpClass()
     tc.query("query { }", operation_name="QueryName")
-    body = json.loads(post_mock.call_args.args[1])
+    body = json.loads(post_mock.call_args[0][1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
         "operationName",
@@ -66,7 +66,7 @@ def test_graphql_test_case_operation_name(post_mock):
 @patch("graphene_django.utils.testing.Client.post")
 def test_graphql_query_case_operation_name(post_mock):
     graphql_query("query { }", operation_name="QueryName")
-    body = json.loads(post_mock.call_args.args[1])
+    body = json.loads(post_mock.call_args[0][1])
     # `operationName` field from https://graphql.org/learn/serving-over-http/#post-request
     assert (
         "operationName",

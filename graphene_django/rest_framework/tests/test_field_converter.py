@@ -3,7 +3,7 @@ import copy
 import graphene
 from django.db import models
 from graphene import InputObjectType
-from py.test import raises
+from pytest import raises
 from rest_framework import serializers
 
 from ..serializer_converter import convert_serializer_field
@@ -133,9 +133,9 @@ def test_should_float_convert_float():
     assert_conversion(serializers.FloatField, graphene.Float)
 
 
-def test_should_decimal_convert_float():
+def test_should_decimal_convert_decimal():
     assert_conversion(
-        serializers.DecimalField, graphene.Float, max_digits=4, decimal_places=2
+        serializers.DecimalField, graphene.Decimal, max_digits=4, decimal_places=2
     )
 
 

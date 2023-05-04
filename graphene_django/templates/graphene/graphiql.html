@@ -33,8 +33,11 @@ add "&raw" to the end of the URL within a browser.
   <script src="https://cdn.jsdelivr.net/npm/graphiql@{{graphiql_version}}/graphiql.min.js"
           integrity="{{graphiql_sri}}"
           crossorigin="anonymous"></script>
-  <script src="https://cdn.jsdelivr.net/npm/subscriptions-transport-ws@{{subscriptions_transport_ws_version}}/browser/client.js"
+  <script src="https://cdn.jsdelivr.net/npm/graphql-ws@{{subscriptions_transport_ws_version}}/umd/graphql-ws.min.js"
           integrity="{{subscriptions_transport_ws_sri}}"
+          crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@graphiql/plugin-explorer@{{graphiql_plugin_explorer_version}}/dist/graphiql-plugin-explorer.umd.js"
+          integrity="{{graphiql_plugin_explorer_sri}}"
           crossorigin="anonymous"></script>
 </head>
 <body>
@@ -46,6 +49,7 @@ add "&raw" to the end of the URL within a browser.
       subscriptionPath: "{{subscription_path}}",
     {% endif %}
       graphiqlHeaderEditorEnabled: {{ graphiql_header_editor_enabled|yesno:"true,false" }},
+      graphiqlShouldPersistHeaders: {{ graphiql_should_persist_headers|yesno:"true,false" }},
     };
   </script>
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>

@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
 from graphql_relay import to_global_id
-from py.test import raises
+from pytest import raises
 
 import graphene
 from graphene.relay import Node
@@ -15,7 +15,7 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Reporter
+from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter
 
 
 def test_should_query_only_fields():
@@ -251,8 +251,8 @@ def test_should_node():
 
 
 def test_should_query_onetoone_fields():
-    film = Film(id=1)
-    film_details = FilmDetails(id=1, film=film)
+    film = Film.objects.create(id=1)
+    film_details = FilmDetails.objects.create(id=1, film=film)
 
     class FilmNode(DjangoObjectType):
         class Meta:
@@ -780,7 +780,6 @@ def test_should_query_promise_connectionfields():
 
 
 def test_should_query_connectionfields_with_last():
-
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
@@ -818,7 +817,6 @@ def test_should_query_connectionfields_with_last():
 
 
 def test_should_query_connectionfields_with_manager():
-
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
@@ -1151,9 +1149,9 @@ def test_connection_should_limit_after_to_list_length():
 
 REPORTERS = [
     dict(
-        first_name="First {}".format(i),
-        last_name="Last {}".format(i),
-        email="johndoe+{}@example.com".format(i),
+        first_name=f"First {i}",
+        last_name=f"Last {i}",
+        email=f"johndoe+{i}@example.com",
         a_choice=1,
     )
     for i in range(6)
@@ -1243,6 +1241,7 @@ def test_should_have_next_page(graphene_settings):
     }
 
 
+@pytest.mark.parametrize("max_limit", [100, 4])
 class TestBackwardPagination:
     def setup_schema(self, graphene_settings, max_limit):
         graphene_settings.RELAY_CONNECTION_MAX_LIMIT = max_limit
@@ -1261,8 +1260,8 @@ class TestBackwardPagination:
         schema = graphene.Schema(query=Query)
         return schema
 
-    def do_queries(self, schema):
-        # Simply last 3
+    def test_query_last(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_last = """
             query {
                 allReporters(last: 3) {
@@ -1282,7 +1281,8 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 3", "First 4", "First 5"]
 
-        # Use a combination of first and last
+    def test_query_first_and_last(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_first_and_last = """
             query {
                 allReporters(first: 4, last: 3) {
@@ -1302,7 +1302,8 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 1", "First 2", "First 3"]
 
-        # Use a combination of first and last and after
+    def test_query_first_last_and_after(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
         query_first_last_and_after = """
             query queryAfter($after: String) {
                 allReporters(first: 4, last: 3, after: $after) {
@@ -1317,7 +1318,8 @@ class TestBackwardPagination:
 
         after = base64.b64encode(b"arrayconnection:0").decode()
         result = schema.execute(
-            query_first_last_and_after, variable_values=dict(after=after)
+            query_first_last_and_after,
+            variable_values=dict(after=after),
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
@@ -1325,20 +1327,35 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 2", "First 3", "First 4"]
 
-    def test_should_query(self, graphene_settings):
+    def test_query_last_and_before(self, graphene_settings, max_limit):
+        schema = self.setup_schema(graphene_settings, max_limit=max_limit)
+        query_first_last_and_after = """
+            query queryAfter($before: String) {
+                allReporters(last: 1, before: $before) {
+                    edges {
+                        node {
+                            firstName
+                        }
+                    }
+                }
+            }
         """
-        Backward pagination should work as expected
-        """
-        schema = self.setup_schema(graphene_settings, max_limit=100)
-        self.do_queries(schema)
 
-    def test_should_query_with_low_max_limit(self, graphene_settings):
-        """
-        When doing backward pagination (using last) in combination with a max limit higher than the number of objects
-        we should really retrieve the last ones.
-        """
-        schema = self.setup_schema(graphene_settings, max_limit=4)
-        self.do_queries(schema)
+        result = schema.execute(
+            query_first_last_and_after,
+        )
+        assert not result.errors
+        assert len(result.data["allReporters"]["edges"]) == 1
+        assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 5"
+
+        before = base64.b64encode(b"arrayconnection:5").decode()
+        result = schema.execute(
+            query_first_last_and_after,
+            variable_values=dict(before=before),
+        )
+        assert not result.errors
+        assert len(result.data["allReporters"]["edges"]) == 1
+        assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 4"
 
 
 def test_should_preserve_prefetch_related(django_assert_num_queries):
@@ -1480,7 +1497,11 @@ def test_connection_should_enable_offset_filtering():
     result = schema.execute(query)
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Some", "lastName": "Guy"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+            ]
+        }
     }
     assert result.data == expected
 
@@ -1521,7 +1542,9 @@ def test_connection_should_enable_offset_filtering_higher_than_max_limit(
     assert not result.errors
     expected = {
         "allReporters": {
-            "edges": [{"node": {"firstName": "Some", "lastName": "Lady"}},]
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
         }
     }
     assert result.data == expected
@@ -1590,6 +1613,149 @@ def test_connection_should_allow_offset_filtering_with_after():
     result = schema.execute(query, variable_values=dict(after=after))
     assert not result.errors
     expected = {
-        "allReporters": {"edges": [{"node": {"firstName": "Jane", "lastName": "Roe"}},]}
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+            ]
+        }
     }
     assert result.data == expected
+
+
+def test_connection_should_succeed_if_last_higher_than_number_of_objects():
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            fields = "__all__"
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery ($last: Int) {
+            allReporters(last: $last) {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query, variable_values=dict(last=2))
+    assert not result.errors
+    expected = {"allReporters": {"edges": []}}
+    assert result.data == expected
+
+    Reporter.objects.create(first_name="John", last_name="Doe")
+    Reporter.objects.create(first_name="Some", last_name="Guy")
+    Reporter.objects.create(first_name="Jane", last_name="Roe")
+    Reporter.objects.create(first_name="Some", last_name="Lady")
+
+    result = schema.execute(query, variable_values=dict(last=2))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
+
+    result = schema.execute(query, variable_values=dict(last=4))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "John", "lastName": "Doe"}},
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
+
+    result = schema.execute(query, variable_values=dict(last=20))
+    assert not result.errors
+    expected = {
+        "allReporters": {
+            "edges": [
+                {"node": {"firstName": "John", "lastName": "Doe"}},
+                {"node": {"firstName": "Some", "lastName": "Guy"}},
+                {"node": {"firstName": "Jane", "lastName": "Roe"}},
+                {"node": {"firstName": "Some", "lastName": "Lady"}},
+            ]
+        }
+    }
+    assert result.data == expected
+
+
+def test_should_query_nullable_foreign_key():
+    class PetType(DjangoObjectType):
+        class Meta:
+            model = Pet
+
+    class PersonType(DjangoObjectType):
+        class Meta:
+            model = Person
+
+    class Query(graphene.ObjectType):
+        pet = graphene.Field(PetType, name=graphene.String(required=True))
+        person = graphene.Field(PersonType, name=graphene.String(required=True))
+
+        def resolve_pet(self, info, name):
+            return Pet.objects.filter(name=name).first()
+
+        def resolve_person(self, info, name):
+            return Person.objects.filter(name=name).first()
+
+    schema = graphene.Schema(query=Query)
+
+    person = Person.objects.create(name="Jane")
+    pets = [
+        Pet.objects.create(name="Stray dog", age=1),
+        Pet.objects.create(name="Jane's dog", owner=person, age=1),
+    ]
+
+    query_pet = """
+        query getPet($name: String!) {
+            pet(name: $name) {
+                owner {
+                    name
+                }
+            }
+        }
+    """
+    result = schema.execute(query_pet, variables={"name": "Stray dog"})
+    assert not result.errors
+    assert result.data["pet"] == {
+        "owner": None,
+    }
+
+    result = schema.execute(query_pet, variables={"name": "Jane's dog"})
+    assert not result.errors
+    assert result.data["pet"] == {
+        "owner": {"name": "Jane"},
+    }
+
+    query_owner = """
+        query getOwner($name: String!) {
+            person(name: $name) {
+                pets {
+                    name
+                }
+            }
+        }
+    """
+    result = schema.execute(query_owner, variables={"name": "Jane"})
+    assert not result.errors
+    assert result.data["person"] == {
+        "pets": [{"name": "Jane's dog"}],
+    }
