@@ -80,7 +80,7 @@ from . import schema
 
 urlpatterns = [
     # ...
-    path('graphql/', GraphQLView.as_view(graphiql=True, schema=schema.schema)),
+    path('graphql/', GraphQLView.as_view(graphiql=True)), # Given that schema path is defined in GRAPHENE['SCHEMA'] in your settings.py
 ]
 ```
 
@@ -145,8 +145,6 @@ Graphene-Django is released under the [MIT License](https://github.com/graphql-p
 ## Support
 
 If you encounter any issues or have questions regarding Graphene-Django, feel free to [submit an issue](https://github.com/graphql-python/graphene-django/issues/new) on the official GitHub repository. You can also ask for help and share your experiences with the Graphene-Django community on [💬 Discord](https://discord.gg/Fftt273T79)
-
-To keep up to date with the latest news, updates, and releases, follow Graphene-Django on [Twitter](https://twitter.com/graphene_python) and [GitHub](https://github.com/graphql-python/graphene-django).
 
 ## Release Notes
 
