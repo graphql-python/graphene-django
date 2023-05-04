@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+import traceback
 
 from asyncio import gather, coroutines
 
@@ -519,7 +520,9 @@ class AsyncGraphQLView(GraphQLView):
                 )
 
             if self.batch:
-                responses = await gather(*[self.get_response(request, entry) for entry in data])
+                responses = await gather(
+                    *[self.get_response(request, entry) for entry in data]
+                )
                 result = "[{}]".format(
                     ",".join([response[0] for response in responses])
                 )
@@ -529,7 +532,9 @@ class AsyncGraphQLView(GraphQLView):
                     or 200
                 )
             else:
-                result, status_code = await self.get_response(request, data, show_graphiql)
+                result, status_code = await self.get_response(
+                    request, data, show_graphiql
+                )
 
             return HttpResponse(
                 status=status_code, content=result, content_type="application/json"
@@ -558,6 +563,9 @@ class AsyncGraphQLView(GraphQLView):
             response = {}
 
             if execution_result.errors:
+                for e in execution_result.errors:
+                    print(e)
+                    traceback.print_tb(e.__traceback__)
                 set_rollback()
                 response["errors"] = [
                     self.format_error(e) for e in execution_result.errors
