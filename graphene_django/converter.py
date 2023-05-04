@@ -96,7 +96,12 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
         def description(self):
             return str(named_choices_descriptions[self.name])
 
-    return_type = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return_type = Enum(
+        name,
+        list(named_choices),
+        type=EnumWithDescriptionsType,
+        description="An enumeration.",  # Temporary fix until https://github.com/graphql-python/graphene/pull/1502 is merged
+    )
     return return_type
 
 

@@ -6,6 +6,7 @@
   React,
   ReactDOM,
   graphqlWs,
+  GraphiQLPluginExplorer,
   fetch,
   history,
   location,
@@ -98,24 +99,44 @@
   function updateURL() {
     history.replaceState(null, null, locationQuery(parameters));
   }
-  var options = {
-    fetcher: graphQLFetcher,
-    onEditQuery: onEditQuery,
-    onEditVariables: onEditVariables,
-    onEditOperationName: onEditOperationName,
-    isHeadersEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled,
-    shouldPersistHeaders: GRAPHENE_SETTINGS.graphiqlShouldPersistHeaders,
-    query: parameters.query,
-  };
-  if (parameters.variables) {
-    options.variables = parameters.variables;
+
+  function GraphiQLWithExplorer() {
+    var [query, setQuery] = React.useState(parameters.query);
+
+    function handleQuery(query) {
+      setQuery(query);
+      onEditQuery(query);
+    }
+
+    var explorerPlugin = GraphiQLPluginExplorer.useExplorerPlugin({
+      query: query,
+      onEdit: handleQuery,
+    });
+
+    var options = {
+      fetcher: graphQLFetcher,
+      plugins: [explorerPlugin],
+      defaultEditorToolsVisibility: true,
+      onEditQuery: handleQuery,
+      onEditVariables: onEditVariables,
+      onEditOperationName: onEditOperationName,
+      isHeadersEditorEnabled: GRAPHENE_SETTINGS.graphiqlHeaderEditorEnabled,
+      shouldPersistHeaders: GRAPHENE_SETTINGS.graphiqlShouldPersistHeaders,
+      query: query,
+    };
+    if (parameters.variables) {
+      options.variables = parameters.variables;
+    }
+    if (parameters.operation_name) {
+      options.operationName = parameters.operation_name;
+    }
+
+    return React.createElement(GraphiQL, options);
   }
-  if (parameters.operation_name) {
-    options.operationName = parameters.operation_name;
-  }
+
   // Render <GraphiQL /> into the body.
   ReactDOM.render(
-    React.createElement(GraphiQL, options),
+    React.createElement(GraphiQLWithExplorer),
     document.getElementById("editor"),
   );
 })(
@@ -126,6 +147,7 @@
   window.React,
   window.ReactDOM,
   window.graphqlWs,
+  window.GraphiQLPluginExplorer,
   window.fetch,
   window.history,
   window.location,
