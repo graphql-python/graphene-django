@@ -13,6 +13,8 @@ jobs:
         include:
           - django: "3.2"
             python-version: "3.7"
+          - django: "4.1"
+            python-version: "3.11"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
