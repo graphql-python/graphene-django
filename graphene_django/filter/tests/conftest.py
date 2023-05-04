@@ -87,7 +87,6 @@ def Query(EventType):
         events = DjangoFilterConnectionField(EventType)
 
         def resolve_events(self, info, **kwargs):
-
             events = [
                 Event(name="Live Show", tags=["concert", "music", "rock"]),
                 Event(name="Musical", tags=["movie", "music"]),

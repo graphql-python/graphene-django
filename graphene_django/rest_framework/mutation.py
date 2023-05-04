@@ -72,7 +72,6 @@ class SerializerMutation(ClientIDMutation):
         _meta=None,
         **options
     ):
-
         if not serializer_class:
             raise Exception("serializer_class is required for the SerializerMutation")
 
