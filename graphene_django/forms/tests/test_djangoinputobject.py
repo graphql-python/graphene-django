@@ -1,7 +1,7 @@
 import graphene
 
 from django import forms
-from py.test import raises
+from pytest import raises
 
 from graphene_django import DjangoObjectType
 from ..types import DjangoFormInputObjectType
