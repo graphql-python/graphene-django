@@ -88,9 +88,7 @@ class DjangoFormInputObjectType(InputObjectType):
         elif "id" not in exclude_fields:
             cls.id = ID(required=False)
 
-        super(DjangoFormInputObjectType, cls).__init_subclass_with_meta__(
-            container=container, _meta=_meta, **options
-        )
+        super().__init_subclass_with_meta__(container=container, _meta=_meta, **options)
 
     @staticmethod
     def get_enum_cnv_cls_instance(field_name, object_type):
