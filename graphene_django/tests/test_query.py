@@ -780,7 +780,6 @@ def test_should_query_promise_connectionfields():
 
 
 def test_should_query_connectionfields_with_last():
-
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
@@ -818,7 +817,6 @@ def test_should_query_connectionfields_with_last():
 
 
 def test_should_query_connectionfields_with_manager():
-
     r = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )

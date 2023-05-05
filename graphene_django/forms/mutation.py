@@ -82,7 +82,6 @@ class DjangoFormMutation(BaseDjangoFormMutation):
     def __init_subclass_with_meta__(
         cls, form_class=None, only_fields=(), exclude_fields=(), **options
     ):
-
         if not form_class:
             raise Exception("form_class is required for DjangoFormMutation")
 
@@ -129,7 +128,6 @@ class DjangoModelFormMutation(BaseDjangoFormMutation):
         exclude_fields=(),
         **options,
     ):
-
         if not form_class:
             raise Exception("form_class is required for DjangoModelFormMutation")
 

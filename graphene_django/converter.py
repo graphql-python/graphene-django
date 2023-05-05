@@ -96,7 +96,12 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
         def description(self):
             return str(named_choices_descriptions[self.name])
 
-    return_type = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
+    return_type = Enum(
+        name,
+        list(named_choices),
+        type=EnumWithDescriptionsType,
+        description="An enumeration.",  # Temporary fix until https://github.com/graphql-python/graphene/pull/1502 is merged
+    )
     return return_type
 
 
@@ -315,26 +320,7 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        class CustomField(Field):
-            def wrap_resolve(self, parent_resolver):
-                """
-                Implements a custom resolver which go through the `get_node` method to ensure that
-                it goes through the `get_queryset` method of the DjangoObjectType.
-                """
-                resolver = super().wrap_resolve(parent_resolver)
-
-                def custom_resolver(root, info, **args):
-                    fk_obj = resolver(root, info, **args)
-                    if not isinstance(fk_obj, model):
-                        # In case the resolver is a custom one that overwrites
-                        # the default Django resolver
-                        # This happens, for example, when using custom awaitable resolvers.
-                        return fk_obj
-                    return _type.get_node(info, fk_obj.pk)
-
-                return custom_resolver
-
-        return CustomField(
+        return Field(
             _type,
             description=get_django_field_description(field),
             required=not field.null,

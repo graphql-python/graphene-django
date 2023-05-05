@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import OperationType, get_operation_ast, parse, validate
+from graphql import OperationType, get_operation_ast, parse
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
 
@@ -75,6 +75,9 @@ class GraphQLView(View):
     subscriptions_transport_ws_sri = (
         "sha256-EZhvg6ANJrBsgLvLAa0uuHNLepLJVCFYS+xlb5U/bqw="
     )
+
+    graphiql_plugin_explorer_version = "0.1.15"
+    graphiql_plugin_explorer_sri = "sha256-3hUuhBXdXlfCj6RTeEkJFtEh/kUG+TCDASFpFPLrzvE="
 
     schema = None
     graphiql = False
@@ -158,6 +161,8 @@ class GraphQLView(View):
                     graphiql_css_sri=self.graphiql_css_sri,
                     subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
+                    graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
+                    graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
@@ -303,11 +308,6 @@ class GraphQLView(View):
                         ),
                     )
                 )
-
-        validation_errors = validate(self.schema.graphql_schema, document)
-        if validation_errors:
-            return ExecutionResult(data=None, errors=validation_errors)
-
         try:
             extra_options = {}
             if self.execution_context_class:
