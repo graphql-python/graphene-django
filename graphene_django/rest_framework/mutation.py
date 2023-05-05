@@ -154,17 +154,19 @@ class SerializerMutation(ClientIDMutation):
         kwargs = cls.get_serializer_kwargs(root, info, **input)
         serializer = cls._meta.serializer_class(**kwargs)
 
-        try: 
+        try:
             get_running_loop()
         except RuntimeError:
-                pass
+            pass
         else:
+
             async def perform_mutate_async():
                 if await sync_to_async(serializer.is_valid)():
                     return await sync_to_async(cls.perform_mutate)(serializer, info)
                 else:
                     errors = ErrorType.from_errors(serializer.errors)
                     return cls(errors=errors)
+
             return perform_mutate_async()
 
         if serializer.is_valid():

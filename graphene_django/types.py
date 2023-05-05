@@ -288,14 +288,15 @@ class DjangoObjectType(ObjectType):
     def get_node(cls, info, id):
         queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
-            try: 
+            try:
                 import asyncio
+
                 asyncio.get_running_loop()
             except RuntimeError:
                 pass
             else:
                 return queryset.aget(pk=id)
-            
+
             return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
