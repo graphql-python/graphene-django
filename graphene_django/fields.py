@@ -53,7 +53,28 @@ class DjangoListField(Field):
     def list_resolver(
         django_object_type, resolver, default_manager, root, info, **args
     ):
-        queryset = maybe_queryset(resolver(root, info, **args))
+        iterable = resolver(root, info, **args)
+
+        if info.is_awaitable(iterable):
+
+            async def resolve_list_async(iterable):
+                queryset = maybe_queryset(await iterable)
+                if queryset is None:
+                    queryset = maybe_queryset(default_manager)
+
+                if isinstance(queryset, QuerySet):
+                    # Pass queryset to the DjangoObjectType get_queryset method
+                    queryset = maybe_queryset(
+                        await sync_to_async(django_object_type.get_queryset)(
+                            queryset, info
+                        )
+                    )
+
+                return await sync_to_async(list)(queryset)
+
+            return resolve_list_async(iterable)
+
+        queryset = maybe_queryset(iterable)
         if queryset is None:
             queryset = maybe_queryset(default_manager)
 
@@ -61,12 +82,12 @@ class DjangoListField(Field):
             # Pass queryset to the DjangoObjectType get_queryset method
             queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
 
-        try: 
+        try:
             get_running_loop()
         except RuntimeError:
-                pass
+            pass
         else:
-            return queryset.aiterator()
+            return sync_to_async(list)(queryset)
 
         return queryset
 
@@ -238,34 +259,39 @@ class DjangoConnectionField(ConnectionField):
         # or a resolve_foo (does not accept queryset)
 
         iterable = resolver(root, info, **args)
-        
+
         if info.is_awaitable(iterable):
+
             async def resolve_connection_async(iterable):
                 iterable = await iterable
                 if iterable is None:
                     iterable = default_manager
                 ## This could also be async
                 iterable = queryset_resolver(connection, iterable, info, args)
-                
+
                 if info.is_awaitable(iterable):
                     iterable = await iterable
-                
-                return await sync_to_async(cls.resolve_connection)(connection, args, iterable, max_limit=max_limit)
+
+                return await sync_to_async(cls.resolve_connection)(
+                    connection, args, iterable, max_limit=max_limit
+                )
+
             return resolve_connection_async(iterable)
-        
+
         if iterable is None:
             iterable = default_manager
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
         iterable = queryset_resolver(connection, iterable, info, args)
 
-        try: 
+        try:
             get_running_loop()
         except RuntimeError:
-                pass
+            pass
         else:
-            return sync_to_async(cls.resolve_connection)(connection, args, iterable, max_limit=max_limit)
-
+            return sync_to_async(cls.resolve_connection)(
+                connection, args, iterable, max_limit=max_limit
+            )
 
         return cls.resolve_connection(connection, args, iterable, max_limit=max_limit)
 
