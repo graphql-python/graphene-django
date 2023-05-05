@@ -1,8 +1,5 @@
 # ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django
 
-
-A [Django](https://www.djangoproject.com/) integration for [Graphene](http://graphene-python.org/).
-
 [![build][build-image]][build-url]
 [![pypi][pypi-image]][pypi-url]
 [![Anaconda-Server Badge][conda-image]][conda-url]
@@ -17,107 +14,137 @@ A [Django](https://www.djangoproject.com/) integration for [Graphene](http://gra
 [conda-image]: https://img.shields.io/conda/vn/conda-forge/graphene-django.svg
 [conda-url]: https://anaconda.org/conda-forge/graphene-django
 
-[💬 Join the community on Slack](https://join.slack.com/t/graphenetools/shared_invite/enQtOTE2MDQ1NTg4MDM1LTA4Nzk0MGU0NGEwNzUxZGNjNDQ4ZjAwNDJjMjY0OGE1ZDgxZTg4YjM2ZTc4MjE2ZTAzZjE2ZThhZTQzZTkyMmM)
+Graphene-Django is an open-source library that provides seamless integration between Django, a high-level Python web framework, and Graphene, a library for building GraphQL APIs. The library allows developers to create GraphQL APIs in Django quickly and efficiently while maintaining a high level of performance.
 
-## Documentation
+## Features
 
-[Visit the documentation to get started!](https://docs.graphene-python.org/projects/django/en/latest/)
+* Seamless integration with Django models
+* Automatic generation of GraphQL schema
+* Integration with Django's authentication and permission system
+* Easy querying and filtering of data
+* Support for Django's pagination system
+* Compatible with Django's form and validation system
+* Extensive documentation and community support
 
-## Quickstart
+## Installation
 
-For installing graphene, just run this command in your shell
+To install Graphene-Django, run the following command:
 
-```bash
-pip install "graphene-django>=3"
+```
+pip install graphene-django
 ```
 
-### Settings
+## Configuration
+
+After installation, add 'graphene_django' to your Django project's `INSTALLED_APPS` list and define the GraphQL schema in your project's settings:
 
 ```python
-INSTALLED_APPS = (
+INSTALLED_APPS = [
     # ...
-    'django.contrib.staticfiles', # Required for GraphiQL
     'graphene_django',
-)
+]
 
 GRAPHENE = {
-    'SCHEMA': 'app.schema.schema' # Where your Graphene schema lives
+    'SCHEMA': 'myapp.schema.schema'
 }
 ```
 
-### Urls
+## Usage
 
-We need to set up a `GraphQL` endpoint in our Django app, so we can serve the queries.
-
-```python
-from django.urls import path
-from graphene_django.views import GraphQLView
-
-urlpatterns = [
-    # ...
-    path('graphql/', GraphQLView.as_view(graphiql=True)),
-]
-```
-
-## Examples
-
-Here is a simple Django model:
+To use Graphene-Django, create a `schema.py` file in your Django app directory and define your GraphQL types and queries:
 
 ```python
-from django.db import models
-
-class UserModel(models.Model):
-    name = models.CharField(max_length=100)
-    last_name = models.CharField(max_length=100)
-```
-
-To create a GraphQL schema for it you simply have to write the following:
-
-```python
-from graphene_django import DjangoObjectType
 import graphene
+from graphene_django import DjangoObjectType
+from .models import MyModel
 
-class User(DjangoObjectType):
+class MyModelType(DjangoObjectType):
     class Meta:
-        model = UserModel
+        model = MyModel
 
 class Query(graphene.ObjectType):
-    users = graphene.List(User)
+    mymodels = graphene.List(MyModelType)
 
-    def resolve_users(self, info):
-        return UserModel.objects.all()
+    def resolve_mymodels(self, info, **kwargs):
+        return MyModel.objects.all()
 
 schema = graphene.Schema(query=Query)
 ```
 
-Then you can query the schema:
+Then, expose the GraphQL API in your Django project's `urls.py` file:
 
 ```python
-query = '''
-    query {
-      users {
-        name,
-        lastName
-      }
-    }
-'''
-result = schema.execute(query)
+from django.urls import path
+from graphene_django.views import GraphQLView
+from . import schema
+
+urlpatterns = [
+    # ...
+    path('graphql/', GraphQLView.as_view(graphiql=True)), # Given that schema path is defined in GRAPHENE['SCHEMA'] in your settings.py
+]
 ```
 
-To learn more check out the following [examples](examples/):
+## Testing
 
-* **Schema with Filtering**: [Cookbook example](examples/cookbook)
-* **Relay Schema**: [Starwars Relay example](examples/starwars)
+Graphene-Django provides support for testing GraphQL APIs using Django's test client. To create tests, create a `tests.py` file in your Django app directory and write your test cases:
 
+```python
+from django.test import TestCase
+from graphene_django.utils.testing import GraphQLTestCase
+from . import schema
 
-## GraphQL testing clients
- - [Firecamp](https://firecamp.io/graphql)
- - [GraphiQL](https://github.com/graphql/graphiql)
+class MyModelAPITestCase(GraphQLTestCase):
+    GRAPHENE_SCHEMA = schema.schema
 
+    def test_query_all_mymodels(self):
+        response = self.query(
+            '''
+            query {
+                mymodels {
+                    id
+                    name
+                }
+            }
+            '''
+        )
+
+        self.assertResponseNoErrors(response)
+        self.assertEqual(len(response.data['mymodels']), MyModel.objects.count())
+```
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md)
+Contributions to Graphene-Django are always welcome! To get started, check the repository's [issue tracker](https://github.com/graphql-python/graphene-django/issues) and [contribution guidelines](https://github.com/graphql-python/graphene-django/blob/master/CONTRIBUTING.md).
+
+## License
+
+Graphene-Django is released under the [MIT License](https://github.com/graphql-python/graphene-django/blob/master/LICENSE).
+
+## Resources
+
+* [Official GitHub Repository](https://github.com/graphql-python/graphene-django)
+* [Graphene Documentation](http://docs.graphene-python.org/en/latest/)
+* [Django Documentation](https://docs.djangoproject.com/en/stable/)
+* [GraphQL Specification](https://spec.graphql.org/)
+* [GraphiQL](https://github.com/graphql/graphiql) - An in-browser IDE for exploring GraphQL APIs
+* [Graphene-Django Community](https://spectrum.chat/graphene) - Join the community to discuss questions and share ideas related to Graphene-Django
+
+## Tutorials and Examples
+
+* [Official Graphene-Django Tutorial](https://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/)
+* [Building a GraphQL API with Django and Graphene-Django](https://www.howtographql.com/graphql-python/0-introduction/)
+* [Real-world example: Django, Graphene, and Relay](https://github.com/graphql-python/swapi-graphene)
+
+## Related Projects
+
+* [Graphene](https://github.com/graphql-python/graphene) - A library for building GraphQL APIs in Python
+* [Graphene-SQLAlchemy](https://github.com/graphql-python/graphene-sqlalchemy) - Integration between Graphene and SQLAlchemy, an Object Relational Mapper (ORM) for Python
+* [Graphene-File-Upload](https://github.com/lmcgartland/graphene-file-upload) - A package providing an Upload scalar for handling file uploads in Graphene
+* [Graphene-Subscriptions](https://github.com/graphql-python/graphene-subscriptions) - A package for adding real-time subscriptions to Graphene-based GraphQL APIs
+
+## Support
+
+If you encounter any issues or have questions regarding Graphene-Django, feel free to [submit an issue](https://github.com/graphql-python/graphene-django/issues/new) on the official GitHub repository. You can also ask for help and share your experiences with the Graphene-Django community on [💬 Discord](https://discord.gg/Fftt273T79)
 
 ## Release Notes
 
