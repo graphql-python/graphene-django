@@ -80,7 +80,9 @@ class DjangoSyncRequiredMiddleware:
         if hasattr(parent_type, "graphene_type") and hasattr(
             parent_type.graphene_type._meta, "model"
         ):
-            if not inspect.iscoroutinefunction(next):
+            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
+                next
+            ):
                 return sync_to_async(next)(root, info, **args)
 
         ## In addition, if we're resolving to a DjangoObject type
@@ -88,7 +90,9 @@ class DjangoSyncRequiredMiddleware:
         if hasattr(info.return_type, "graphene_type") and hasattr(
             info.return_type.graphene_type._meta, "model"
         ):
-            if not info.is_awaitable(next):
+            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
+                next
+            ):
                 return sync_to_async(next)(root, info, **args)
 
         return next(root, info, **args)
