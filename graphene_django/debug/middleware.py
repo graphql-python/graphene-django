@@ -95,4 +95,15 @@ class DjangoSyncRequiredMiddleware:
             ):
                 return sync_to_async(next)(root, info, **args)
 
+        ## We also need to handle custom resolvers around Connections
+        # but only when their parent is not already a DjangoObject type
+        # this case already gets handled above.
+        if hasattr(info.return_type, "graphene_type"):
+            if hasattr(info.return_type.graphene_type, "Edge"):
+                node_type = info.return_type.graphene_type.Edge.node.type
+                if hasattr(node_type, "_meta") and hasattr(node_type._meta, "model"):
+                    if not inspect.iscoroutinefunction(
+                        next
+                    ) and not inspect.isasyncgenfunction(next):
+                        return sync_to_async(next)(root, info, **args)
         return next(root, info, **args)
