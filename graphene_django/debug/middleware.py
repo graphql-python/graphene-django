@@ -1,7 +1,7 @@
 from django.db import connections
 
-from promise import Promise
-
+from asgiref.sync import sync_to_async
+import inspect
 from .sql.tracking import unwrap_cursor, wrap_cursor
 from .exception.formating import wrap_exception
 from .types import DjangoDebug
@@ -69,3 +69,26 @@ class DjangoDebugMiddleware:
             return context.django_debug.on_resolve_error(e)
         context.django_debug.add_result(result)
         return result
+
+
+class DjangoSyncRequiredMiddleware:
+    def resolve(self, next, root, info, **args):
+        parent_type = info.parent_type
+
+        ## Anytime the parent is a DjangoObject type
+        # and we're resolving a sync field, we need to wrap it in a sync_to_async
+        if hasattr(parent_type, "graphene_type") and hasattr(
+            parent_type.graphene_type._meta, "model"
+        ):
+            if not inspect.iscoroutinefunction(next):
+                return sync_to_async(next)(root, info, **args)
+
+        ## In addition, if we're resolving to a DjangoObject type
+        # we likely need to wrap it in a sync_to_async as well
+        if hasattr(info.return_type, "graphene_type") and hasattr(
+            info.return_type.graphene_type._meta, "model"
+        ):
+            if not info.is_awaitable(next):
+                return sync_to_async(next)(root, info, **args)
+
+        return next(root, info, **args)

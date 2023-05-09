@@ -1,7 +1,5 @@
 from collections import OrderedDict
 from functools import singledispatch, wraps
-from asyncio import get_running_loop
-from asgiref.sync import sync_to_async
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -267,20 +265,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        class CustomField(Field):
-            def wrap_resolve(self, parent_resolver):
-                resolver = super().wrap_resolve(parent_resolver)
-
-                try:
-                    get_running_loop()
-                except RuntimeError:
-                    pass
-                else:
-                    resolver = sync_to_async(resolver)
-
-                return resolver
-
-        return CustomField(_type, required=not field.null)
+        return Field(_type, required=not field.null)
 
     return Dynamic(dynamic_type)
 
@@ -335,20 +320,7 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        class CustomField(Field):
-            def wrap_resolve(self, parent_resolver):
-                resolver = super().wrap_resolve(parent_resolver)
-
-                try:
-                    get_running_loop()
-                except RuntimeError:
-                    pass
-                else:
-                    resolver = sync_to_async(resolver)
-
-                return resolver
-
-        return CustomField(
+        return Field(
             _type,
             description=get_django_field_description(field),
             required=not field.null,
