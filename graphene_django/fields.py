@@ -1,3 +1,4 @@
+import inspect
 from functools import partial
 
 from django.db.models.query import QuerySet
@@ -82,13 +83,6 @@ class DjangoListField(Field):
             # Pass queryset to the DjangoObjectType get_queryset method
             queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
 
-        try:
-            get_running_loop()
-        except RuntimeError:
-            pass
-        else:
-            return sync_to_async(list)(queryset)
-
         return queryset
 
     def wrap_resolve(self, parent_resolver):
@@ -97,12 +91,31 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
-        return partial(
-            self.list_resolver,
-            django_object_type,
-            resolver,
-            self.get_manager(),
-        )
+
+        try:
+            get_running_loop()
+        except RuntimeError:
+            return partial(
+                self.list_resolver, django_object_type, resolver, self.get_manager()
+            )
+        else:
+            if not inspect.iscoroutinefunction(
+                resolver
+            ) and not inspect.isasyncgenfunction(resolver):
+                async_resolver = sync_to_async(resolver)
+
+            ## This is needed because our middleware can't detect the resolver as async when we returns partial[couroutine]
+            async def wrapped_resolver(root, info, **args):
+                return await self.list_resolver(
+                    django_object_type,
+                    async_resolver,
+                    self.get_manager(),
+                    root,
+                    info,
+                    **args
+                )
+
+            return wrapped_resolver
 
 
 class DjangoConnectionField(ConnectionField):
@@ -257,7 +270,6 @@ class DjangoConnectionField(ConnectionField):
 
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)
-
         iterable = resolver(root, info, **args)
 
         if info.is_awaitable(iterable):

@@ -5,6 +5,9 @@ import inspect
 from .sql.tracking import unwrap_cursor, wrap_cursor
 from .exception.formating import wrap_exception
 from .types import DjangoDebug
+from graphql.type.definition import GraphQLNonNull
+
+from django.db.models import QuerySet
 
 
 class DjangoDebugContext:
@@ -74,6 +77,12 @@ class DjangoDebugMiddleware:
 class DjangoSyncRequiredMiddleware:
     def resolve(self, next, root, info, **args):
         parent_type = info.parent_type
+        return_type = info.return_type
+
+        if isinstance(parent_type, GraphQLNonNull):
+            parent_type = parent_type.of_type
+        if isinstance(return_type, GraphQLNonNull):
+            return_type = return_type.of_type
 
         ## Anytime the parent is a DjangoObject type
         # and we're resolving a sync field, we need to wrap it in a sync_to_async
@@ -87,23 +96,28 @@ class DjangoSyncRequiredMiddleware:
 
         ## In addition, if we're resolving to a DjangoObject type
         # we likely need to wrap it in a sync_to_async as well
-        if hasattr(info.return_type, "graphene_type") and hasattr(
-            info.return_type.graphene_type._meta, "model"
+        if hasattr(return_type, "graphene_type") and hasattr(
+            return_type.graphene_type._meta, "model"
         ):
             if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
                 next
             ):
                 return sync_to_async(next)(root, info, **args)
 
-        ## We also need to handle custom resolvers around Connections
-        # but only when their parent is not already a DjangoObject type
-        # this case already gets handled above.
-        if hasattr(info.return_type, "graphene_type"):
-            if hasattr(info.return_type.graphene_type, "Edge"):
-                node_type = info.return_type.graphene_type.Edge.node.type
+        ## We can move this resolver logic into the field resolver itself and probably should
+        if hasattr(return_type, "graphene_type"):
+            if hasattr(return_type.graphene_type, "Edge"):
+                node_type = return_type.graphene_type.Edge.node.type
                 if hasattr(node_type, "_meta") and hasattr(node_type._meta, "model"):
                     if not inspect.iscoroutinefunction(
                         next
                     ) and not inspect.isasyncgenfunction(next):
                         return sync_to_async(next)(root, info, **args)
+
+        if info.parent_type.name == "Mutation":
+            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
+                next
+            ):
+                return sync_to_async(next)(root, info, **args)
+
         return next(root, info, **args)
