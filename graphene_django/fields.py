@@ -49,10 +49,14 @@ class DjangoListField(Field):
     def get_manager(self):
         return self.model._default_manager
 
-    @staticmethod
+    @classmethod
     def list_resolver(
-        django_object_type, resolver, default_manager, root, info, **args
+        cls, django_object_type, resolver, default_manager, root, info, **args
     ):
+        if is_running_async():
+            if is_sync_function(resolver):
+                resolver = sync_to_async(resolver)
+
         iterable = resolver(root, info, **args)
 
         if info.is_awaitable(iterable):
@@ -82,7 +86,7 @@ class DjangoListField(Field):
             # Pass queryset to the DjangoObjectType get_queryset method
             queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
 
-        return queryset
+        return list(queryset)
 
     def wrap_resolve(self, parent_resolver):
         resolver = super().wrap_resolve(parent_resolver)
@@ -90,27 +94,12 @@ class DjangoListField(Field):
         if isinstance(_type, NonNull):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
-
-        if not is_running_async():
-            return partial(
-                self.list_resolver, django_object_type, resolver, self.get_manager()
-            )
-        else:
-            if is_sync_function(resolver):
-                async_resolver = sync_to_async(resolver)
-
-            ## This is needed because our middleware can't detect the resolver as async when we returns partial[couroutine]
-            async def wrapped_resolver(root, info, **args):
-                return await self.list_resolver(
-                    django_object_type,
-                    async_resolver,
-                    self.get_manager(),
-                    root,
-                    info,
-                    **args
-                )
-
-            return wrapped_resolver
+        return partial(
+            self.list_resolver,
+            django_object_type,
+            resolver,
+            self.get_manager(),
+        )
 
 
 class DjangoConnectionField(ConnectionField):
