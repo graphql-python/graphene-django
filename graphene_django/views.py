@@ -665,10 +665,6 @@ class AsyncGraphQLView(GraphQLView):
                     )
                 )
 
-        validation_errors = validate(self.schema.graphql_schema, document)
-        if validation_errors:
-            return ExecutionResult(data=None, errors=validation_errors)
-
         try:
             extra_options = {}
             if self.execution_context_class:
