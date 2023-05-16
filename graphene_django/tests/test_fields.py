@@ -156,8 +156,6 @@ class TestDjangoListField:
         class Query(ObjectType):
             reporters = DjangoListField(Reporter)
 
-            @staticmethod
-            @sync_to_async
             def resolve_reporters(_, info):
                 return ReporterModel.objects.filter(first_name="Tara")
 
@@ -411,8 +409,6 @@ class TestDjangoListField:
         class Query(ObjectType):
             reporters = DjangoListField(Reporter)
 
-            @staticmethod
-            @sync_to_async
             def resolve_reporters(_, info):
                 return [ReporterModel.objects.get(first_name="Debra")]
 
@@ -565,7 +561,6 @@ class TestDjangoListField:
                     article_count__gt=0
                 )
 
-        @sync_to_async
         def resolve_reporters(_, info):
             return [ReporterModel.objects.get(first_name="Debra")]
 

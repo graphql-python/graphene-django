@@ -1007,8 +1007,6 @@ def test_should_query_dataloader_fields_async():
 
         articles = DjangoConnectionField(ArticleType)
 
-        @staticmethod
-        @sync_to_async
         def resolve_articles(self, info, **args):
             return article_loader.load(self.id).get()
 
