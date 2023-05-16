@@ -293,6 +293,7 @@ class DjangoObjectType(ObjectType):
                 return queryset.aget(pk=id)
 
             return queryset.get(pk=id)
+
         except cls._meta.model.DoesNotExist:
             return None
 
