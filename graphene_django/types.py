@@ -16,6 +16,7 @@ from .utils import (
     camelize,
     get_model_fields,
     is_valid_django_model,
+    is_running_async,
 )
 
 ALL_FIELDS = "__all__"
@@ -288,13 +289,7 @@ class DjangoObjectType(ObjectType):
     def get_node(cls, info, id):
         queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
-            try:
-                import asyncio
-
-                asyncio.get_running_loop()
-            except RuntimeError:
-                pass
-            else:
+            if is_running_async():
                 return queryset.aget(pk=id)
 
             return queryset.get(pk=id)

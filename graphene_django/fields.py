@@ -11,7 +11,6 @@ from graphql_relay import (
 )
 
 from asgiref.sync import sync_to_async
-from asyncio import get_running_loop
 
 from graphene import Int, NonNull
 from graphene.relay import ConnectionField
@@ -19,7 +18,7 @@ from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
 
 from .settings import graphene_settings
-from .utils import maybe_queryset
+from .utils import maybe_queryset, is_sync_function, is_running_async
 
 
 class DjangoListField(Field):
@@ -92,16 +91,12 @@ class DjangoListField(Field):
             _type = _type.of_type
         django_object_type = _type.of_type.of_type
 
-        try:
-            get_running_loop()
-        except RuntimeError:
+        if not is_running_async():
             return partial(
                 self.list_resolver, django_object_type, resolver, self.get_manager()
             )
         else:
-            if not inspect.iscoroutinefunction(
-                resolver
-            ) and not inspect.isasyncgenfunction(resolver):
+            if is_sync_function(resolver):
                 async_resolver = sync_to_async(resolver)
 
             ## This is needed because our middleware can't detect the resolver as async when we returns partial[couroutine]
@@ -271,14 +266,8 @@ class DjangoConnectionField(ConnectionField):
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)
 
-        try:
-            get_running_loop()
-        except RuntimeError:
-            pass
-        else:
-            if not inspect.iscoroutinefunction(
-                resolver
-            ) and not inspect.isasyncgenfunction(resolver):
+        if is_running_async():
+            if is_sync_function(resolver):
                 resolver = sync_to_async(resolver)
 
         iterable = resolver(root, info, **args)
@@ -305,11 +294,7 @@ class DjangoConnectionField(ConnectionField):
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
 
-        try:
-            get_running_loop()
-        except RuntimeError:
-            pass
-        else:
+        if is_running_async():
 
             async def perform_resolve(iterable):
                 iterable = await sync_to_async(queryset_resolver)(

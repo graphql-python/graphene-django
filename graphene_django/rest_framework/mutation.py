@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from asyncio import get_running_loop
 from asgiref.sync import sync_to_async
 
 import graphene
@@ -13,6 +12,7 @@ from graphene.types.objecttype import yank_fields_from_attrs
 
 from ..types import ErrorType
 from .serializer_converter import convert_serializer_field
+from ..utils import is_running_async
 
 
 class SerializerMutationOptions(MutationOptions):
@@ -154,11 +154,7 @@ class SerializerMutation(ClientIDMutation):
         kwargs = cls.get_serializer_kwargs(root, info, **input)
         serializer = cls._meta.serializer_class(**kwargs)
 
-        try:
-            get_running_loop()
-        except RuntimeError:
-            pass
-        else:
+        if is_running_async():
 
             async def perform_mutate_async():
                 if await sync_to_async(serializer.is_valid)():

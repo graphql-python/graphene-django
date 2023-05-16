@@ -6,6 +6,8 @@ from .utils import (
     get_reverse_fields,
     is_valid_django_model,
     maybe_queryset,
+    is_sync_function,
+    is_running_async,
 )
 
 __all__ = [
@@ -16,4 +18,6 @@ __all__ = [
     "camelize",
     "is_valid_django_model",
     "GraphQLTestCase",
+    "is_sync_function",
+    "is_running_async",
 ]

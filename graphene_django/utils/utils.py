@@ -1,4 +1,5 @@
 import inspect
+from asyncio import get_running_loop
 
 from django.db import connection, models, transaction
 from django.db.models.manager import Manager
@@ -105,3 +106,18 @@ def set_rollback():
     atomic_requests = connection.settings_dict.get("ATOMIC_REQUESTS", False)
     if atomic_requests and connection.in_atomic_block:
         transaction.set_rollback(True)
+
+
+def is_running_async():
+    try:
+        get_running_loop()
+    except RuntimeError:
+        return False
+    else:
+        return True
+
+
+def is_sync_function(func):
+    return not inspect.iscoroutinefunction(func) and not inspect.isasyncgenfunction(
+        func
+    )

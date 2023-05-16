@@ -9,6 +9,8 @@ from graphql.type.definition import GraphQLNonNull
 
 from django.db.models import QuerySet
 
+from ..utils import is_sync_function
+
 
 class DjangoDebugContext:
     def __init__(self):
@@ -89,9 +91,7 @@ class DjangoSyncRequiredMiddleware:
         if hasattr(parent_type, "graphene_type") and hasattr(
             parent_type.graphene_type._meta, "model"
         ):
-            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
-                next
-            ):
+            if is_sync_function(next):
                 return sync_to_async(next)(root, info, **args)
 
         ## In addition, if we're resolving to a DjangoObject type
@@ -99,15 +99,11 @@ class DjangoSyncRequiredMiddleware:
         if hasattr(return_type, "graphene_type") and hasattr(
             return_type.graphene_type._meta, "model"
         ):
-            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
-                next
-            ):
+            if is_sync_function(next):
                 return sync_to_async(next)(root, info, **args)
 
         if info.parent_type.name == "Mutation":
-            if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
-                next
-            ):
+            if is_sync_function(next):
                 return sync_to_async(next)(root, info, **args)
 
         return next(root, info, **args)
