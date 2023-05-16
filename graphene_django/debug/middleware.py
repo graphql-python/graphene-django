@@ -86,23 +86,15 @@ class DjangoSyncRequiredMiddleware:
         if isinstance(return_type, GraphQLNonNull):
             return_type = return_type.of_type
 
-        ## Anytime the parent is a DjangoObject type
-        # and we're resolving a sync field, we need to wrap it in a sync_to_async
-        if hasattr(parent_type, "graphene_type") and hasattr(
-            parent_type.graphene_type._meta, "model"
+        if any(
+            [
+                hasattr(parent_type, "graphene_type")
+                and hasattr(parent_type.graphene_type._meta, "model"),
+                hasattr(return_type, "graphene_type")
+                and hasattr(return_type.graphene_type._meta, "model"),
+                info.parent_type.name == "Mutation",
+            ]
         ):
-            if is_sync_function(next):
-                return sync_to_async(next)(root, info, **args)
-
-        ## In addition, if we're resolving to a DjangoObject type
-        # we likely need to wrap it in a sync_to_async as well
-        if hasattr(return_type, "graphene_type") and hasattr(
-            return_type.graphene_type._meta, "model"
-        ):
-            if is_sync_function(next):
-                return sync_to_async(next)(root, info, **args)
-
-        if info.parent_type.name == "Mutation":
             if is_sync_function(next):
                 return sync_to_async(next)(root, info, **args)
 
