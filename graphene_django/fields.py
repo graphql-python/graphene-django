@@ -270,6 +270,17 @@ class DjangoConnectionField(ConnectionField):
 
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)
+
+        try:
+            get_running_loop()
+        except RuntimeError:
+            pass
+        else:
+            if not inspect.iscoroutinefunction(
+                resolver
+            ) and not inspect.isasyncgenfunction(resolver):
+                resolver = sync_to_async(resolver)
+
         iterable = resolver(root, info, **args)
 
         if info.is_awaitable(iterable):
@@ -293,17 +304,24 @@ class DjangoConnectionField(ConnectionField):
             iterable = default_manager
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
-        iterable = queryset_resolver(connection, iterable, info, args)
 
         try:
             get_running_loop()
         except RuntimeError:
             pass
         else:
-            return sync_to_async(cls.resolve_connection)(
-                connection, args, iterable, max_limit=max_limit
-            )
 
+            async def perform_resolve(iterable):
+                iterable = await sync_to_async(queryset_resolver)(
+                    connection, iterable, info, args
+                )
+                return await sync_to_async(cls.resolve_connection)(
+                    connection, args, iterable, max_limit=max_limit
+                )
+
+            return perform_resolve(iterable)
+
+        iterable = queryset_resolver(connection, iterable, info, args)
         return cls.resolve_connection(connection, args, iterable, max_limit=max_limit)
 
     def wrap_resolve(self, parent_resolver):

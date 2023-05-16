@@ -104,16 +104,6 @@ class DjangoSyncRequiredMiddleware:
             ):
                 return sync_to_async(next)(root, info, **args)
 
-        ## We can move this resolver logic into the field resolver itself and probably should
-        if hasattr(return_type, "graphene_type"):
-            if hasattr(return_type.graphene_type, "Edge"):
-                node_type = return_type.graphene_type.Edge.node.type
-                if hasattr(node_type, "_meta") and hasattr(node_type._meta, "model"):
-                    if not inspect.iscoroutinefunction(
-                        next
-                    ) and not inspect.isasyncgenfunction(next):
-                        return sync_to_async(next)(root, info, **args)
-
         if info.parent_type.name == "Mutation":
             if not inspect.iscoroutinefunction(next) and not inspect.isasyncgenfunction(
                 next
