@@ -132,6 +132,9 @@ DjangoFormInputObjectType
 
 .. code:: python
 
+    from graphene_django.forms.types import DjangoFormInputObjectType
+
+
     class PetFormInput(DjangoFormInputObjectType):
         # any other fields can be placed here as well as
         # other djangoforminputobjects and intputobjects
