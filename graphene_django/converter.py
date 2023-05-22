@@ -288,8 +288,6 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 
                 def custom_resolver(root, info, **args):
                     # Note: this function is used to resolve 1:1 relation fields
-                    #   it does not differentiate between custom-resolved fields
-                    #   and default resolved fields.
 
                     is_resolver_awaitable = inspect.iscoroutinefunction(resolver)
 
