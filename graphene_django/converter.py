@@ -299,33 +299,16 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
                         # the default Django resolver
                         return fk_obj
 
-                    object_pk = resolver(root, info, **args).pk
-                    instance_from_get_node = _type.get_node(info, object_pk)
-
-                    if instance_from_get_node is None:
-                        # no instance to return
-                        return
-                    elif (
-                        isinstance(resolver, partial)
-                        and resolver.func is get_default_resolver()
-                    ):
-                        return instance_from_get_node
-                    elif resolver is not get_default_resolver():
-                        # Default resolver is overridden
-                        # For optimization, add the instance to the resolver
-                        field_name = to_snake_case(info.field_name)
-                        setattr(root, field_name, instance_from_get_node)
-                        # Explanation:
-                        #   previously, _type.get_node` is called which results in at least one hit to the database.
-                        #   But, if we did not pass the instance to the root, calling the resolver will result in
-                        #   another call to get the instance which results in at least two database queries in total
-                        #   to resolve this node only.
-                        #   That's why the value of the object is set in the root so when the object is accessed
-                        #   in the resolver (root.field_name) it does not access the database unless queried explicitly.
-                        fk_obj = resolver(root, info, **args)
-                        return fk_obj
-                    else:
-                        return instance_from_get_node
+                    field_name = to_snake_case(info.field_name)
+                    reversed_field_name = root.__class__._meta.get_field(
+                        field_name
+                    ).remote_field.name
+                    return _type.get_queryset(
+                        _type._meta.model.objects.filter(
+                            **{reversed_field_name: root.pk}
+                        ),
+                        info,
+                    ).get()
 
                 return custom_resolver
 
