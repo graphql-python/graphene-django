@@ -483,7 +483,7 @@ class TestShouldCallGetQuerySetOnOneToOne:
         assert len(result.errors) == 1
         assert result.errors[0].message == "Not authorized to access film details."
 
-    def test_get_queryset_called_on_foreignkey(self):
+    def test_get_queryset_called_on_foreignkey(self, django_assert_num_queries):
         # A user tries to access a film details through a film
         query = """
             query getFilm($id: ID!) {
@@ -497,14 +497,15 @@ class TestShouldCallGetQuerySetOnOneToOne:
         """
 
         # With `permission_get_film_details`
-        result = self.schema.execute(
-            query,
-            variables={"id": self.films[0].id},
-            context_value={
-                "permission_get_film": True,
-                "permission_get_film_details": True,
-            },
-        )
+        with django_assert_num_queries(2):
+            result = self.schema.execute(
+                query,
+                variables={"id": self.films[0].id},
+                context_value={
+                    "permission_get_film": True,
+                    "permission_get_film_details": True,
+                },
+            )
         assert not result.errors
         assert result.data["film"] == {
             "genre": "DO",
@@ -512,14 +513,15 @@ class TestShouldCallGetQuerySetOnOneToOne:
         }
 
         # Without `permission_get_film_details`
-        result = self.schema.execute(
-            query,
-            variables={"id": self.films[0].id},
-            context_value={
-                "permission_get_film": True,
-                "permission_get_film_details": False,
-            },
-        )
+        with django_assert_num_queries(1):
+            result = self.schema.execute(
+                query,
+                variables={"id": self.films[0].id},
+                context_value={
+                    "permission_get_film": True,
+                    "permission_get_film_details": False,
+                },
+            )
         assert len(result.errors) == 1
         assert result.errors[0].message == "Not authorized to access film details."
 
@@ -536,14 +538,15 @@ class TestShouldCallGetQuerySetOnOneToOne:
         """
 
         # With `permission_get_film`
-        result = self.schema.execute(
-            query,
-            variables={"id": self.film_details[0].id},
-            context_value={
-                "permission_get_film": True,
-                "permission_get_film_details": True,
-            },
-        )
+        with django_assert_num_queries(2):
+            result = self.schema.execute(
+                query,
+                variables={"id": self.film_details[0].id},
+                context_value={
+                    "permission_get_film": True,
+                    "permission_get_film_details": True,
+                },
+            )
         assert not result.errors
         assert result.data["filmDetails"] == {
             "location": "",
@@ -551,13 +554,14 @@ class TestShouldCallGetQuerySetOnOneToOne:
         }
 
         # Without `permission_get_film`
-        result = self.schema.execute(
-            query,
-            variables={"id": self.film_details[1].id},
-            context_value={
-                "permission_get_film": False,
-                "permission_get_film_details": True,
-            },
-        )
+        with django_assert_num_queries(1):
+            result = self.schema.execute(
+                query,
+                variables={"id": self.film_details[1].id},
+                context_value={
+                    "permission_get_film": False,
+                    "permission_get_film_details": True,
+                },
+            )
         assert len(result.errors) == 1
         assert result.errors[0].message == "Not authorized to access film."
