@@ -115,7 +115,9 @@ class GraphQLView(View):
         self.pretty = pretty or self.pretty
         self.graphiql = graphiql or self.graphiql
         self.batch = batch or self.batch
-        self.execution_context_class = execution_context_class or self.execution_context_class
+        self.execution_context_class = (
+            execution_context_class or self.execution_context_class
+        )
         if subscription_path is None:
             self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
