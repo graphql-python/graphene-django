@@ -38,6 +38,7 @@ setup(
     version=version,
     description="Graphene Django integration",
     long_description=open("README.md").read(),
+    long_description_content_type='text/markdown',
     url="https://github.com/graphql-python/graphene-django",
     author="Syrus Akbary",
     author_email="me@syrusakbary.com",
