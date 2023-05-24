@@ -105,17 +105,19 @@ class GraphQLView(View):
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
 
-        self.schema = self.schema or schema
+        self.schema = schema or self.schema
         if middleware is not None:
             if isinstance(middleware, MiddlewareManager):
                 self.middleware = middleware
             else:
                 self.middleware = list(instantiate_middleware(middleware))
         self.root_value = root_value
-        self.pretty = self.pretty or pretty
-        self.graphiql = self.graphiql or graphiql
-        self.batch = self.batch or batch
-        self.execution_context_class = execution_context_class
+        self.pretty = pretty or self.pretty
+        self.graphiql = graphiql or self.graphiql
+        self.batch = batch or self.batch
+        self.execution_context_class = (
+            execution_context_class or self.execution_context_class
+        )
         if subscription_path is None:
             self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
