@@ -48,7 +48,7 @@ class CommandArguments(BaseCommand):
 class Command(CommandArguments):
     help = "Dump Graphene schema as a JSON or GraphQL file"
     can_import_settings = True
-    requires_system_checks = False
+    requires_system_checks = []
 
     def save_json_file(self, out, schema_dict, indent):
         with open(out, "w") as outfile:
