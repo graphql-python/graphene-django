@@ -273,7 +273,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         class CustomField(Field):
             def wrap_resolve(self, parent_resolver):
                 """
-                Implements a custom resolver which go through the `get_node` method to insure that
+                Implements a custom resolver which goes through the `get_node` method to ensure that
                 it goes through the `get_queryset` method of the DjangoObjectType.
                 """
                 resolver = super().wrap_resolve(parent_resolver)
@@ -374,7 +374,7 @@ def convert_field_to_djangomodel(field, registry=None):
         class CustomField(Field):
             def wrap_resolve(self, parent_resolver):
                 """
-                Implements a custom resolver which go through the `get_node` method to ensure that
+                Implements a custom resolver which goes through the `get_node` method to ensure that
                 it goes through the `get_queryset` method of the DjangoObjectType.
                 """
                 resolver = super().wrap_resolve(parent_resolver)
