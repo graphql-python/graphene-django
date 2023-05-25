@@ -403,28 +403,6 @@ class GraphQLView(View):
 
 
 class AsyncGraphQLView(GraphQLView):
-    graphiql_template = "graphene/graphiql.html"
-
-    # Polyfill for window.fetch.
-    whatwg_fetch_version = "3.6.2"
-    whatwg_fetch_sri = "sha256-+pQdxwAcHJdQ3e/9S4RK6g8ZkwdMgFQuHvLuN5uyk5c="
-
-    # React and ReactDOM.
-    react_version = "17.0.2"
-    react_sri = "sha256-Ipu/TQ50iCCVZBUsZyNJfxrDk0E2yhaEIz0vqI+kFG8="
-    react_dom_sri = "sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0="
-
-    # The GraphiQL React app.
-    graphiql_version = "1.4.7"  # "1.0.3"
-    graphiql_sri = "sha256-cpZ8w9D/i6XdEbY/Eu7yAXeYzReVw0mxYd7OU3gUcsc="  # "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
-    graphiql_css_sri = "sha256-HADQowUuFum02+Ckkv5Yu5ygRoLllHZqg0TFZXY7NHI="  # "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
-
-    # The websocket transport library for subscriptions.
-    subscriptions_transport_ws_version = "0.9.18"
-    subscriptions_transport_ws_sri = (
-        "sha256-i0hAXd4PdJ/cHX3/8tIy/Q/qKiWr5WSTxMFuL9tACkw="
-    )
-
     schema = None
     graphiql = False
     middleware = None
@@ -512,6 +490,8 @@ class AsyncGraphQLView(GraphQLView):
                     graphiql_css_sri=self.graphiql_css_sri,
                     subscriptions_transport_ws_version=self.subscriptions_transport_ws_version,
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
+                    graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
+                    graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
