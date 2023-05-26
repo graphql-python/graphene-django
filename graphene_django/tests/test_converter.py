@@ -3,7 +3,7 @@ from collections import namedtuple
 import pytest
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from py.test import raises
+from pytest import raises
 
 import graphene
 from graphene import NonNull
