@@ -78,6 +78,9 @@ class GraphQLView(View):
 
     graphiql_plugin_explorer_version = "0.1.15"
     graphiql_plugin_explorer_sri = "sha256-3hUuhBXdXlfCj6RTeEkJFtEh/kUG+TCDASFpFPLrzvE="
+    graphiql_plugin_explorer_css_sri = (
+        "sha256-fA0LPUlukMNR6L4SPSeFqDTYav8QdWjQ2nr559Zln1U="
+    )
 
     schema = None
     graphiql = False
