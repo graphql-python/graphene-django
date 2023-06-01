@@ -1,4 +1,3 @@
-graphene>=2.1,<3
-graphene-django>=2.1,<3
-graphql-core>=2.1,<3
-django==3.1.14
+django~=3.2
+graphene
+graphene-django>=3.1
