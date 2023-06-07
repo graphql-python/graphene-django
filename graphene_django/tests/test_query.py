@@ -119,13 +119,12 @@ def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
         IntegerRangeField,
         ArrayField,
-        JSONField,
         HStoreField,
     )
 
     class Event(models.Model):
         ages = IntegerRangeField(help_text="The age ranges")
-        data = JSONField(help_text="Data")
+        data = models.JSONField(help_text="Data")
         store = HStoreField()
         tags = ArrayField(models.CharField(max_length=50))
 

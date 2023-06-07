@@ -15,8 +15,6 @@ from graphene.types.scalars import BigInt
 from ..compat import (
     ArrayField,
     HStoreField,
-    JSONField,
-    PGJSONField,
     MissingType,
     RangeField,
 )
@@ -370,16 +368,6 @@ def test_should_postgres_array_multiple_convert_list():
 @pytest.mark.skipif(HStoreField is MissingType, reason="HStoreField should exist")
 def test_should_postgres_hstore_convert_string():
     assert_conversion(HStoreField, JSONString)
-
-
-@pytest.mark.skipif(PGJSONField is MissingType, reason="PGJSONField should exist")
-def test_should_postgres_json_convert_string():
-    assert_conversion(PGJSONField, JSONString)
-
-
-@pytest.mark.skipif(JSONField is MissingType, reason="JSONField should exist")
-def test_should_json_convert_string():
-    assert_conversion(JSONField, JSONString)
 
 
 @pytest.mark.skipif(RangeField is MissingType, reason="RangeField should exist")
