@@ -13,4 +13,4 @@ try:
         RangeField,
     )
 except ImportError:
-    IntegerRangeField, ArrayField, HStoreField, RangeField = (MissingType,) * 5
+    IntegerRangeField, ArrayField, HStoreField, RangeField = (MissingType,) * 4
