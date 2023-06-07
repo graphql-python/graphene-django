@@ -10,16 +10,7 @@ try:
         IntegerRangeField,
         ArrayField,
         HStoreField,
-        JSONField as PGJSONField,
         RangeField,
     )
 except ImportError:
-    IntegerRangeField, ArrayField, HStoreField, PGJSONField, RangeField = (
-        MissingType,
-    ) * 5
-
-try:
-    # JSONField is only available from Django 3.1
-    from django.db.models import JSONField
-except ImportError:
-    JSONField = MissingType
+    IntegerRangeField, ArrayField, HStoreField, RangeField = (MissingType,) * 5

@@ -35,7 +35,7 @@ except ImportError:
     from graphql import assert_valid_name as assert_name
 from graphql.pyutils import register_description
 
-from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
+from .compat import ArrayField, HStoreField, RangeField
 from .fields import DjangoListField, DjangoConnectionField
 from .settings import graphene_settings
 from .utils.str_converters import to_const
@@ -346,9 +346,8 @@ def convert_postgres_array_to_list(field, registry=None):
 
 
 @convert_django_field.register(HStoreField)
-@convert_django_field.register(PGJSONField)
-@convert_django_field.register(JSONField)
-def convert_pg_and_json_field_to_string(field, registry=None):
+@convert_django_field.register(models.JSONField)
+def convert_json_field_to_string(field, registry=None):
     return JSONString(
         description=get_django_field_description(field), required=not field.null
     )
