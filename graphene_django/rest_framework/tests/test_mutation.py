@@ -164,6 +164,21 @@ def test_read_only_fields():
     ), "'cool_name' is read_only field and shouldn't be on arguments"
 
 
+def test_hidden_fields():
+    class SerializerWithHiddenField(serializers.Serializer):
+        cool_name = serializers.CharField()
+        user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = SerializerWithHiddenField
+
+    assert "cool_name" in MyMutation.Input._meta.fields
+    assert (
+        "user" not in MyMutation.Input._meta.fields
+    ), "'user' is hidden field and shouldn't be on arguments"
+
+
 def test_nested_model():
     class MyFakeModelGrapheneType(DjangoObjectType):
         class Meta:

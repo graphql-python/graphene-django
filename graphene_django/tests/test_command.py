@@ -46,7 +46,7 @@ def test_generate_graphql_file_on_call_graphql_schema():
     open_mock.assert_called_once()
 
     handle = open_mock()
-    assert handle.write.called_once()
+    handle.write.assert_called_once()
 
     schema_output = handle.write.call_args[0][0]
     assert schema_output == dedent(
