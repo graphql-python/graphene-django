@@ -278,11 +278,13 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
                 """
                 resolver = super().wrap_resolve(parent_resolver)
 
-                # If `get_queryset` was not overridden in the DjangoObjectType,
+                # If `get_queryset` was not overridden in the DjangoObjectType
+                # or if we explicitly bypass the `get_queryset` method,
                 # we can just return the default resolver.
                 if (
                     _type.get_queryset.__func__
                     is DjangoObjectType.get_queryset.__func__
+                    or getattr(resolver, "_bypass_get_queryset", False)
                 ):
                     return resolver
 
@@ -379,11 +381,13 @@ def convert_field_to_djangomodel(field, registry=None):
                 """
                 resolver = super().wrap_resolve(parent_resolver)
 
-                # If `get_queryset` was not overridden in the DjangoObjectType,
+                # If `get_queryset` was not overridden in the DjangoObjectType
+                # or if we explicitly bypass the `get_queryset` method,
                 # we can just return the default resolver.
                 if (
                     _type.get_queryset.__func__
                     is DjangoObjectType.get_queryset.__func__
+                    or getattr(resolver, "_bypass_get_queryset", False)
                 ):
                     return resolver
 
