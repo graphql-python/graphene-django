@@ -46,6 +46,7 @@ class Reporter(models.Model):
     a_choice = models.IntegerField(choices=CHOICES, null=True, blank=True)
     objects = models.Manager()
     doe_objects = DoeReporterManager()
+    fans = models.ManyToManyField(Person)
 
     reporter_type = models.IntegerField(
         "Reporter Type",
@@ -88,6 +89,16 @@ class CNNReporter(Reporter):
         proxy = True
 
     objects = CNNReporterManager()
+
+
+class APNewsReporter(Reporter):
+    """
+    This class only inherits from Reporter for testing multi table inheritence
+    similar to what you'd see in django-polymorphic
+    """
+
+    alias = models.CharField(max_length=30)
+    objects = models.Manager()
 
 
 class Article(models.Model):

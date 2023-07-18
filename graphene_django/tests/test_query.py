@@ -15,7 +15,16 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter
+from .models import (
+    Article,
+    CNNReporter,
+    Film,
+    FilmDetails,
+    Person,
+    Pet,
+    Reporter,
+    APNewsReporter,
+)
 
 
 def test_should_query_only_fields():
@@ -1061,6 +1070,301 @@ def test_proxy_model_support():
 
     result = schema.execute(query)
     assert not result.errors
+    assert result.data == expected
+
+
+def test_model_inheritance_support_reverse_relationships():
+    """
+    This test asserts that we can query reverse relationships for all Reporters and proxied Reporters and multi table Reporters.
+    """
+
+    class FilmType(DjangoObjectType):
+        class Meta:
+            model = Film
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class CNNReporterType(DjangoObjectType):
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class APNewsReporterType(DjangoObjectType):
+        class Meta:
+            model = APNewsReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    film = Film.objects.create(genre="do")
+
+    reporter = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    cnn_reporter = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    ap_news_reporter = APNewsReporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    film.reporters.add(cnn_reporter, ap_news_reporter)
+    film.save()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        cnn_reporters = DjangoConnectionField(CNNReporterType)
+        ap_news_reporters = DjangoConnectionField(APNewsReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+            cnnReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+            apNewsReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", reporter.id),
+                        "films": [],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", ap_news_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
+            ]
+        },
+        "cnnReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+        "apNewsReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("APNewsReporterType", ap_news_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+    }
+
+    result = schema.execute(query)
+    assert result.data == expected
+
+
+def test_model_inheritance_support_local_relationships():
+    """
+    This test asserts that we can query local relationships for all Reporters and proxied Reporters and multi table Reporters.
+    """
+
+    class PersonType(DjangoObjectType):
+        class Meta:
+            model = Person
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class CNNReporterType(DjangoObjectType):
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class APNewsReporterType(DjangoObjectType):
+        class Meta:
+            model = APNewsReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    film = Film.objects.create(genre="do")
+
+    reporter = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    reporter_fan = Person.objects.create(name="Reporter Fan")
+
+    reporter.fans.add(reporter_fan)
+    reporter.save()
+
+    cnn_reporter = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+    cnn_fan = Person.objects.create(name="CNN Fan")
+    cnn_reporter.fans.add(cnn_fan)
+    cnn_reporter.save()
+
+    ap_news_reporter = APNewsReporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    ap_news_fan = Person.objects.create(name="AP News Fan")
+    ap_news_reporter.fans.add(ap_news_fan)
+    ap_news_reporter.save()
+
+    film.reporters.add(cnn_reporter, ap_news_reporter)
+    film.save()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        cnn_reporters = DjangoConnectionField(CNNReporterType)
+        ap_news_reporters = DjangoConnectionField(APNewsReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+            cnnReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+            apNewsReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", reporter.id),
+                        "fans": [{"name": f"{reporter_fan.name}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", cnn_reporter.id),
+                        "fans": [{"name": f"{cnn_fan.name}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", ap_news_reporter.id),
+                        "fans": [{"name": f"{ap_news_fan.name}"}],
+                    },
+                },
+            ]
+        },
+        "cnnReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "fans": [{"name": f"{cnn_fan.name}"}],
+                    }
+                }
+            ]
+        },
+        "apNewsReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("APNewsReporterType", ap_news_reporter.id),
+                        "fans": [{"name": f"{ap_news_fan.name}"}],
+                    }
+                }
+            ]
+        },
+    }
+
+    result = schema.execute(query)
     assert result.data == expected
 
 

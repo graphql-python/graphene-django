@@ -67,16 +67,17 @@ def test_django_get_node(get):
 def test_django_objecttype_map_correct_fields():
     fields = Reporter._meta.fields
     fields = list(fields.keys())
-    assert fields[:-2] == [
+    assert fields[:-3] == [
         "id",
         "first_name",
         "last_name",
         "email",
         "pets",
         "a_choice",
+        "fans",
         "reporter_type",
     ]
-    assert sorted(fields[-2:]) == ["articles", "films"]
+    assert sorted(fields[-3:]) == ["apnewsreporter", "articles", "films"]
 
 
 def test_django_objecttype_with_node_have_correct_fields():
