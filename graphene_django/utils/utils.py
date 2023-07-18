@@ -105,3 +105,12 @@ def set_rollback():
     atomic_requests = connection.settings_dict.get("ATOMIC_REQUESTS", False)
     if atomic_requests and connection.in_atomic_block:
         transaction.set_rollback(True)
+
+
+def bypass_get_queryset(resolver):
+    """
+    Adds a bypass_get_queryset attribute to the resolver, which is used to
+    bypass any custom get_queryset method of the DjangoObjectType.
+    """
+    resolver._bypass_get_queryset = True
+    return resolver

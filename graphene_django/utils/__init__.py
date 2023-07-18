@@ -6,6 +6,7 @@ from .utils import (
     get_reverse_fields,
     is_valid_django_model,
     maybe_queryset,
+    bypass_get_queryset,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "camelize",
     "is_valid_django_model",
     "GraphQLTestCase",
+    "bypass_get_queryset",
 ]

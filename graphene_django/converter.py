@@ -1,5 +1,6 @@
+import inspect
 from collections import OrderedDict
-from functools import singledispatch, wraps
+from functools import partial, singledispatch, wraps
 
 from django.db import models
 from django.utils.encoding import force_str
@@ -25,6 +26,7 @@ from graphene import (
 )
 from graphene.types.json import JSONString
 from graphene.types.scalars import BigInt
+from graphene.types.resolver import get_default_resolver
 from graphene.utils.str_converters import to_camel_case
 from graphql import GraphQLError
 
@@ -258,6 +260,9 @@ def convert_time_to_string(field, registry=None):
 
 @convert_django_field.register(models.OneToOneRel)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
+    from graphene.utils.str_converters import to_snake_case
+    from .types import DjangoObjectType
+
     model = field.related_model
 
     def dynamic_type():
@@ -265,7 +270,52 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(_type, required=not field.null)
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                """
+                Implements a custom resolver which goes through the `get_node` method to ensure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super().wrap_resolve(parent_resolver)
+
+                # If `get_queryset` was not overridden in the DjangoObjectType
+                # or if we explicitly bypass the `get_queryset` method,
+                # we can just return the default resolver.
+                if (
+                    _type.get_queryset.__func__
+                    is DjangoObjectType.get_queryset.__func__
+                    or getattr(resolver, "_bypass_get_queryset", False)
+                ):
+                    return resolver
+
+                def custom_resolver(root, info, **args):
+                    # Note: this function is used to resolve 1:1 relation fields
+
+                    is_resolver_awaitable = inspect.iscoroutinefunction(resolver)
+
+                    if is_resolver_awaitable:
+                        fk_obj = resolver(root, info, **args)
+                        # In case the resolver is a custom awaitable resolver that overwrites
+                        # the default Django resolver
+                        return fk_obj
+
+                    field_name = to_snake_case(info.field_name)
+                    reversed_field_name = root.__class__._meta.get_field(
+                        field_name
+                    ).remote_field.name
+                    return _type.get_queryset(
+                        _type._meta.model.objects.filter(
+                            **{reversed_field_name: root.pk}
+                        ),
+                        info,
+                    ).get()
+
+                return custom_resolver
+
+        return CustomField(
+            _type,
+            required=not field.null,
+        )
 
     return Dynamic(dynamic_type)
 
@@ -313,6 +363,9 @@ def convert_field_to_list_or_connection(field, registry=None):
 @convert_django_field.register(models.OneToOneField)
 @convert_django_field.register(models.ForeignKey)
 def convert_field_to_djangomodel(field, registry=None):
+    from graphene.utils.str_converters import to_snake_case
+    from .types import DjangoObjectType
+
     model = field.related_model
 
     def dynamic_type():
@@ -320,7 +373,79 @@ def convert_field_to_djangomodel(field, registry=None):
         if not _type:
             return
 
-        return Field(
+        class CustomField(Field):
+            def wrap_resolve(self, parent_resolver):
+                """
+                Implements a custom resolver which goes through the `get_node` method to ensure that
+                it goes through the `get_queryset` method of the DjangoObjectType.
+                """
+                resolver = super().wrap_resolve(parent_resolver)
+
+                # If `get_queryset` was not overridden in the DjangoObjectType
+                # or if we explicitly bypass the `get_queryset` method,
+                # we can just return the default resolver.
+                if (
+                    _type.get_queryset.__func__
+                    is DjangoObjectType.get_queryset.__func__
+                    or getattr(resolver, "_bypass_get_queryset", False)
+                ):
+                    return resolver
+
+                def custom_resolver(root, info, **args):
+                    # Note: this function is used to resolve FK or 1:1 fields
+                    #   it does not differentiate between custom-resolved fields
+                    #   and default resolved fields.
+
+                    # because this is a django foreign key or one-to-one field, the primary-key for
+                    # this node can be accessed from the root node.
+                    # ex: article.reporter_id
+
+                    # get the name of the id field from the root's model
+                    field_name = to_snake_case(info.field_name)
+                    db_field_key = root.__class__._meta.get_field(field_name).attname
+                    if hasattr(root, db_field_key):
+                        # get the object's primary-key from root
+                        object_pk = getattr(root, db_field_key)
+                    else:
+                        return None
+
+                    is_resolver_awaitable = inspect.iscoroutinefunction(resolver)
+
+                    if is_resolver_awaitable:
+                        fk_obj = resolver(root, info, **args)
+                        # In case the resolver is a custom awaitable resolver that overwrites
+                        # the default Django resolver
+                        return fk_obj
+
+                    instance_from_get_node = _type.get_node(info, object_pk)
+
+                    if instance_from_get_node is None:
+                        # no instance to return
+                        return
+                    elif (
+                        isinstance(resolver, partial)
+                        and resolver.func is get_default_resolver()
+                    ):
+                        return instance_from_get_node
+                    elif resolver is not get_default_resolver():
+                        # Default resolver is overridden
+                        # For optimization, add the instance to the resolver
+                        setattr(root, field_name, instance_from_get_node)
+                        # Explanation:
+                        #   previously, _type.get_node` is called which results in at least one hit to the database.
+                        #   But, if we did not pass the instance to the root, calling the resolver will result in
+                        #   another call to get the instance which results in at least two database queries in total
+                        #   to resolve this node only.
+                        #   That's why the value of the object is set in the root so when the object is accessed
+                        #   in the resolver (root.field_name) it does not access the database unless queried explicitly.
+                        fk_obj = resolver(root, info, **args)
+                        return fk_obj
+                    else:
+                        return instance_from_get_node
+
+                return custom_resolver
+
+        return CustomField(
             _type,
             description=get_django_field_description(field),
             required=not field.null,
