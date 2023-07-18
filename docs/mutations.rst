@@ -125,6 +125,55 @@ to change how the form is saved or to return a different Graphene object type.
 If the form is *not* valid then a list of errors will be returned. These errors have two fields: ``field``, a string
 containing the name of the invalid form field, and ``messages``, a list of strings with the validation messages.
 
+DjangoFormInputObjectType
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``DjangoFormInputObjectType`` is used in mutations to create input fields by **using django form** to retrieve input data structure from it. This can be helpful in situations where you need to pass data to several django forms in one mutation.
+
+.. code:: python
+
+    from graphene_django.forms.types import DjangoFormInputObjectType
+
+
+    class PetFormInput(DjangoFormInputObjectType):
+        # any other fields can be placed here as well as
+        # other djangoforminputobjects and intputobjects
+        class Meta:
+            form_class = PetForm
+            object_type = PetType
+
+    class QuestionFormInput(DjangoFormInputObjectType)
+        class Meta:
+            form_class = QuestionForm
+            object_type = QuestionType
+
+    class SeveralFormsInputData(graphene.InputObjectType):
+        pet = PetFormInput(required=True)
+        question = QuestionFormInput(required=True)
+
+    class SomeSophisticatedMutation(graphene.Mutation):
+        class Arguments:
+            data = SeveralFormsInputData(required=True)
+
+        @staticmethod
+        def mutate(_root, _info, data):
+            pet_form_inst = PetForm(data=data.pet)
+            question_form_inst = QuestionForm(data=data.question)
+
+            if pet_form_inst.is_valid():
+                pet_model_instance = pet_form_inst.save(commit=False)
+
+            if question_form_inst.is_valid():
+                question_model_instance = question_form_inst.save(commit=False)
+
+            # ...
+
+Additional to **InputObjectType** ``Meta`` class attributes:
+
+* ``form_class`` is required and should be equal to django form class.
+* ``object_type`` is not required and used to enable convertion of enum values back to original if model object type ``convert_choices_to_enum`` ``Meta`` class attribute is not set to ``False``. Any data field, which have choices in django, with value ``A_1`` (for example) from client will be automatically converted to ``1`` in mutation data.
+* ``add_id_field_name`` is used to specify `id` field name (not required, by default equal to ``id``)
+* ``add_id_field_type`` is used to specify `id` field type (not required, default is ``graphene.ID``)
 
 Django REST Framework
 ---------------------

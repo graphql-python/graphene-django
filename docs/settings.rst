@@ -224,7 +224,7 @@ Default: ``/graphql``
 
 
 ``GRAPHIQL_SHOULD_PERSIST_HEADERS``
----------------------
+-----------------------------------
 
 Set to ``True`` if you want to persist GraphiQL headers after refreshing the page.
 

@@ -39,6 +39,9 @@ def fields_for_serializer(
                 field.read_only
                 and is_input
                 and lookup_field != name,  # don't show read_only fields in Input
+                isinstance(
+                    field, serializers.HiddenField
+                ),  # don't show hidden fields in Input
             ]
         )
 
