@@ -31,7 +31,7 @@ class ReporterType(DjangoObjectType):
 class ReporterForm(forms.ModelForm):
     class Meta:
         model = Reporter
-        exclude = ("pets", "email")
+        exclude = ("pets", "email", "fans")
 
 
 class MyForm(forms.Form):
