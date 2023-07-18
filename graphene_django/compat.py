@@ -1,3 +1,9 @@
+# For backwards compatibility, we import JSONField to have it available for import via
+# this compat module (https://github.com/graphql-python/graphene-django/issues/1428).
+# Django's JSONField is available in Django 3.2+ (the minimum version we support)
+from django.db.models import JSONField
+
+
 class MissingType:
     def __init__(self, *args, **kwargs):
         pass
