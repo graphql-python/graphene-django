@@ -129,8 +129,7 @@ class SerializerMutation(ClientIDMutation):
         if model_class:
             for input_dict_key, maybe_enum in input.items():
                 if isinstance(maybe_enum, Enum):
-                    choicefield_enum = maybe_enum
-                    input[input_dict_key] = choicefield_enum.value
+                    input[input_dict_key] = maybe_enum.value
             if "update" in cls._meta.model_operations and lookup_field in input:
                 instance = get_object_or_404(
                     model_class, **{lookup_field: input[lookup_field]}
