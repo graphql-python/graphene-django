@@ -1073,6 +1073,9 @@ def test_proxy_model_support():
     assert result.data == expected
 
 
+@pytest.mark.xfail(
+    reason="Until https://github.com/graphql-python/graphene-django/pull/1380#issuecomment-1646331317 is fixed."
+)
 def test_model_inheritance_support_reverse_relationships():
     """
     This test asserts that we can query reverse relationships for all Reporters and proxied Reporters and multi table Reporters.
