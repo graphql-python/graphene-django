@@ -20,7 +20,7 @@ tests_require = [
     "coveralls",
     "mock",
     "pytz",
-    "django-filter>=22.1",
+    "django-filter>=21.1",
     "pytest-django>=4.5.2",
 ] + rest_framework_require
 
@@ -62,7 +62,7 @@ setup(
         "graphene @ git+https://github.com/graphql-python/graphene.git@ee1ff975d71f6590eb6933d76d12054c9839774a#egg=graphene",
         "graphql-core>=3.1.0,<4",
         "graphql-relay @ git+https://github.com/loft-orbital/graphql-relay-py.git@loft-v3.2.0-1#egg=graphql-relay",
-        "Django>=3.2",
+        "Django>=2.2.13",
         "promise>=2.1",
         "text-unidecode",
     ],
