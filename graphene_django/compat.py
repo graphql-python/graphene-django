@@ -1,9 +1,3 @@
-# For backwards compatibility, we import JSONField to have it available for import via
-# this compat module (https://github.com/graphql-python/graphene-django/issues/1428).
-# Django's JSONField is available in Django 3.2+ (the minimum version we support)
-from django.db.models import JSONField
-
-
 class MissingType:
     def __init__(self, *args, **kwargs):
         pass
@@ -18,5 +12,12 @@ try:
         HStoreField,
         RangeField,
     )
+
+    try:
+        from django.db.models import JSONField
+    except ImportError:
+        from django.contrib.postgres.fields import JSONField
 except ImportError:
-    IntegerRangeField, ArrayField, HStoreField, RangeField = (MissingType,) * 4
+    IntegerRangeField, ArrayField, HStoreField, RangeField, JSONField = (
+        MissingType,
+    ) * 5
