@@ -11,7 +11,7 @@ from pytest import raises
 import graphene
 from graphene.relay import Node
 
-from ..compat import IntegerRangeField, MissingType
+from ..compat import IntegerRangeField, MissingType, JSONField
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
@@ -133,7 +133,7 @@ def test_should_query_postgres_fields():
 
     class Event(models.Model):
         ages = IntegerRangeField(help_text="The age ranges")
-        data = models.JSONField(help_text="Data")
+        data = JSONField(help_text="Data")
         store = HStoreField()
         tags = ArrayField(models.CharField(max_length=50))
 

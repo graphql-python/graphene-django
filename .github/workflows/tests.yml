@@ -11,6 +11,10 @@ jobs:
         django: ["3.2", "4.1", "4.2"]
         python-version: ["3.8", "3.9", "3.10"]
         include:
+          - django: "2.2"
+            python-version: "3.10"
+          - django: "2.2"
+            python-version: "3.11"
           - django: "3.2"
             python-version: "3.7"
           - django: "4.1"
