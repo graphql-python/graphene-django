@@ -331,8 +331,9 @@ class GraphQLView(View):
             )
 
         execute_args = (self.schema.graphql_schema, document)
+        validation_errors = validate(*execute_args)
 
-        if validation_errors := validate(*execute_args):
+        if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
 
         try:
