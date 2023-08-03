@@ -12,6 +12,7 @@ from django.views.generic import View
 from graphql import ExecutionResult, OperationType, execute, get_operation_ast, parse
 from graphql.error import GraphQLError
 from graphql.execution.middleware import MiddlewareManager
+from graphql.language import OperationDefinitionNode
 from graphql.validation import validate
 
 from graphene import Schema
@@ -302,13 +303,23 @@ class GraphQLView(View):
 
         operation_ast = get_operation_ast(document, operation_name)
 
-        op_error = None
         if not operation_ast:
-            op_error = "Must provide a valid operation."
-        elif operation_ast.operation == OperationType.SUBSCRIPTION:
-            op_error = "The 'subscription' operation is not supported."
+            ops_count = len(
+                [
+                    x
+                    for x in document.definitions
+                    if isinstance(x, OperationDefinitionNode)
+                ]
+            )
+            if ops_count > 1:
+                op_error = (
+                    "Must provide operation name if query contains multiple operations."
+                )
+            elif operation_name:
+                op_error = f"Unknown operation named '{operation_name}'."
+            else:
+                op_error = "Must provide a valid operation."
 
-        if op_error:
             return ExecutionResult(errors=[GraphQLError(op_error)])
 
         if (
@@ -348,8 +359,7 @@ class GraphQLView(View):
             if (
                 graphene_settings.ATOMIC_MUTATIONS is True
                 or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
-                and operation_ast.operation == OperationType.MUTATION
-            ):
+            ) and operation_ast.operation == OperationType.MUTATION:
                 with transaction.atomic():
                     result = execute(*execute_args, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
