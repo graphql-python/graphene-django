@@ -9,10 +9,10 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import OperationType, get_operation_ast, parse
+from graphql import ExecutionResult, OperationType, execute, get_operation_ast, parse
 from graphql.error import GraphQLError
-from graphql.execution import ExecutionResult
 from graphql.execution.middleware import MiddlewareManager
+from graphql.validation import validate
 
 from graphene import Schema
 from graphene_django.constants import MUTATION_ERRORS_FLAG
@@ -300,51 +300,63 @@ class GraphQLView(View):
         except Exception as e:
             return ExecutionResult(errors=[e])
 
-        if request.method.lower() == "get":
-            operation_ast = get_operation_ast(document, operation_name)
-            if operation_ast and operation_ast.operation != OperationType.QUERY:
-                if show_graphiql:
-                    return None
+        operation_ast = get_operation_ast(document, operation_name)
 
-                raise HttpError(
-                    HttpResponseNotAllowed(
-                        ["POST"],
-                        "Can only perform a {} operation from a POST request.".format(
-                            operation_ast.operation.value
-                        ),
-                    )
+        op_error = None
+        if not operation_ast:
+            op_error = "Must provide a valid operation."
+        elif operation_ast.operation == OperationType.SUBSCRIPTION:
+            op_error = "The 'subscription' operation is not supported."
+
+        if op_error:
+            return ExecutionResult(errors=[GraphQLError(op_error)])
+
+        if (
+            request.method.lower() == "get"
+            and operation_ast.operation != OperationType.QUERY
+        ):
+            if show_graphiql:
+                return None
+
+            raise HttpError(
+                HttpResponseNotAllowed(
+                    ["POST"],
+                    "Can only perform a {} operation from a POST request.".format(
+                        operation_ast.operation.value
+                    ),
                 )
-        try:
-            extra_options = {}
-            if self.execution_context_class:
-                extra_options["execution_context_class"] = self.execution_context_class
+            )
 
-            options = {
-                "source": query,
+        execute_args = (self.schema.graphql_schema, document)
+
+        if validation_errors := validate(*execute_args):
+            return ExecutionResult(data=None, errors=validation_errors)
+
+        try:
+            execute_options = {
                 "root_value": self.get_root_value(request),
+                "context_value": self.get_context(request),
                 "variable_values": variables,
                 "operation_name": operation_name,
-                "context_value": self.get_context(request),
                 "middleware": self.get_middleware(request),
             }
-            options.update(extra_options)
+            if self.execution_context_class:
+                execute_options[
+                    "execution_context_class"
+                ] = self.execution_context_class
 
-            operation_ast = get_operation_ast(document, operation_name)
             if (
-                operation_ast
+                graphene_settings.ATOMIC_MUTATIONS is True
+                or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
                 and operation_ast.operation == OperationType.MUTATION
-                and (
-                    graphene_settings.ATOMIC_MUTATIONS is True
-                    or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
-                )
             ):
                 with transaction.atomic():
-                    result = self.schema.execute(**options)
+                    result = execute(*execute_args, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
                         transaction.set_rollback(True)
                 return result
 
-            return self.schema.execute(**options)
+            return execute(*execute_args, **execute_options)
         except Exception as e:
             return ExecutionResult(errors=[e])
 
