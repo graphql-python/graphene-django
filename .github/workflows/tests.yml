@@ -29,4 +29,3 @@ jobs:
       run: tox
       env:
         DJANGO: ${{ matrix.django }}
-        TOXENV: ${{ matrix.toxenv }}
