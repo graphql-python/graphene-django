@@ -186,7 +186,7 @@ class GraphQLView(View):
                     or 200
                 )
             else:
-                result, status_code = self.get_response(request, data, show_graphiql)
+                result, status_code = self.get_response(request, data)
 
             return HttpResponse(
                 status=status_code, content=result, content_type="application/json"
@@ -200,11 +200,11 @@ class GraphQLView(View):
             )
             return response
 
-    def get_response(self, request, data, show_graphiql=False):
+    def get_response(self, request, data):
         query, variables, operation_name, id = self.get_graphql_params(request, data)
 
         execution_result = self.execute_graphql_request(
-            request, data, query, variables, operation_name, show_graphiql
+            request, data, query, variables, operation_name
         )
 
         if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
@@ -231,7 +231,7 @@ class GraphQLView(View):
                 response["id"] = id
                 response["status"] = status_code
 
-            result = self.json_encode(request, response, pretty=show_graphiql)
+            result = self.json_encode(request, response)
         else:
             result = None
 
@@ -286,12 +286,8 @@ class GraphQLView(View):
 
         return {}
 
-    def execute_graphql_request(
-        self, request, data, query, variables, operation_name, show_graphiql=False
-    ):
+    def execute_graphql_request(self, request, data, query, variables, operation_name):
         if not query:
-            if show_graphiql:
-                return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
         try:
@@ -324,14 +320,12 @@ class GraphQLView(View):
             request.method.lower() == "get"
             and operation_ast.operation != OperationType.QUERY
         ):
-            if show_graphiql:
-                return None
-
             raise HttpError(
                 HttpResponseNotAllowed(
                     ["POST"],
-                    "Can only perform a {} operation from a POST request.".format(
-                        operation_ast.operation.value
+                    (
+                        f"Can only perform a {operation_ast.operation.value} operation "
+                        "from a POST request."
                     ),
                 )
             )
