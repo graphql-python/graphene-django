@@ -11,8 +11,6 @@ jobs:
         django: ["3.2", "4.1", "4.2"]
         python-version: ["3.8", "3.9", "3.10"]
         include:
-          - django: "3.2"
-            python-version: "3.7"
           - django: "4.1"
             python-version: "3.11"
           - django: "4.2"
@@ -31,4 +29,3 @@ jobs:
       run: tox
       env:
         DJANGO: ${{ matrix.django }}
-        TOXENV: ${{ matrix.toxenv }}
