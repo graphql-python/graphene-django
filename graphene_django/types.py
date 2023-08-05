@@ -1,9 +1,10 @@
 import warnings
 from collections import OrderedDict
-from typing import Type
+from typing import Type  # noqa: F401
+
+from django.db.models import Model  # noqa: F401
 
 import graphene
-from django.db.models import Model
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs

@@ -1,0 +1,20 @@
+select = [
+    "E",    # pycodestyle
+    "W",    # pycodestyle
+    "F",    # pyflake
+]
+
+ignore = [
+    "E501",  # line-too-long
+]
+
+exclude = [
+    "**/docs",
+]
+
+target-version = "py38"
+
+[per-file-ignores]
+# Ignore unused imports (F401) in these files
+"__init__.py" = ["F401"]
+"graphene_django/compat.py" = ["F401"]

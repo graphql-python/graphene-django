@@ -22,7 +22,7 @@ class TestDjangoListField:
             foo = String()
 
         with pytest.raises(AssertionError):
-            list_field = DjangoListField(TestType)
+            DjangoListField(TestType)
 
     def test_only_import_paths(self):
         list_field = DjangoListField("graphene_django.tests.schema.Human")

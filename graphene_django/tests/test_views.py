@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 from django.db import connection
 
-from graphene_django.settings import graphene_settings
 
 from .models import Pet
 
@@ -31,8 +30,12 @@ def response_json(response):
     return json.loads(response.content.decode())
 
 
-j = lambda **kwargs: json.dumps(kwargs)
-jl = lambda **kwargs: json.dumps([kwargs])
+def j(**kwargs):
+    return json.dumps(kwargs)
+
+
+def jl(**kwargs):
+    return json.dumps([kwargs])
 
 
 def test_graphiql_is_enabled(client):

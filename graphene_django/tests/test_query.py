@@ -517,7 +517,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
             ).distinct()
 
     f = Film.objects.create()
-    fd = FilmDetails.objects.create(location="Berlin", film=f)
+    FilmDetails.objects.create(location="Berlin", film=f)
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -640,7 +640,7 @@ def test_should_enforce_first_or_last(graphene_settings):
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -682,7 +682,7 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -724,7 +724,7 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -788,7 +788,7 @@ def test_should_query_promise_connectionfields():
 
 
 def test_should_query_connectionfields_with_last():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -825,11 +825,11 @@ def test_should_query_connectionfields_with_last():
 
 
 def test_should_query_connectionfields_with_manager():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="NotDoe", email="johndoe@example.com", a_choice=1
     )
 
@@ -1369,10 +1369,10 @@ def test_model_inheritance_support_local_relationships():
 
 
 def test_should_resolve_get_queryset_connectionfields():
-    reporter_1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = CNNReporter.objects.create(
+    CNNReporter.objects.create(
         first_name="Some",
         last_name="Guy",
         email="someguy@cnn.com",
@@ -1414,10 +1414,10 @@ def test_should_resolve_get_queryset_connectionfields():
 
 
 def test_connection_should_limit_after_to_list_length():
-    reporter_1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Some", last_name="Guy", email="someguy@cnn.com", a_choice=1
     )
 
@@ -1710,7 +1710,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     """
     schema = graphene.Schema(query=Query)
 
-    with django_assert_num_queries(3) as captured:
+    with django_assert_num_queries(3):
         result = schema.execute(query)
         assert not result.errors
 
@@ -2022,7 +2022,7 @@ def test_should_query_nullable_foreign_key():
     schema = graphene.Schema(query=Query)
 
     person = Person.objects.create(name="Jane")
-    pets = [
+    [
         Pet.objects.create(name="Stray dog", age=1),
         Pet.objects.create(name="Jane's dog", owner=person, age=1),
     ]

@@ -5,7 +5,6 @@ from graphene.relay import Node
 
 from graphql_relay import to_global_id
 
-from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 
 from .models import Article, Reporter, FilmDetails, Film

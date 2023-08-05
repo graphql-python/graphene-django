@@ -1,7 +1,6 @@
 from django import forms
 from pytest import raises
 
-import graphene
 from graphene import (
     String,
     Int,

@@ -1,18 +1,12 @@
 # https://github.com/graphql-python/graphene-django/issues/520
 
-import datetime
 
 from django import forms
 
 import graphene
 
-from graphene import Field, ResolveInfo
-from graphene.types.inputobjecttype import InputObjectType
-from pytest import raises
-from pytest import mark
 from rest_framework import serializers
 
-from ...types import DjangoObjectType
 from ...rest_framework.models import MyFakeModel
 from ...rest_framework.mutation import SerializerMutation
 from ...forms.mutation import DjangoFormMutation

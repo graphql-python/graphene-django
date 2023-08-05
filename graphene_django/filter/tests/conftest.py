@@ -3,13 +3,12 @@ import pytest
 
 from django.db import models
 from django.db.models.query import QuerySet
-from django_filters import filters
 from django_filters import FilterSet
 import graphene
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
-from graphene_django.filter import ArrayFilter, ListFilter
+from graphene_django.filter import ArrayFilter
 
 from ...compat import ArrayField
 

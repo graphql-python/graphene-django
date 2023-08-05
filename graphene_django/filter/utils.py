@@ -1,8 +1,7 @@
 import graphene
 from django import forms
-from django_filters.utils import get_model_field, get_field_parts
-from django_filters.filters import Filter, BaseCSVFilter
-from .filters import ArrayFilter, ListFilter, RangeFilter, TypedFilter
+from django_filters.utils import get_model_field
+from .filters import ListFilter, RangeFilter, TypedFilter
 from .filterset import custom_filterset_factory, setup_filterset
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
@@ -50,7 +49,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             ):
                 # Get the filter field for filters that are no explicitly declared.
                 if filter_type == "isnull":
-                    field = graphene.Boolean(required=required)
+                    graphene.Boolean(required=required)
                 else:
                     model_field = get_model_field(model, filter_field.field_name)
 

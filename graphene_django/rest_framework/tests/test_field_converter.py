@@ -2,7 +2,6 @@ import copy
 
 import graphene
 from django.db import models
-from graphene import InputObjectType
 from pytest import raises
 from rest_framework import serializers
 
