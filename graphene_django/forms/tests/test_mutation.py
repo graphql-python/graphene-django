@@ -279,7 +279,7 @@ def test_model_form_mutation_mutate_invalid_form():
     result = PetMutation.mutate_and_get_payload(None, None)
 
     # A pet was not created
-    Pet.objects.count() == 0
+    assert Pet.objects.count() == 0
 
     fields_w_error = [e.field for e in result.errors]
     assert len(result.errors) == 2
