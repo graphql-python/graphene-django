@@ -39,9 +39,9 @@ def get_accepted_content_types(request):
 
     raw_content_types = request.META.get("HTTP_ACCEPT", "*/*").split(",")
     qualified_content_types = map(qualify, raw_content_types)
-    return list(
+    return [
         x[0] for x in sorted(qualified_content_types, key=lambda x: x[1], reverse=True)
-    )
+    ]
 
 
 def instantiate_middleware(middlewares):
