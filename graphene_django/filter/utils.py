@@ -51,7 +51,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             ):
                 # Get the filter field for filters that are no explicitly declared.
                 if filter_type == "isnull":
-                    field_type = graphene.Boolean(required=required)
+                    field_type = graphene.Boolean
                 else:
                     model_field = get_model_field(model, filter_field.field_name)
 
