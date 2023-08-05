@@ -2,6 +2,7 @@ select = [
     "E",    # pycodestyle
     "W",    # pycodestyle
     "F",    # pyflake
+    "UP",   # pyupgrade
 ]
 
 ignore = [

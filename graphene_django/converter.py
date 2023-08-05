@@ -161,9 +161,7 @@ def get_django_field_description(field):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field {} ({})".format(
-            field, field.__class__
-        )
+        f"Don't know how to convert the Django field {field} ({field.__class__})"
     )
 
 

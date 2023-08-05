@@ -348,9 +348,9 @@ def test_fk_id_in_filter(query):
 
     schema = Schema(query=query)
 
-    query = """
+    query = f"""
     query {{
-        articles (reporter_In: [{}, {}]) {{
+        articles (reporter_In: [{john_doe.id}, {jean_bon.id}]) {{
             edges {{
                 node {{
                     headline
@@ -361,10 +361,7 @@ def test_fk_id_in_filter(query):
             }}
         }}
     }}
-    """.format(
-        john_doe.id,
-        jean_bon.id,
-    )
+    """
     result = schema.execute(query)
     assert not result.errors
     assert result.data["articles"]["edges"] == [
