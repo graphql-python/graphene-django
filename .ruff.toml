@@ -3,11 +3,15 @@ select = [
     "W",    # pycodestyle
     "F",    # pyflake
     "I",    # isort
+    "B",    # flake8-bugbear
     "UP",   # pyupgrade
 ]
 
 ignore = [
     "E501",  # line-too-long
+    "B017",  # pytest.raises(Exception) should be considered evil
+    "B028",  # warnings.warn called without an explicit stacklevel keyword argument
+    "B904",  # check for raise statements in exception handlers that lack a from clause
 ]
 
 exclude = [
