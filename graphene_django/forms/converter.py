@@ -27,8 +27,8 @@ def get_form_field_description(field):
 @singledispatch
 def convert_form_field(field):
     raise ImproperlyConfigured(
-        f"Don't know how to convert the Django form field {field} ({field.__class__}) "
-        "to Graphene type"
+        "Don't know how to convert the Django form field %s (%s) "
+        "to Graphene type" % (field, field.__class__)
     )
 
 
