@@ -16,7 +16,7 @@ repos:
     -   id: trailing-whitespace
         exclude: README.md
 -   repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
     -   id: black
 -   repo: https://github.com/astral-sh/ruff-pre-commit
