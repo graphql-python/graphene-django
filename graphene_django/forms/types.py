@@ -1,12 +1,11 @@
 import graphene
-
 from graphene import ID
 from graphene.types.inputobjecttype import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 
-from .mutation import fields_for_form
-from ..types import ErrorType  # noqa Import ErrorType for backwards compatability
 from ..converter import BlankValueField
+from ..types import ErrorType  # noqa Import ErrorType for backwards compatability
+from .mutation import fields_for_form
 
 
 class DjangoFormInputObjectType(InputObjectType):

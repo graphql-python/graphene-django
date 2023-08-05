@@ -1,14 +1,16 @@
 from datetime import datetime
 
 import pytest
+from django_filters import (
+    FilterSet,
+    rest_framework as filters,
+)
 
-from django_filters import FilterSet
-from django_filters import rest_framework as filters
 from graphene import ObjectType, Schema
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
-from graphene_django.tests.models import Pet, Person, Reporter, Article, Film
 from graphene_django.filter.tests.filters import ArticleFilter
+from graphene_django.tests.models import Article, Film, Person, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []

@@ -2,6 +2,7 @@ select = [
     "E",    # pycodestyle
     "W",    # pycodestyle
     "F",    # pyflake
+    "I",    # isort
     "UP",   # pyupgrade
 ]
 
@@ -19,3 +20,9 @@ target-version = "py38"
 # Ignore unused imports (F401) in these files
 "__init__.py" = ["F401"]
 "graphene_django/compat.py" = ["F401"]
+
+[isort]
+known-first-party = ["graphene", "graphene-django"]
+known-local-folder = ["cookbook"]
+force-wrap-aliases = true
+combine-as-imports = true

@@ -5,8 +5,8 @@ from rest_framework import serializers
 
 import graphene
 
-from ..registry import get_global_registry
 from ..converter import convert_choices_to_named_enum_with_descriptions
+from ..registry import get_global_registry
 from .types import DictType
 
 

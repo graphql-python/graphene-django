@@ -1,9 +1,9 @@
 import pytest
-
-from .. import GraphQLTestCase
-from ...tests.test_types import with_local_registry
-from ...settings import graphene_settings
 from django.test import Client
+
+from ...settings import graphene_settings
+from ...tests.test_types import with_local_registry
+from .. import GraphQLTestCase
 
 
 @with_local_registry

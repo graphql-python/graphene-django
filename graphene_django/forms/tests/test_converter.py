@@ -2,17 +2,17 @@ from django import forms
 from pytest import raises
 
 from graphene import (
-    String,
-    Int,
-    Boolean,
-    Decimal,
-    Float,
     ID,
     UUID,
+    Boolean,
+    Date,
+    DateTime,
+    Decimal,
+    Float,
+    Int,
     List,
     NonNull,
-    DateTime,
-    Date,
+    String,
     Time,
 )
 

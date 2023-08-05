@@ -1,9 +1,11 @@
-import graphene
 from django import forms
 from django_filters.utils import get_model_field
+
+import graphene
+
+from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 from .filters import ListFilter, RangeFilter, TypedFilter
 from .filterset import custom_filterset_factory, setup_filterset
-from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
 
 def get_field_type(registry, model, field_name):

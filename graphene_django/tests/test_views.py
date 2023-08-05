@@ -1,11 +1,8 @@
 import json
-
-import pytest
-
 from unittest.mock import patch
 
+import pytest
 from django.db import connection
-
 
 from .models import Pet
 

@@ -1,5 +1,5 @@
-import datetime
 import base64
+import datetime
 
 import pytest
 from django.db import models
@@ -16,6 +16,7 @@ from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
 from .models import (
+    APNewsReporter,
     Article,
     CNNReporter,
     Film,
@@ -23,7 +24,6 @@ from .models import (
     Person,
     Pet,
     Reporter,
-    APNewsReporter,
 )
 
 
@@ -126,9 +126,9 @@ def test_should_query_well():
 @pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
 def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
-        IntegerRangeField,
         ArrayField,
         HStoreField,
+        IntegerRangeField,
     )
 
     class Event(models.Model):
@@ -355,7 +355,7 @@ def test_should_query_connectionfields():
 
 
 def test_should_keep_annotations():
-    from django.db.models import Count, Avg
+    from django.db.models import Avg, Count
 
     class ReporterType(DjangoObjectType):
         class Meta:

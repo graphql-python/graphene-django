@@ -1,8 +1,8 @@
 import datetime
 import re
-from django.db.models import Count, Prefetch
 
 import pytest
+from django.db.models import Count, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
 

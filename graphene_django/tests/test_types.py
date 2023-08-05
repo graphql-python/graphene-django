@@ -1,9 +1,9 @@
 from collections import OrderedDict, defaultdict
 from textwrap import dedent
+from unittest.mock import patch
 
 import pytest
 from django.db import models
-from unittest.mock import patch
 
 from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
@@ -11,8 +11,10 @@ from graphene.relay import Node
 from .. import registry
 from ..filter import DjangoFilterConnectionField
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
-from .models import Article as ArticleModel
-from .models import Reporter as ReporterModel
+from .models import (
+    Article as ArticleModel,
+    Reporter as ReporterModel,
+)
 
 
 class Reporter(DjangoObjectType):

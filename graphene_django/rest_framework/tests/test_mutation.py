@@ -9,9 +9,9 @@ from graphene.types.inputobjecttype import InputObjectType
 from ...types import DjangoObjectType
 from ..models import (
     MyFakeModel,
+    MyFakeModelWithChoiceField,
     MyFakeModelWithDate,
     MyFakeModelWithPassword,
-    MyFakeModelWithChoiceField,
 )
 from ..mutation import SerializerMutation
 

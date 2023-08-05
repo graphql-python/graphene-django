@@ -1,14 +1,12 @@
 from functools import partial
 
 from django.db.models.query import QuerySet
-
 from graphql_relay import (
     connection_from_array_slice,
     cursor_to_offset,
     get_offset_with_default,
     offset_to_cursor,
 )
-
 from promise import Promise
 
 from graphene import Int, NonNull

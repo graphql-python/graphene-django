@@ -3,8 +3,8 @@ from functools import partial
 
 from django.core.exceptions import ValidationError
 
-from graphene.types.enum import EnumType
 from graphene.types.argument import to_arguments
+from graphene.types.enum import EnumType
 from graphene.utils.str_converters import to_snake_case
 
 from ..fields import DjangoConnectionField

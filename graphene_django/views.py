@@ -12,10 +12,9 @@ from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
-
-from graphene import Schema
 from graphql.execution.middleware import MiddlewareManager
 
+from graphene import Schema
 from graphene_django.constants import MUTATION_ERRORS_FLAG
 from graphene_django.utils.utils import set_rollback
 

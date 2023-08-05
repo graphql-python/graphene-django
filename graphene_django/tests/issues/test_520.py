@@ -2,14 +2,13 @@
 
 
 from django import forms
+from rest_framework import serializers
 
 import graphene
 
-from rest_framework import serializers
-
+from ...forms.mutation import DjangoFormMutation
 from ...rest_framework.models import MyFakeModel
 from ...rest_framework.mutation import SerializerMutation
-from ...forms.mutation import DjangoFormMutation
 
 
 class MyModelSerializer(serializers.ModelSerializer):

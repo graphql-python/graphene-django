@@ -5,15 +5,15 @@ from django.core.exceptions import ImproperlyConfigured
 
 from graphene import (
     ID,
+    UUID,
     Boolean,
+    Date,
+    DateTime,
     Decimal,
     Float,
     Int,
     List,
     String,
-    UUID,
-    Date,
-    DateTime,
     Time,
 )
 

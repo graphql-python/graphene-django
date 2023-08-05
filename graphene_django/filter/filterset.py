@@ -1,11 +1,13 @@
 import itertools
 
 from django.db import models
-from django_filters.filterset import BaseFilterSet, FilterSet
-from django_filters.filterset import FILTER_FOR_DBFIELD_DEFAULTS
+from django_filters.filterset import (
+    FILTER_FOR_DBFIELD_DEFAULTS,
+    BaseFilterSet,
+    FilterSet,
+)
 
 from .filters import GlobalIDFilter, GlobalIDMultipleChoiceFilter
-
 
 GRAPHENE_FILTER_SET_OVERRIDES = {
     models.AutoField: {"filter_class": GlobalIDFilter},

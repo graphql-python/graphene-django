@@ -1,5 +1,4 @@
 from django_filters import Filter, MultipleChoiceFilter
-
 from graphql_relay.node.node import from_global_id
 
 from ...forms import GlobalIDFormField, GlobalIDMultipleChoiceField

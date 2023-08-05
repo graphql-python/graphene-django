@@ -1,12 +1,12 @@
-import os
+import functools
 import importlib
 import json
-import functools
+import os
 
 from django.core.management.base import BaseCommand, CommandError
 from django.utils import autoreload
-
 from graphql import print_schema
+
 from graphene_django.settings import graphene_settings
 
 

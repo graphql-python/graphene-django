@@ -19,8 +19,8 @@ if DJANGO_FILTER_INSTALLED:
     from django_filters import FilterSet, NumberFilter, OrderingFilter
 
     from graphene_django.filter import (
-        GlobalIDFilter,
         DjangoFilterConnectionField,
+        GlobalIDFilter,
         GlobalIDMultipleChoiceFilter,
     )
     from graphene_django.filter.tests.filters import (
