@@ -23,7 +23,7 @@ def test_graphql_test_case_deprecated_client_getter():
     tc.setUpClass()
 
     with pytest.warns(PendingDeprecationWarning):
-        tc._client
+        tc._client  # noqa: B018
 
 
 @with_local_registry
