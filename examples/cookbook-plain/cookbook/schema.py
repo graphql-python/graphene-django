@@ -1,8 +1,8 @@
+import graphene
+from graphene_django.debug import DjangoDebug
+
 import cookbook.ingredients.schema
 import cookbook.recipes.schema
-import graphene
-
-from graphene_django.debug import DjangoDebug
 
 
 class Query(

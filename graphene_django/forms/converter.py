@@ -5,15 +5,15 @@ from django.core.exceptions import ImproperlyConfigured
 
 from graphene import (
     ID,
+    UUID,
     Boolean,
+    Date,
+    DateTime,
     Decimal,
     Float,
     Int,
     List,
     String,
-    UUID,
-    Date,
-    DateTime,
     Time,
 )
 
@@ -27,8 +27,8 @@ def get_form_field_description(field):
 @singledispatch
 def convert_form_field(field):
     raise ImproperlyConfigured(
-        "Don't know how to convert the Django form field %s (%s) "
-        "to Graphene type" % (field, field.__class__)
+        "Don't know how to convert the Django form field {} ({}) "
+        "to Graphene type".format(field, field.__class__)
     )
 
 

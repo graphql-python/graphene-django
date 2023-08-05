@@ -1,9 +1,9 @@
 import pytest
-
-from .. import GraphQLTestCase
-from ...tests.test_types import with_local_registry
-from ...settings import graphene_settings
 from django.test import Client
+
+from ...settings import graphene_settings
+from ...tests.test_types import with_local_registry
+from .. import GraphQLTestCase
 
 
 @with_local_registry
@@ -23,7 +23,7 @@ def test_graphql_test_case_deprecated_client_getter():
     tc.setUpClass()
 
     with pytest.warns(PendingDeprecationWarning):
-        tc._client
+        tc._client  # noqa: B018
 
 
 @with_local_registry

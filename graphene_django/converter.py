@@ -6,6 +6,7 @@ from django.db import models
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
 from django.utils.module_loading import import_string
+from graphql import GraphQLError
 
 from graphene import (
     ID,
@@ -13,6 +14,7 @@ from graphene import (
     Boolean,
     Date,
     DateTime,
+    Decimal,
     Dynamic,
     Enum,
     Field,
@@ -22,13 +24,11 @@ from graphene import (
     NonNull,
     String,
     Time,
-    Decimal,
 )
 from graphene.types.json import JSONString
-from graphene.types.scalars import BigInt
 from graphene.types.resolver import get_default_resolver
+from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
-from graphql import GraphQLError
 
 try:
     from graphql import assert_name
@@ -38,7 +38,7 @@ except ImportError:
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, RangeField
-from .fields import DjangoListField, DjangoConnectionField
+from .fields import DjangoConnectionField, DjangoListField
 from .settings import graphene_settings
 from .utils.str_converters import to_const
 
@@ -161,9 +161,7 @@ def get_django_field_description(field):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field {} ({})".format(
-            field, field.__class__
-        )
+        f"Don't know how to convert the Django field {field} ({field.__class__})"
     )
 
 
@@ -261,6 +259,7 @@ def convert_time_to_string(field, registry=None):
 @convert_django_field.register(models.OneToOneRel)
 def convert_onetoone_field_to_djangomodel(field, registry=None):
     from graphene.utils.str_converters import to_snake_case
+
     from .types import DjangoObjectType
 
     model = field.related_model
@@ -364,6 +363,7 @@ def convert_field_to_list_or_connection(field, registry=None):
 @convert_django_field.register(models.ForeignKey)
 def convert_field_to_djangomodel(field, registry=None):
     from graphene.utils.str_converters import to_snake_case
+
     from .types import DjangoObjectType
 
     model = field.related_model

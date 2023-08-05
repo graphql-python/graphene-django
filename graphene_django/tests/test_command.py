@@ -1,8 +1,8 @@
+from io import StringIO
 from textwrap import dedent
+from unittest.mock import mock_open, patch
 
 from django.core import management
-from io import StringIO
-from unittest.mock import mock_open, patch
 
 from graphene import ObjectType, Schema, String
 

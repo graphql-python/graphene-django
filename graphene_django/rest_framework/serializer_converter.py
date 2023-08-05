@@ -5,16 +5,16 @@ from rest_framework import serializers
 
 import graphene
 
-from ..registry import get_global_registry
 from ..converter import convert_choices_to_named_enum_with_descriptions
+from ..registry import get_global_registry
 from .types import DictType
 
 
 @singledispatch
 def get_graphene_type_from_serializer_field(field):
     raise ImproperlyConfigured(
-        "Don't know how to convert the serializer field %s (%s) "
-        "to Graphene type" % (field, field.__class__)
+        "Don't know how to convert the serializer field {} ({}) "
+        "to Graphene type".format(field, field.__class__)
     )
 
 

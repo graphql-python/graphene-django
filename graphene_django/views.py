@@ -12,10 +12,9 @@ from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse
 from graphql.error import GraphQLError
 from graphql.execution import ExecutionResult
-
-from graphene import Schema
 from graphql.execution.middleware import MiddlewareManager
 
+from graphene import Schema
 from graphene_django.constants import MUTATION_ERRORS_FLAG
 from graphene_django.utils.utils import set_rollback
 
@@ -40,9 +39,9 @@ def get_accepted_content_types(request):
 
     raw_content_types = request.META.get("HTTP_ACCEPT", "*/*").split(",")
     qualified_content_types = map(qualify, raw_content_types)
-    return list(
+    return [
         x[0] for x in sorted(qualified_content_types, key=lambda x: x[1], reverse=True)
-    )
+    ]
 
 
 def instantiate_middleware(middlewares):
