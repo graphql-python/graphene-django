@@ -9,9 +9,9 @@ from graphene.types.inputobjecttype import InputObjectType
 from ...types import DjangoObjectType
 from ..models import (
     MyFakeModel,
+    MyFakeModelWithChoiceField,
     MyFakeModelWithDate,
     MyFakeModelWithPassword,
-    MyFakeModelWithChoiceField,
 )
 from ..mutation import SerializerMutation
 
@@ -250,7 +250,7 @@ def test_model_invalid_update_mutate_and_get_payload_success():
             model_operations = ["update"]
 
     with raises(Exception) as exc:
-        result = InvalidModelMutation.mutate_and_get_payload(
+        InvalidModelMutation.mutate_and_get_payload(
             None, mock_info(), **{"cool_name": "Narf"}
         )
 

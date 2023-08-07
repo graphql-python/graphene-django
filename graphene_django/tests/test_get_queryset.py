@@ -1,14 +1,11 @@
 import pytest
+from graphql_relay import to_global_id
 
 import graphene
 from graphene.relay import Node
 
-from graphql_relay import to_global_id
-
-from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
-
-from .models import Article, Reporter, FilmDetails, Film
+from .models import Article, Film, FilmDetails, Reporter
 
 
 class TestShouldCallGetQuerySetOnForeignKey:

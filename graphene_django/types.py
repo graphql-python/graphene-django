@@ -1,9 +1,10 @@
 import warnings
 from collections import OrderedDict
-from typing import Type
+from typing import Type  # noqa: F401
+
+from django.db.models import Model  # noqa: F401
 
 import graphene
-from django.db.models import Model
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -149,7 +150,7 @@ class DjangoObjectType(ObjectType):
         interfaces=(),
         convert_choices_to_enum=True,
         _meta=None,
-        **options
+        **options,
     ):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
@@ -239,9 +240,9 @@ class DjangoObjectType(ObjectType):
             )
 
         if connection is not None:
-            assert issubclass(connection, Connection), (
-                "The connection must be a Connection. Received {}"
-            ).format(connection.__name__)
+            assert issubclass(
+                connection, Connection
+            ), f"The connection must be a Connection. Received {connection.__name__}"
 
         if not _meta:
             _meta = DjangoObjectTypeOptions(cls)
@@ -272,7 +273,7 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(root.__class__):
-            raise Exception(('Received incompatible instance "{}".').format(root))
+            raise Exception(f'Received incompatible instance "{root}".')
 
         if cls._meta.model._meta.proxy:
             model = root._meta.model

@@ -1,12 +1,12 @@
 from .testing import GraphQLTestCase
 from .utils import (
     DJANGO_FILTER_INSTALLED,
+    bypass_get_queryset,
     camelize,
     get_model_fields,
     get_reverse_fields,
     is_valid_django_model,
     maybe_queryset,
-    bypass_get_queryset,
 )
 
 __all__ = [

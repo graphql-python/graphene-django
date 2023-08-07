@@ -1,12 +1,8 @@
 import json
-
-import pytest
-
 from unittest.mock import patch
 
+import pytest
 from django.db import connection
-
-from graphene_django.settings import graphene_settings
 
 from .models import Pet
 
@@ -31,8 +27,12 @@ def response_json(response):
     return json.loads(response.content.decode())
 
 
-j = lambda **kwargs: json.dumps(kwargs)
-jl = lambda **kwargs: json.dumps([kwargs])
+def j(**kwargs):
+    return json.dumps(kwargs)
+
+
+def jl(**kwargs):
+    return json.dumps([kwargs])
 
 
 def test_graphiql_is_enabled(client):
@@ -229,7 +229,7 @@ def test_allows_sending_a_mutation_via_post(client):
 def test_allows_post_with_url_encoding(client):
     response = client.post(
         url_string(),
-        urlencode(dict(query="{test}")),
+        urlencode({"query": "{test}"}),
         "application/x-www-form-urlencoded",
     )
 
@@ -303,10 +303,10 @@ def test_supports_post_url_encoded_query_with_string_variables(client):
     response = client.post(
         url_string(),
         urlencode(
-            dict(
-                query="query helloWho($who: String){ test(who: $who) }",
-                variables=json.dumps({"who": "Dolly"}),
-            )
+            {
+                "query": "query helloWho($who: String){ test(who: $who) }",
+                "variables": json.dumps({"who": "Dolly"}),
+            }
         ),
         "application/x-www-form-urlencoded",
     )
@@ -329,7 +329,7 @@ def test_supports_post_json_quey_with_get_variable_values(client):
 def test_post_url_encoded_query_with_get_variable_values(client):
     response = client.post(
         url_string(variables=json.dumps({"who": "Dolly"})),
-        urlencode(dict(query="query helloWho($who: String){ test(who: $who) }")),
+        urlencode({"query": "query helloWho($who: String){ test(who: $who) }"}),
         "application/x-www-form-urlencoded",
     )
 
@@ -511,7 +511,7 @@ def test_handles_django_request_error(client, monkeypatch):
 
     monkeypatch.setattr("django.http.request.HttpRequest.read", mocked_read)
 
-    valid_json = json.dumps(dict(foo="bar"))
+    valid_json = json.dumps({"foo": "bar"})
     response = client.post(url_string(), valid_json, "application/json")
 
     assert response.status_code == 400

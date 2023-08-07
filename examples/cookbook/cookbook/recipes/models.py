@@ -6,7 +6,9 @@ from cookbook.ingredients.models import Ingredient
 class Recipe(models.Model):
     title = models.CharField(max_length=100)
     instructions = models.TextField()
-    __unicode__ = lambda self: self.title
+
+    def __unicode__(self):
+        return self.title
 
 
 class RecipeIngredient(models.Model):

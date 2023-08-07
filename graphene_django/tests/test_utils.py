@@ -1,12 +1,12 @@
 import json
+from unittest.mock import patch
 
 import pytest
 from django.utils.translation import gettext_lazy
-from unittest.mock import patch
 
-from ..utils import camelize, get_model_fields, get_reverse_fields, GraphQLTestCase
-from .models import Film, Reporter, CNNReporter, APNewsReporter
+from ..utils import GraphQLTestCase, camelize, get_model_fields, get_reverse_fields
 from ..utils.testing import graphql_query
+from .models import APNewsReporter, CNNReporter, Film, Reporter
 
 
 def test_get_model_fields_no_duplication():

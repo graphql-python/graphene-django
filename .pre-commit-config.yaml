@@ -15,16 +15,12 @@ repos:
         - --autofix
     -   id: trailing-whitespace
         exclude: README.md
--   repo: https://github.com/asottile/pyupgrade
-    rev: v3.3.2
-    hooks:
-    -   id: pyupgrade
-        args: [--py38-plus]
 -   repo: https://github.com/psf/black
-    rev: 23.3.0
+    rev: 23.7.0
     hooks:
     -   id: black
--   repo: https://github.com/PyCQA/flake8
-    rev: 6.0.0
+-   repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.0.282
     hooks:
-    -   id: flake8
+    -   id: ruff
+        args: [--fix, --exit-non-zero-on-fix, --show-fixes]

@@ -3,8 +3,8 @@ from functools import partial
 
 from django.core.exceptions import ValidationError
 
-from graphene.types.enum import EnumType
 from graphene.types.argument import to_arguments
+from graphene.types.enum import EnumType
 from graphene.utils.str_converters import to_snake_case
 
 from ..fields import DjangoConnectionField
@@ -58,7 +58,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
     def filterset_class(self):
         if not self._filterset_class:
             fields = self._fields or self.node_type._meta.filter_fields
-            meta = dict(model=self.model, fields=fields)
+            meta = {"model": self.model, "fields": fields}
             if self._extra_filter_meta:
                 meta.update(self._extra_filter_meta)
 

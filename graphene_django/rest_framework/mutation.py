@@ -1,6 +1,5 @@
-from enum import Enum
-
 from collections import OrderedDict
+from enum import Enum
 
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers

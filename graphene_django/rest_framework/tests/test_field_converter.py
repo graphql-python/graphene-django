@@ -1,10 +1,10 @@
 import copy
 
-import graphene
 from django.db import models
-from graphene import InputObjectType
 from pytest import raises
 from rest_framework import serializers
+
+import graphene
 
 from ..serializer_converter import convert_serializer_field
 from ..types import DictType

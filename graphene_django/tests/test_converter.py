@@ -31,10 +31,10 @@ from .models import Article, Film, FilmDetails, Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
-    _kwargs = kwargs.copy()
+    _kwargs = {**kwargs, "help_text": "Custom Help Text"}
     if "null" not in kwargs:
         _kwargs["null"] = True
-    field = django_field(help_text="Custom Help Text", *args, **_kwargs)
+    field = django_field(*args, **_kwargs)
     graphene_type = convert_django_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()

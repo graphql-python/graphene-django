@@ -1,10 +1,8 @@
 import pytest
-
 from django_filters import FilterSet
 
 import graphene
 from graphene.relay import Node
-
 from graphene_django import DjangoObjectType
 from graphene_django.tests.models import Article, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
@@ -14,8 +12,8 @@ pytestmark = []
 if DJANGO_FILTER_INSTALLED:
     from graphene_django.filter import (
         DjangoFilterConnectionField,
-        TypedFilter,
         ListFilter,
+        TypedFilter,
     )
 else:
     pytestmark.append(

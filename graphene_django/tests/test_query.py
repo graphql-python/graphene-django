@@ -1,5 +1,5 @@
-import datetime
 import base64
+import datetime
 
 import pytest
 from django.db import models
@@ -16,6 +16,7 @@ from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
 from .models import (
+    APNewsReporter,
     Article,
     CNNReporter,
     Film,
@@ -23,7 +24,6 @@ from .models import (
     Person,
     Pet,
     Reporter,
-    APNewsReporter,
 )
 
 
@@ -126,9 +126,9 @@ def test_should_query_well():
 @pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
 def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
-        IntegerRangeField,
         ArrayField,
         HStoreField,
+        IntegerRangeField,
     )
 
     class Event(models.Model):
@@ -355,7 +355,7 @@ def test_should_query_connectionfields():
 
 
 def test_should_keep_annotations():
-    from django.db.models import Count, Avg
+    from django.db.models import Avg, Count
 
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -517,7 +517,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
             ).distinct()
 
     f = Film.objects.create()
-    fd = FilmDetails.objects.create(location="Berlin", film=f)
+    FilmDetails.objects.create(location="Berlin", film=f)
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -640,7 +640,7 @@ def test_should_enforce_first_or_last(graphene_settings):
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -682,7 +682,7 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -724,7 +724,7 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -788,7 +788,7 @@ def test_should_query_promise_connectionfields():
 
 
 def test_should_query_connectionfields_with_last():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -825,11 +825,11 @@ def test_should_query_connectionfields_with_last():
 
 
 def test_should_query_connectionfields_with_manager():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="NotDoe", email="johndoe@example.com", a_choice=1
     )
 
@@ -1369,10 +1369,10 @@ def test_model_inheritance_support_local_relationships():
 
 
 def test_should_resolve_get_queryset_connectionfields():
-    reporter_1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = CNNReporter.objects.create(
+    CNNReporter.objects.create(
         first_name="Some",
         last_name="Guy",
         email="someguy@cnn.com",
@@ -1414,10 +1414,10 @@ def test_should_resolve_get_queryset_connectionfields():
 
 
 def test_connection_should_limit_after_to_list_length():
-    reporter_1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Some", last_name="Guy", email="someguy@cnn.com", a_choice=1
     )
 
@@ -1444,19 +1444,19 @@ def test_connection_should_limit_after_to_list_length():
     """
 
     after = base64.b64encode(b"arrayconnection:10").decode()
-    result = schema.execute(query, variable_values=dict(after=after))
+    result = schema.execute(query, variable_values={"after": after})
     expected = {"allReporters": {"edges": []}}
     assert not result.errors
     assert result.data == expected
 
 
 REPORTERS = [
-    dict(
-        first_name=f"First {i}",
-        last_name=f"Last {i}",
-        email=f"johndoe+{i}@example.com",
-        a_choice=1,
-    )
+    {
+        "first_name": f"First {i}",
+        "last_name": f"Last {i}",
+        "email": f"johndoe+{i}@example.com",
+        "a_choice": 1,
+    }
     for i in range(6)
 ]
 
@@ -1531,7 +1531,7 @@ def test_should_have_next_page(graphene_settings):
     assert result.data["allReporters"]["pageInfo"]["hasNextPage"]
 
     last_result = result.data["allReporters"]["pageInfo"]["endCursor"]
-    result2 = schema.execute(query, variable_values=dict(first=4, after=last_result))
+    result2 = schema.execute(query, variable_values={"first": 4, "after": last_result})
     assert not result2.errors
     assert len(result2.data["allReporters"]["edges"]) == 2
     assert not result2.data["allReporters"]["pageInfo"]["hasNextPage"]
@@ -1622,7 +1622,7 @@ class TestBackwardPagination:
         after = base64.b64encode(b"arrayconnection:0").decode()
         result = schema.execute(
             query_first_last_and_after,
-            variable_values=dict(after=after),
+            variable_values={"after": after},
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
@@ -1654,7 +1654,7 @@ class TestBackwardPagination:
         before = base64.b64encode(b"arrayconnection:5").decode()
         result = schema.execute(
             query_first_last_and_after,
-            variable_values=dict(before=before),
+            variable_values={"before": before},
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 1
@@ -1710,7 +1710,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     """
     schema = graphene.Schema(query=Query)
 
-    with django_assert_num_queries(3) as captured:
+    with django_assert_num_queries(3):
         result = schema.execute(query)
         assert not result.errors
 
@@ -1877,7 +1877,7 @@ def test_connection_should_forbid_offset_filtering_with_before():
         }
     """
     before = base64.b64encode(b"arrayconnection:2").decode()
-    result = schema.execute(query, variable_values=dict(before=before))
+    result = schema.execute(query, variable_values={"before": before})
     expected_error = "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `allReporters` connection."
     assert len(result.errors) == 1
     assert result.errors[0].message == expected_error
@@ -1913,7 +1913,7 @@ def test_connection_should_allow_offset_filtering_with_after():
     """
 
     after = base64.b64encode(b"arrayconnection:0").decode()
-    result = schema.execute(query, variable_values=dict(after=after))
+    result = schema.execute(query, variable_values={"after": after})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1949,7 +1949,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     """
 
-    result = schema.execute(query, variable_values=dict(last=2))
+    result = schema.execute(query, variable_values={"last": 2})
     assert not result.errors
     expected = {"allReporters": {"edges": []}}
     assert result.data == expected
@@ -1959,7 +1959,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     Reporter.objects.create(first_name="Jane", last_name="Roe")
     Reporter.objects.create(first_name="Some", last_name="Lady")
 
-    result = schema.execute(query, variable_values=dict(last=2))
+    result = schema.execute(query, variable_values={"last": 2})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1971,7 +1971,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     }
     assert result.data == expected
 
-    result = schema.execute(query, variable_values=dict(last=4))
+    result = schema.execute(query, variable_values={"last": 4})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1985,7 +1985,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     }
     assert result.data == expected
 
-    result = schema.execute(query, variable_values=dict(last=20))
+    result = schema.execute(query, variable_values={"last": 20})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -2022,7 +2022,7 @@ def test_should_query_nullable_foreign_key():
     schema = graphene.Schema(query=Query)
 
     person = Person.objects.create(name="Jane")
-    pets = [
+    [
         Pet.objects.create(name="Stray dog", age=1),
         Pet.objects.create(name="Jane's dog", owner=person, age=1),
     ]
