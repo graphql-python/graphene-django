@@ -1,8 +1,8 @@
-from .fields import DjangoConnectionField, DjangoListField
+xfrom .fields import DjangoConnectionField, DjangoListField
 from .types import DjangoObjectType
 from .utils import bypass_get_queryset
 
-__version__ = "3.1.3"
+__version__ = "3.1.4"
 
 __all__ = [
     "__version__",
