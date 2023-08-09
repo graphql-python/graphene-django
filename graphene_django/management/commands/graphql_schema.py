@@ -83,7 +83,7 @@ class Command(CommandArguments):
     def handle(self, *args, **options):
         options_schema = options.get("schema")
 
-        if options_schema and type(options_schema) is str:
+        if options_schema and isinstance(options_schema, str):
             module_str, schema_name = options_schema.rsplit(".", 1)
             mod = importlib.import_module(module_str)
             schema = getattr(mod, schema_name)
