@@ -10,7 +10,7 @@ dev-setup:
 
 .PHONY: tests ## Run unit tests
 tests:
-	py.test graphene_django --cov=graphene_django -vv
+	PYTHONPATH=. py.test graphene_django --cov=graphene_django -vv
 
 .PHONY: format ## Format code
 format:

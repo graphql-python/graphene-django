@@ -19,7 +19,11 @@ class Pet(models.Model):
 class FilmDetails(models.Model):
     location = models.CharField(max_length=30)
     film = models.OneToOneField(
-        "Film", on_delete=models.CASCADE, related_name="details"
+        "Film",
+        on_delete=models.CASCADE,
+        related_name="details",
+        null=True,
+        blank=True,
     )
 
 

@@ -2062,3 +2062,74 @@ def test_should_query_nullable_foreign_key():
     assert result.data["person"] == {
         "pets": [{"name": "Jane's dog"}],
     }
+
+
+def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
+    class FilmType(DjangoObjectType):
+        class Meta:
+            model = Film
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset
+
+    class FilmDetailsType(DjangoObjectType):
+        class Meta:
+            model = FilmDetails
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset
+
+    class Query(graphene.ObjectType):
+        film = graphene.Field(FilmType, genre=graphene.String(required=True))
+        film_details = graphene.Field(
+            FilmDetailsType, location=graphene.String(required=True)
+        )
+
+        def resolve_film(self, info, genre):
+            return Film.objects.filter(genre=genre).first()
+
+        def resolve_film_details(self, info, location):
+            return FilmDetails.objects.filter(location=location).first()
+
+    schema = graphene.Schema(query=Query)
+
+    Film.objects.create(genre="do")
+    FilmDetails.objects.create(location="London")
+
+    query_film = """
+        query getFilm($genre: String!) {
+            film(genre: $genre) {
+                genre
+                details {
+                    location
+                }
+            }
+        }
+    """
+
+    query_film_details = """
+        query getFilmDetails($location: String!) {
+            filmDetails(location: $location) {
+                location
+                film {
+                    genre
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query_film, variables={"genre": "do"})
+    assert not result.errors
+    assert result.data["film"] == {
+        "genre": "DO",
+        "details": None,
+    }
+
+    result = schema.execute(query_film_details, variables={"location": "London"})
+    assert not result.errors
+    assert result.data["filmDetails"] == {
+        "location": "London",
+        "film": None,
+    }
