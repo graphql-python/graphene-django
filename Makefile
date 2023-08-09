@@ -14,7 +14,7 @@ tests:
 
 .PHONY: format ## Format code
 format:
-	tox -e pre-commit
+	black graphene_django examples setup.py
 
 .PHONY: lint ## Lint code
 lint:
