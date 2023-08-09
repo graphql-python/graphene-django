@@ -1,4 +1,4 @@
-xfrom .fields import DjangoConnectionField, DjangoListField
+from .fields import DjangoConnectionField, DjangoListField
 from .types import DjangoObjectType
 from .utils import bypass_get_queryset
 
