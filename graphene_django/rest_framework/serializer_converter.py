@@ -13,8 +13,8 @@ from .types import DictType
 @singledispatch
 def get_graphene_type_from_serializer_field(field):
     raise ImproperlyConfigured(
-        "Don't know how to convert the serializer field {} ({}) "
-        "to Graphene type".format(field, field.__class__)
+        f"Don't know how to convert the serializer field {field} ({field.__class__}) "
+        "to Graphene type"
     )
 
 

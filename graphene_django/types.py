@@ -160,9 +160,9 @@ class DjangoObjectType(ObjectType):
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            "The attribute registry in {} needs to be an instance of "
-            'Registry, received "{}".'
-        ).format(cls.__name__, registry)
+            f"The attribute registry in {cls.__name__} needs to be an instance of "
+            f'Registry, received "{registry}".'
+        )
 
         if filter_fields and filterset_class:
             raise Exception("Can't set both filter_fields and filterset_class")
@@ -175,7 +175,7 @@ class DjangoObjectType(ObjectType):
 
         assert not (fields and exclude), (
             "Cannot set both 'fields' and 'exclude' options on "
-            "DjangoObjectType {class_name}.".format(class_name=cls.__name__)
+            f"DjangoObjectType {cls.__name__}."
         )
 
         # Alias only_fields -> fields
@@ -214,8 +214,8 @@ class DjangoObjectType(ObjectType):
             warnings.warn(
                 "Creating a DjangoObjectType without either the `fields` "
                 "or the `exclude` option is deprecated. Add an explicit `fields "
-                "= '__all__'` option on DjangoObjectType {class_name} to use all "
-                "fields".format(class_name=cls.__name__),
+                f"= '__all__'` option on DjangoObjectType {cls.__name__} to use all "
+                "fields",
                 DeprecationWarning,
                 stacklevel=2,
             )
