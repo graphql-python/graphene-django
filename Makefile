@@ -10,15 +10,15 @@ dev-setup:
 
 .PHONY: tests ## Run unit tests
 tests:
-	PYTHONPATH=. py.test graphene_django --cov=graphene_django -vv
+	PYTHONPATH=. pytest graphene_django --cov=graphene_django -vv
 
 .PHONY: format ## Format code
 format:
-	black graphene_django examples setup.py
+	tox -e pre-commit
 
 .PHONY: lint ## Lint code
 lint:
-	flake8 graphene_django examples
+	ruff graphene_django examples
 
 .PHONY: docs ## Generate docs
 docs: dev-setup
