@@ -1,11 +1,13 @@
 import datetime
 
+import pytest
 from pytest import raises
 from rest_framework import serializers
 
 from graphene import Field, ResolveInfo
 from graphene.types.inputobjecttype import InputObjectType
 
+from ...compat import Choices, MissingType
 from ...types import DjangoObjectType
 from ..models import (
     MyFakeModel,
@@ -273,6 +275,7 @@ def test_perform_mutate_success():
     assert result.days_since_last_edit == 4
 
 
+@pytest.mark.skipif(Choices is MissingType, reason="Choices should exist")
 def test_perform_mutate_success_with_enum_choice_field():
     class ListViewChoiceFieldSerializer(serializers.ModelSerializer):
         choice_type = serializers.ChoiceField(

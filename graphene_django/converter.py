@@ -37,7 +37,7 @@ except ImportError:
     from graphql import assert_valid_name as assert_name
 from graphql.pyutils import register_description
 
-from .compat import ArrayField, HStoreField, RangeField, JSONField
+from .compat import ArrayField, HStoreField, JSONField, RangeField
 from .fields import DjangoConnectionField, DjangoListField
 from .settings import graphene_settings
 from .utils.str_converters import to_const

@@ -1,5 +1,7 @@
 from django.db import models
 
+from ..compat import Choices, MissingType
+
 
 class MyFakeModel(models.Model):
     cool_name = models.CharField(max_length=50)
@@ -16,12 +18,19 @@ class MyFakeModelWithDate(models.Model):
     last_edited = models.DateField()
 
 
-class MyFakeModelWithChoiceField(models.Model):
-    class ChoiceType(models.Choices):
-        ASDF = "asdf"
-        HI = "hi"
+if Choices is not MissingType:
 
-    choice_type = models.CharField(
-        max_length=4,
-        default=ChoiceType.HI.name,
-    )
+    class MyFakeModelWithChoiceField(models.Model):
+        class ChoiceType(Choices):
+            ASDF = "asdf"
+            HI = "hi"
+
+        choice_type = models.CharField(
+            max_length=4,
+            default=ChoiceType.HI.name,
+        )
+
+else:
+
+    class MyFakeModelWithChoiceField:
+        ...

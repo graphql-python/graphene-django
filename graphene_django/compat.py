@@ -12,12 +12,13 @@ try:
         IntegerRangeField,
         RangeField,
     )
+    from django.db.models import Choices
 
     try:
         from django.db.models import JSONField
     except ImportError:
         from django.contrib.postgres.fields import JSONField
 except ImportError:
-    IntegerRangeField, ArrayField, HStoreField, RangeField, JSONField = (
+    IntegerRangeField, ArrayField, HStoreField, RangeField, JSONField, Choices = (
         MissingType,
-    ) * 5
+    ) * 6

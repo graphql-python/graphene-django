@@ -11,7 +11,7 @@ from pytest import raises
 import graphene
 from graphene.relay import Node
 
-from ..compat import IntegerRangeField, MissingType, JSONField
+from ..compat import IntegerRangeField, JSONField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
