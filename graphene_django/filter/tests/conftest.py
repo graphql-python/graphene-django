@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from functools import reduce
 
 import pytest
 from django.db import models
@@ -25,14 +25,14 @@ else:
     )
 
 
-STORE = {"events": []}
-
-
 class Event(models.Model):
     name = models.CharField(max_length=50)
     tags = ArrayField(models.CharField(max_length=50))
     tag_ids = ArrayField(models.IntegerField())
     random_field = ArrayField(models.BooleanField())
+
+    def __repr__(self):
+        return f"Event [{self.name}]"
 
 
 @pytest.fixture
@@ -48,6 +48,14 @@ def EventFilterSet():
         tags__contains = ArrayFilter(field_name="tags", lookup_expr="contains")
         tags__overlap = ArrayFilter(field_name="tags", lookup_expr="overlap")
         tags = ArrayFilter(field_name="tags", lookup_expr="exact")
+        tags__len = ArrayFilter(
+            field_name="tags", lookup_expr="len", input_type=graphene.Int
+        )
+        tags__len__in = ArrayFilter(
+            field_name="tags",
+            method="tags__len__in_filter",
+            input_type=graphene.List(graphene.Int),
+        )
 
         # Those are actually not usable and only to check type declarations
         tags_ids__contains = ArrayFilter(field_name="tag_ids", lookup_expr="contains")
@@ -60,6 +68,14 @@ def EventFilterSet():
             field_name="random_field", lookup_expr="overlap"
         )
         random_field = ArrayFilter(field_name="random_field", lookup_expr="exact")
+
+        def tags__len__in_filter(self, queryset, _name, value):
+            if not value:
+                return queryset.none()
+            return reduce(
+                lambda q1, q2: q1.union(q2),
+                [queryset.filter(tags__len=v) for v in value],
+            ).distinct()
 
     return EventFilterSet
 
@@ -83,68 +99,94 @@ def Query(EventType):
     we are running unit tests in sqlite which does not have ArrayFields.
     """
 
+    events = [
+        Event(name="Live Show", tags=["concert", "music", "rock"]),
+        Event(name="Musical", tags=["movie", "music"]),
+        Event(name="Ballet", tags=["concert", "dance"]),
+        Event(name="Speech", tags=[]),
+    ]
+
     class Query(graphene.ObjectType):
         events = DjangoFilterConnectionField(EventType)
 
         def resolve_events(self, info, **kwargs):
-            events = [
-                Event(name="Live Show", tags=["concert", "music", "rock"]),
-                Event(name="Musical", tags=["movie", "music"]),
-                Event(name="Ballet", tags=["concert", "dance"]),
-                Event(name="Speech", tags=[]),
-            ]
+            class FakeQuerySet(QuerySet):
+                def __init__(self, model=None):
+                    self.model = Event
+                    self.__store = list(events)
 
-            STORE["events"] = events
+                def all(self):
+                    return self
 
-            m_queryset = MagicMock(spec=QuerySet)
-            m_queryset.model = Event
-
-            def filter_events(**kwargs):
-                if "tags__contains" in kwargs:
-                    STORE["events"] = list(
-                        filter(
-                            lambda e: set(kwargs["tags__contains"]).issubset(
-                                set(e.tags)
-                            ),
-                            STORE["events"],
+                def filter(self, **kwargs):
+                    queryset = FakeQuerySet()
+                    queryset.__store = list(self.__store)
+                    if "tags__contains" in kwargs:
+                        queryset.__store = list(
+                            filter(
+                                lambda e: set(kwargs["tags__contains"]).issubset(
+                                    set(e.tags)
+                                ),
+                                queryset.__store,
+                            )
                         )
-                    )
-                if "tags__overlap" in kwargs:
-                    STORE["events"] = list(
-                        filter(
-                            lambda e: not set(kwargs["tags__overlap"]).isdisjoint(
-                                set(e.tags)
-                            ),
-                            STORE["events"],
+                    if "tags__overlap" in kwargs:
+                        queryset.__store = list(
+                            filter(
+                                lambda e: not set(kwargs["tags__overlap"]).isdisjoint(
+                                    set(e.tags)
+                                ),
+                                queryset.__store,
+                            )
                         )
-                    )
-                if "tags__exact" in kwargs:
-                    STORE["events"] = list(
-                        filter(
-                            lambda e: set(kwargs["tags__exact"]) == set(e.tags),
-                            STORE["events"],
+                    if "tags__exact" in kwargs:
+                        queryset.__store = list(
+                            filter(
+                                lambda e: set(kwargs["tags__exact"]) == set(e.tags),
+                                queryset.__store,
+                            )
                         )
-                    )
+                    if "tags__len" in kwargs:
+                        queryset.__store = list(
+                            filter(
+                                lambda e: len(e.tags) == kwargs["tags__len"],
+                                queryset.__store,
+                            )
+                        )
+                    return queryset
 
-            def mock_queryset_filter(*args, **kwargs):
-                filter_events(**kwargs)
-                return m_queryset
+                def union(self, *args):
+                    queryset = FakeQuerySet()
+                    queryset.__store = self.__store
+                    for arg in args:
+                        queryset.__store += arg.__store
+                    return queryset
 
-            def mock_queryset_none(*args, **kwargs):
-                STORE["events"] = []
-                return m_queryset
+                def none(self):
+                    queryset = FakeQuerySet()
+                    queryset.__store = []
+                    return queryset
 
-            def mock_queryset_count(*args, **kwargs):
-                return len(STORE["events"])
+                def count(self):
+                    return len(self.__store)
 
-            m_queryset.all.return_value = m_queryset
-            m_queryset.filter.side_effect = mock_queryset_filter
-            m_queryset.none.side_effect = mock_queryset_none
-            m_queryset.count.side_effect = mock_queryset_count
-            m_queryset.__getitem__.side_effect = lambda index: STORE[
-                "events"
-            ].__getitem__(index)
+                def distinct(self):
+                    queryset = FakeQuerySet()
+                    queryset.__store = []
+                    for event in self.__store:
+                        if event not in queryset.__store:
+                            queryset.__store.append(event)
+                    queryset.__store = sorted(queryset.__store, key=lambda e: e.name)
+                    return queryset
 
-            return m_queryset
+                def __getitem__(self, index):
+                    return self.__store[index]
+
+            return FakeQuerySet()
 
     return Query
+
+
+@pytest.fixture
+def schema(Query):
+    return graphene.Schema(query=Query)
