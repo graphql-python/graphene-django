@@ -16,8 +16,8 @@ from .utils import (
     DJANGO_FILTER_INSTALLED,
     camelize,
     get_model_fields,
-    is_valid_django_model,
     is_running_async,
+    is_valid_django_model,
 )
 
 ALL_FIELDS = "__all__"

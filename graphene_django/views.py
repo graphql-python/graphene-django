@@ -2,16 +2,14 @@ import inspect
 import json
 import re
 import traceback
-
-from asyncio import gather, coroutines
+from asyncio import coroutines, gather
 
 from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
 from django.http.response import HttpResponseBadRequest
 from django.shortcuts import render
-from django.utils.decorators import method_decorator
+from django.utils.decorators import classonlymethod, method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
-from django.utils.decorators import classonlymethod
 from django.views.generic import View
 from graphql import OperationType, get_operation_ast, parse
 from graphql.error import GraphQLError

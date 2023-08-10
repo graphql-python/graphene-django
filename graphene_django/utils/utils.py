@@ -153,6 +153,7 @@ def is_sync_function(func):
         func
     )
 
+
 def bypass_get_queryset(resolver):
     """
     Adds a bypass_get_queryset attribute to the resolver, which is used to

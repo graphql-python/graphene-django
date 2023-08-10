@@ -1,6 +1,6 @@
-import inspect
 from functools import partial
 
+from asgiref.sync import sync_to_async
 from django.db.models.query import QuerySet
 from graphql_relay import (
     connection_from_array_slice,
@@ -9,16 +9,13 @@ from graphql_relay import (
     offset_to_cursor,
 )
 
-from asgiref.sync import sync_to_async
-from promise import Promise
-
 from graphene import Int, NonNull
 from graphene.relay import ConnectionField
 from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
 
 from .settings import graphene_settings
-from .utils import maybe_queryset, is_sync_function, is_running_async
+from .utils import is_running_async, is_sync_function, maybe_queryset
 
 
 class DjangoListField(Field):

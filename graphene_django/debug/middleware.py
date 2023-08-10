@@ -1,15 +1,11 @@
-from django.db import connections
-
 from asgiref.sync import sync_to_async
-import inspect
-from .sql.tracking import unwrap_cursor, wrap_cursor
-from .exception.formating import wrap_exception
-from .types import DjangoDebug
+from django.db import connections
 from graphql.type.definition import GraphQLNonNull
 
-from django.db.models import QuerySet
-
 from ..utils import is_sync_function
+from .exception.formating import wrap_exception
+from .sql.tracking import unwrap_cursor, wrap_cursor
+from .types import DjangoDebug
 
 
 class DjangoDebugContext:

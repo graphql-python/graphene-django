@@ -1,21 +1,21 @@
 import datetime
 import re
-from django.db.models import Count, Prefetch
-from asgiref.sync import sync_to_async, async_to_sync
+
 import pytest
+from asgiref.sync import async_to_sync
 from django.db.models import Count, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
 
 from ..fields import DjangoListField
 from ..types import DjangoObjectType
+from .async_test_helper import assert_async_result_equal
 from .models import (
     Article as ArticleModel,
     Film as FilmModel,
     FilmDetails as FilmDetailsModel,
     Reporter as ReporterModel,
 )
-from .async_test_helper import assert_async_result_equal
 
 
 class TestDjangoListField:

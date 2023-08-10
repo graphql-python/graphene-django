@@ -2,8 +2,7 @@ import asyncio
 
 from asgiref.sync import sync_to_async
 
-from cookbook.recipes.models import Recipe, RecipeIngredient
-from graphene import Node, String, Field
+from graphene import Field, Node, String
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
 

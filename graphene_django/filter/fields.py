@@ -1,13 +1,12 @@
 from collections import OrderedDict
 from functools import partial
 
+from asgiref.sync import sync_to_async
 from django.core.exceptions import ValidationError
 
 from graphene.types.argument import to_arguments
 from graphene.types.enum import EnumType
 from graphene.utils.str_converters import to_snake_case
-
-from asgiref.sync import sync_to_async
 
 from ..fields import DjangoConnectionField
 from .utils import get_filtering_args_from_filterset, get_filterset_class

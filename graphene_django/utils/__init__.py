@@ -5,10 +5,10 @@ from .utils import (
     camelize,
     get_model_fields,
     get_reverse_fields,
+    is_running_async,
+    is_sync_function,
     is_valid_django_model,
     maybe_queryset,
-    is_sync_function,
-    is_running_async,
 )
 
 __all__ = [

@@ -2,12 +2,12 @@ import base64
 import datetime
 
 import pytest
+from asgiref.sync import async_to_sync
 from django.db import models
 from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
 from graphql_relay import to_global_id
 from pytest import raises
-from asgiref.sync import sync_to_async, async_to_sync
 
 import graphene
 from graphene.relay import Node
@@ -27,6 +27,7 @@ from .models import (
     Pet,
     Reporter,
 )
+
 
 def test_should_query_only_fields():
     with raises(Exception):
@@ -1569,7 +1570,7 @@ def test_connection_should_limit_after_to_list_length():
     expected = {"allReporters": {"edges": []}}
     assert not result.errors
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(after=after))
+    assert_async_result_equal(schema, query, result, variable_values={"after": after})
 
 
 REPORTERS = [
@@ -1667,7 +1668,7 @@ def test_should_have_next_page(graphene_settings):
         gql_reporter["node"]["id"] for gql_reporter in gql_reporters
     }
     assert_async_result_equal(
-        schema, query, result2, variable_values=dict(first=4, after=last_result)
+        schema, query, result2, variable_values={"first": 4, "after": last_result}
     )
 
 
@@ -1736,7 +1737,7 @@ class TestBackwardPagination:
 
     def test_query_first_last_and_after(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
-        query = """
+        query_first_last_and_after = """
             query queryAfter($after: String) {
                 allReporters(first: 4, last: 3, after: $after) {
                     edges {
@@ -1759,12 +1760,12 @@ class TestBackwardPagination:
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 2", "First 3", "First 4"]
         assert_async_result_equal(
-            schema, query, result, variable_values=dict(after=after)
+            schema, query_first_last_and_after, result, variable_values={"after": after}
         )
 
     def test_query_last_and_before(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
-        query = """
+        query_first_last_and_after = """
             query queryAfter($before: String) {
                 allReporters(last: 1, before: $before) {
                     edges {
@@ -1777,12 +1778,12 @@ class TestBackwardPagination:
         """
 
         result = schema.execute(
-            query,
+            query_first_last_and_after,
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 1
         assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 5"
-        assert_async_result_equal(schema, query, result)
+        assert_async_result_equal(schema, query_first_last_and_after, result)
 
         before = base64.b64encode(b"arrayconnection:5").decode()
         result = schema.execute(
@@ -1793,7 +1794,10 @@ class TestBackwardPagination:
         assert len(result.data["allReporters"]["edges"]) == 1
         assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 4"
         assert_async_result_equal(
-            schema, query, result, variable_values=dict(before=before)
+            schema,
+            query_first_last_and_after,
+            result,
+            variable_values={"before": before},
         )
 
 
@@ -2021,9 +2025,7 @@ def test_connection_should_forbid_offset_filtering_with_before():
     expected_error = "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `allReporters` connection."
     assert len(result.errors) == 1
     assert result.errors[0].message == expected_error
-    assert_async_result_equal(
-        schema, query, result, variable_values=dict(before=before)
-    )
+    assert_async_result_equal(schema, query, result, variable_values={"before": before})
 
 
 def test_connection_should_allow_offset_filtering_with_after():
@@ -2066,7 +2068,7 @@ def test_connection_should_allow_offset_filtering_with_after():
         }
     }
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(after=after))
+    assert_async_result_equal(schema, query, result, variable_values={"after": after})
 
 
 def test_connection_should_succeed_if_last_higher_than_number_of_objects():
@@ -2097,7 +2099,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     assert not result.errors
     expected = {"allReporters": {"edges": []}}
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(last=2))
+    assert_async_result_equal(schema, query, result, variable_values={"last": 2})
 
     Reporter.objects.create(first_name="John", last_name="Doe")
     Reporter.objects.create(first_name="Some", last_name="Guy")
@@ -2115,7 +2117,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(last=2))
+    assert_async_result_equal(schema, query, result, variable_values={"last": 2})
 
     result = schema.execute(query, variable_values={"last": 4})
     assert not result.errors
@@ -2130,7 +2132,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(last=4))
+    assert_async_result_equal(schema, query, result, variable_values={"last": 4})
 
     result = schema.execute(query, variable_values={"last": 20})
     assert not result.errors
@@ -2145,7 +2147,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
-    assert_async_result_equal(schema, query, result, variable_values=dict(last=20))
+    assert_async_result_equal(schema, query, result, variable_values={"last": 20})
 
 
 def test_should_query_nullable_foreign_key():
