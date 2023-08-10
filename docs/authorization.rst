@@ -144,6 +144,21 @@ If you are using ``DjangoObjectType`` you can define a custom `get_queryset`.
                 return queryset.filter(published=True)
             return queryset
 
+.. warning::
+
+    Defining a custom ``get_queryset`` gives the guaranteed it will be called
+    when resolving the ``DjangoObjectType``, even through related objects.
+    Note that because of this, benefits from using ``select_related``
+    in objects that define a relation to this ``DjangoObjectType`` will be canceled out.
+    In the case of ``prefetch_related``, the benefits of the optimization will be lost only
+    if the custom ``get_queryset`` modifies the queryset. For more information about this, refers
+    to Django documentation about ``prefetch_related``: https://docs.djangoproject.com/en/4.2/ref/models/querysets/#prefetch-related.
+
+
+    If you want to explicitly disable the execution of the custom ``get_queryset`` when resolving,
+    you can decorate the resolver with `@graphene_django.bypass_get_queryset`. Note that this
+    can lead to authorization leaks if you are performing authorization checks in the custom
+    ``get_queryset``.
 
 Filtering ID-based Node Access
 ------------------------------
@@ -197,8 +212,8 @@ For Django 2.2 and above:
 .. code:: python
 
     urlpatterns = [
-      # some other urls
-      path('graphql/', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
+        # some other urls
+        path('graphql/', PrivateGraphQLView.as_view(graphiql=True, schema=schema)),
     ]
 
 .. _LoginRequiredMixin: https://docs.djangoproject.com/en/dev/topics/auth/default/#the-loginrequired-mixin

@@ -1,9 +1,9 @@
 from collections import OrderedDict, defaultdict
 from textwrap import dedent
+from unittest.mock import patch
 
 import pytest
 from django.db import models
-from unittest.mock import patch
 
 from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
@@ -11,8 +11,10 @@ from graphene.relay import Node
 from .. import registry
 from ..filter import DjangoFilterConnectionField
 from ..types import DjangoObjectType, DjangoObjectTypeOptions
-from .models import Article as ArticleModel
-from .models import Reporter as ReporterModel
+from .models import (
+    Article as ArticleModel,
+    Reporter as ReporterModel,
+)
 
 
 class Reporter(DjangoObjectType):
@@ -67,16 +69,17 @@ def test_django_get_node(get):
 def test_django_objecttype_map_correct_fields():
     fields = Reporter._meta.fields
     fields = list(fields.keys())
-    assert fields[:-2] == [
+    assert fields[:-3] == [
         "id",
         "first_name",
         "last_name",
         "email",
         "pets",
         "a_choice",
+        "fans",
         "reporter_type",
     ]
-    assert sorted(fields[-2:]) == ["articles", "films"]
+    assert sorted(fields[-3:]) == ["apnewsreporter", "articles", "films"]
 
 
 def test_django_objecttype_with_node_have_correct_fields():

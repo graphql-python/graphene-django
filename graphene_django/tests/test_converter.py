@@ -15,8 +15,6 @@ from graphene.types.scalars import BigInt
 from ..compat import (
     ArrayField,
     HStoreField,
-    JSONField,
-    PGJSONField,
     MissingType,
     RangeField,
 )
@@ -33,10 +31,10 @@ from .models import Article, Film, FilmDetails, Reporter
 
 
 def assert_conversion(django_field, graphene_field, *args, **kwargs):
-    _kwargs = kwargs.copy()
+    _kwargs = {**kwargs, "help_text": "Custom Help Text"}
     if "null" not in kwargs:
         _kwargs["null"] = True
-    field = django_field(help_text="Custom Help Text", *args, **_kwargs)
+    field = django_field(*args, **_kwargs)
     graphene_type = convert_django_field(field)
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
@@ -370,16 +368,6 @@ def test_should_postgres_array_multiple_convert_list():
 @pytest.mark.skipif(HStoreField is MissingType, reason="HStoreField should exist")
 def test_should_postgres_hstore_convert_string():
     assert_conversion(HStoreField, JSONString)
-
-
-@pytest.mark.skipif(PGJSONField is MissingType, reason="PGJSONField should exist")
-def test_should_postgres_json_convert_string():
-    assert_conversion(PGJSONField, JSONString)
-
-
-@pytest.mark.skipif(JSONField is MissingType, reason="JSONField should exist")
-def test_should_json_convert_string():
-    assert_conversion(JSONField, JSONString)
 
 
 @pytest.mark.skipif(RangeField is MissingType, reason="RangeField should exist")

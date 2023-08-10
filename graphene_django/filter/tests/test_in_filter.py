@@ -1,14 +1,16 @@
 from datetime import datetime
 
 import pytest
+from django_filters import (
+    FilterSet,
+    rest_framework as filters,
+)
 
-from django_filters import FilterSet
-from django_filters import rest_framework as filters
 from graphene import ObjectType, Schema
 from graphene.relay import Node
 from graphene_django import DjangoObjectType
-from graphene_django.tests.models import Pet, Person, Reporter, Article, Film
 from graphene_django.filter.tests.filters import ArticleFilter
+from graphene_django.tests.models import Article, Film, Person, Pet, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 
 pytestmark = []
@@ -348,9 +350,9 @@ def test_fk_id_in_filter(query):
 
     schema = Schema(query=query)
 
-    query = """
+    query = f"""
     query {{
-        articles (reporter_In: [{}, {}]) {{
+        articles (reporter_In: [{john_doe.id}, {jean_bon.id}]) {{
             edges {{
                 node {{
                     headline
@@ -361,10 +363,7 @@ def test_fk_id_in_filter(query):
             }}
         }}
     }}
-    """.format(
-        john_doe.id,
-        jean_bon.id,
-    )
+    """
     result = schema.execute(query)
     assert not result.errors
     assert result.data["articles"]["edges"] == [

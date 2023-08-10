@@ -1,7 +1,7 @@
 from graphene import List, ObjectType
 
-from .sql.types import DjangoDebugSQL
 from .exception.types import DjangoDebugException
+from .sql.types import DjangoDebugSQL
 
 
 class DjangoDebug(ObjectType):

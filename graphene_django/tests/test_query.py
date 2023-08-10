@@ -1,5 +1,5 @@
-import datetime
 import base64
+import datetime
 
 import pytest
 from django.db import models
@@ -16,9 +16,17 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
-from .models import Article, CNNReporter, Film, FilmDetails, Person, Pet, Reporter
 from .async_test_helper import assert_async_result_equal
-
+from .models import (
+    APNewsReporter,
+    Article,
+    CNNReporter,
+    Film,
+    FilmDetails,
+    Person,
+    Pet,
+    Reporter,
+)
 
 def test_should_query_only_fields():
     with raises(Exception):
@@ -123,15 +131,14 @@ def test_should_query_well():
 @pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
 def test_should_query_postgres_fields():
     from django.contrib.postgres.fields import (
-        IntegerRangeField,
         ArrayField,
-        JSONField,
         HStoreField,
+        IntegerRangeField,
     )
 
     class Event(models.Model):
         ages = IntegerRangeField(help_text="The age ranges")
-        data = JSONField(help_text="Data")
+        data = models.JSONField(help_text="Data")
         store = HStoreField()
         tags = ArrayField(models.CharField(max_length=50))
 
@@ -357,7 +364,7 @@ def test_should_query_connectionfields():
 
 
 def test_should_keep_annotations():
-    from django.db.models import Count, Avg
+    from django.db.models import Avg, Count
 
     class ReporterType(DjangoObjectType):
         class Meta:
@@ -521,7 +528,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
             ).distinct()
 
     f = Film.objects.create()
-    fd = FilmDetails.objects.create(location="Berlin", film=f)
+    FilmDetails.objects.create(location="Berlin", film=f)
 
     schema = graphene.Schema(query=Query)
     query = """
@@ -646,7 +653,7 @@ def test_should_enforce_first_or_last(graphene_settings):
     class Query(graphene.ObjectType):
         all_reporters = DjangoConnectionField(ReporterType)
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -689,7 +696,7 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -732,7 +739,7 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
 
     assert Query.all_reporters.max_limit == 100
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -798,7 +805,7 @@ def test_should_query_promise_connectionfields():
 
 
 def test_should_query_connectionfields_with_last():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
@@ -836,11 +843,11 @@ def test_should_query_connectionfields_with_last():
 
 
 def test_should_query_connectionfields_with_manager():
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
 
-    r = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="NotDoe", email="johndoe@example.com", a_choice=1
     )
 
@@ -1186,11 +1193,306 @@ def test_proxy_model_support():
     assert_async_result_equal(schema, query, result)
 
 
-def test_should_resolve_get_queryset_connectionfields():
-    reporter_1 = Reporter.objects.create(
+def test_model_inheritance_support_reverse_relationships():
+    """
+    This test asserts that we can query reverse relationships for all Reporters and proxied Reporters and multi table Reporters.
+    """
+
+    class FilmType(DjangoObjectType):
+        class Meta:
+            model = Film
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class CNNReporterType(DjangoObjectType):
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class APNewsReporterType(DjangoObjectType):
+        class Meta:
+            model = APNewsReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    film = Film.objects.create(genre="do")
+
+    reporter = Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = CNNReporter.objects.create(
+
+    cnn_reporter = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+
+    ap_news_reporter = APNewsReporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    film.reporters.add(cnn_reporter, ap_news_reporter)
+    film.save()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        cnn_reporters = DjangoConnectionField(CNNReporterType)
+        ap_news_reporters = DjangoConnectionField(APNewsReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+            cnnReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+            apNewsReporters {
+                edges {
+                    node {
+                        id
+                        films {
+                            id
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", reporter.id),
+                        "films": [],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", ap_news_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    },
+                },
+            ]
+        },
+        "cnnReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+        "apNewsReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("APNewsReporterType", ap_news_reporter.id),
+                        "films": [{"id": f"{film.id}"}],
+                    }
+                }
+            ]
+        },
+    }
+
+    result = schema.execute(query)
+    assert result.data == expected
+
+
+def test_model_inheritance_support_local_relationships():
+    """
+    This test asserts that we can query local relationships for all Reporters and proxied Reporters and multi table Reporters.
+    """
+
+    class PersonType(DjangoObjectType):
+        class Meta:
+            model = Person
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class CNNReporterType(DjangoObjectType):
+        class Meta:
+            model = CNNReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    class APNewsReporterType(DjangoObjectType):
+        class Meta:
+            model = APNewsReporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+    film = Film.objects.create(genre="do")
+
+    reporter = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    reporter_fan = Person.objects.create(name="Reporter Fan")
+
+    reporter.fans.add(reporter_fan)
+    reporter.save()
+
+    cnn_reporter = CNNReporter.objects.create(
+        first_name="Some",
+        last_name="Guy",
+        email="someguy@cnn.com",
+        a_choice=1,
+        reporter_type=2,  # set this guy to be CNN
+    )
+    cnn_fan = Person.objects.create(name="CNN Fan")
+    cnn_reporter.fans.add(cnn_fan)
+    cnn_reporter.save()
+
+    ap_news_reporter = APNewsReporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    ap_news_fan = Person.objects.create(name="AP News Fan")
+    ap_news_reporter.fans.add(ap_news_fan)
+    ap_news_reporter.save()
+
+    film.reporters.add(cnn_reporter, ap_news_reporter)
+    film.save()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+        cnn_reporters = DjangoConnectionField(CNNReporterType)
+        ap_news_reporters = DjangoConnectionField(APNewsReporterType)
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ProxyModelQuery {
+            allReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+            cnnReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+            apNewsReporters {
+                edges {
+                    node {
+                        id
+                        fans {
+                            name
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", reporter.id),
+                        "fans": [{"name": f"{reporter_fan.name}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", cnn_reporter.id),
+                        "fans": [{"name": f"{cnn_fan.name}"}],
+                    },
+                },
+                {
+                    "node": {
+                        "id": to_global_id("ReporterType", ap_news_reporter.id),
+                        "fans": [{"name": f"{ap_news_fan.name}"}],
+                    },
+                },
+            ]
+        },
+        "cnnReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("CNNReporterType", cnn_reporter.id),
+                        "fans": [{"name": f"{cnn_fan.name}"}],
+                    }
+                }
+            ]
+        },
+        "apNewsReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": to_global_id("APNewsReporterType", ap_news_reporter.id),
+                        "fans": [{"name": f"{ap_news_fan.name}"}],
+                    }
+                }
+            ]
+        },
+    }
+
+    result = schema.execute(query)
+    assert result.data == expected
+
+
+def test_should_resolve_get_queryset_connectionfields():
+    Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+    CNNReporter.objects.create(
         first_name="Some",
         last_name="Guy",
         email="someguy@cnn.com",
@@ -1233,10 +1535,10 @@ def test_should_resolve_get_queryset_connectionfields():
 
 
 def test_connection_should_limit_after_to_list_length():
-    reporter_1 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
     )
-    reporter_2 = Reporter.objects.create(
+    Reporter.objects.create(
         first_name="Some", last_name="Guy", email="someguy@cnn.com", a_choice=1
     )
 
@@ -1263,7 +1565,7 @@ def test_connection_should_limit_after_to_list_length():
     """
 
     after = base64.b64encode(b"arrayconnection:10").decode()
-    result = schema.execute(query, variable_values=dict(after=after))
+    result = schema.execute(query, variable_values={"after": after})
     expected = {"allReporters": {"edges": []}}
     assert not result.errors
     assert result.data == expected
@@ -1271,12 +1573,12 @@ def test_connection_should_limit_after_to_list_length():
 
 
 REPORTERS = [
-    dict(
-        first_name=f"First {i}",
-        last_name=f"Last {i}",
-        email=f"johndoe+{i}@example.com",
-        a_choice=1,
-    )
+    {
+        "first_name": f"First {i}",
+        "last_name": f"Last {i}",
+        "email": f"johndoe+{i}@example.com",
+        "a_choice": 1,
+    }
     for i in range(6)
 ]
 
@@ -1353,7 +1655,7 @@ def test_should_have_next_page(graphene_settings):
     assert_async_result_equal(schema, query, result, variable_values={})
 
     last_result = result.data["allReporters"]["pageInfo"]["endCursor"]
-    result2 = schema.execute(query, variable_values=dict(first=4, after=last_result))
+    result2 = schema.execute(query, variable_values={"first": 4, "after": last_result})
     assert not result2.errors
     assert len(result2.data["allReporters"]["edges"]) == 2
     assert not result2.data["allReporters"]["pageInfo"]["hasNextPage"]
@@ -1448,8 +1750,8 @@ class TestBackwardPagination:
 
         after = base64.b64encode(b"arrayconnection:0").decode()
         result = schema.execute(
-            query,
-            variable_values=dict(after=after),
+            query_first_last_and_after,
+            variable_values={"after": after},
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
@@ -1484,8 +1786,8 @@ class TestBackwardPagination:
 
         before = base64.b64encode(b"arrayconnection:5").decode()
         result = schema.execute(
-            query,
-            variable_values=dict(before=before),
+            query_first_last_and_after,
+            variable_values={"before": before},
         )
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 1
@@ -1544,7 +1846,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     """
     schema = graphene.Schema(query=Query)
 
-    with django_assert_num_queries(3) as captured:
+    with django_assert_num_queries(3):
         result = schema.execute(query)
         assert not result.errors
     assert_async_result_equal(schema, query, result)
@@ -1715,7 +2017,7 @@ def test_connection_should_forbid_offset_filtering_with_before():
         }
     """
     before = base64.b64encode(b"arrayconnection:2").decode()
-    result = schema.execute(query, variable_values=dict(before=before))
+    result = schema.execute(query, variable_values={"before": before})
     expected_error = "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `allReporters` connection."
     assert len(result.errors) == 1
     assert result.errors[0].message == expected_error
@@ -1754,7 +2056,7 @@ def test_connection_should_allow_offset_filtering_with_after():
     """
 
     after = base64.b64encode(b"arrayconnection:0").decode()
-    result = schema.execute(query, variable_values=dict(after=after))
+    result = schema.execute(query, variable_values={"after": after})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1791,7 +2093,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     """
 
-    result = schema.execute(query, variable_values=dict(last=2))
+    result = schema.execute(query, variable_values={"last": 2})
     assert not result.errors
     expected = {"allReporters": {"edges": []}}
     assert result.data == expected
@@ -1802,7 +2104,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     Reporter.objects.create(first_name="Jane", last_name="Roe")
     Reporter.objects.create(first_name="Some", last_name="Lady")
 
-    result = schema.execute(query, variable_values=dict(last=2))
+    result = schema.execute(query, variable_values={"last": 2})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1815,7 +2117,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     assert result.data == expected
     assert_async_result_equal(schema, query, result, variable_values=dict(last=2))
 
-    result = schema.execute(query, variable_values=dict(last=4))
+    result = schema.execute(query, variable_values={"last": 4})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1830,7 +2132,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     assert result.data == expected
     assert_async_result_equal(schema, query, result, variable_values=dict(last=4))
 
-    result = schema.execute(query, variable_values=dict(last=20))
+    result = schema.execute(query, variable_values={"last": 20})
     assert not result.errors
     expected = {
         "allReporters": {
@@ -1868,7 +2170,7 @@ def test_should_query_nullable_foreign_key():
     schema = graphene.Schema(query=Query)
 
     person = Person.objects.create(name="Jane")
-    pets = [
+    [
         Pet.objects.create(name="Stray dog", age=1),
         Pet.objects.create(name="Jane's dog", owner=person, age=1),
     ]
@@ -1907,4 +2209,75 @@ def test_should_query_nullable_foreign_key():
     assert not result.errors
     assert result.data["person"] == {
         "pets": [{"name": "Jane's dog"}],
+    }
+
+
+def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
+    class FilmType(DjangoObjectType):
+        class Meta:
+            model = Film
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset
+
+    class FilmDetailsType(DjangoObjectType):
+        class Meta:
+            model = FilmDetails
+
+        @classmethod
+        def get_queryset(cls, queryset, info):
+            return queryset
+
+    class Query(graphene.ObjectType):
+        film = graphene.Field(FilmType, genre=graphene.String(required=True))
+        film_details = graphene.Field(
+            FilmDetailsType, location=graphene.String(required=True)
+        )
+
+        def resolve_film(self, info, genre):
+            return Film.objects.filter(genre=genre).first()
+
+        def resolve_film_details(self, info, location):
+            return FilmDetails.objects.filter(location=location).first()
+
+    schema = graphene.Schema(query=Query)
+
+    Film.objects.create(genre="do")
+    FilmDetails.objects.create(location="London")
+
+    query_film = """
+        query getFilm($genre: String!) {
+            film(genre: $genre) {
+                genre
+                details {
+                    location
+                }
+            }
+        }
+    """
+
+    query_film_details = """
+        query getFilmDetails($location: String!) {
+            filmDetails(location: $location) {
+                location
+                film {
+                    genre
+                }
+            }
+        }
+    """
+
+    result = schema.execute(query_film, variables={"genre": "do"})
+    assert not result.errors
+    assert result.data["film"] == {
+        "genre": "DO",
+        "details": None,
+    }
+
+    result = schema.execute(query_film_details, variables={"location": "London"})
+    assert not result.errors
+    assert result.data["filmDetails"] == {
+        "location": "London",
+        "film": None,
     }

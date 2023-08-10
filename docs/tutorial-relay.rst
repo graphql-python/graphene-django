@@ -12,7 +12,7 @@ app <https://github.com/graphql-python/graphene-django/tree/master/examples/cook
 A good idea is to check the following things first:
 
 * `Graphene Relay documentation <http://docs.graphene-python.org/en/latest/relay/>`__
-* `GraphQL Relay Specification <https://facebook.github.io/relay/docs/en/graphql-server-specification.html>`__
+* `GraphQL Relay Specification <https://relay.dev/docs/guides/graphql-server-specification/>`__
 
 Setup the Django project
 ------------------------

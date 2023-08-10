@@ -1,8 +1,7 @@
 import json
+
 import pytest
 
-from django_filters import FilterSet
-from django_filters import rest_framework as filters
 from graphene import ObjectType, Schema
 from graphene.relay import Node
 from graphene_django import DjangoObjectType

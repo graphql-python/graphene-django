@@ -1,9 +1,10 @@
 import warnings
 from collections import OrderedDict
-from typing import Type
+from typing import Type  # noqa: F401
+
+from django.db.models import Model  # noqa: F401
 
 import graphene
-from django.db.models import Model
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -150,7 +151,7 @@ class DjangoObjectType(ObjectType):
         interfaces=(),
         convert_choices_to_enum=True,
         _meta=None,
-        **options
+        **options,
     ):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
@@ -160,9 +161,9 @@ class DjangoObjectType(ObjectType):
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            "The attribute registry in {} needs to be an instance of "
-            'Registry, received "{}".'
-        ).format(cls.__name__, registry)
+            f"The attribute registry in {cls.__name__} needs to be an instance of "
+            f'Registry, received "{registry}".'
+        )
 
         if filter_fields and filterset_class:
             raise Exception("Can't set both filter_fields and filterset_class")
@@ -175,7 +176,7 @@ class DjangoObjectType(ObjectType):
 
         assert not (fields and exclude), (
             "Cannot set both 'fields' and 'exclude' options on "
-            "DjangoObjectType {class_name}.".format(class_name=cls.__name__)
+            f"DjangoObjectType {cls.__name__}."
         )
 
         # Alias only_fields -> fields
@@ -214,8 +215,8 @@ class DjangoObjectType(ObjectType):
             warnings.warn(
                 "Creating a DjangoObjectType without either the `fields` "
                 "or the `exclude` option is deprecated. Add an explicit `fields "
-                "= '__all__'` option on DjangoObjectType {class_name} to use all "
-                "fields".format(class_name=cls.__name__),
+                f"= '__all__'` option on DjangoObjectType {cls.__name__} to use all "
+                "fields",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -240,9 +241,9 @@ class DjangoObjectType(ObjectType):
             )
 
         if connection is not None:
-            assert issubclass(connection, Connection), (
-                "The connection must be a Connection. Received {}"
-            ).format(connection.__name__)
+            assert issubclass(
+                connection, Connection
+            ), f"The connection must be a Connection. Received {connection.__name__}"
 
         if not _meta:
             _meta = DjangoObjectTypeOptions(cls)
@@ -253,6 +254,7 @@ class DjangoObjectType(ObjectType):
         _meta.filterset_class = filterset_class
         _meta.fields = django_fields
         _meta.connection = connection
+        _meta.convert_choices_to_enum = convert_choices_to_enum
 
         super().__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -272,7 +274,7 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(root.__class__):
-            raise Exception(('Received incompatible instance "{}".').format(root))
+            raise Exception(f'Received incompatible instance "{root}".')
 
         if cls._meta.model._meta.proxy:
             model = root._meta.model

@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from enum import Enum
 
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -41,6 +42,9 @@ def fields_for_serializer(
                 field.read_only
                 and is_input
                 and lookup_field != name,  # don't show read_only fields in Input
+                isinstance(
+                    field, serializers.HiddenField
+                ),  # don't show hidden fields in Input
             ]
         )
 
@@ -123,8 +127,10 @@ class SerializerMutation(ClientIDMutation):
     def get_serializer_kwargs(cls, root, info, **input):
         lookup_field = cls._meta.lookup_field
         model_class = cls._meta.model_class
-
         if model_class:
+            for input_dict_key, maybe_enum in input.items():
+                if isinstance(maybe_enum, Enum):
+                    input[input_dict_key] = maybe_enum.value
             if "update" in cls._meta.model_operations and lookup_field in input:
                 instance = get_object_or_404(
                     model_class, **{lookup_field: input[lookup_field]}

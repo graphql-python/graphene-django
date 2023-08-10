@@ -12,11 +12,10 @@ Graphene settings, checking for user settings first, then falling
 back to the defaults.
 """
 
-from django.conf import settings
-from django.test.signals import setting_changed
-
 import importlib  # Available in Python 3.1+
 
+from django.conf import settings
+from django.test.signals import setting_changed
 
 # Copied shamelessly from Django REST Framework
 

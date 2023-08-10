@@ -62,3 +62,12 @@ Now head on over to
 and run some queries!
 (See the [Graphene-Django Tutorial](http://docs.graphene-python.org/projects/django/en/latest/tutorial-plain/#testing-our-graphql-schema)
 for some example queries)
+
+Testing local graphene-django changes
+-------------------------------------
+
+In `requirements.txt`, replace the entire `graphene-django=...` line with the following (so that we install the local version instead of the one from PyPI):
+
+```
+../../  # graphene-django
+```

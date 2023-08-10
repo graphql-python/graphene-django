@@ -2,7 +2,6 @@ import inspect
 from functools import partial
 
 from django.db.models.query import QuerySet
-
 from graphql_relay import (
     connection_from_array_slice,
     cursor_to_offset,
@@ -11,6 +10,7 @@ from graphql_relay import (
 )
 
 from asgiref.sync import sync_to_async
+from promise import Promise
 
 from graphene import Int, NonNull
 from graphene.relay import ConnectionField

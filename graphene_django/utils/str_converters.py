@@ -1,4 +1,5 @@
 import re
+
 from text_unidecode import unidecode
 
 

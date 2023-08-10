@@ -19,7 +19,11 @@ class Pet(models.Model):
 class FilmDetails(models.Model):
     location = models.CharField(max_length=30)
     film = models.OneToOneField(
-        "Film", on_delete=models.CASCADE, related_name="details"
+        "Film",
+        on_delete=models.CASCADE,
+        related_name="details",
+        null=True,
+        blank=True,
     )
 
 
@@ -43,9 +47,10 @@ class Reporter(models.Model):
     last_name = models.CharField(max_length=30)
     email = models.EmailField()
     pets = models.ManyToManyField("self")
-    a_choice = models.CharField(max_length=30, choices=CHOICES, blank=True)
+    a_choice = models.IntegerField(choices=CHOICES, null=True, blank=True)
     objects = models.Manager()
     doe_objects = DoeReporterManager()
+    fans = models.ManyToManyField(Person)
 
     reporter_type = models.IntegerField(
         "Reporter Type",
@@ -88,6 +93,16 @@ class CNNReporter(Reporter):
         proxy = True
 
     objects = CNNReporterManager()
+
+
+class APNewsReporter(Reporter):
+    """
+    This class only inherits from Reporter for testing multi table inheritence
+    similar to what you'd see in django-polymorphic
+    """
+
+    alias = models.CharField(max_length=30)
+    objects = models.Manager()
 
 
 class Article(models.Model):

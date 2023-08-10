@@ -1,7 +1,8 @@
-from cookbook.ingredients.models import Category, Ingredient
 from graphene import Node
 from graphene_django.filter import DjangoFilterConnectionField
 from graphene_django.types import DjangoObjectType
+
+from cookbook.ingredients.models import Category, Ingredient
 
 
 # Graphene will automatically map the Category model's fields onto the CategoryNode.
