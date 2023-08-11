@@ -6,8 +6,13 @@ on:
       - 'v*'
 
 jobs:
-  build:
+  lint:
+    uses: ./.github/workflows/lint.yml
+  tests:
+    uses: ./.github/workflows/tests.yml
+  release:
     runs-on: ubuntu-latest
+    needs: [lint, tests]
 
     steps:
     - uses: actions/checkout@v3
