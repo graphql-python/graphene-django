@@ -2,7 +2,7 @@ from asgiref.sync import sync_to_async
 from django.db import connections
 from graphql.type.definition import GraphQLNonNull
 
-from ..utils import is_sync_function
+from ..utils import is_running_async, is_sync_function
 from .exception.formating import wrap_exception
 from .sql.tracking import unwrap_cursor, wrap_cursor
 from .types import DjangoDebug
@@ -91,7 +91,7 @@ class DjangoSyncRequiredMiddleware:
                 info.parent_type.name == "Mutation",
             ]
         ):
-            if is_sync_function(next):
+            if is_sync_function(next) and is_running_async():
                 return sync_to_async(next)(root, info, **args)
 
         return next(root, info, **args)
