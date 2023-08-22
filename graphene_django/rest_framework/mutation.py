@@ -99,14 +99,6 @@ class SerializerMutation(ClientIDMutation):
             convert_choices_to_enum=convert_choices_to_enum,
             lookup_field=lookup_field,
         )
-        output_fields = fields_for_serializer(
-            serializer,
-            only_fields,
-            exclude_fields,
-            is_input=False,
-            convert_choices_to_enum=convert_choices_to_enum,
-            lookup_field=lookup_field,
-        )
 
         if not _meta:
             _meta = SerializerMutationOptions(cls)
@@ -114,7 +106,6 @@ class SerializerMutation(ClientIDMutation):
         _meta.model_operations = model_operations
         _meta.serializer_class = serializer_class
         _meta.model_class = model_class
-        _meta.fields = yank_fields_from_attrs(output_fields, _as=Field)
 
         input_fields = yank_fields_from_attrs(input_fields, _as=InputField)
         super().__init_subclass_with_meta__(
