@@ -50,7 +50,7 @@ def fields_for_serializer(
 
         if is_not_in_only or is_excluded:
             continue
-        is_optional = name in optional_fields
+        is_optional = name in optional_fields or '__all__' in optional_fields
 
         fields[name] = convert_serializer_field(
             field, is_input=is_input, convert_choices_to_enum=convert_choices_to_enum,
