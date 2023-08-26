@@ -31,14 +31,14 @@ def initialize():
     falcon = Ship(id="4", name="Millennium Falcon", faction=rebels)
     falcon.save()
 
-    homeOne = Ship(id="5", name="Home One", faction=rebels)
-    homeOne.save()
+    home_one = Ship(id="5", name="Home One", faction=rebels)
+    home_one.save()
 
-    tieFighter = Ship(id="6", name="TIE Fighter", faction=empire)
-    tieFighter.save()
+    tie_fighter = Ship(id="6", name="TIE Fighter", faction=empire)
+    tie_fighter.save()
 
-    tieInterceptor = Ship(id="7", name="TIE Interceptor", faction=empire)
-    tieInterceptor.save()
+    tie_interceptor = Ship(id="7", name="TIE Interceptor", faction=empire)
+    tie_interceptor.save()
 
     executor = Ship(id="8", name="Executor", faction=empire)
     executor.save()
