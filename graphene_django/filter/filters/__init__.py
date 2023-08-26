@@ -14,7 +14,6 @@ else:
     from .list_filter import ListFilter
     from .range_filter import RangeFilter
     from .typed_filter import TypedFilter
-    from ..filters import DjangoFilterConnectionField
 
     __all__ = [
         "DjangoFilterConnectionField",
