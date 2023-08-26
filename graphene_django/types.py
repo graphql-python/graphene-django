@@ -62,10 +62,7 @@ def construct_fields(
     return fields
 
 
-def validate_fields(type_, model, fields, only_fields, exclude_fields):
-    # Validate the given fields against the model's fields and custom fields
-    all_field_names = set(fields.keys())
-    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
+def validate_only_fields(only_fields, all_field_names, model, type_):
     for name in only_fields or ():
         if name in all_field_names:
             continue
@@ -83,20 +80,21 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                     type_=type_,
                 )
             )
+            continue
 
-        else:
-            warnings.warn(
-                (
-                    'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
-                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
-                ).format(
-                    field_name=name,
-                    app_label=model._meta.app_label,
-                    object_name=model._meta.object_name,
-                    type_=type_,
-                )
+        warnings.warn(
+            (
+                'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+            ).format(
+                field_name=name,
+                app_label=model._meta.app_label,
+                object_name=model._meta.object_name,
+                type_=type_,
             )
+        )
 
+def validate_exclude_fields(exclude_fields, all_field_names, model, type_):
     # Validate exclude fields
     for name in exclude_fields or ():
         if name in all_field_names:
@@ -107,19 +105,28 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                     'Either remove the custom field or remove the field from the "exclude" list.'
                 ).format(field_name=name, type_=type_)
             )
-        else:
-            if not hasattr(model, name):
-                warnings.warn(
-                    (
-                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
-                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
-                    ).format(
-                        field_name=name,
-                        app_label=model._meta.app_label,
-                        object_name=model._meta.object_name,
-                        type_=type_,
-                    )
+            continue
+
+        if not hasattr(model, name):
+            warnings.warn(
+                (
+                    'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
+                    'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
+                ).format(
+                    field_name=name,
+                    app_label=model._meta.app_label,
+                    object_name=model._meta.object_name,
+                    type_=type_,
                 )
+            )
+
+def validate_fields(type_, model, fields, only_fields, exclude_fields):
+    # Validate the given fields against the model's fields and custom fields
+    all_field_names = set(fields.keys())
+    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
+
+    validate_only_fields(only_fields, all_field_names, model, type_)
+    validate_exclude_fields(exclude_fields, all_field_names, model, type_)
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
