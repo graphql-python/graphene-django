@@ -71,17 +71,17 @@ class SerializerMutation(ClientIDMutation):
 
     @classmethod
     def __init_subclass_with_meta__(
-            cls,
-            lookup_field=None,
-            serializer_class=None,
-            model_class=None,
-            model_operations=("create", "update"),
-            only_fields=(),
-            exclude_fields=(),
-            convert_choices_to_enum=True,
-            _meta=None,
-            optional_fields=(),
-            **options
+        cls,
+        lookup_field=None,
+        serializer_class=None,
+        model_class=None,
+        model_operations=("create", "update"),
+        only_fields=(),
+        exclude_fields=(),
+        convert_choices_to_enum=True,
+        _meta=None,
+        optional_fields=(),
+        **options
     ):
         if not serializer_class:
             raise Exception("serializer_class is required for the SerializerMutation")
