@@ -40,7 +40,7 @@ def test_mutations():
                         {"node": {"id": "U2hpcDox", "name": "X-Wing"}},
                         {"node": {"id": "U2hpcDoy", "name": "Y-Wing"}},
                         {"node": {"id": "U2hpcDoz", "name": "A-Wing"}},
-                        {"node": {"id": "U2hpcDo0", "name": "Millenium Falcon"}},
+                        {"node": {"id": "U2hpcDo0", "name": "Millennium Falcon"}},
                         {"node": {"id": "U2hpcDo1", "name": "Home One"}},
                         {"node": {"id": "U2hpcDo5", "name": "Peter"}},
                     ]
