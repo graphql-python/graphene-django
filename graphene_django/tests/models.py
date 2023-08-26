@@ -97,7 +97,7 @@ class CNNReporter(Reporter):
 
 class APNewsReporter(Reporter):
     """
-    This class only inherits from Reporter for testing multi table inheritence
+    This class only inherits from Reporter for testing multi table inheritance
     similar to what you'd see in django-polymorphic
     """
 
