@@ -8,7 +8,7 @@ from .filters import ListFilter, RangeFilter, TypedFilter
 from .filterset import custom_filterset_factory, setup_filterset
 
 
-def get_field_type(registry, model, field_name):
+def get_field_type_from_registry(registry, model, field_name):
     """
     Try to get a model field corresponding Graphql type from the DjangoObjectType.
     """
