@@ -78,7 +78,7 @@ class SerializerMutation(ClientIDMutation):
             exclude_fields=(),
             convert_choices_to_enum=True,
             _meta=None,
-            optional_fields=()
+            optional_fields=(),
             **options
     ):
         if not serializer_class:
