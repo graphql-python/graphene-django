@@ -3,7 +3,7 @@ import datetime
 from pytest import raises
 from rest_framework import serializers
 
-from graphene import Field, ResolveInfo
+from graphene import Field, ResolveInfo, String
 from graphene.types.inputobjecttype import InputObjectType
 
 from ...types import DjangoObjectType
