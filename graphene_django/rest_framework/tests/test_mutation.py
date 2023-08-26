@@ -104,6 +104,7 @@ def test_exclude_fields():
     assert "cool_name" in MyMutation.Input._meta.fields
     assert "created" not in MyMutation.Input._meta.fields
 
+
 def test_model_serializer_optional_fields():
     class MyMutation(SerializerMutation):
         class Meta:
