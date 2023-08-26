@@ -13,14 +13,17 @@ def get_field_type(registry, model, field_name):
     Try to get a model field corresponding Graphql type from the DjangoObjectType.
     """
     object_type = registry.get_type_for_model(model)
-    if object_type:
-        object_type_field = object_type._meta.fields.get(field_name)
-        if object_type_field:
-            field_type = object_type_field.type
-            if isinstance(field_type, graphene.NonNull):
-                field_type = field_type.of_type
-            return field_type
-    return None
+    if not object_type:
+        return None
+
+    object_type_field = object_type._meta.fields.get(field_name)
+    if not object_type_field:
+        return None
+
+    field_type = object_type_field.type
+    if isinstance(field_type, graphene.NonNull):
+        field_type = field_type.of_type
+    return field_type
 
 
 def get_filtering_args_from_filterset(filterset_class, type):
