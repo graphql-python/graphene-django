@@ -121,6 +121,7 @@ def validate_exclude_fields(exclude_fields, all_field_names, model, type_):
                 )
             )
 
+
 def validate_fields(type_, model, fields, only_fields, exclude_fields):
     # Validate the given fields against the model's fields and custom fields
     all_field_names = set(fields.keys())
