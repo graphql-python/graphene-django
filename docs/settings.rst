@@ -197,9 +197,6 @@ Set to ``False`` if you want to disable GraphiQL headers editor tab for some rea
 
 This setting is passed to ``headerEditorEnabled`` GraphiQL options, for details refer to GraphiQLDocs_.
 
-.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
-
-
 Default: ``True``
 
 .. code:: python
@@ -230,8 +227,6 @@ Set to ``True`` if you want to persist GraphiQL headers after refreshing the pag
 
 This setting is passed to ``shouldPersistHeaders`` GraphiQL options, for details refer to GraphiQLDocs_.
 
-.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
-
 
 Default: ``False``
 
@@ -240,3 +235,6 @@ Default: ``False``
    GRAPHENE = {
       'GRAPHIQL_SHOULD_PERSIST_HEADERS': False,
    }
+
+
+.. _GraphiQLDocs: https://graphiql-test.netlify.app/typedoc/modules/graphiql_react#graphiqlprovider-2
