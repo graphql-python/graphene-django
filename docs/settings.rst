@@ -237,4 +237,35 @@ Default: ``False``
    }
 
 
+``GRAPHIQL_INPUT_VALUE_DEPRECATION``
+------------------------------------
+
+Set to ``True`` if you want GraphiQL to show any deprecated fields on input object types' docs.
+
+For example, having this schema:
+
+.. code:: python
+
+    class MyMutationInputType(graphene.InputObjectType):
+        old_field = graphene.String(deprecation_reason="You should now use 'newField' instead.")
+        new_field = graphene.String()
+
+    class MyMutation(graphene.Mutation):
+        class Arguments:
+            input = types.MyMutationInputType()
+
+GraphiQL will add a ``Show Deprecated Fields`` button to toggle information display on ``oldField`` and its deprecation
+reason. Otherwise, you would get neither a button nor any information at all on ``oldField``.
+
+This setting is passed to ``inputValueDeprecation`` GraphiQL options, for details refer to GraphiQLDocs_.
+
+Default: ``False``
+
+.. code:: python
+
+   GRAPHENE = {
+      'GRAPHIQL_INPUT_VALUE_DEPRECATION': False,
+   }
+
+
 .. _GraphiQLDocs: https://graphiql-test.netlify.app/typedoc/modules/graphiql_react#graphiqlprovider-2
