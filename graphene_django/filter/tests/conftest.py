@@ -44,7 +44,7 @@ def EventFilterSet():
                 "name": ["exact", "contains"],
             }
 
-        # Those are actually usable with our Query fixture bellow
+        # Those are actually usable with our Query fixture below
         tags__contains = ArrayFilter(field_name="tags", lookup_expr="contains")
         tags__overlap = ArrayFilter(field_name="tags", lookup_expr="overlap")
         tags = ArrayFilter(field_name="tags", lookup_expr="exact")

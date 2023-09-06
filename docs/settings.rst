@@ -6,7 +6,7 @@ Graphene-Django can be customised using settings. This page explains each settin
 Usage
 -----
 
-Add settings to your Django project by creating a Dictonary with name ``GRAPHENE`` in the project's ``settings.py``:
+Add settings to your Django project by creating a Dictionary with name ``GRAPHENE`` in the project's ``settings.py``:
 
 .. code:: python
 

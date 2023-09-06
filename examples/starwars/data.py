@@ -28,7 +28,7 @@ def initialize():
 
     # Yeah, technically it's Corellian. But it flew in the service of the rebels,
     # so for the purposes of this demo it's a rebel ship.
-    falcon = Ship(id="4", name="Millenium Falcon", faction=rebels)
+    falcon = Ship(id="4", name="Millennium Falcon", faction=rebels)
     falcon.save()
 
     homeOne = Ship(id="5", name="Home One", faction=rebels)
