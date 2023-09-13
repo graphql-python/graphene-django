@@ -167,6 +167,7 @@ class GraphQLView(View):
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
                     graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
                     graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
+                    graphiql_plugin_explorer_css_sri=self.graphiql_plugin_explorer_css_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
