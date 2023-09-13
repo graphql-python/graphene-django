@@ -173,6 +173,7 @@ class GraphQLView(View):
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
                     graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
+                    graphiql_input_value_deprecation=graphene_settings.GRAPHIQL_INPUT_VALUE_DEPRECATION,
                 )
 
             if self.batch:
