@@ -1,6 +1,5 @@
 import inspect
 
-import pkg_resources
 from django.db import connection, models, transaction
 from django.db.models.manager import Manager
 from django.utils.encoding import force_str
@@ -149,11 +148,15 @@ def bypass_get_queryset(resolver):
 
 
 def __django_version():
-    return pkg_resources.get_distribution("django").parsed_version
+    from pkg_resources import get_distribution
+
+    return get_distribution("django").parsed_version
 
 
 def __parse_version(v):
-    return pkg_resources.parse_version(v)
+    from pkg_resources import parse_version
+
+    return parse_version(v)
 
 
 _DJANGO_VERSION_AT_LEAST_4_2 = __django_version() >= __parse_version("4.2")
