@@ -135,7 +135,7 @@ class GraphQLTestMixin:
         )
         self.client = client
 
-    def assertResponseNoErrors(self, resp, msg=None):
+    def assert_response_no_errors(self, resp, msg=None):
         """
         Assert that the call went through correctly. 200 means the syntax is ok, if there are no `errors`,
         the call was fine.
@@ -145,7 +145,7 @@ class GraphQLTestMixin:
         self.assertEqual(resp.status_code, 200, msg or content)
         self.assertNotIn("errors", list(content.keys()), msg or content)
 
-    def assertResponseHasErrors(self, resp, msg=None):
+    def assert_response_has_errors(self, resp, msg=None):
         """
         Assert that the call was failing. Take care: Even with errors, GraphQL returns status 200!
         :resp HttpResponse: Response

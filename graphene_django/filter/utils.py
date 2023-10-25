@@ -8,19 +8,102 @@ from .filters import ListFilter, RangeFilter, TypedFilter
 from .filterset import custom_filterset_factory, setup_filterset
 
 
-def get_field_type(registry, model, field_name):
+def get_field_type_from_registry(registry, model, field_name):
     """
-    Try to get a model field corresponding Graphql type from the DjangoObjectType.
+    Try to get a model field corresponding GraphQL type from the DjangoObjectType.
     """
     object_type = registry.get_type_for_model(model)
-    if object_type:
-        object_type_field = object_type._meta.fields.get(field_name)
-        if object_type_field:
-            field_type = object_type_field.type
-            if isinstance(field_type, graphene.NonNull):
-                field_type = field_type.of_type
-            return field_type
-    return None
+    if not object_type:
+        return None
+
+    object_type_field = object_type._meta.fields.get(field_name)
+    if not object_type_field:
+        return None
+
+    field_type = object_type_field.type
+    if isinstance(field_type, graphene.NonNull):
+        field_type = field_type.of_type
+    return field_type
+
+
+def get_field_type_from_model_field(model_field, form_field, registry):
+    """
+    Get the field type from the model field.
+
+    If the model field is a foreign key, then we need to get the type from the related model.
+    """
+    if (
+        isinstance(form_field, forms.ModelChoiceField)
+        or isinstance(form_field, forms.ModelMultipleChoiceField)
+        or isinstance(form_field, GlobalIDMultipleChoiceField)
+        or isinstance(form_field, GlobalIDFormField)
+    ):
+        # Foreign key have dynamic types and filtering on a foreign key actually means filtering on its ID.
+        return get_field_type_from_registry(registry, model_field.related_model, "id")
+
+    return get_field_type_from_registry(registry, model_field.model, model_field.name)
+
+
+def get_form_field(model_field, filter_field, required):
+    """
+    Retrieve the form field to use for the filter.
+
+    Get the form field either from:
+    #  1. the formfield corresponding to the model field
+    #  2. the field defined on filter
+
+    Returns None if no form field can be found.
+    """
+    form_field = None
+    if hasattr(model_field, "formfield"):
+        form_field = model_field.formfield(required=required)
+    if not form_field:
+        form_field = filter_field.field
+    return form_field
+
+
+def get_field_type_and_form_field_for_implicit_filter(
+    model, filter_type, filter_field, registry, required
+):
+    """
+    Get the filter type for filters that are not explicitly declared.
+
+    Returns a tuple of (field_type, form_field) where:
+    - field_type is the type of the filter argument
+    - form_field is the form field to use to validate the input value
+    """
+    if filter_type == "isnull":
+        # Filter type is boolean, no form field.
+        return (graphene.Boolean, None)
+
+    model_field = get_model_field(model, filter_field.field_name)
+    form_field = get_form_field(model_field, filter_field, required)
+
+    # First try to get the matching field type from the GraphQL DjangoObjectType
+    if model_field:
+        field_type = get_field_type_from_model_field(model_field, form_field, registry)
+        return (field_type, form_field)
+
+    return (None, None)
+
+
+def get_field_type_for_explicit_filter(filter_field, form_field):
+    """
+    Fallback on converting the form field either because:
+    - it's an explicitly declared filters
+    - we did not manage to get the type from the model type
+    """
+    from ..forms.converter import convert_form_field
+
+    form_field = form_field or filter_field.field
+    return convert_form_field(form_field).get_type()
+
+
+def is_filter_list_or_range(filter_field):
+    """
+    Determine if the filter is a ListFilter or RangeFilter.
+    """
+    return isinstance(filter_field, ListFilter) or isinstance(filter_field, RangeFilter)
 
 
 def get_filtering_args_from_filterset(filterset_class, type):
@@ -28,7 +111,6 @@ def get_filtering_args_from_filterset(filterset_class, type):
     Inspect a FilterSet and produce the arguments to pass to a Graphene Field.
     These arguments will be available to filter against in the GraphQL API.
     """
-    from ..forms.converter import convert_form_field
 
     args = {}
     model = filterset_class._meta.model
@@ -49,49 +131,21 @@ def get_filtering_args_from_filterset(filterset_class, type):
             if name not in filterset_class.declared_filters or isinstance(
                 filter_field, TypedFilter
             ):
-                # Get the filter field for filters that are no explicitly declared.
-                if filter_type == "isnull":
-                    field_type = graphene.Boolean
-                else:
-                    model_field = get_model_field(model, filter_field.field_name)
-
-                    # Get the form field either from:
-                    #  1. the formfield corresponding to the model field
-                    #  2. the field defined on filter
-                    if hasattr(model_field, "formfield"):
-                        form_field = model_field.formfield(required=required)
-                    if not form_field:
-                        form_field = filter_field.field
-
-                    # First try to get the matching field type from the GraphQL DjangoObjectType
-                    if model_field:
-                        if (
-                            isinstance(form_field, forms.ModelChoiceField)
-                            or isinstance(form_field, forms.ModelMultipleChoiceField)
-                            or isinstance(form_field, GlobalIDMultipleChoiceField)
-                            or isinstance(form_field, GlobalIDFormField)
-                        ):
-                            # Foreign key have dynamic types and filtering on a foreign key actually means filtering on its ID.
-                            field_type = get_field_type(
-                                registry, model_field.related_model, "id"
-                            )
-                        else:
-                            field_type = get_field_type(
-                                registry, model_field.model, model_field.name
-                            )
+                (
+                    field_type,
+                    form_field,
+                ) = get_field_type_and_form_field_for_implicit_filter(
+                    model, filter_type, filter_field, registry, required
+                )
 
             if not field_type:
-                # Fallback on converting the form field either because:
-                #  - it's an explicitly declared filters
-                #  - we did not manage to get the type from the model type
-                form_field = form_field or filter_field.field
-                field_type = convert_form_field(form_field).get_type()
+                field_type = get_field_type_for_explicit_filter(
+                    filter_field, form_field
+                )
 
-            if isinstance(filter_field, ListFilter) or isinstance(
-                filter_field, RangeFilter
-            ):
-                # Replace InFilter/RangeFilter filters (`in`, `range`) argument type to be a list of
-                # the same type as the field. See comments in `replace_csv_filters` method for more details.
+            # Replace InFilter/RangeFilter filters (`in`, `range`) argument type to be a list of
+            # the same type as the field. See comments in `replace_csv_filters` method for more details.
+            if is_filter_list_or_range(filter_field):
                 field_type = graphene.List(field_type)
 
         args[name] = graphene.Argument(

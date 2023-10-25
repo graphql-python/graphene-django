@@ -30,7 +30,7 @@ class ArticleConnection(Connection):
 
     test = String()
 
-    def resolve_test():
+    def resolve_test(self):
         return "test"
 
     class Meta:

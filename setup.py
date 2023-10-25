@@ -22,6 +22,8 @@ tests_require = [
     "pytz",
     "django-filter>=22.1",
     "pytest-django>=4.5.2",
+    "pytest-repeat>=0.9.1",
+    "pytest-xdist>=3.3.1",
 ] + rest_framework_require
 
 

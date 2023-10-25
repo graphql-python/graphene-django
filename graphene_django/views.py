@@ -103,16 +103,15 @@ class GraphQLView(View):
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
+        self.schema = schema or self.schema
 
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
+        if isinstance(middleware, MiddlewareManager):
+            self.middleware = middleware
+        else:
+            self.middleware = list(instantiate_middleware(middleware))
 
-        self.schema = schema or self.schema
-        if middleware is not None:
-            if isinstance(middleware, MiddlewareManager):
-                self.middleware = middleware
-            else:
-                self.middleware = list(instantiate_middleware(middleware))
         self.root_value = root_value
         self.pretty = pretty or self.pretty
         self.graphiql = graphiql or self.graphiql
@@ -287,6 +286,25 @@ class GraphQLView(View):
 
         return {}
 
+    def validate_query_request_type(
+        self, request, document, operation_name, show_graphiql
+    ):
+        if request.method.lower() == "get":
+            operation_ast = get_operation_ast(document, operation_name)
+            if (
+                operation_ast
+                and operation_ast.operation != OperationType.QUERY
+                and not show_graphiql
+            ):
+                raise HttpError(
+                    HttpResponseNotAllowed(
+                        ["POST"],
+                        "Can only perform a {} operation from a POST request.".format(
+                            operation_ast.operation.value
+                        ),
+                    )
+                )
+
     def execute_graphql_request(
         self, request, data, query, variables, operation_name, show_graphiql=False
     ):
@@ -300,20 +318,12 @@ class GraphQLView(View):
         except Exception as e:
             return ExecutionResult(errors=[e])
 
-        if request.method.lower() == "get":
-            operation_ast = get_operation_ast(document, operation_name)
-            if operation_ast and operation_ast.operation != OperationType.QUERY:
-                if show_graphiql:
-                    return None
+        self.validate_query_request_type(
+            request, document, operation_name, show_graphiql
+        )
+        if show_graphiql:
+            return None
 
-                raise HttpError(
-                    HttpResponseNotAllowed(
-                        ["POST"],
-                        "Can only perform a {} operation from a POST request.".format(
-                            operation_ast.operation.value
-                        ),
-                    )
-                )
         try:
             extra_options = {}
             if self.execution_context_class:
@@ -330,14 +340,7 @@ class GraphQLView(View):
             options.update(extra_options)
 
             operation_ast = get_operation_ast(document, operation_name)
-            if (
-                operation_ast
-                and operation_ast.operation == OperationType.MUTATION
-                and (
-                    graphene_settings.ATOMIC_MUTATIONS is True
-                    or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
-                )
-            ):
+            if self.is_atomic_mutation_enabled(operation_ast, connection):
                 with transaction.atomic():
                     result = self.schema.execute(**options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
@@ -402,3 +405,14 @@ class GraphQLView(View):
         meta = request.META
         content_type = meta.get("CONTENT_TYPE", meta.get("HTTP_CONTENT_TYPE", ""))
         return content_type.split(";", 1)[0].lower()
+
+    @staticmethod
+    def is_atomic_mutation_enabled(operation_ast, connection):
+        return (
+            operation_ast
+            and operation_ast.operation == OperationType.MUTATION
+            and (
+                graphene_settings.ATOMIC_MUTATIONS is True
+                or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+            )
+        )
