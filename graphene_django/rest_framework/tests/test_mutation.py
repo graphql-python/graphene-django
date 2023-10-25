@@ -275,7 +275,7 @@ def test_perform_mutate_success():
     result = MyMethodMutation.mutate_and_get_payload(
         None,
         mock_info(),
-        **{"cool_name": "Narf", "last_edited": datetime.date(2020, 1, 4)}
+        **{"cool_name": "Narf", "last_edited": datetime.date(2020, 1, 4)},
     )
 
     assert result.errors is None
