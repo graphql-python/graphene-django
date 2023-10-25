@@ -145,7 +145,7 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )
         elif filter_type == "range":
             filterset_class.base_filters[name] = RangeFilter(
@@ -154,5 +154,5 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )

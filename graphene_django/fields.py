@@ -194,7 +194,7 @@ class DjangoConnectionField(ConnectionField):
         enforce_first_or_last,
         root,
         info,
-        **args
+        **args,
     ):
         first = args.get("first")
         last = args.get("last")

@@ -63,7 +63,7 @@ def graphql_query(
             graphql_url,
             json.dumps(body),
             content_type="application/json",
-            **header_params
+            **header_params,
         )
     else:
         resp = client.post(

@@ -102,10 +102,8 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
         if name in all_field_names:
             # Field is a custom field
             warnings.warn(
-                (
-                    'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
-                    'Either remove the custom field or remove the field from the "exclude" list.'
-                ).format(field_name=name, type_=type_)
+                f'Excluding the custom field "{name}" on DjangoObjectType "{type_}" has no effect. '
+                'Either remove the custom field or remove the field from the "exclude" list.'
             )
         else:
             if not hasattr(model, name):

@@ -26,8 +26,7 @@ tests_require = [
 
 
 dev_requires = [
-    "black==23.7.0",
-    "ruff==0.0.283",
+    "ruff==0.1.2",
     "pre-commit",
 ] + tests_require
 
