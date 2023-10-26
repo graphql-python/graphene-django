@@ -231,7 +231,7 @@
     "fields": {
       "category": 3,
       "name": "Newt",
-      "notes": "Braised and Confuesd"
+      "notes": "Braised and Confused"
     },
     "model": "ingredients.ingredient",
     "pk": 5

@@ -19,7 +19,11 @@ class Pet(models.Model):
 class FilmDetails(models.Model):
     location = models.CharField(max_length=30)
     film = models.OneToOneField(
-        "Film", on_delete=models.CASCADE, related_name="details"
+        "Film",
+        on_delete=models.CASCADE,
+        related_name="details",
+        null=True,
+        blank=True,
     )
 
 
@@ -93,7 +97,7 @@ class CNNReporter(Reporter):
 
 class APNewsReporter(Reporter):
     """
-    This class only inherits from Reporter for testing multi table inheritence
+    This class only inherits from Reporter for testing multi table inheritance
     similar to what you'd see in django-polymorphic
     """
 

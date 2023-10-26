@@ -4,6 +4,7 @@ import warnings
 from django.test import Client, TestCase, TransactionTestCase
 
 from graphene_django.settings import graphene_settings
+from graphene_django.utils.utils import _DJANGO_VERSION_AT_LEAST_4_2
 
 DEFAULT_GRAPHQL_URL = "/graphql"
 
@@ -55,8 +56,14 @@ def graphql_query(
         else:
             body["variables"] = {"input": input_data}
     if headers:
+        header_params = (
+            {"headers": headers} if _DJANGO_VERSION_AT_LEAST_4_2 else headers
+        )
         resp = client.post(
-            graphql_url, json.dumps(body), content_type="application/json", **headers
+            graphql_url,
+            json.dumps(body),
+            content_type="application/json",
+            **header_params,
         )
     else:
         resp = client.post(

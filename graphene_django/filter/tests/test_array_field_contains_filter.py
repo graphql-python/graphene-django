@@ -1,17 +1,13 @@
 import pytest
 
-from graphene import Schema
-
 from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_contains_multiple(Query):
+def test_array_field_contains_multiple(schema):
     """
     Test contains filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -32,12 +28,10 @@ def test_array_field_contains_multiple(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_contains_one(Query):
+def test_array_field_contains_one(schema):
     """
     Test contains filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -59,12 +53,10 @@ def test_array_field_contains_one(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_contains_empty_list(Query):
+def test_array_field_contains_empty_list(schema):
     """
     Test contains filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {

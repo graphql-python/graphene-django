@@ -23,8 +23,7 @@ def fields_for_form(form, only_fields, exclude_fields):
     for name, field in form.fields.items():
         is_not_in_only = only_fields and name not in only_fields
         is_excluded = (
-            name
-            in exclude_fields  # or
+            name in exclude_fields  # or
             # name in already_created_fields
         )
 

@@ -168,11 +168,13 @@ class GraphQLView(View):
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
                     graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
                     graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
+                    graphiql_plugin_explorer_css_sri=self.graphiql_plugin_explorer_css_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
                     graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
+                    graphiql_input_value_deprecation=graphene_settings.GRAPHIQL_INPUT_VALUE_DEPRECATION,
                 )
 
             if self.batch:

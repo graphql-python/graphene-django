@@ -302,12 +302,15 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
                     reversed_field_name = root.__class__._meta.get_field(
                         field_name
                     ).remote_field.name
-                    return _type.get_queryset(
-                        _type._meta.model.objects.filter(
-                            **{reversed_field_name: root.pk}
-                        ),
-                        info,
-                    ).get()
+                    try:
+                        return _type.get_queryset(
+                            _type._meta.model.objects.filter(
+                                **{reversed_field_name: root.pk}
+                            ),
+                            info,
+                        ).get()
+                    except _type._meta.model.DoesNotExist:
+                        return None
 
                 return custom_resolver
 

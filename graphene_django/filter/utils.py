@@ -43,7 +43,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             isinstance(filter_field, TypedFilter)
             and filter_field.input_type is not None
         ):
-            # First check if the filter input type has been explicitely given
+            # First check if the filter input type has been explicitly given
             field_type = filter_field.input_type
         else:
             if name not in filterset_class.declared_filters or isinstance(
@@ -145,7 +145,7 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )
         elif filter_type == "range":
             filterset_class.base_filters[name] = RangeFilter(
@@ -154,5 +154,5 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )
