@@ -9,7 +9,14 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import ExecutionResult, OperationType, execute, get_operation_ast, parse
+from graphql import (
+    ExecutionResult,
+    OperationType,
+    execute,
+    get_operation_ast,
+    parse,
+    validate_schema,
+)
 from graphql.error import GraphQLError
 from graphql.execution.middleware import MiddlewareManager
 from graphql.language import OperationDefinitionNode
@@ -295,6 +302,10 @@ class GraphQLView(View):
             if show_graphiql:
                 return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
+
+        schema_validation_errors = validate_schema(self.schema.graphql_schema)
+        if schema_validation_errors:
+            return ExecutionResult(data=None, errors=schema_validation_errors)
 
         try:
             document = parse(query)
