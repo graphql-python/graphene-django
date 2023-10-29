@@ -19,7 +19,6 @@ from graphql import (
 )
 from graphql.error import GraphQLError
 from graphql.execution.middleware import MiddlewareManager
-from graphql.language import OperationDefinitionNode
 from graphql.validation import validate
 
 from graphene import Schema
@@ -316,27 +315,9 @@ class GraphQLView(View):
 
         operation_ast = get_operation_ast(document, operation_name)
 
-        if not operation_ast:
-            ops_count = len(
-                [
-                    x
-                    for x in document.definitions
-                    if isinstance(x, OperationDefinitionNode)
-                ]
-            )
-            if ops_count > 1:
-                op_error = (
-                    "Must provide operation name if query contains multiple operations."
-                )
-            elif operation_name:
-                op_error = f"Unknown operation named '{operation_name}'."
-            else:
-                op_error = "Must provide a valid operation."
-
-            return ExecutionResult(errors=[GraphQLError(op_error)])
-
         if (
             request.method.lower() == "get"
+            and operation_ast is not None
             and operation_ast.operation != OperationType.QUERY
         ):
             if show_graphiql:
@@ -370,9 +351,13 @@ class GraphQLView(View):
                 ] = self.execution_context_class
 
             if (
-                graphene_settings.ATOMIC_MUTATIONS is True
-                or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
-            ) and operation_ast.operation == OperationType.MUTATION:
+                operation_ast is not None
+                and operation_ast.operation == OperationType.MUTATION
+                and (
+                    graphene_settings.ATOMIC_MUTATIONS is True
+                    or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+                )
+            ):
                 with transaction.atomic():
                     result = execute(schema, document, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
