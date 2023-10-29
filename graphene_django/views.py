@@ -303,7 +303,9 @@ class GraphQLView(View):
                 return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
-        schema_validation_errors = validate_schema(self.schema.graphql_schema)
+        schema = self.schema.graphql_schema
+
+        schema_validation_errors = validate_schema(schema)
         if schema_validation_errors:
             return ExecutionResult(data=None, errors=schema_validation_errors)
 
@@ -349,8 +351,7 @@ class GraphQLView(View):
                 )
             )
 
-        execute_args = (self.schema.graphql_schema, document)
-        validation_errors = validate(*execute_args)
+        validation_errors = validate(schema, document)
 
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
@@ -373,12 +374,12 @@ class GraphQLView(View):
                 or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
             ) and operation_ast.operation == OperationType.MUTATION:
                 with transaction.atomic():
-                    result = execute(*execute_args, **execute_options)
+                    result = execute(schema, document, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
                         transaction.set_rollback(True)
                 return result
 
-            return execute(*execute_args, **execute_options)
+            return execute(schema, document, **execute_options)
         except Exception as e:
             return ExecutionResult(errors=[e])
 
