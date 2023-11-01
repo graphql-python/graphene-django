@@ -336,7 +336,12 @@ class GraphQLView(View):
                 )
             )
 
-        validation_errors = validate(schema, document, self.validation_rules)
+        validation_errors = validate(
+            schema,
+            document,
+            self.validation_rules,
+            graphene_settings.MAX_VALIDATION_ERRORS,
+        )
 
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
