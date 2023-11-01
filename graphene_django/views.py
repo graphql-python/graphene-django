@@ -96,6 +96,7 @@ class GraphQLView(View):
     batch = False
     subscription_path = None
     execution_context_class = None
+    validation_rules = None
 
     def __init__(
         self,
@@ -107,6 +108,7 @@ class GraphQLView(View):
         batch=False,
         subscription_path=None,
         execution_context_class=None,
+        validation_rules=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -134,6 +136,8 @@ class GraphQLView(View):
             self.schema, Schema
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
+
+        self.validation_rules = validation_rules
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -332,7 +336,7 @@ class GraphQLView(View):
                 )
             )
 
-        validation_errors = validate(schema, document)
+        validation_errors = validate(schema, document, self.validation_rules)
 
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
