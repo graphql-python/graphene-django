@@ -142,6 +142,15 @@ Default: ``False``
    # ]
 
 
+``DJANGO_CHOICE_FIELD_ENUM_CONVERT``
+--------------------------------------
+
+When set to ``True`` Django choice fields are automatically converted into Enum types.
+
+Can be disabled globally by setting it to ``False``.
+
+Default: ``True``
+
 ``DJANGO_CHOICE_FIELD_ENUM_V2_NAMING``
 --------------------------------------
 

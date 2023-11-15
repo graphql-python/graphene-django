@@ -661,6 +661,122 @@ class TestDjangoObjectType:
             }"""
         )
 
+    def test_django_objecttype_convert_choices_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = "__all__"
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: String!
+              cuteness: Int!
+            }"""
+        )
+
+    def test_django_objecttype_convert_choices_true_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = "__all__"
+                convert_choices_to_enum = True
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: TestsPetModelKindChoices!
+              cuteness: TestsPetModelCutenessChoices!
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelCutenessChoices {
+              \"""Kind of cute\"""
+              A_1
+
+              \"""Pretty cute\"""
+              A_2
+
+              \"""OMG SO CUTE!!!\"""
+              A_3
+            }"""
+        )
+
+    def test_django_objecttype_convert_choices_enum_list_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = ["kind"]
+                fields = "__all__"
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: TestsPetModelKindChoices!
+              cuteness: Int!
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }"""
+        )
+
 
 @with_local_registry
 def test_django_objecttype_name_connection_propagation():
