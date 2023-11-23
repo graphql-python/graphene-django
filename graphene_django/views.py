@@ -137,7 +137,7 @@ class GraphQLView(View):
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
 
-        self.validation_rules = validation_rules
+        self.validation_rules = validation_rules or self.validation_rules
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):

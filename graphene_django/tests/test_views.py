@@ -829,6 +829,8 @@ def test_query_errors_non_atomic(set_rollback_mock, client):
     set_rollback_mock.assert_not_called()
 
 
+validation_urls = ["/graphql/validation/", "/graphql/validation/alternative/"]
+
 query_with_two_introspections = """
 query Instrospection {
     queryType: __schema {
@@ -856,22 +858,20 @@ def test_allow_introspection(client):
     }
 
 
+@pytest.mark.parametrize("url", validation_urls)
 @pytest.mark.urls("graphene_django.tests.urls_validation")
-def test_validation_disallow_introspection(client):
-    response = client.post(
-        url_string("/graphql/validation/", query="{__schema {queryType {name}}}")
-    )
+def test_validation_disallow_introspection(client, url):
+    response = client.post(url_string(url, query="{__schema {queryType {name}}}"))
 
     assert response.status_code == 400
     assert introspection_disallow_error_message in response.content.decode()
 
 
+@pytest.mark.parametrize("url", validation_urls)
 @pytest.mark.urls("graphene_django.tests.urls_validation")
 @patch("graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", 2)
-def test_within_max_validation_errors(client):
-    response = client.post(
-        url_string("/graphql/validation/", query=query_with_two_introspections)
-    )
+def test_within_max_validation_errors(client, url):
+    response = client.post(url_string(url, query=query_with_two_introspections))
 
     assert response.status_code == 400
 
@@ -881,12 +881,11 @@ def test_within_max_validation_errors(client):
     assert max_validation_errors_exceeded_message not in text_response
 
 
+@pytest.mark.parametrize("url", validation_urls)
 @pytest.mark.urls("graphene_django.tests.urls_validation")
 @patch("graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", 1)
-def test_exceeds_max_validation_errors(client):
-    response = client.post(
-        url_string("/graphql/validation/", query=query_with_two_introspections)
-    )
+def test_exceeds_max_validation_errors(client, url):
+    response = client.post(url_string(url, query=query_with_two_introspections))
 
     assert response.status_code == 400
     assert max_validation_errors_exceeded_message in response.content.decode().lower()
