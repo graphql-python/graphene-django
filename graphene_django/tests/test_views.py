@@ -829,7 +829,11 @@ def test_query_errors_non_atomic(set_rollback_mock, client):
     set_rollback_mock.assert_not_called()
 
 
-validation_urls = ["/graphql/validation/", "/graphql/validation/alternative/"]
+validation_urls = [
+    "/graphql/validation/",
+    "/graphql/validation/alternative/",
+    "/graphql/validation/inherited/",
+]
 
 query_with_two_introspections = """
 query Instrospection {
