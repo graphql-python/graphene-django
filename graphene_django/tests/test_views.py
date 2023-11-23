@@ -827,3 +827,66 @@ def test_query_errors_atomic_request(set_rollback_mock, client):
 def test_query_errors_non_atomic(set_rollback_mock, client):
     client.get(url_string(query="force error"))
     set_rollback_mock.assert_not_called()
+
+
+query_with_two_introspections = """
+query Instrospection {
+    queryType: __schema {
+        queryType {name}
+    }
+    mutationType: __schema {
+        mutationType {name}
+    }
+}
+"""
+
+introspection_disallow_error_message = "introspection is disabled"
+max_validation_errors_exceeded_message = "too many validation errors"
+
+
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+def test_allow_introspection(client):
+    response = client.post(
+        url_string("/graphql/", query="{__schema {queryType {name}}}")
+    )
+    assert response.status_code == 200
+
+    assert response_json(response) == {
+        "data": {"__schema": {"queryType": {"name": "QueryRoot"}}}
+    }
+
+
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+def test_validation_disallow_introspection(client):
+    response = client.post(
+        url_string("/graphql/validation/", query="{__schema {queryType {name}}}")
+    )
+
+    assert response.status_code == 400
+    assert introspection_disallow_error_message in response.content.decode()
+
+
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+@patch("graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", 2)
+def test_within_max_validation_errors(client):
+    response = client.post(
+        url_string("/graphql/validation/", query=query_with_two_introspections)
+    )
+
+    assert response.status_code == 400
+
+    text_response = response.content.decode().lower()
+
+    assert text_response.count(introspection_disallow_error_message) == 2
+    assert max_validation_errors_exceeded_message not in text_response
+
+
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+@patch("graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", 1)
+def test_exceeds_max_validation_errors(client):
+    response = client.post(
+        url_string("/graphql/validation/", query=query_with_two_introspections)
+    )
+
+    assert response.status_code == 400
+    assert max_validation_errors_exceeded_message in response.content.decode().lower()
