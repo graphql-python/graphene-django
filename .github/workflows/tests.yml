@@ -12,15 +12,17 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        django: ["3.2", "4.1", "4.2"]
-        python-version: ["3.8", "3.9", "3.10"]
-        include:
-          - django: "4.1"
+        django: ["3.2", "4.2", "5.0"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        exclude:
+          - django: "3.2"
             python-version: "3.11"
-          - django: "4.2"
-            python-version: "3.11"
-          - django: "4.2"
+          - django: "3.2"
             python-version: "3.12"
+          - django: "5.0"
+            python-version: "3.8"
+          - django: "5.0"
+            python-version: "3.9"
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python ${{ matrix.python-version }}
