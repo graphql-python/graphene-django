@@ -42,6 +42,7 @@ DEFAULTS = {
     # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
     "GRAPHIQL_SHOULD_PERSIST_HEADERS": False,
+    "GRAPHIQL_INPUT_VALUE_DEPRECATION": False,
     "ATOMIC_MUTATIONS": False,
     "TESTING_ENDPOINT": "/graphql",
 }

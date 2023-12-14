@@ -1,5 +1,6 @@
 import inspect
 
+import django
 from django.db import connection, models, transaction
 from django.db.models.manager import Manager
 from django.utils.encoding import force_str
@@ -145,3 +146,8 @@ def bypass_get_queryset(resolver):
     """
     resolver._bypass_get_queryset = True
     return resolver
+
+
+_DJANGO_VERSION_AT_LEAST_4_2 = django.VERSION[0] > 4 or (
+    django.VERSION[0] >= 4 and django.VERSION[1] >= 2
+)

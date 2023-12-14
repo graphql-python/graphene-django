@@ -13,6 +13,7 @@ ignore = [
     "B017",  # pytest.raises(Exception) should be considered evil
     "B028",  # warnings.warn called without an explicit stacklevel keyword argument
     "B904",  # check for raise statements in exception handlers that lack a from clause
+    "W191",  # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
 ]
 
 exclude = [
@@ -29,5 +30,4 @@ target-version = "py38"
 [isort]
 known-first-party = ["graphene", "graphene-django"]
 known-local-folder = ["cookbook"]
-force-wrap-aliases = true
 combine-as-imports = true
