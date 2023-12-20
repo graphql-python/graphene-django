@@ -827,3 +827,97 @@ def test_query_errors_atomic_request(set_rollback_mock, client):
 def test_query_errors_non_atomic(set_rollback_mock, client):
     client.get(url_string(query="force error"))
     set_rollback_mock.assert_not_called()
+
+
+VALIDATION_URLS = [
+    "/graphql/validation/",
+    "/graphql/validation/alternative/",
+    "/graphql/validation/inherited/",
+]
+
+QUERY_WITH_TWO_INTROSPECTIONS = """
+query Instrospection {
+    queryType: __schema {
+        queryType {name}
+    }
+    mutationType: __schema {
+        mutationType {name}
+    }
+}
+"""
+
+N_INTROSPECTIONS = 2
+
+INTROSPECTION_DISALLOWED_ERROR_MESSAGE = "introspection is disabled"
+MAX_VALIDATION_ERRORS_EXCEEDED_MESSAGE = "too many validation errors"
+
+
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+def test_allow_introspection(client):
+    response = client.post(
+        url_string("/graphql/", query="{__schema {queryType {name}}}")
+    )
+    assert response.status_code == 200
+
+    assert response_json(response) == {
+        "data": {"__schema": {"queryType": {"name": "QueryRoot"}}}
+    }
+
+
+@pytest.mark.parametrize("url", VALIDATION_URLS)
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+def test_validation_disallow_introspection(client, url):
+    response = client.post(url_string(url, query="{__schema {queryType {name}}}"))
+
+    assert response.status_code == 400
+
+    json_response = response_json(response)
+    assert "data" not in json_response
+    assert "errors" in json_response
+    assert len(json_response["errors"]) == 1
+
+    error_message = json_response["errors"][0]["message"]
+    assert INTROSPECTION_DISALLOWED_ERROR_MESSAGE in error_message
+
+
+@pytest.mark.parametrize("url", VALIDATION_URLS)
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+@patch(
+    "graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", N_INTROSPECTIONS
+)
+def test_within_max_validation_errors(client, url):
+    response = client.post(url_string(url, query=QUERY_WITH_TWO_INTROSPECTIONS))
+
+    assert response.status_code == 400
+
+    json_response = response_json(response)
+    assert "data" not in json_response
+    assert "errors" in json_response
+    assert len(json_response["errors"]) == N_INTROSPECTIONS
+
+    error_messages = [error["message"].lower() for error in json_response["errors"]]
+
+    n_introspection_error_messages = sum(
+        INTROSPECTION_DISALLOWED_ERROR_MESSAGE in msg for msg in error_messages
+    )
+    assert n_introspection_error_messages == N_INTROSPECTIONS
+
+    assert all(
+        MAX_VALIDATION_ERRORS_EXCEEDED_MESSAGE not in msg for msg in error_messages
+    )
+
+
+@pytest.mark.parametrize("url", VALIDATION_URLS)
+@pytest.mark.urls("graphene_django.tests.urls_validation")
+@patch("graphene_django.settings.graphene_settings.MAX_VALIDATION_ERRORS", 1)
+def test_exceeds_max_validation_errors(client, url):
+    response = client.post(url_string(url, query=QUERY_WITH_TWO_INTROSPECTIONS))
+
+    assert response.status_code == 400
+
+    json_response = response_json(response)
+    assert "data" not in json_response
+    assert "errors" in json_response
+
+    error_messages = (error["message"].lower() for error in json_response["errors"])
+    assert any(MAX_VALIDATION_ERRORS_EXCEEDED_MESSAGE in msg for msg in error_messages)
