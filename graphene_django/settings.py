@@ -43,6 +43,7 @@ DEFAULTS = {
     "GRAPHIQL_INPUT_VALUE_DEPRECATION": False,
     "ATOMIC_MUTATIONS": False,
     "TESTING_ENDPOINT": "/graphql",
+    "MAX_VALIDATION_ERRORS": None,
 }
 
 if settings.DEBUG:

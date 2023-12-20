@@ -269,3 +269,14 @@ Default: ``False``
 
 
 .. _GraphiQLDocs: https://graphiql-test.netlify.app/typedoc/modules/graphiql_react#graphiqlprovider-2
+
+
+``MAX_VALIDATION_ERRORS``
+------------------------------------
+
+In case ``validation_rules`` are provided to ``GraphQLView``, if this is set to a non-negative ``int`` value,
+``graphql.validation.validate`` will stop validation after this number of errors has been reached.
+If not set or set to ``None``, the maximum number of errors will follow ``graphql.validation.validate`` default
+*i.e.* 100.
+
+Default: ``None``
