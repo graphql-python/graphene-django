@@ -22,8 +22,13 @@ class TestDjangoListField:
         class Query(ObjectType):
             something = DjangoListField(String)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(TypeError) as excinfo:
             Schema(query=Query)
+
+        assert (
+            "Query fields cannot be resolved. DjangoListField only accepts DjangoObjectType types as underlying type"
+            in str(excinfo.value)
+        )
 
     def test_only_import_paths(self):
         list_field = DjangoListField("graphene_django.tests.schema.Human")
