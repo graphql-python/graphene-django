@@ -88,7 +88,7 @@ def test_query_djangoformtype():
     schema = graphene.Schema(query=MockQuery)
 
     result = schema.execute(
-        """ 
+        """
             query {
                 form {
                     fields {
