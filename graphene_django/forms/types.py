@@ -8,8 +8,9 @@ from graphene.utils.str_converters import to_camel_case
 from django.db.models import Model
 
 from ..converter import BlankValueField
-from ..types import ErrorType  # noqa Import ErrorType for backwards compatibility
+from ..types import DjangoObjectTypeOptions, ErrorType  # noqa Import ErrorType for backwards compatibility
 from .mutation import fields_for_form
+from graphene.types.objecttype import ObjectTypeOptions
 
 
 class DjangoFormFieldObjectType(ObjectType):
@@ -24,50 +25,35 @@ class DjangoFormFieldObjectType(ObjectType):
     )
 
 
+class DjangoFormTypeOptions(ObjectTypeOptions):
+    form_class = Form
+    only_fields = ()
+    exclude_fields = ()
+    object_type = Model
+
+
 class DjangoFormObjectType(ObjectType):
-    class Meta:
-        form_class = Form
-        object_type = Model
-        only_fields = []
-        exclude_fields = []
+    form_class = Form
+    only_fields = ()
+    exclude_fields = ()
 
     fields = graphene.List(
         DjangoFormFieldObjectType
     )
-    
-    @classmethod
-    def __init_subclass_with_meta__(
-        cls,
-        container=None,
-        _meta=None,
-        only_fields=(),
-        exclude_fields=(),
-        form_class=None,
-        object_type=None,
-        add_id_field_name=None,
-        add_id_field_type=None,
-        **options,
-    ):
-    
-        if not form_class:
-            raise Exception("form_class is required for DjangoFormObjectType")
-
-        super().__init_subclass_with_meta__(container=container, _meta=_meta, **options)
 
     @staticmethod
-    def resolve_fields(parent, info):
-        form_class = parent._meta.form_class
+    def resolve_fields(parent, info): 
+        form_class = parent.form_class
         form = form_class()
-        only_fields = parent._meta.only_fields
-        exclude_fields = parent._meta.exclude_fields
+        only_fields = parent.only_fields
+        exclude_fields = parent.exclude_fields
 
         form_fields = fields_for_form(form, only_fields, exclude_fields)
-        
+
         result = []
-        
-        type = field.__class__.__name__
 
         for name, field in form_fields.items():
+            type = field.__class__.__name__
             result.append(
                 DjangoFormFieldObjectType(
                     name=name,

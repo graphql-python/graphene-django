@@ -5,7 +5,7 @@ import graphene
 from graphene_django import DjangoObjectType
 
 from ...tests.models import CHOICES, Film, Reporter
-from ..types import DjangoFormFieldObjectType, DjangoFormInputObjectType, DjangoFormObjectType
+from ..types import DjangoFormFieldObjectType, DjangoFormInputObjectType, DjangoFormObjectType, DjangoFormTypeOptions
 
 # Reporter a_choice CHOICES = ((1, "this"), (2, _("that")))
 THIS = CHOICES[0][0]
@@ -40,41 +40,16 @@ class MyForm(forms.Form):
 
 
 class ReporterFormType(DjangoFormObjectType):
-    class Meta:
-        form_class = ReporterForm
-
-
-def test_needs_form_class():
-    with raises(Exception) as exc:
-        class MyFormType(DjangoFormObjectType):
-            pass
-
-    assert exc.value.args[0] == "form_class is required for DjangoFormObjectType"
-
-
-def test_type_form_has_fields():
-    class ReporterFormType(DjangoFormObjectType):
-        class Meta:
-            form_class = ReporterForm
-            only_fields = ("first_name", "last_name", "a_choice")
-
-    fields = ["first_name", "last_name", "a_choice", "id"]
-    assert all(f in ReporterFormType._meta.fields for f in fields)
-
-
-def test_type_form_has_fields():
-    class MyFormFieldType(DjangoFormFieldObjectType):
-        class Meta:
-            form_class = MyForm
-
-    fields = ["text_field", "int_field", "id"]
-    assert all(f in MyFormFieldType._meta.fields for f in fields)
+    form_class = ReporterForm
+    only_fields = ('pets', 'email')
 
 
 def test_query_djangoformtype():
     class MyFormType(DjangoFormObjectType):
-        class Meta:
-            form_class = MyForm
+        form_class = MyForm
+        
+        only_fields = ('text_field', 'int_field')
+        exclude_fields = []
 
     class MockQuery(graphene.ObjectType):
         form = graphene.Field(
@@ -106,11 +81,11 @@ def test_query_djangoformtype():
             "fields": [
                 {
                     "name": "text_field",
-                    "type": "CharField"
+                    "type": "String"
                 },
                 {
                     "name": "int_field",
-                    "type": "IntegerField"
+                    "type": "Int"
                 }
             ]
         }
