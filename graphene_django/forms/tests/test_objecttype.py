@@ -47,7 +47,7 @@ class ReporterFormType(DjangoFormObjectType):
 def test_query_djangoformtype():
     class MyFormType(DjangoFormObjectType):
         form_class = MyForm
-        
+
         only_fields = ('text_field', 'int_field')
         exclude_fields = []
 
