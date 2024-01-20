@@ -20,17 +20,20 @@ from .utils import maybe_queryset
 
 class DjangoListField(Field):
     def __init__(self, _type, *args, **kwargs):
-        from .types import DjangoObjectType
-
         if isinstance(_type, NonNull):
             _type = _type.of_type
 
         # Django would never return a Set of None  vvvvvvv
         super().__init__(List(NonNull(_type)), *args, **kwargs)
 
+    @property
+    def type(self):
+        from .types import DjangoObjectType
+
         assert issubclass(
             self._underlying_type, DjangoObjectType
-        ), "DjangoListField only accepts DjangoObjectType types"
+        ), "DjangoListField only accepts DjangoObjectType types as underlying type"
+        return super().type
 
     @property
     def _underlying_type(self):
