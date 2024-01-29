@@ -26,6 +26,9 @@ else:
 
 
 class Event(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     name = models.CharField(max_length=50)
     tags = ArrayField(models.CharField(max_length=50))
     tag_ids = ArrayField(models.IntegerField())
