@@ -2,11 +2,12 @@ import datetime
 import re
 
 import pytest
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Model, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
+from graphene.relay import Node
 
-from ..fields import DjangoListField
+from ..fields import DjangoConnectionField, DjangoListField
 from ..types import DjangoObjectType
 from .models import (
     Article as ArticleModel,
@@ -716,3 +717,34 @@ class TestDjangoListField:
             r'SELECT .* FROM "tests_film" INNER JOIN "tests_film_reporters" .* LEFT OUTER JOIN "tests_filmdetails"',
             captured.captured_queries[1]["sql"],
         )
+
+
+class TestDjangoConnectionField:
+    def test_model_ordering_assertion(self):
+        class Chaos(Model):
+            class Meta:
+                app_label = "test"
+
+        class ChaosType(DjangoObjectType):
+            class Meta:
+                model = Chaos
+                interfaces = (Node,)
+
+        class Query(ObjectType):
+            chaos = DjangoConnectionField(ChaosType)
+
+        with pytest.raises(
+            TypeError,
+            match=r"Django model test\.Chaos has to have a default ordering to be used in a Connection\.",
+        ):
+            Schema(query=Query)
+
+    def test_only_django_object_types(self):
+        class Query(ObjectType):
+            something = DjangoConnectionField(String)
+
+        with pytest.raises(
+            TypeError,
+            match="DjangoConnectionField only accepts DjangoObjectType types as underlying type",
+        ):
+            Schema(query=Query)
