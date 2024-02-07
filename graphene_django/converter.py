@@ -1,5 +1,6 @@
 import inspect
 from collections import OrderedDict
+from collections.abc import Callable
 from functools import partial, singledispatch, wraps
 
 from django.db import models
@@ -72,6 +73,8 @@ def convert_choice_name(name):
 
 def get_choices(choices):
     converted_names = []
+    if isinstance(choices, Callable):
+        choices = choices()
     if isinstance(choices, OrderedDict):
         choices = choices.items()
     for value, help_text in choices:
