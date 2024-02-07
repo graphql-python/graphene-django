@@ -180,6 +180,26 @@ def test_field_with_choices_convert_enum():
     assert graphene_type._meta.enum.__members__["EN"].description == "English"
 
 
+def test_field_with_callable_choices_convert_enum():
+    def get_choices():
+        return ("es", "Spanish"), ("en", "English")
+
+    field = models.CharField(help_text="Language", choices=get_choices)
+
+    class TranslatedModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    graphene_type = convert_django_field_with_choices(field).type.of_type
+    assert graphene_type._meta.name == "TestTranslatedModelLanguageChoices"
+    assert graphene_type._meta.enum.__members__["ES"].value == "es"
+    assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
+    assert graphene_type._meta.enum.__members__["EN"].value == "en"
+    assert graphene_type._meta.enum.__members__["EN"].description == "English"
+
+
 def test_field_with_grouped_choices():
     field = models.CharField(
         help_text="Language",
