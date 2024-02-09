@@ -14,7 +14,7 @@ tests:
 
 .PHONY: format ## Format code
 format:
-	black graphene_django examples setup.py
+	ruff format graphene_django examples setup.py
 
 .PHONY: lint ## Lint code
 lint:

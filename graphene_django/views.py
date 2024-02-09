@@ -11,10 +11,17 @@ from django.shortcuts import render
 from django.utils.decorators import classonlymethod, method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import OperationType, get_operation_ast, parse
+from graphql import (
+    ExecutionResult,
+    OperationType,
+    execute,
+    get_operation_ast,
+    parse,
+    validate_schema,
+)
 from graphql.error import GraphQLError
-from graphql.execution import ExecutionResult
 from graphql.execution.middleware import MiddlewareManager
+from graphql.validation import validate
 
 from graphene import Schema
 from graphene_django.constants import MUTATION_ERRORS_FLAG
@@ -91,6 +98,7 @@ class GraphQLView(View):
     batch = False
     subscription_path = None
     execution_context_class = None
+    validation_rules = None
 
     def __init__(
         self,
@@ -102,6 +110,7 @@ class GraphQLView(View):
         batch=False,
         subscription_path=None,
         execution_context_class=None,
+        validation_rules=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -129,6 +138,8 @@ class GraphQLView(View):
             self.schema, Schema
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
+
+        self.validation_rules = validation_rules or self.validation_rules
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -169,11 +180,13 @@ class GraphQLView(View):
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
                     graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
                     graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
+                    graphiql_plugin_explorer_css_sri=self.graphiql_plugin_explorer_css_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
                     graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
+                    graphiql_input_value_deprecation=graphene_settings.GRAPHIQL_INPUT_VALUE_DEPRECATION,
                 )
 
             if self.batch:
@@ -295,43 +308,61 @@ class GraphQLView(View):
                 return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
+        schema = self.schema.graphql_schema
+
+        schema_validation_errors = validate_schema(schema)
+        if schema_validation_errors:
+            return ExecutionResult(data=None, errors=schema_validation_errors)
+
         try:
             document = parse(query)
         except Exception as e:
             return ExecutionResult(errors=[e])
 
-        if request.method.lower() == "get":
-            operation_ast = get_operation_ast(document, operation_name)
-            if operation_ast and operation_ast.operation != OperationType.QUERY:
-                if show_graphiql:
-                    return None
+        operation_ast = get_operation_ast(document, operation_name)
 
-                raise HttpError(
-                    HttpResponseNotAllowed(
-                        ["POST"],
-                        "Can only perform a {} operation from a POST request.".format(
-                            operation_ast.operation.value
-                        ),
-                    )
+        if (
+            request.method.lower() == "get"
+            and operation_ast is not None
+            and operation_ast.operation != OperationType.QUERY
+        ):
+            if show_graphiql:
+                return None
+
+            raise HttpError(
+                HttpResponseNotAllowed(
+                    ["POST"],
+                    "Can only perform a {} operation from a POST request.".format(
+                        operation_ast.operation.value
+                    ),
                 )
-        try:
-            extra_options = {}
-            if self.execution_context_class:
-                extra_options["execution_context_class"] = self.execution_context_class
+            )
 
-            options = {
-                "source": query,
+        validation_errors = validate(
+            schema,
+            document,
+            self.validation_rules,
+            graphene_settings.MAX_VALIDATION_ERRORS,
+        )
+
+        if validation_errors:
+            return ExecutionResult(data=None, errors=validation_errors)
+
+        try:
+            execute_options = {
                 "root_value": self.get_root_value(request),
+                "context_value": self.get_context(request),
                 "variable_values": variables,
                 "operation_name": operation_name,
-                "context_value": self.get_context(request),
                 "middleware": self.get_middleware(request),
             }
-            options.update(extra_options)
+            if self.execution_context_class:
+                execute_options[
+                    "execution_context_class"
+                ] = self.execution_context_class
 
-            operation_ast = get_operation_ast(document, operation_name)
             if (
-                operation_ast
+                operation_ast is not None
                 and operation_ast.operation == OperationType.MUTATION
                 and (
                     graphene_settings.ATOMIC_MUTATIONS is True
@@ -339,12 +370,12 @@ class GraphQLView(View):
                 )
             ):
                 with transaction.atomic():
-                    result = self.schema.execute(**options)
+                    result = execute(schema, document, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
                         transaction.set_rollback(True)
                 return result
 
-            return self.schema.execute(**options)
+            return execute(schema, document, **execute_options)
         except Exception as e:
             return ExecutionResult(errors=[e])
 

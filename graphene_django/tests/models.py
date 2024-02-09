@@ -5,10 +5,19 @@ CHOICES = ((1, "this"), (2, _("that")))
 
 
 class Person(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     name = models.CharField(max_length=30)
+    parent = models.ForeignKey(
+        "self", on_delete=models.CASCADE, null=True, blank=True, related_name="children"
+    )
 
 
 class Pet(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     name = models.CharField(max_length=30)
     age = models.PositiveIntegerField()
     owner = models.ForeignKey(
@@ -28,6 +37,9 @@ class FilmDetails(models.Model):
 
 
 class Film(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     genre = models.CharField(
         max_length=2,
         help_text="Genre",
@@ -43,6 +55,9 @@ class DoeReporterManager(models.Manager):
 
 
 class Reporter(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     first_name = models.CharField(max_length=30)
     last_name = models.CharField(max_length=30)
     email = models.EmailField()
@@ -97,7 +112,7 @@ class CNNReporter(Reporter):
 
 class APNewsReporter(Reporter):
     """
-    This class only inherits from Reporter for testing multi table inheritence
+    This class only inherits from Reporter for testing multi table inheritance
     similar to what you'd see in django-polymorphic
     """
 

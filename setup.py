@@ -27,8 +27,7 @@ tests_require = [
 
 
 dev_requires = [
-    "black==23.7.0",
-    "ruff==0.0.283",
+    "ruff==0.1.2",
     "pre-commit",
 ] + tests_require
 
@@ -51,6 +50,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: Implementation :: PyPy",
         "Framework :: Django",
         "Framework :: Django :: 3.2",

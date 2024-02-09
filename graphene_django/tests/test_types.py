@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict, defaultdict
 from textwrap import dedent
 from unittest.mock import patch
@@ -399,7 +400,7 @@ def test_django_objecttype_fields_exist_on_model():
     with pytest.warns(
         UserWarning,
         match=r"Field name .* matches an attribute on Django model .* but it's not a model field",
-    ) as record:
+    ):
 
         class Reporter2(DjangoObjectType):
             class Meta:
@@ -407,7 +408,8 @@ def test_django_objecttype_fields_exist_on_model():
                 fields = ["first_name", "some_method", "email"]
 
     # Don't warn if selecting a custom field
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
 
         class Reporter3(DjangoObjectType):
             custom_field = String()
@@ -415,8 +417,6 @@ def test_django_objecttype_fields_exist_on_model():
             class Meta:
                 model = ReporterModel
                 fields = ["first_name", "custom_field", "email"]
-
-    assert len(record) == 0
 
 
 @with_local_registry
@@ -445,14 +445,13 @@ def test_django_objecttype_exclude_fields_exist_on_model():
                 exclude = ["custom_field"]
 
     # Don't warn on exclude fields
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
 
         class Reporter4(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 exclude = ["email", "first_name"]
-
-    assert len(record) == 0
 
 
 @with_local_registry
@@ -467,23 +466,21 @@ def test_django_objecttype_neither_fields_nor_exclude():
             class Meta:
                 model = ReporterModel
 
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
 
         class Reporter2(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 fields = ["email"]
 
-    assert len(record) == 0
-
-    with pytest.warns(None) as record:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
 
         class Reporter3(DjangoObjectType):
             class Meta:
                 model = ReporterModel
                 exclude = ["email"]
-
-    assert len(record) == 0
 
 
 def custom_enum_name(field):
@@ -653,6 +650,122 @@ class TestDjangoObjectType:
 
             \"""An enumeration.\"""
             enum CustomEnumKind {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }"""
+        )
+
+    def test_django_objecttype_convert_choices_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = "__all__"
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: String!
+              cuteness: Int!
+            }"""
+        )
+
+    def test_django_objecttype_convert_choices_true_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                fields = "__all__"
+                convert_choices_to_enum = True
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: TestsPetModelKindChoices!
+              cuteness: TestsPetModelCutenessChoices!
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
+              \"""Cat\"""
+              CAT
+
+              \"""Dog\"""
+              DOG
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelCutenessChoices {
+              \"""Kind of cute\"""
+              A_1
+
+              \"""Pretty cute\"""
+              A_2
+
+              \"""OMG SO CUTE!!!\"""
+              A_3
+            }"""
+        )
+
+    def test_django_objecttype_convert_choices_enum_list_global_false(
+        self, graphene_settings, PetModel
+    ):
+        graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT = False
+
+        class Pet(DjangoObjectType):
+            class Meta:
+                model = PetModel
+                convert_choices_to_enum = ["kind"]
+                fields = "__all__"
+
+        class Query(ObjectType):
+            pet = Field(Pet)
+
+        schema = Schema(query=Query)
+
+        assert str(schema) == dedent(
+            """\
+            type Query {
+              pet: Pet
+            }
+
+            type Pet {
+              id: ID!
+              kind: TestsPetModelKindChoices!
+              cuteness: Int!
+            }
+
+            \"""An enumeration.\"""
+            enum TestsPetModelKindChoices {
               \"""Cat\"""
               CAT
 

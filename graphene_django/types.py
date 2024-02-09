@@ -24,7 +24,7 @@ ALL_FIELDS = "__all__"
 
 
 def construct_fields(
-    model, registry, only_fields, exclude_fields, convert_choices_to_enum
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum=None
 ):
     _model_fields = get_model_fields(model)
 
@@ -48,7 +48,7 @@ def construct_fields(
             continue
 
         _convert_choices_to_enum = convert_choices_to_enum
-        if not isinstance(_convert_choices_to_enum, bool):
+        if isinstance(_convert_choices_to_enum, list):
             # then `convert_choices_to_enum` is a list of field names to convert
             if name in _convert_choices_to_enum:
                 _convert_choices_to_enum = True
@@ -103,10 +103,8 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
         if name in all_field_names:
             # Field is a custom field
             warnings.warn(
-                (
-                    'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
-                    'Either remove the custom field or remove the field from the "exclude" list.'
-                ).format(field_name=name, type_=type_)
+                f'Excluding the custom field "{name}" on DjangoObjectType "{type_}" has no effect. '
+                'Either remove the custom field or remove the field from the "exclude" list.'
             )
         else:
             if not hasattr(model, name):
@@ -149,7 +147,7 @@ class DjangoObjectType(ObjectType):
         connection_class=None,
         use_connection=None,
         interfaces=(),
-        convert_choices_to_enum=True,
+        convert_choices_to_enum=None,
         _meta=None,
         **options,
     ):

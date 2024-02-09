@@ -3,28 +3,35 @@ import re
 
 import pytest
 from asgiref.sync import async_to_sync
-from django.db.models import Count, Prefetch
+from django.db.models import Count, Model, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
+from graphene.relay import Node
 
-from ..fields import DjangoListField
+from ..fields import DjangoConnectionField, DjangoListField
 from ..types import DjangoObjectType
 from .async_test_helper import assert_async_result_equal
 from .models import (
     Article as ArticleModel,
     Film as FilmModel,
     FilmDetails as FilmDetailsModel,
+    Person as PersonModel,
     Reporter as ReporterModel,
 )
 
 
 class TestDjangoListField:
     def test_only_django_object_types(self):
-        class TestType(ObjectType):
-            foo = String()
+        class Query(ObjectType):
+            something = DjangoListField(String)
 
-        with pytest.raises(AssertionError):
-            DjangoListField(TestType)
+        with pytest.raises(TypeError) as excinfo:
+            Schema(query=Query)
+
+        assert (
+            "Query fields cannot be resolved. DjangoListField only accepts DjangoObjectType types as underlying type"
+            in str(excinfo.value)
+        )
 
     def test_only_import_paths(self):
         list_field = DjangoListField("graphene_django.tests.schema.Human")
@@ -297,6 +304,69 @@ class TestDjangoListField:
             ]
         }
         assert_async_result_equal(schema, query, result)
+
+    def test_same_type_nested_list_field(self):
+        class Person(DjangoObjectType):
+            class Meta:
+                model = PersonModel
+                fields = ("name", "parent")
+
+            children = DjangoListField(lambda: Person)
+
+        class Query(ObjectType):
+            persons = DjangoListField(Person)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                persons {
+                    name
+                    children {
+                        name
+                    }
+                }
+            }
+        """
+
+        p1 = PersonModel.objects.create(name="Tara")
+        PersonModel.objects.create(name="Debra")
+
+        PersonModel.objects.create(
+            name="Toto",
+            parent=p1,
+        )
+        PersonModel.objects.create(
+            name="Tata",
+            parent=p1,
+        )
+
+        result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {
+            "persons": [
+                {
+                    "name": "Tara",
+                    "children": [
+                        {"name": "Toto"},
+                        {"name": "Tata"},
+                    ],
+                },
+                {
+                    "name": "Debra",
+                    "children": [],
+                },
+                {
+                    "name": "Toto",
+                    "children": [],
+                },
+                {
+                    "name": "Tata",
+                    "children": [],
+                },
+            ]
+        }
 
     def test_get_queryset_filter(self):
         class Reporter(DjangoObjectType):
@@ -781,3 +851,34 @@ class TestDjangoListField:
             captured.captured_queries[1]["sql"],
         )
         assert_async_result_equal(schema, query, result)
+
+
+class TestDjangoConnectionField:
+    def test_model_ordering_assertion(self):
+        class Chaos(Model):
+            class Meta:
+                app_label = "test"
+
+        class ChaosType(DjangoObjectType):
+            class Meta:
+                model = Chaos
+                interfaces = (Node,)
+
+        class Query(ObjectType):
+            chaos = DjangoConnectionField(ChaosType)
+
+        with pytest.raises(
+            TypeError,
+            match=r"Django model test\.Chaos has to have a default ordering to be used in a Connection\.",
+        ):
+            Schema(query=Query)
+
+    def test_only_django_object_types(self):
+        class Query(ObjectType):
+            something = DjangoConnectionField(String)
+
+        with pytest.raises(
+            TypeError,
+            match="DjangoConnectionField only accepts DjangoObjectType types as underlying type",
+        ):
+            Schema(query=Query)

@@ -133,13 +133,17 @@ def convert_choice_field_to_enum(field, name=None):
 
 
 def convert_django_field_with_choices(
-    field, registry=None, convert_choices_to_enum=True
+    field, registry=None, convert_choices_to_enum=None
 ):
     if registry is not None:
         converted = registry.get_converted_field(field)
         if converted:
             return converted
     choices = getattr(field, "choices", None)
+    if convert_choices_to_enum is None:
+        convert_choices_to_enum = bool(
+            graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT
+        )
     if choices and convert_choices_to_enum:
         EnumCls = convert_choice_field_to_enum(field)
         required = not (field.blank or field.null)

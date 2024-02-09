@@ -33,5 +33,6 @@ For more advanced use, check out the Relay tutorial.
    authorization
    debug
    introspection
+   validation
    testing
    settings

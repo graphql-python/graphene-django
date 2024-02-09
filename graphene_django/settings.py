@@ -30,6 +30,8 @@ DEFAULTS = {
     # Max items returned in ConnectionFields / FilterConnectionFields
     "RELAY_CONNECTION_MAX_LIMIT": 100,
     "CAMELCASE_ERRORS": True,
+    # Automatically convert Choice fields of Django into Enum fields
+    "DJANGO_CHOICE_FIELD_ENUM_CONVERT": True,
     # Set to True to enable v2 naming convention for choice field Enum's
     "DJANGO_CHOICE_FIELD_ENUM_V2_NAMING": False,
     "DJANGO_CHOICE_FIELD_ENUM_CUSTOM_NAME": None,
@@ -40,8 +42,10 @@ DEFAULTS = {
     # https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
     "GRAPHIQL_SHOULD_PERSIST_HEADERS": False,
+    "GRAPHIQL_INPUT_VALUE_DEPRECATION": False,
     "ATOMIC_MUTATIONS": False,
     "TESTING_ENDPOINT": "/graphql",
+    "MAX_VALIDATION_ERRORS": None,
 }
 
 if settings.DEBUG:

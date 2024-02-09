@@ -1,17 +1,13 @@
 import pytest
 
-from graphene import Schema
-
 from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_exact_no_match(Query):
+def test_array_field_exact_no_match(schema):
     """
     Test exact filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -30,12 +26,10 @@ def test_array_field_exact_no_match(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_exact_match(Query):
+def test_array_field_exact_match(schema):
     """
     Test exact filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -56,12 +50,10 @@ def test_array_field_exact_match(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_exact_empty_list(Query):
+def test_array_field_exact_empty_list(schema):
     """
     Test exact filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -82,11 +74,10 @@ def test_array_field_exact_empty_list(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_filter_schema_type(Query):
+def test_array_field_filter_schema_type(schema):
     """
     Check that the type in the filter is an array field like on the object type.
     """
-    schema = Schema(query=Query)
     schema_str = str(schema)
 
     assert (
@@ -112,6 +103,8 @@ def test_array_field_filter_schema_type(Query):
         "tags_Contains": "[String!]",
         "tags_Overlap": "[String!]",
         "tags": "[String!]",
+        "tags_Len": "Int",
+        "tags_Len_In": "[Int]",
         "tagsIds_Contains": "[Int!]",
         "tagsIds_Overlap": "[Int!]",
         "tagsIds": "[Int!]",

@@ -24,6 +24,9 @@ class Faction(models.Model):
 
 
 class Ship(models.Model):
+    class Meta:
+        ordering = ["pk"]
+
     name = models.CharField(max_length=50)
     faction = models.ForeignKey(Faction, on_delete=models.CASCADE, related_name="ships")
 

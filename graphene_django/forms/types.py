@@ -4,7 +4,7 @@ from graphene.types.inputobjecttype import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 
 from ..converter import BlankValueField
-from ..types import ErrorType  # noqa Import ErrorType for backwards compatability
+from ..types import ErrorType  # noqa Import ErrorType for backwards compatibility
 from .mutation import fields_for_form
 
 
@@ -60,7 +60,7 @@ class DjangoFormInputObjectType(InputObjectType):
                 and isinstance(object_type._meta.fields[name], BlankValueField)
             ):
                 # Field type BlankValueField here means that field
-                # with choises have been converted to enum
+                # with choices have been converted to enum
                 # (BlankValueField is using only for that task ?)
                 setattr(cls, name, cls.get_enum_cnv_cls_instance(name, object_type))
             elif (

@@ -20,17 +20,20 @@ from .utils import is_running_async, is_sync_function, maybe_queryset
 
 class DjangoListField(Field):
     def __init__(self, _type, *args, **kwargs):
-        from .types import DjangoObjectType
-
         if isinstance(_type, NonNull):
             _type = _type.of_type
 
         # Django would never return a Set of None  vvvvvvv
         super().__init__(List(NonNull(_type)), *args, **kwargs)
 
+    @property
+    def type(self):
+        from .types import DjangoObjectType
+
         assert issubclass(
             self._underlying_type, DjangoObjectType
-        ), "DjangoListField only accepts DjangoObjectType types"
+        ), "DjangoListField only accepts DjangoObjectType types as underlying type"
+        return super().type
 
     @property
     def _underlying_type(self):
@@ -123,13 +126,19 @@ class DjangoConnectionField(ConnectionField):
             non_null = True
         assert issubclass(
             _type, DjangoObjectType
-        ), "DjangoConnectionField only accepts DjangoObjectType types"
+        ), "DjangoConnectionField only accepts DjangoObjectType types as underlying type"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
         connection_type = _type._meta.connection
         if non_null:
             return NonNull(connection_type)
+        # Since Relay Connections require to have a predictible ordering for pagination,
+        # check on init that the Django model provided has a default ordering declared.
+        model = connection_type._meta.node._meta.model
+        assert (
+            len(getattr(model._meta, "ordering", [])) > 0
+        ), f"Django model {model._meta.app_label}.{model.__name__} has to have a default ordering to be used in a Connection."
         return connection_type
 
     @property
@@ -219,7 +228,7 @@ class DjangoConnectionField(ConnectionField):
         enforce_first_or_last,
         root,
         info,
-        **args
+        **args,
     ):
         first = args.get("first")
         last = args.get("last")

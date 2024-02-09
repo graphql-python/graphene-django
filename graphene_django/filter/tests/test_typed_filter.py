@@ -1,4 +1,8 @@
+import operator
+from functools import reduce
+
 import pytest
+from django.db.models import Q
 from django_filters import FilterSet
 
 import graphene
@@ -44,6 +48,10 @@ def schema():
         only_first = TypedFilter(
             input_type=graphene.Boolean, method="only_first_filter"
         )
+        headline_search = ListFilter(
+            method="headline_search_filter",
+            input_type=graphene.List(graphene.String),
+        )
 
         def first_n_filter(self, queryset, _name, value):
             return queryset[:value]
@@ -53,6 +61,13 @@ def schema():
                 return queryset[:1]
             else:
                 return queryset
+
+        def headline_search_filter(self, queryset, _name, value):
+            if not value:
+                return queryset.none()
+            return queryset.filter(
+                reduce(operator.or_, [Q(headline__icontains=v) for v in value])
+            )
 
     class ArticleType(DjangoObjectType):
         class Meta:
@@ -87,6 +102,7 @@ def test_typed_filter_schema(schema):
         "lang_InStr": "[String]",
         "firstN": "Int",
         "onlyFirst": "Boolean",
+        "headlineSearch": "[String]",
     }
 
     all_articles_filters = (
@@ -104,24 +120,7 @@ def test_typed_filters_work(schema):
     Article.objects.create(headline="A", reporter=reporter, editor=reporter, lang="es")
     Article.objects.create(headline="B", reporter=reporter, editor=reporter, lang="es")
     Article.objects.create(headline="C", reporter=reporter, editor=reporter, lang="en")
-
-    query = "query { articles (lang_In: [ES]) { edges { node { headline } } } }"
-
-    result = schema.execute(query)
-    assert not result.errors
-    assert result.data["articles"]["edges"] == [
-        {"node": {"headline": "A"}},
-        {"node": {"headline": "B"}},
-    ]
-
-    query = 'query { articles (lang_InStr: ["es"]) { edges { node { headline } } } }'
-
-    result = schema.execute(query)
-    assert not result.errors
-    assert result.data["articles"]["edges"] == [
-        {"node": {"headline": "A"}},
-        {"node": {"headline": "B"}},
-    ]
+    Article.objects.create(headline="AB", reporter=reporter, editor=reporter, lang="es")
 
     query = 'query { articles (lang_Contains: "n") { edges { node { headline } } } }'
 
@@ -137,7 +136,7 @@ def test_typed_filters_work(schema):
     assert not result.errors
     assert result.data["articles"]["edges"] == [
         {"node": {"headline": "A"}},
-        {"node": {"headline": "B"}},
+        {"node": {"headline": "AB"}},
     ]
 
     query = "query { articles (onlyFirst: true) { edges { node { headline } } } }"
@@ -146,4 +145,87 @@ def test_typed_filters_work(schema):
     assert not result.errors
     assert result.data["articles"]["edges"] == [
         {"node": {"headline": "A"}},
+    ]
+
+
+def test_list_filters_work(schema):
+    reporter = Reporter.objects.create(first_name="John", last_name="Doe", email="")
+    Article.objects.create(headline="A", reporter=reporter, editor=reporter, lang="es")
+    Article.objects.create(headline="B", reporter=reporter, editor=reporter, lang="es")
+    Article.objects.create(headline="C", reporter=reporter, editor=reporter, lang="en")
+    Article.objects.create(headline="AB", reporter=reporter, editor=reporter, lang="es")
+
+    query = "query { articles (lang_In: [ES]) { edges { node { headline } } } }"
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+    ]
+
+    query = 'query { articles (lang_InStr: ["es"]) { edges { node { headline } } } }'
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+    ]
+
+    query = "query { articles (lang_InStr: []) { edges { node { headline } } } }"
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == []
+
+    query = "query { articles (lang_InStr: null) { edges { node { headline } } } }"
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+        {"node": {"headline": "C"}},
+    ]
+
+    query = 'query { articles (headlineSearch: ["a", "B"]) { edges { node { headline } } } }'
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+    ]
+
+    query = "query { articles (headlineSearch: []) { edges { node { headline } } } }"
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == []
+
+    query = "query { articles (headlineSearch: null) { edges { node { headline } } } }"
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+        {"node": {"headline": "C"}},
+    ]
+
+    query = 'query { articles (headlineSearch: [""]) { edges { node { headline } } } }'
+
+    result = schema.execute(query)
+    assert not result.errors
+    assert result.data["articles"]["edges"] == [
+        {"node": {"headline": "A"}},
+        {"node": {"headline": "AB"}},
+        {"node": {"headline": "B"}},
+        {"node": {"headline": "C"}},
     ]

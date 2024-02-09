@@ -6,7 +6,7 @@ Graphene-Django can be customised using settings. This page explains each settin
 Usage
 -----
 
-Add settings to your Django project by creating a Dictonary with name ``GRAPHENE`` in the project's ``settings.py``:
+Add settings to your Django project by creating a Dictionary with name ``GRAPHENE`` in the project's ``settings.py``:
 
 .. code:: python
 
@@ -142,6 +142,15 @@ Default: ``False``
    # ]
 
 
+``DJANGO_CHOICE_FIELD_ENUM_CONVERT``
+--------------------------------------
+
+When set to ``True`` Django choice fields are automatically converted into Enum types.
+
+Can be disabled globally by setting it to ``False``.
+
+Default: ``True``
+
 ``DJANGO_CHOICE_FIELD_ENUM_V2_NAMING``
 --------------------------------------
 
@@ -197,9 +206,6 @@ Set to ``False`` if you want to disable GraphiQL headers editor tab for some rea
 
 This setting is passed to ``headerEditorEnabled`` GraphiQL options, for details refer to GraphiQLDocs_.
 
-.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
-
-
 Default: ``True``
 
 .. code:: python
@@ -230,8 +236,6 @@ Set to ``True`` if you want to persist GraphiQL headers after refreshing the pag
 
 This setting is passed to ``shouldPersistHeaders`` GraphiQL options, for details refer to GraphiQLDocs_.
 
-.. _GraphiQLDocs: https://github.com/graphql/graphiql/tree/main/packages/graphiql#options
-
 
 Default: ``False``
 
@@ -240,3 +244,48 @@ Default: ``False``
    GRAPHENE = {
       'GRAPHIQL_SHOULD_PERSIST_HEADERS': False,
    }
+
+
+``GRAPHIQL_INPUT_VALUE_DEPRECATION``
+------------------------------------
+
+Set to ``True`` if you want GraphiQL to show any deprecated fields on input object types' docs.
+
+For example, having this schema:
+
+.. code:: python
+
+    class MyMutationInputType(graphene.InputObjectType):
+        old_field = graphene.String(deprecation_reason="You should now use 'newField' instead.")
+        new_field = graphene.String()
+
+    class MyMutation(graphene.Mutation):
+        class Arguments:
+            input = types.MyMutationInputType()
+
+GraphiQL will add a ``Show Deprecated Fields`` button to toggle information display on ``oldField`` and its deprecation
+reason. Otherwise, you would get neither a button nor any information at all on ``oldField``.
+
+This setting is passed to ``inputValueDeprecation`` GraphiQL options, for details refer to GraphiQLDocs_.
+
+Default: ``False``
+
+.. code:: python
+
+   GRAPHENE = {
+      'GRAPHIQL_INPUT_VALUE_DEPRECATION': False,
+   }
+
+
+.. _GraphiQLDocs: https://graphiql-test.netlify.app/typedoc/modules/graphiql_react#graphiqlprovider-2
+
+
+``MAX_VALIDATION_ERRORS``
+------------------------------------
+
+In case ``validation_rules`` are provided to ``GraphQLView``, if this is set to a non-negative ``int`` value,
+``graphql.validation.validate`` will stop validation after this number of errors has been reached.
+If not set or set to ``None``, the maximum number of errors will follow ``graphql.validation.validate`` default
+*i.e.* 100.
+
+Default: ``None``

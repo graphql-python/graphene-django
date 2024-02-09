@@ -37,7 +37,7 @@ class DjangoFilterConnectionField(DjangoConnectionField):
         extra_filter_meta=None,
         filterset_class=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
         self._fields = fields
         self._provided_filterset_class = filterset_class
