@@ -184,6 +184,7 @@ class DjangoObjectType(ObjectType):
         field_to_permission=None,
         permission_to_field=None,
         permission_to_all_fields=None,
+        permission_raise_exception=True,
         _meta=None,
         **options
     ):
@@ -295,6 +296,7 @@ class DjangoObjectType(ObjectType):
             permission_to_field,
             permission_to_all_fields,
             permission_classes,
+            permission_raise_exception,
         )
 
         # Validate fields
@@ -317,6 +319,7 @@ class DjangoObjectType(ObjectType):
         permission_to_field,
         permission_to_all_fields,
         permission_classes,
+        permission_raise_exception,
     ):
         """Combines permissions from meta"""
         permissions = field_to_permission if field_to_permission else {}
@@ -343,7 +346,7 @@ class DjangoObjectType(ObjectType):
                     set(permissions.get(name, ()) + permission_to_all_fields)
                 )
 
-            if name in permissions:
+            if name in permissions and permission_raise_exception:
                 fields_raise_exception[name] = hasattr(field, "_type") and isinstance(
                     field._type, NonNull
                 )
