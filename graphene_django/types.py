@@ -55,7 +55,9 @@ def construct_fields(
             else:
                 _convert_choices_to_enum = False
 
+        # Make Django field nullable then graphene will generate the graphql field nullable.
         if name != 'id' and not permission_raise_exception:
+            previous = field.null
             field.null = True
 
         converted = convert_django_field_with_choices(
@@ -64,6 +66,10 @@ def construct_fields(
 
         if isinstance(converted, NonNull) and getattr(converted, '_of_type', None) == Boolean and not permission_raise_exception:
             converted = Boolean(description=field.help_text, required=False)
+
+        # Restore Django field nullability to original value
+        if name != 'id' and not permission_raise_exception:
+            field.null = previous
 
         fields[name] = converted
 
