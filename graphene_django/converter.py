@@ -1,5 +1,4 @@
 import inspect
-from collections import OrderedDict
 from collections.abc import Callable
 from functools import partial, singledispatch, wraps
 
@@ -75,8 +74,13 @@ def get_choices(choices):
     converted_names = []
     if isinstance(choices, Callable):
         choices = choices()
-    if isinstance(choices, OrderedDict):
+
+    # In restframework==3.15.0, choices are not passed
+    # as OrderedDict anymore, so it's safer to check
+    # for a dict
+    if isinstance(choices, dict):
         choices = choices.items()
+
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
             yield from get_choices(help_text)
