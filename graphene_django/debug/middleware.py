@@ -1,5 +1,8 @@
+from asgiref.sync import sync_to_async
 from django.db import connections
+from graphql.type.definition import GraphQLNonNull
 
+from ..utils import is_running_async, is_sync_function
 from .exception.formating import wrap_exception
 from .sql.tracking import unwrap_cursor, wrap_cursor
 from .types import DjangoDebug
@@ -67,3 +70,28 @@ class DjangoDebugMiddleware:
             return context.django_debug.on_resolve_error(e)
         context.django_debug.add_result(result)
         return result
+
+
+class DjangoSyncRequiredMiddleware:
+    def resolve(self, next, root, info, **args):
+        parent_type = info.parent_type
+        return_type = info.return_type
+
+        if isinstance(parent_type, GraphQLNonNull):
+            parent_type = parent_type.of_type
+        if isinstance(return_type, GraphQLNonNull):
+            return_type = return_type.of_type
+
+        if any(
+            [
+                hasattr(parent_type, "graphene_type")
+                and hasattr(parent_type.graphene_type._meta, "model"),
+                hasattr(return_type, "graphene_type")
+                and hasattr(return_type.graphene_type._meta, "model"),
+                info.parent_type.name == "Mutation",
+            ]
+        ):
+            if is_sync_function(next) and is_running_async():
+                return sync_to_async(next)(root, info, **args)
+
+        return next(root, info, **args)

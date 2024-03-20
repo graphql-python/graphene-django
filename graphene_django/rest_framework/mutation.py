@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from enum import Enum
 
+from asgiref.sync import sync_to_async
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -11,6 +12,7 @@ from graphene.types.mutation import MutationOptions
 from graphene.types.objecttype import yank_fields_from_attrs
 
 from ..types import ErrorType
+from ..utils import is_running_async
 from .serializer_converter import convert_serializer_field
 
 
@@ -165,6 +167,17 @@ class SerializerMutation(ClientIDMutation):
     def mutate_and_get_payload(cls, root, info, **input):
         kwargs = cls.get_serializer_kwargs(root, info, **input)
         serializer = cls._meta.serializer_class(**kwargs)
+
+        if is_running_async():
+
+            async def perform_mutate_async():
+                if await sync_to_async(serializer.is_valid)():
+                    return await sync_to_async(cls.perform_mutate)(serializer, info)
+                else:
+                    errors = ErrorType.from_errors(serializer.errors)
+                    return cls(errors=errors)
+
+            return perform_mutate_async()
 
         if serializer.is_valid():
             return cls.perform_mutate(serializer, info)
