@@ -1,11 +1,66 @@
+from django.forms import Form
 import graphene
 from graphene import ID
+from graphene.types.objecttype import ObjectType
 from graphene.types.inputobjecttype import InputObjectType
 from graphene.utils.str_converters import to_camel_case
 
+from django.db.models import Model
+
 from ..converter import BlankValueField
-from ..types import ErrorType  # noqa Import ErrorType for backwards compatibility
+from ..types import DjangoObjectTypeOptions, ErrorType  # noqa Import ErrorType for backwards compatibility
 from .mutation import fields_for_form
+from graphene.types.objecttype import ObjectTypeOptions
+
+
+class DjangoFormFieldObjectType(ObjectType):
+    class Meta:
+        form_class = Form
+    name = graphene.Field(
+        graphene.String
+    )
+    
+    type = graphene.Field(
+        graphene.String
+    )
+
+
+class DjangoFormTypeOptions(ObjectTypeOptions):
+    form_class = Form
+    only_fields = ()
+    exclude_fields = ()
+    object_type = Model
+
+
+class DjangoFormObjectType(ObjectType):
+    form_class = Form
+    only_fields = ()
+    exclude_fields = ()
+
+    fields = graphene.List(
+        DjangoFormFieldObjectType
+    )
+
+    @staticmethod
+    def resolve_fields(parent, info): 
+        form_class = parent.form_class
+        form = form_class()
+        only_fields = parent.only_fields
+        exclude_fields = parent.exclude_fields
+
+        form_fields = fields_for_form(form, only_fields, exclude_fields)
+
+        result = []
+
+        for name, field in form_fields.items():
+            type = field.__class__.__name__
+            result.append(
+                DjangoFormFieldObjectType(
+                    name=name,
+                    type=type
+                )
+            )
+        return result
 
 
 class DjangoFormInputObjectType(InputObjectType):
