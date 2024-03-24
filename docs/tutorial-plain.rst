@@ -104,7 +104,7 @@ Load some test data
 
 Now is a good time to load up some test data. The easiest option will be
 to `download the
-ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/master/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
+ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/main/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
 fixture and place it in
 ``cookbook/ingredients/fixtures/ingredients.json``. You can then run the
 following:

@@ -30,7 +30,7 @@ Graphene-Django is an open-source library that provides seamless integration bet
 
 To install Graphene-Django, run the following command:
 
-```
+```sh
 pip install graphene-django
 ```
 
@@ -114,11 +114,11 @@ class MyModelAPITestCase(GraphQLTestCase):
 
 ## Contributing
 
-Contributions to Graphene-Django are always welcome! To get started, check the repository's [issue tracker](https://github.com/graphql-python/graphene-django/issues) and [contribution guidelines](https://github.com/graphql-python/graphene-django/blob/master/CONTRIBUTING.md).
+Contributions to Graphene-Django are always welcome! To get started, check the repository's [issue tracker](https://github.com/graphql-python/graphene-django/issues) and [contribution guidelines](https://github.com/graphql-python/graphene-django/blob/main/CONTRIBUTING.md).
 
 ## License
 
-Graphene-Django is released under the [MIT License](https://github.com/graphql-python/graphene-django/blob/master/LICENSE).
+Graphene-Django is released under the [MIT License](https://github.com/graphql-python/graphene-django/blob/main/LICENSE).
 
 ## Resources
 
