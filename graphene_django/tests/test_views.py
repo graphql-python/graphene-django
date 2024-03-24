@@ -1,4 +1,5 @@
 import json
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -37,7 +38,7 @@ def jl(**kwargs):
 
 def test_graphiql_is_enabled(client):
     response = client.get(url_string(), HTTP_ACCEPT="text/html")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response["Content-Type"].split(";")[0] == "text/html"
 
 
@@ -46,7 +47,7 @@ def test_qfactor_graphiql(client):
         url_string(query="{test}"),
         HTTP_ACCEPT="application/json;q=0.8, text/html;q=0.9",
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response["Content-Type"].split(";")[0] == "text/html"
 
 
@@ -55,7 +56,7 @@ def test_qfactor_json(client):
         url_string(query="{test}"),
         HTTP_ACCEPT="text/html;q=0.8, application/json;q=0.9",
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response["Content-Type"].split(";")[0] == "application/json"
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
@@ -63,7 +64,7 @@ def test_qfactor_json(client):
 def test_allows_get_with_query_param(client):
     response = client.get(url_string(query="{test}"))
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
@@ -75,7 +76,7 @@ def test_allows_get_with_variable_values(client):
         )
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -94,7 +95,7 @@ def test_allows_get_with_operation_name(client):
         )
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {
         "data": {"test": "Hello World", "shared": "Hello Everyone"}
     }
@@ -103,7 +104,7 @@ def test_allows_get_with_operation_name(client):
 def test_reports_validation_errors(client):
     response = client.get(url_string(query="{ test, unknownOne, unknownTwo }"))
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [
             {
@@ -128,7 +129,7 @@ def test_errors_when_missing_operation_name(client):
         )
     )
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [
             {
@@ -146,7 +147,7 @@ def test_errors_when_sending_a_mutation_via_get(client):
         """
         )
     )
-    assert response.status_code == 405
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
     assert response_json(response) == {
         "errors": [
             {"message": "Can only perform a mutation operation from a POST request."}
@@ -165,7 +166,7 @@ def test_errors_when_selecting_a_mutation_within_a_get(client):
         )
     )
 
-    assert response.status_code == 405
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
     assert response_json(response) == {
         "errors": [
             {"message": "Can only perform a mutation operation from a POST request."}
@@ -184,14 +185,14 @@ def test_allows_mutation_to_exist_within_a_get(client):
         )
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
 def test_allows_post_with_json_encoding(client):
     response = client.post(url_string(), j(query="{test}"), "application/json")
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
@@ -200,7 +201,7 @@ def test_batch_allows_post_with_json_encoding(client):
         batch_url_string(), jl(id=1, query="{test}"), "application/json"
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == [
         {"id": 1, "data": {"test": "Hello World"}, "status": 200}
     ]
@@ -209,7 +210,7 @@ def test_batch_allows_post_with_json_encoding(client):
 def test_batch_fails_if_is_empty(client):
     response = client.post(batch_url_string(), "[]", "application/json")
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "Received an empty list in the batch request."}]
     }
@@ -222,7 +223,7 @@ def test_allows_sending_a_mutation_via_post(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"writeTest": {"test": "Hello World"}}}
 
 
@@ -233,7 +234,7 @@ def test_allows_post_with_url_encoding(client):
         "application/x-www-form-urlencoded",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello World"}}
 
 
@@ -247,7 +248,7 @@ def test_supports_post_json_query_with_string_variables(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -262,7 +263,7 @@ def test_batch_supports_post_json_query_with_string_variables(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == [
         {"id": 1, "data": {"test": "Hello Dolly"}, "status": 200}
     ]
@@ -278,7 +279,7 @@ def test_supports_post_json_query_with_json_variables(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -293,7 +294,7 @@ def test_batch_supports_post_json_query_with_json_variables(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == [
         {"id": 1, "data": {"test": "Hello Dolly"}, "status": 200}
     ]
@@ -311,7 +312,7 @@ def test_supports_post_url_encoded_query_with_string_variables(client):
         "application/x-www-form-urlencoded",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -322,7 +323,7 @@ def test_supports_post_json_quey_with_get_variable_values(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -333,7 +334,7 @@ def test_post_url_encoded_query_with_get_variable_values(client):
         "application/x-www-form-urlencoded",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -344,7 +345,7 @@ def test_supports_post_raw_text_query_with_get_variable_values(client):
         "application/graphql",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"test": "Hello Dolly"}}
 
 
@@ -365,7 +366,7 @@ def test_allows_post_with_operation_name(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {
         "data": {"test": "Hello World", "shared": "Hello Everyone"}
     }
@@ -389,7 +390,7 @@ def test_batch_allows_post_with_operation_name(client):
         "application/json",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == [
         {
             "id": 1,
@@ -413,7 +414,7 @@ def test_allows_post_with_get_operation_name(client):
         "application/graphql",
     )
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {
         "data": {"test": "Hello World", "shared": "Hello Everyone"}
     }
@@ -430,7 +431,7 @@ def test_inherited_class_with_attributes_works(client):
 
     # Check graphiql works
     response = client.get(url_string(inherited_url), HTTP_ACCEPT="text/html")
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
 
 @pytest.mark.urls("graphene_django.tests.urls_pretty")
@@ -452,7 +453,7 @@ def test_supports_pretty_printing_by_request(client):
 
 def test_handles_field_errors_caught_by_graphql(client):
     response = client.get(url_string(query="{thrower}"))
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {
         "data": None,
         "errors": [
@@ -467,7 +468,7 @@ def test_handles_field_errors_caught_by_graphql(client):
 
 def test_handles_syntax_errors_caught_by_graphql(client):
     response = client.get(url_string(query="syntaxerror"))
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [
             {
@@ -481,7 +482,7 @@ def test_handles_syntax_errors_caught_by_graphql(client):
 def test_handles_errors_caused_by_a_lack_of_query(client):
     response = client.get(url_string())
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "Must provide query string."}]
     }
@@ -490,7 +491,7 @@ def test_handles_errors_caused_by_a_lack_of_query(client):
 def test_handles_not_expected_json_bodies(client):
     response = client.post(url_string(), "[]", "application/json")
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "The received data is not a valid JSON query."}]
     }
@@ -499,7 +500,7 @@ def test_handles_not_expected_json_bodies(client):
 def test_handles_invalid_json_bodies(client):
     response = client.post(url_string(), "[oh}", "application/json")
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "POST body sent invalid JSON."}]
     }
@@ -514,14 +515,14 @@ def test_handles_django_request_error(client, monkeypatch):
     valid_json = json.dumps({"foo": "bar"})
     response = client.post(url_string(), valid_json, "application/json")
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {"errors": [{"message": "foo-bar"}]}
 
 
 def test_handles_incomplete_json_bodies(client):
     response = client.post(url_string(), '{"query":', "application/json")
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "POST body sent invalid JSON."}]
     }
@@ -533,7 +534,7 @@ def test_handles_plain_post_text(client):
         "query helloWho($who: String){ test(who: $who) }",
         "text/plain",
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "Must provide query string."}]
     }
@@ -545,7 +546,7 @@ def test_handles_poorly_formed_variables(client):
             query="query helloWho($who: String){ test(who: $who) }", variables="who:You"
         )
     )
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
     assert response_json(response) == {
         "errors": [{"message": "Variables are invalid JSON."}]
     }
@@ -553,7 +554,7 @@ def test_handles_poorly_formed_variables(client):
 
 def test_handles_unsupported_http_methods(client):
     response = client.put(url_string(query="{test}"))
-    assert response.status_code == 405
+    assert response.status_code == HTTPStatus.METHOD_NOT_ALLOWED
     assert response["Allow"] == "GET, POST"
     assert response_json(response) == {
         "errors": [{"message": "GraphQL only supports GET and POST requests."}]
@@ -563,7 +564,7 @@ def test_handles_unsupported_http_methods(client):
 def test_passes_request_into_context_request(client):
     response = client.get(url_string(query="{request}", q="testing"))
 
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
     assert response_json(response) == {"data": {"request": "testing"}}
 
 
@@ -857,7 +858,7 @@ def test_allow_introspection(client):
     response = client.post(
         url_string("/graphql/", query="{__schema {queryType {name}}}")
     )
-    assert response.status_code == 200
+    assert response.status_code == HTTPStatus.OK
 
     assert response_json(response) == {
         "data": {"__schema": {"queryType": {"name": "QueryRoot"}}}
@@ -869,7 +870,7 @@ def test_allow_introspection(client):
 def test_validation_disallow_introspection(client, url):
     response = client.post(url_string(url, query="{__schema {queryType {name}}}"))
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
     json_response = response_json(response)
     assert "data" not in json_response
@@ -888,7 +889,7 @@ def test_validation_disallow_introspection(client, url):
 def test_within_max_validation_errors(client, url):
     response = client.post(url_string(url, query=QUERY_WITH_TWO_INTROSPECTIONS))
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
     json_response = response_json(response)
     assert "data" not in json_response
@@ -913,7 +914,7 @@ def test_within_max_validation_errors(client, url):
 def test_exceeds_max_validation_errors(client, url):
     response = client.post(url_string(url, query=QUERY_WITH_TWO_INTROSPECTIONS))
 
-    assert response.status_code == 400
+    assert response.status_code == HTTPStatus.BAD_REQUEST
 
     json_response = response_json(response)
     assert "data" not in json_response
