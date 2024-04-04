@@ -470,13 +470,16 @@ class DjangoObjectType(ObjectType):
 class ErrorType(ObjectType):
     field = graphene.String(required=True)
     messages = graphene.List(graphene.NonNull(graphene.String), required=True)
+    codes = graphene.List(graphene.NonNull(graphene.String), required=True)
 
     @classmethod
     def from_errors(cls, errors):
         data = {
             to_camel_case(key)
             if key != "__all__" and graphene_settings.CAMELCASE_ERRORS
-            else key: value
-            for key, value in errors.items()
+            else key: values
+            for key, values in errors.as_data().items()
         }
-        return [cls(field=key, messages=value) for key, value in data.items()]
+        return [cls(field=key,
+                    messages=[value.message for value in values],
+                    codes=[value.code for value in values]) for key, values in data.items()]
