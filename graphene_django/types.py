@@ -481,5 +481,5 @@ class ErrorType(ObjectType):
             for key, values in errors.as_data().items()
         }
         return [cls(field=key,
-                    messages=[str(value) for value in values],
+                    messages=[value.message % value.params for value in values],
                     codes=[value.code for value in values]) for key, values in data.items()]
