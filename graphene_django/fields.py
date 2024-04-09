@@ -1,5 +1,6 @@
 from functools import partial
 
+from asgiref.sync import sync_to_async
 from django.db.models.query import QuerySet
 from graphql_relay import (
     connection_from_array_slice,
@@ -7,7 +8,6 @@ from graphql_relay import (
     get_offset_with_default,
     offset_to_cursor,
 )
-from promise import Promise
 
 from graphene import Int, NonNull
 from graphene.relay import ConnectionField
@@ -15,7 +15,7 @@ from graphene.relay.connection import connection_adapter, page_info_adapter
 from graphene.types import Field, List
 
 from .settings import graphene_settings
-from .utils import maybe_queryset
+from .utils import is_running_async, is_sync_function, maybe_queryset
 
 
 class DjangoListField(Field):
@@ -49,11 +49,36 @@ class DjangoListField(Field):
     def get_manager(self):
         return self.model._default_manager
 
-    @staticmethod
+    @classmethod
     def list_resolver(
-        django_object_type, resolver, default_manager, root, info, **args
+        cls, django_object_type, resolver, default_manager, root, info, **args
     ):
-        queryset = maybe_queryset(resolver(root, info, **args))
+        if is_running_async():
+            if is_sync_function(resolver):
+                resolver = sync_to_async(resolver)
+
+        iterable = resolver(root, info, **args)
+
+        if info.is_awaitable(iterable):
+
+            async def resolve_list_async(iterable):
+                queryset = maybe_queryset(await iterable)
+                if queryset is None:
+                    queryset = maybe_queryset(default_manager)
+
+                if isinstance(queryset, QuerySet):
+                    # Pass queryset to the DjangoObjectType get_queryset method
+                    queryset = maybe_queryset(
+                        await sync_to_async(django_object_type.get_queryset)(
+                            queryset, info
+                        )
+                    )
+
+                return await sync_to_async(list)(queryset)
+
+            return resolve_list_async(iterable)
+
+        queryset = maybe_queryset(iterable)
         if queryset is None:
             queryset = maybe_queryset(default_manager)
 
@@ -61,7 +86,7 @@ class DjangoListField(Field):
             # Pass queryset to the DjangoObjectType get_queryset method
             queryset = maybe_queryset(django_object_type.get_queryset(queryset, info))
 
-        return queryset
+        return list(queryset)
 
     def wrap_resolve(self, parent_resolver):
         resolver = super().wrap_resolve(parent_resolver)
@@ -235,20 +260,36 @@ class DjangoConnectionField(ConnectionField):
 
         # eventually leads to DjangoObjectType's get_queryset (accepts queryset)
         # or a resolve_foo (does not accept queryset)
+
+        if is_running_async():
+            if is_sync_function(resolver):
+                resolver = sync_to_async(resolver)
+
         iterable = resolver(root, info, **args)
+
+        if info.is_awaitable(iterable):
+
+            async def resolve_connection_async(iterable):
+                iterable = await iterable
+                if iterable is None:
+                    iterable = default_manager
+
+                iterable = await sync_to_async(queryset_resolver)(
+                    connection, iterable, info, args
+                )
+
+                return await sync_to_async(cls.resolve_connection)(
+                    connection, args, iterable, max_limit=max_limit
+                )
+
+            return resolve_connection_async(iterable)
+
         if iterable is None:
             iterable = default_manager
         # thus the iterable gets refiltered by resolve_queryset
         # but iterable might be promise
         iterable = queryset_resolver(connection, iterable, info, args)
-        on_resolve = partial(
-            cls.resolve_connection, connection, args, max_limit=max_limit
-        )
-
-        if Promise.is_thenable(iterable):
-            return Promise.resolve(iterable).then(on_resolve)
-
-        return on_resolve(iterable)
+        return cls.resolve_connection(connection, args, iterable, max_limit=max_limit)
 
     def wrap_resolve(self, parent_resolver):
         return partial(

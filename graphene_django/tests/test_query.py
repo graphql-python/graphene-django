@@ -2,6 +2,7 @@ import base64
 import datetime
 
 import pytest
+from asgiref.sync import async_to_sync
 from django.db import models
 from django.db.models import Q
 from django.utils.functional import SimpleLazyObject
@@ -15,6 +16,7 @@ from ..compat import IntegerRangeField, MissingType
 from ..fields import DjangoConnectionField
 from ..types import DjangoObjectType
 from ..utils import DJANGO_FILTER_INSTALLED
+from .async_test_helper import assert_async_result_equal
 from .models import (
     APNewsReporter,
     Article,
@@ -43,6 +45,7 @@ def test_should_query_only_fields():
         """
         result = schema.execute(query)
         assert not result.errors
+        assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_simplelazy_objects():
@@ -68,6 +71,7 @@ def test_should_query_simplelazy_objects():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == {"reporter": {"id": "1"}}
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_wrapped_simplelazy_objects():
@@ -93,6 +97,7 @@ def test_should_query_wrapped_simplelazy_objects():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == {"reporter": {"id": "1"}}
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_well():
@@ -121,6 +126,7 @@ def test_should_query_well():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 @pytest.mark.skipif(IntegerRangeField is MissingType, reason="RangeField should exist")
@@ -175,6 +181,7 @@ def test_should_query_postgres_fields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_node():
@@ -256,6 +263,7 @@ def test_should_node():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_onetoone_fields():
@@ -314,6 +322,7 @@ def test_should_query_onetoone_fields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_connectionfields():
@@ -352,6 +361,7 @@ def test_should_query_connectionfields():
             "edges": [{"node": {"id": "UmVwb3J0ZXJUeXBlOjE="}}],
         }
     }
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_keep_annotations():
@@ -411,6 +421,7 @@ def test_should_keep_annotations():
     """
     result = schema.execute(query)
     assert not result.errors
+    assert_async_result_equal(schema, query, result)
 
 
 @pytest.mark.skipif(
@@ -492,6 +503,7 @@ def test_should_query_node_filtering():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 @pytest.mark.skipif(
@@ -537,6 +549,7 @@ def test_should_query_node_filtering_with_distinct_queryset():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 @pytest.mark.skipif(
@@ -626,6 +639,7 @@ def test_should_query_node_multiple_filtering():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_enforce_first_or_last(graphene_settings):
@@ -666,6 +680,7 @@ def test_should_enforce_first_or_last(graphene_settings):
         "paginate the `allReporters` connection.\n"
     )
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_error_if_first_is_greater_than_max(graphene_settings):
@@ -708,6 +723,7 @@ def test_should_error_if_first_is_greater_than_max(graphene_settings):
         "exceeds the `first` limit of 100 records.\n"
     )
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_error_if_last_is_greater_than_max(graphene_settings):
@@ -750,6 +766,7 @@ def test_should_error_if_last_is_greater_than_max(graphene_settings):
         "exceeds the `last` limit of 100 records.\n"
     )
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_promise_connectionfields():
@@ -785,6 +802,7 @@ def test_should_query_promise_connectionfields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_connectionfields_with_last():
@@ -822,6 +840,7 @@ def test_should_query_connectionfields_with_last():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_connectionfields_with_manager():
@@ -863,6 +882,7 @@ def test_should_query_connectionfields_with_manager():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_query_dataloader_fields():
@@ -961,6 +981,106 @@ def test_should_query_dataloader_fields():
     }
 
     result = schema.execute(query)
+    assert not result.errors
+    assert result.data == expected
+
+
+def test_should_query_dataloader_fields_async():
+    from promise import Promise
+    from promise.dataloader import DataLoader
+
+    def article_batch_load_fn(keys):
+        queryset = Article.objects.filter(reporter_id__in=keys)
+        return Promise.resolve(
+            [
+                [article for article in queryset if article.reporter_id == id]
+                for id in keys
+            ]
+        )
+
+    article_loader = DataLoader(article_batch_load_fn)
+
+    class ArticleType(DjangoObjectType):
+        class Meta:
+            model = Article
+            interfaces = (Node,)
+            fields = "__all__"
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            interfaces = (Node,)
+            use_connection = True
+            fields = "__all__"
+
+        articles = DjangoConnectionField(ArticleType)
+
+        def resolve_articles(self, info, **args):
+            return article_loader.load(self.id).get()
+
+    class Query(graphene.ObjectType):
+        all_reporters = DjangoConnectionField(ReporterType)
+
+    r = Reporter.objects.create(
+        first_name="John", last_name="Doe", email="johndoe@example.com", a_choice=1
+    )
+
+    Article.objects.create(
+        headline="Article Node 1",
+        pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
+        reporter=r,
+        editor=r,
+        lang="es",
+    )
+    Article.objects.create(
+        headline="Article Node 2",
+        pub_date=datetime.date.today(),
+        pub_date_time=datetime.datetime.now(),
+        reporter=r,
+        editor=r,
+        lang="en",
+    )
+
+    schema = graphene.Schema(query=Query)
+    query = """
+        query ReporterPromiseConnectionQuery {
+            allReporters(first: 1) {
+                edges {
+                    node {
+                        id
+                        articles(first: 2) {
+                            edges {
+                                node {
+                                    headline
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    """
+
+    expected = {
+        "allReporters": {
+            "edges": [
+                {
+                    "node": {
+                        "id": "UmVwb3J0ZXJUeXBlOjE=",
+                        "articles": {
+                            "edges": [
+                                {"node": {"headline": "Article Node 1"}},
+                                {"node": {"headline": "Article Node 2"}},
+                            ]
+                        },
+                    }
+                }
+            ]
+        }
+    }
+
+    result = async_to_sync(schema.execute_async)(query)
     assert not result.errors
     assert result.data == expected
 
@@ -1071,6 +1191,7 @@ def test_proxy_model_support():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_model_inheritance_support_reverse_relationships():
@@ -1411,6 +1532,7 @@ def test_should_resolve_get_queryset_connectionfields():
     result = schema.execute(query)
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_connection_should_limit_after_to_list_length():
@@ -1448,6 +1570,7 @@ def test_connection_should_limit_after_to_list_length():
     expected = {"allReporters": {"edges": []}}
     assert not result.errors
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"after": after})
 
 
 REPORTERS = [
@@ -1491,6 +1614,7 @@ def test_should_return_max_limit(graphene_settings):
     result = schema.execute(query)
     assert not result.errors
     assert len(result.data["allReporters"]["edges"]) == 4
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_have_next_page(graphene_settings):
@@ -1529,6 +1653,7 @@ def test_should_have_next_page(graphene_settings):
     assert not result.errors
     assert len(result.data["allReporters"]["edges"]) == 4
     assert result.data["allReporters"]["pageInfo"]["hasNextPage"]
+    assert_async_result_equal(schema, query, result, variable_values={})
 
     last_result = result.data["allReporters"]["pageInfo"]["endCursor"]
     result2 = schema.execute(query, variable_values={"first": 4, "after": last_result})
@@ -1542,6 +1667,9 @@ def test_should_have_next_page(graphene_settings):
     assert {to_global_id("ReporterType", reporter.id) for reporter in db_reporters} == {
         gql_reporter["node"]["id"] for gql_reporter in gql_reporters
     }
+    assert_async_result_equal(
+        schema, query, result2, variable_values={"first": 4, "after": last_result}
+    )
 
 
 @pytest.mark.parametrize("max_limit", [100, 4])
@@ -1565,7 +1693,7 @@ class TestBackwardPagination:
 
     def test_query_last(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
-        query_last = """
+        query = """
             query {
                 allReporters(last: 3) {
                     edges {
@@ -1577,16 +1705,17 @@ class TestBackwardPagination:
             }
         """
 
-        result = schema.execute(query_last)
+        result = schema.execute(query)
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
         assert [
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 3", "First 4", "First 5"]
+        assert_async_result_equal(schema, query, result)
 
     def test_query_first_and_last(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
-        query_first_and_last = """
+        query = """
             query {
                 allReporters(first: 4, last: 3) {
                     edges {
@@ -1598,12 +1727,13 @@ class TestBackwardPagination:
             }
         """
 
-        result = schema.execute(query_first_and_last)
+        result = schema.execute(query)
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 3
         assert [
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 1", "First 2", "First 3"]
+        assert_async_result_equal(schema, query, result)
 
     def test_query_first_last_and_after(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
@@ -1629,6 +1759,9 @@ class TestBackwardPagination:
         assert [
             e["node"]["firstName"] for e in result.data["allReporters"]["edges"]
         ] == ["First 2", "First 3", "First 4"]
+        assert_async_result_equal(
+            schema, query_first_last_and_after, result, variable_values={"after": after}
+        )
 
     def test_query_last_and_before(self, graphene_settings, max_limit):
         schema = self.setup_schema(graphene_settings, max_limit=max_limit)
@@ -1650,6 +1783,7 @@ class TestBackwardPagination:
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 1
         assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 5"
+        assert_async_result_equal(schema, query_first_last_and_after, result)
 
         before = base64.b64encode(b"arrayconnection:5").decode()
         result = schema.execute(
@@ -1659,6 +1793,12 @@ class TestBackwardPagination:
         assert not result.errors
         assert len(result.data["allReporters"]["edges"]) == 1
         assert result.data["allReporters"]["edges"][0]["node"]["firstName"] == "First 4"
+        assert_async_result_equal(
+            schema,
+            query_first_last_and_after,
+            result,
+            variable_values={"before": before},
+        )
 
 
 def test_should_preserve_prefetch_related(django_assert_num_queries):
@@ -1713,6 +1853,7 @@ def test_should_preserve_prefetch_related(django_assert_num_queries):
     with django_assert_num_queries(3):
         result = schema.execute(query)
         assert not result.errors
+    assert_async_result_equal(schema, query, result)
 
 
 def test_should_preserve_annotations():
@@ -1768,6 +1909,7 @@ def test_should_preserve_annotations():
     }
     assert result.data == expected, str(result.data)
     assert not result.errors
+    assert_async_result_equal(schema, query, result)
 
 
 def test_connection_should_enable_offset_filtering():
@@ -1807,6 +1949,7 @@ def test_connection_should_enable_offset_filtering():
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_connection_should_enable_offset_filtering_higher_than_max_limit(
@@ -1851,6 +1994,7 @@ def test_connection_should_enable_offset_filtering_higher_than_max_limit(
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result)
 
 
 def test_connection_should_forbid_offset_filtering_with_before():
@@ -1881,6 +2025,7 @@ def test_connection_should_forbid_offset_filtering_with_before():
     expected_error = "You can't provide a `before` value at the same time as an `offset` value to properly paginate the `allReporters` connection."
     assert len(result.errors) == 1
     assert result.errors[0].message == expected_error
+    assert_async_result_equal(schema, query, result, variable_values={"before": before})
 
 
 def test_connection_should_allow_offset_filtering_with_after():
@@ -1923,6 +2068,7 @@ def test_connection_should_allow_offset_filtering_with_after():
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"after": after})
 
 
 def test_connection_should_succeed_if_last_higher_than_number_of_objects():
@@ -1953,6 +2099,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     assert not result.errors
     expected = {"allReporters": {"edges": []}}
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"last": 2})
 
     Reporter.objects.create(first_name="John", last_name="Doe")
     Reporter.objects.create(first_name="Some", last_name="Guy")
@@ -1970,6 +2117,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"last": 2})
 
     result = schema.execute(query, variable_values={"last": 4})
     assert not result.errors
@@ -1984,6 +2132,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"last": 4})
 
     result = schema.execute(query, variable_values={"last": 20})
     assert not result.errors
@@ -1998,6 +2147,7 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
         }
     }
     assert result.data == expected
+    assert_async_result_equal(schema, query, result, variable_values={"last": 20})
 
 
 def test_should_query_nullable_foreign_key():

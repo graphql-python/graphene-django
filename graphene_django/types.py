@@ -16,6 +16,7 @@ from .utils import (
     DJANGO_FILTER_INSTALLED,
     camelize,
     get_model_fields,
+    is_running_async,
     is_valid_django_model,
 )
 
@@ -288,7 +289,11 @@ class DjangoObjectType(ObjectType):
     def get_node(cls, info, id):
         queryset = cls.get_queryset(cls._meta.model.objects, info)
         try:
+            if is_running_async():
+                return queryset.aget(pk=id)
+
             return queryset.get(pk=id)
+
         except cls._meta.model.DoesNotExist:
             return None
 

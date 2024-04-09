@@ -2,6 +2,7 @@ import datetime
 import re
 
 import pytest
+from asgiref.sync import async_to_sync
 from django.db.models import Count, Model, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
@@ -9,6 +10,7 @@ from graphene.relay import Node
 
 from ..fields import DjangoConnectionField, DjangoListField
 from ..types import DjangoObjectType
+from .async_test_helper import assert_async_result_equal
 from .models import (
     Article as ArticleModel,
     Film as FilmModel,
@@ -82,6 +84,7 @@ class TestDjangoListField:
 
         result = schema.execute(query)
 
+        assert_async_result_equal(schema, query, result)
         assert not result.errors
         assert result.data == {
             "reporters": [{"firstName": "Tara"}, {"firstName": "Debra"}]
@@ -109,6 +112,7 @@ class TestDjangoListField:
         result = schema.execute(query)
         assert not result.errors
         assert result.data == {"reporters": []}
+        assert_async_result_equal(schema, query, result)
 
         ReporterModel.objects.create(first_name="Tara", last_name="West")
         ReporterModel.objects.create(first_name="Debra", last_name="Payne")
@@ -119,6 +123,7 @@ class TestDjangoListField:
         assert result.data == {
             "reporters": [{"firstName": "Tara"}, {"firstName": "Debra"}]
         }
+        assert_async_result_equal(schema, query, result)
 
     def test_override_resolver(self):
         class Reporter(DjangoObjectType):
@@ -146,6 +151,35 @@ class TestDjangoListField:
         ReporterModel.objects.create(first_name="Debra", last_name="Payne")
 
         result = schema.execute(query)
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Tara"}]}
+
+    def test_override_resolver_async_execution(self):
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name",)
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+            def resolve_reporters(_, info):
+                return ReporterModel.objects.filter(first_name="Tara")
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        result = async_to_sync(schema.execute_async)(query)
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Tara"}]}
@@ -210,6 +244,7 @@ class TestDjangoListField:
                 {"firstName": "Debra", "articles": []},
             ]
         }
+        assert_async_result_equal(schema, query, result)
 
     def test_override_resolver_nested_list_field(self):
         class Article(DjangoObjectType):
@@ -268,6 +303,7 @@ class TestDjangoListField:
                 {"firstName": "Debra", "articles": []},
             ]
         }
+        assert_async_result_equal(schema, query, result)
 
     def test_same_type_nested_list_field(self):
         class Person(DjangoObjectType):
@@ -376,6 +412,7 @@ class TestDjangoListField:
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Tara"}]}
+        assert_async_result_equal(schema, query, result)
 
     def test_resolve_list(self):
         """Resolving a plain list should work (and not call get_queryset)"""
@@ -420,6 +457,53 @@ class TestDjangoListField:
         )
 
         result = schema.execute(query)
+
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Debra"}]}
+
+    def test_resolve_list_async(self):
+        """Resolving a plain list should work (and not call get_queryset) when running under async"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter)
+
+            def resolve_reporters(_, info):
+                return [ReporterModel.objects.get(first_name="Debra")]
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = async_to_sync(schema.execute_async)(query)
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Debra"}]}
@@ -483,6 +567,7 @@ class TestDjangoListField:
                 {"firstName": "Debra", "articles": []},
             ]
         }
+        assert_async_result_equal(schema, query, result)
 
     def test_resolve_list_external_resolver(self):
         """Resolving a plain list from external resolver should work (and not call get_queryset)"""
@@ -531,6 +616,53 @@ class TestDjangoListField:
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Debra"}]}
 
+    def test_resolve_list_external_resolver_async(self):
+        """Resolving a plain list from external resolver should work (and not call get_queryset)"""
+
+        class Reporter(DjangoObjectType):
+            class Meta:
+                model = ReporterModel
+                fields = ("first_name", "articles")
+
+            @classmethod
+            def get_queryset(cls, queryset, info):
+                # Only get reporters with at least 1 article
+                return queryset.annotate(article_count=Count("articles")).filter(
+                    article_count__gt=0
+                )
+
+        def resolve_reporters(_, info):
+            return [ReporterModel.objects.get(first_name="Debra")]
+
+        class Query(ObjectType):
+            reporters = DjangoListField(Reporter, resolver=resolve_reporters)
+
+        schema = Schema(query=Query)
+
+        query = """
+            query {
+                reporters {
+                    firstName
+                }
+            }
+        """
+
+        r1 = ReporterModel.objects.create(first_name="Tara", last_name="West")
+        ReporterModel.objects.create(first_name="Debra", last_name="Payne")
+
+        ArticleModel.objects.create(
+            headline="Amazing news",
+            reporter=r1,
+            pub_date=datetime.date.today(),
+            pub_date_time=datetime.datetime.now(),
+            editor=r1,
+        )
+
+        result = async_to_sync(schema.execute_async)(query)
+
+        assert not result.errors
+        assert result.data == {"reporters": [{"firstName": "Debra"}]}
+
     def test_get_queryset_filter_external_resolver(self):
         class Reporter(DjangoObjectType):
             class Meta:
@@ -575,6 +707,7 @@ class TestDjangoListField:
 
         assert not result.errors
         assert result.data == {"reporters": [{"firstName": "Tara"}]}
+        assert_async_result_equal(schema, query, result)
 
     def test_select_related_and_prefetch_related_are_respected(
         self, django_assert_num_queries
@@ -717,6 +850,7 @@ class TestDjangoListField:
             r'SELECT .* FROM "tests_film" INNER JOIN "tests_film_reporters" .* LEFT OUTER JOIN "tests_filmdetails"',
             captured.captured_queries[1]["sql"],
         )
+        assert_async_result_equal(schema, query, result)
 
 
 class TestDjangoConnectionField:
