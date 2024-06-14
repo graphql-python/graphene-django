@@ -5,8 +5,9 @@ import pytest
 from django.db.models import Count, Prefetch
 
 from graphene import List, NonNull, ObjectType, Schema, String
+from graphene.relay import Node
 
-from ..fields import DjangoListField
+from ..fields import DjangoConnectionField, DjangoListField
 from ..types import DjangoObjectType
 from .models import (
     Article as ArticleModel,
@@ -716,3 +717,37 @@ class TestDjangoListField:
             r'SELECT .* FROM "tests_film" INNER JOIN "tests_film_reporters" .* LEFT OUTER JOIN "tests_filmdetails"',
             captured.captured_queries[1]["sql"],
         )
+
+
+class TestDjangoConnectionField:
+    def test_can_use_custom_resolver(self):
+        def resolve_some_people(*args, **kwargs):
+            return PersonModel.objects.filter(name="Bob")
+
+        class PersonType(DjangoObjectType):
+            class Meta:
+                model = PersonModel
+                interfaces = (Node,)
+
+        class Query(ObjectType):
+            people = DjangoConnectionField(PersonType, resolver=resolve_some_people)
+
+        schema = Schema(query=Query)
+        PersonModel.objects.create(name="Bob")
+        PersonModel.objects.create(name="Alice")
+
+        query = """
+            query {
+                people {
+                    edges {
+                        node {
+                            name
+                        }
+                    }
+                }
+            }
+        """
+
+        result = schema.execute(query)
+        assert not result.errors
+        assert result.data == {"people": {"edges": [{"node": {"name": "Bob"}}]}}
