@@ -2004,10 +2004,12 @@ def test_should_query_nullable_foreign_key():
     class PetType(DjangoObjectType):
         class Meta:
             model = Pet
+            fields = "__all__"
 
     class PersonType(DjangoObjectType):
         class Meta:
             model = Person
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         pet = graphene.Field(PetType, name=graphene.String(required=True))
@@ -2022,10 +2024,8 @@ def test_should_query_nullable_foreign_key():
     schema = graphene.Schema(query=Query)
 
     person = Person.objects.create(name="Jane")
-    [
-        Pet.objects.create(name="Stray dog", age=1),
-        Pet.objects.create(name="Jane's dog", owner=person, age=1),
-    ]
+    Pet.objects.create(name="Stray dog", age=1)
+    Pet.objects.create(name="Jane's dog", owner=person, age=1)
 
     query_pet = """
         query getPet($name: String!) {
@@ -2068,6 +2068,7 @@ def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
     class FilmType(DjangoObjectType):
         class Meta:
             model = Film
+            fields = "__all__"
 
         @classmethod
         def get_queryset(cls, queryset, info):
@@ -2076,6 +2077,7 @@ def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
     class FilmDetailsType(DjangoObjectType):
         class Meta:
             model = FilmDetails
+            fields = "__all__"
 
         @classmethod
         def get_queryset(cls, queryset, info):

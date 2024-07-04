@@ -28,3 +28,5 @@ TEMPLATES = [
 GRAPHENE = {"SCHEMA": "graphene_django.tests.schema_view.schema"}
 
 ROOT_URLCONF = "graphene_django.tests.urls"
+
+USE_TZ = True
