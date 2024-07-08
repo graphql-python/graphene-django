@@ -245,9 +245,12 @@ class DjangoConnectionField(ConnectionField):
         return on_resolve(iterable)
 
     def wrap_resolve(self, parent_resolver):
+        # skip the wrap_resolve method on ConnectionField as it's already
+        # wrapping the connection_resolver, so we don't want to do it twice
+        resolver = super(ConnectionField, self).wrap_resolve(parent_resolver)
         return partial(
             self.connection_resolver,
-            parent_resolver,
+            resolver,
             self.connection_type,
             self.get_manager(),
             self.get_queryset_resolver(),
