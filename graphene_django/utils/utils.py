@@ -112,6 +112,7 @@ def is_valid_django_model(model):
 
 def import_single_dispatch():
     from functools import singledispatch
+
     return singledispatch
 
 
