@@ -7,34 +7,34 @@ from .exception.formating import wrap_exception
 from .types import DjangoDebug
 
 
-class DjangoDebugContext:
+class DjangoDebugContext(object):
     def __init__(self):
-        self.debug_result = None
-        self.results = []
+        self.debug_promise = None
+        self.promises = []
         self.object = DjangoDebug(sql=[], exceptions=[])
         self.enable_instrumentation()
 
-    def get_debug_result(self):
-        if not self.debug_result:
-            self.debug_result = self.results
-            self.results = []
-        return self.on_resolve_all_results()
+    def get_debug_promise(self):
+        if not self.debug_promise:
+            self.debug_promise = Promise.all(self.promises)
+            self.promises = []
+        return self.debug_promise.then(self.on_resolve_all_promises).get()
 
     def on_resolve_error(self, value):
         if hasattr(self, "object"):
             self.object.exceptions.append(wrap_exception(value))
-        return value
+        return Promise.reject(value)
 
-    def on_resolve_all_results(self):
-        if self.results:
-            self.debug_result = None
-            return self.get_debug_result()
+    def on_resolve_all_promises(self, values):
+        if self.promises:
+            self.debug_promise = None
+            return self.get_debug_promise()
         self.disable_instrumentation()
         return self.object
 
-    def add_result(self, result):
-        if self.debug_result:
-            self.results.append(result)
+    def add_promise(self, promise):
+        if self.debug_promise:
+            self.promises.append(promise)
 
     def enable_instrumentation(self):
         # This is thread-safe because database connections are thread-local.
@@ -46,7 +46,7 @@ class DjangoDebugContext:
             unwrap_cursor(connection)
 
 
-class DjangoDebugMiddleware:
+class DjangoDebugMiddleware(object):
     def resolve(self, next, root, info, **args):
         context = info.context
         django_debug = getattr(context, "django_debug", None)
@@ -62,10 +62,10 @@ class DjangoDebugMiddleware:
                     )
                 )
         if info.schema.get_type("DjangoDebug") == info.return_type:
-            return context.django_debug.get_debug_result()
+            return context.django_debug.get_debug_promise()
         try:
-            result = next(root, info, **args)
+            promise = next(root, info, **args)
         except Exception as e:
             return context.django_debug.on_resolve_error(e)
-        context.django_debug.add_result(result)
-        return result
+        context.django_debug.add_promise(promise)
+        return promise

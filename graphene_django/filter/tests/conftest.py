@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from mock import MagicMock
 import pytest
 
 from django.db import models
@@ -87,11 +87,12 @@ def Query(EventType):
         events = DjangoFilterConnectionField(EventType)
 
         def resolve_events(self, info, **kwargs):
+
             events = [
-                Event(name="Live Show", tags=["concert", "music", "rock"]),
-                Event(name="Musical", tags=["movie", "music"]),
-                Event(name="Ballet", tags=["concert", "dance"]),
-                Event(name="Speech", tags=[]),
+                Event(name="Live Show", tags=["concert", "music", "rock"],),
+                Event(name="Musical", tags=["movie", "music"],),
+                Event(name="Ballet", tags=["concert", "dance"],),
+                Event(name="Speech", tags=[],),
             ]
 
             STORE["events"] = events

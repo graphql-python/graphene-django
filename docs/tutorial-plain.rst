@@ -35,7 +35,6 @@ Now sync your database for the first time:
 
 .. code:: bash
 
-    cd ..
     python manage.py migrate
 
 Let's create a few simple models...
@@ -78,18 +77,6 @@ Add ingredients as INSTALLED_APPS:
         "cookbook.ingredients",
     ]
 
-Make sure the app name in ``cookbook.ingredients.apps.IngredientsConfig`` is set to ``cookbook.ingredients``.
-
-.. code:: python
-
-    # cookbook/ingredients/apps.py
-
-    from django.apps import AppConfig
-
-
-    class IngredientsConfig(AppConfig):
-        default_auto_field = 'django.db.models.BigAutoField'
-        name = 'cookbook.ingredients'
 
 Don't forget to create & run migrations:
 

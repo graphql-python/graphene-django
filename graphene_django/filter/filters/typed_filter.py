@@ -12,7 +12,7 @@ class TypedFilter(Filter):
 
     def __init__(self, input_type=None, *args, **kwargs):
         self._input_type = input_type
-        super().__init__(*args, **kwargs)
+        super(TypedFilter, self).__init__(*args, **kwargs)
 
     @property
     def input_type(self):

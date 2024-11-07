@@ -1,4 +1,5 @@
 # Code obtained from django-debug-toolbar sql panel tracking
+from __future__ import absolute_import, unicode_literals
 
 import json
 from threading import local
@@ -49,7 +50,7 @@ def unwrap_cursor(connection):
         del connection._graphene_cursor
 
 
-class ExceptionCursorWrapper:
+class ExceptionCursorWrapper(object):
     """
     Wraps a cursor and raises an exception on any operation.
     Used in Templates panel.
@@ -62,7 +63,7 @@ class ExceptionCursorWrapper:
         raise SQLQueryTriggered()
 
 
-class NormalCursorWrapper:
+class NormalCursorWrapper(object):
     """
     Wraps a cursor and logs queries.
     """
@@ -84,7 +85,7 @@ class NormalCursorWrapper:
         if not params:
             return params
         if isinstance(params, dict):
-            return {key: self._quote_expr(value) for key, value in params.items()}
+            return dict((key, self._quote_expr(value)) for key, value in params.items())
         return list(map(self._quote_expr, params))
 
     def _decode(self, param):

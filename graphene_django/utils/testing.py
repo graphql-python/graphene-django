@@ -3,9 +3,7 @@ import warnings
 
 from django.test import Client, TestCase, TransactionTestCase
 
-from graphene_django.settings import graphene_settings
-
-DEFAULT_GRAPHQL_URL = "/graphql"
+DEFAULT_GRAPHQL_URL = "/graphql/"
 
 
 def graphql_query(
@@ -21,7 +19,7 @@ def graphql_query(
     Args:
         query (string)              - GraphQL query to run
         operation_name (string)     - If the query is a mutation or named query, you must
-                                      supply the operation_name.  For annon queries ("{ ... }"),
+                                      supply the op_name.  For annon queries ("{ ... }"),
                                       should be None (default).
         input_data (dict)           - If provided, the $input variable in GraphQL will be set
                                       to this value. If both ``input_data`` and ``variables``,
@@ -42,7 +40,7 @@ def graphql_query(
     if client is None:
         client = Client()
     if not graphql_url:
-        graphql_url = graphene_settings.TESTING_ENDPOINT
+        graphql_url = DEFAULT_GRAPHQL_URL
 
     body = {"query": query}
     if operation_name:
@@ -65,13 +63,13 @@ def graphql_query(
     return resp
 
 
-class GraphQLTestMixin:
+class GraphQLTestMixin(object):
     """
     Based on: https://www.sam.today/blog/testing-graphql-with-graphene-django/
     """
 
     # URL to graphql endpoint
-    GRAPHQL_URL = graphene_settings.TESTING_ENDPOINT
+    GRAPHQL_URL = DEFAULT_GRAPHQL_URL
 
     def query(
         self, query, operation_name=None, input_data=None, variables=None, headers=None
@@ -80,7 +78,7 @@ class GraphQLTestMixin:
         Args:
             query (string)    - GraphQL query to run
             operation_name (string)  - If the query is a mutation or named query, you must
-                                supply the operation_name.  For annon queries ("{ ... }"),
+                                supply the op_name.  For annon queries ("{ ... }"),
                                 should be None (default).
             input_data (dict) - If provided, the $input variable in GraphQL will be set
                                 to this value. If both ``input_data`` and ``variables``,
@@ -91,7 +89,7 @@ class GraphQLTestMixin:
             headers (dict)    - If provided, the headers in POST request to GRAPHQL_URL
                                 will be set to this value. Keys should be prepended with
                                 "HTTP_" (e.g. to specify the "Authorization" HTTP header,
-                                use "HTTP_AUTHORIZATION" as the key).
+                                use "HTTP_AUTHORIZATION" as the key).       
 
         Returns:
             Response object from client

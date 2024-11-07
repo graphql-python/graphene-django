@@ -1,4 +1,4 @@
-from django.urls import path
+from django.conf.urls import url
 
 from ..views import GraphQLView
 from .schema_view import schema
@@ -10,4 +10,4 @@ class CustomGraphQLView(GraphQLView):
     pretty = True
 
 
-urlpatterns = [path("graphql/inherited/", CustomGraphQLView.as_view())]
+urlpatterns = [url(r"^graphql/inherited/$", CustomGraphQLView.as_view())]

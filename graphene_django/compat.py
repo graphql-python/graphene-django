@@ -1,4 +1,4 @@
-class MissingType:
+class MissingType(object):
     def __init__(self, *args, **kwargs):
         pass
 

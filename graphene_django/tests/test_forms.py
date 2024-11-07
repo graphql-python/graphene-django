@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from pytest import raises
+from py.test import raises
 
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 

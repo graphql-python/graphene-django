@@ -6,8 +6,7 @@ Using unittest
 
 If you want to unittest your API calls derive your test case from the class `GraphQLTestCase`.
 
-The default endpoint for testing is `/graphql`. You can override this in the `settings <https://docs.graphene-python.org/projects/django/en/latest/settings/#testing-endpoint>`__.
-
+Your endpoint is set through the `GRAPHQL_URL` attribute on `GraphQLTestCase`. The default endpoint is `GRAPHQL_URL = "/graphql/"`.
 
 Usage:
 
@@ -28,7 +27,7 @@ Usage:
                     }
                 }
                 ''',
-                operation_name='myModel'
+                op_name='myModel'
             )
 
             content = json.loads(response.content)
@@ -49,7 +48,7 @@ Usage:
                     }
                 }
                 ''',
-                operation_name='myModel',
+                op_name='myModel',
                 variables={'id': 1}
             )
 
@@ -73,7 +72,7 @@ Usage:
                     }
                 }
                 ''',
-                operation_name='myMutation',
+                op_name='myMutation',
                 input_data={'my_field': 'foo', 'other_field': 'bar'}
             )
 
@@ -108,7 +107,7 @@ Usage:
                     }
                 }
                 ''',
-                operation_name='myMutation',
+                op_name='myMutation',
                 input_data={'my_field': 'foo', 'other_field': 'bar'}
             )
 
@@ -148,7 +147,7 @@ To use pytest define a simple fixture using the query helper below
                     }
                 }
                 ''',
-                operation_name='myModel'
+                op_name='myModel'
             )
 
             content = json.loads(response.content)

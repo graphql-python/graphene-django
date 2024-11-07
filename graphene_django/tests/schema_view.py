@@ -5,6 +5,7 @@ from .mutations import PetFormMutation, PetMutation
 
 
 class QueryRoot(ObjectType):
+
     thrower = graphene.String(required=True)
     request = graphene.String(required=True)
     test = graphene.String(who=graphene.String())

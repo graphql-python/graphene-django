@@ -28,7 +28,7 @@ class IngredientNode(DjangoObjectType):
         }
 
 
-class Query:
+class Query(object):
     category = Node.Field(CategoryNode)
     all_categories = DjangoFilterConnectionField(CategoryNode)
 

@@ -16,7 +16,7 @@ class IngredientType(DjangoObjectType):
         fields = "__all__"
 
 
-class Query:
+class Query(object):
     category = graphene.Field(CategoryType, id=graphene.Int(), name=graphene.String())
     all_categories = graphene.List(CategoryType)
 

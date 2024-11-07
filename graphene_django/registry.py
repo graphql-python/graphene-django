@@ -1,4 +1,4 @@
-class Registry:
+class Registry(object):
     def __init__(self):
         self._registry = {}
         self._field_registry = {}

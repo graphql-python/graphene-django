@@ -24,15 +24,8 @@ from graphene import (
     Decimal,
 )
 from graphene.types.json import JSONString
-from graphene.types.scalars import BigInt
 from graphene.utils.str_converters import to_camel_case
-from graphql import GraphQLError
-
-try:
-    from graphql import assert_name
-except ImportError:
-    # Support for older versions of graphql
-    from graphql import assert_valid_name as assert_name
+from graphql import GraphQLError, assert_valid_name
 from graphql.pyutils import register_description
 
 from .compat import ArrayField, HStoreField, JSONField, PGJSONField, RangeField
@@ -62,7 +55,7 @@ class BlankValueField(Field):
 def convert_choice_name(name):
     name = to_const(force_str(name))
     try:
-        assert_name(name)
+        assert_valid_name(name)
     except GraphQLError:
         name = "A_%s" % name
     return name
@@ -74,7 +67,8 @@ def get_choices(choices):
         choices = choices.items()
     for value, help_text in choices:
         if isinstance(help_text, (tuple, list)):
-            yield from get_choices(help_text)
+            for choice in get_choices(help_text):
+                yield choice
         else:
             name = convert_choice_name(value)
             while name in converted_names:
@@ -91,17 +85,12 @@ def convert_choices_to_named_enum_with_descriptions(name, choices):
     named_choices = [(c[0], c[1]) for c in choices]
     named_choices_descriptions = {c[0]: c[2] for c in choices}
 
-    class EnumWithDescriptionsType:
+    class EnumWithDescriptionsType(object):
         @property
         def description(self):
             return str(named_choices_descriptions[self.name])
 
-    return_type = Enum(
-        name,
-        list(named_choices),
-        type=EnumWithDescriptionsType,
-        description="An enumeration.",  # Temporary fix until https://github.com/graphql-python/graphene/pull/1502 is merged
-    )
+    return_type = Enum(name, list(named_choices), type=EnumWithDescriptionsType)
     return return_type
 
 
@@ -113,7 +102,7 @@ def generate_enum_name(django_model_meta, field):
         )
         name = custom_func(field)
     elif graphene_settings.DJANGO_CHOICE_FIELD_ENUM_V2_NAMING is True:
-        name = to_camel_case(f"{django_model_meta.object_name}_{field.name}")
+        name = to_camel_case("{}_{}".format(django_model_meta.object_name, field.name))
     else:
         name = "{app_label}{object_name}{field_name}Choices".format(
             app_label=to_camel_case(django_model_meta.app_label.title()),
@@ -159,9 +148,7 @@ def get_django_field_description(field):
 @singledispatch
 def convert_django_field(field, registry=None):
     raise Exception(
-        "Don't know how to convert the Django field {} ({})".format(
-            field, field.__class__
-        )
+        "Don't know how to convert the Django field %s (%s)" % (field, field.__class__)
     )
 
 
@@ -199,14 +186,10 @@ def convert_field_to_uuid(field, registry=None):
     )
 
 
-@convert_django_field.register(models.BigIntegerField)
-def convert_big_int_field(field, registry=None):
-    return BigInt(description=field.help_text, required=not field.null)
-
-
 @convert_django_field.register(models.PositiveIntegerField)
 @convert_django_field.register(models.PositiveSmallIntegerField)
 @convert_django_field.register(models.SmallIntegerField)
+@convert_django_field.register(models.BigIntegerField)
 @convert_django_field.register(models.IntegerField)
 def convert_field_to_int(field, registry=None):
     return Int(description=get_django_field_description(field), required=not field.null)
@@ -222,9 +205,7 @@ def convert_field_to_boolean(field, registry=None):
 
 @convert_django_field.register(models.DecimalField)
 def convert_field_to_decimal(field, registry=None):
-    return Decimal(
-        description=get_django_field_description(field), required=not field.null
-    )
+    return Decimal(description=field.help_text, required=not field.null)
 
 
 @convert_django_field.register(models.FloatField)

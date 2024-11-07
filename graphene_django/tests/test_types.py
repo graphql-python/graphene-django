@@ -3,7 +3,7 @@ from textwrap import dedent
 
 import pytest
 from django.db import models
-from unittest.mock import patch
+from mock import patch
 
 from graphene import Connection, Field, Interface, ObjectType, Schema, String
 from graphene.relay import Node
@@ -104,7 +104,7 @@ def test_django_objecttype_with_custom_meta():
         @classmethod
         def __init_subclass_with_meta__(cls, **options):
             options.setdefault("_meta", ArticleTypeOptions(cls))
-            super().__init_subclass_with_meta__(**options)
+            super(ArticleType, cls).__init_subclass_with_meta__(**options)
 
     class Article(ArticleType):
         class Meta:
@@ -183,7 +183,7 @@ def test_schema_representation():
           pets: [Reporter!]!
           aChoice: TestsReporterAChoiceChoices
           reporterType: TestsReporterReporterTypeChoices
-          articles(offset: Int, before: String, after: String, first: Int, last: Int): ArticleConnection!
+          articles(offset: Int = null, before: String = null, after: String = null, first: Int = null, last: Int = null): ArticleConnection!
         }
 
         \"""An enumeration.\"""
@@ -244,7 +244,8 @@ def test_schema_representation():
             \"""The ID of the object\"""
             id: ID!
           ): Node
-        }"""
+        }
+        """
     )
     assert str(schema) == expected
 
@@ -484,7 +485,7 @@ def test_django_objecttype_neither_fields_nor_exclude():
 
 
 def custom_enum_name(field):
-    return f"CustomEnum{field.name.title()}"
+    return "CustomEnum{}".format(field.name.title())
 
 
 class TestDjangoObjectType:
@@ -524,7 +525,8 @@ class TestDjangoObjectType:
               id: ID!
               kind: String!
               cuteness: Int!
-            }"""
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_list(self, PetModel):
@@ -558,7 +560,8 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }"""
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_empty_list(self, PetModel):
@@ -583,7 +586,8 @@ class TestDjangoObjectType:
               id: ID!
               kind: String!
               cuteness: Int!
-            }"""
+            }
+            """
         )
 
     def test_django_objecttype_convert_choices_enum_naming_collisions(
@@ -617,7 +621,8 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }"""
+            }
+            """
         )
 
     def test_django_objecttype_choices_custom_enum_name(
@@ -655,7 +660,8 @@ class TestDjangoObjectType:
 
               \"""Dog\"""
               DOG
-            }"""
+            }
+            """
         )
 
 

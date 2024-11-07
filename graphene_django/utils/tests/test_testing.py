@@ -2,7 +2,6 @@ import pytest
 
 from .. import GraphQLTestCase
 from ...tests.test_types import with_local_registry
-from ...settings import graphene_settings
 from django.test import Client
 
 
@@ -44,11 +43,3 @@ def test_graphql_test_case_deprecated_client_setter():
 
     with pytest.warns(PendingDeprecationWarning):
         tc._client = Client()
-
-
-def test_graphql_test_case_imports_endpoint():
-    """
-    GraphQLTestCase class should import the default endpoint from settings file
-    """
-
-    assert GraphQLTestCase.GRAPHQL_URL == graphene_settings.TESTING_ENDPOINT

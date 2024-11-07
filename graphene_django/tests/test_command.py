@@ -2,7 +2,7 @@ from textwrap import dedent
 
 from django.core import management
 from io import StringIO
-from unittest.mock import mock_open, patch
+from mock import mock_open, patch
 
 from graphene import ObjectType, Schema, String
 
@@ -53,5 +53,6 @@ def test_generate_graphql_file_on_call_graphql_schema():
         """\
         type Query {
           hi: String
-        }"""
+        }
+    """
     )

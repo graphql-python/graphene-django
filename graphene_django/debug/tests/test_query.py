@@ -8,7 +8,7 @@ from ..middleware import DjangoDebugMiddleware
 from ..types import DjangoDebug
 
 
-class context:
+class context(object):
     pass
 
 

@@ -97,9 +97,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
                 field_type = graphene.List(field_type)
 
         args[name] = graphene.Argument(
-            field_type,
-            description=filter_field.label,
-            required=required,
+            field_type, description=filter_field.label, required=required,
         )
 
     return args
