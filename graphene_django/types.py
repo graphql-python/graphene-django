@@ -7,6 +7,7 @@ from django.db.models import Model  # noqa: F401
 import graphene
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
+from graphene.types.union import Union
 from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
@@ -291,6 +292,137 @@ class DjangoObjectType(ObjectType):
             return queryset.get(pk=id)
         except cls._meta.model.DoesNotExist:
             return None
+
+
+class DjangoUnionTypeOptions(ObjectTypeOptions):
+    model = None  # type: Type[Model]
+    registry = None  # type: Registry
+    connection = None  # type: Type[Connection]
+
+    filter_fields = ()
+    filterset_class = None
+
+
+class DjangoUnionType(Union):
+    """
+    A Django specific Union type that allows to map multiple Django object types
+    One use case is to handle polymorphic relationships for a Django model, using a library like django-polymorphic.
+
+    Can be used in combination with DjangoConnectionField and DjangoFilterConnectionField
+
+    Args:
+        Meta (class): The meta class of the union type
+            model (Model): The Django model that represents the union type
+            types (tuple): A tuple of DjangoObjectType classes that represent the possible types of the union
+
+    Example:
+    ```python
+    from graphene_django.types import DjangoObjectType, DjangoUnionType
+
+    class AssessmentUnion(DjangoUnionType):
+        class Meta:
+            model = Assessment
+            types = (HomeworkAssessmentNode, QuizAssessmentNode)
+            interfaces = (graphene.relay.Node,)
+            filter_fields = ("id", "title", "description")
+
+        @classmethod
+        def resolve_type(cls, instance, info):
+            if isinstance(instance, HomeworkAssessment):
+                return HomeworkAssessmentNode
+            elif isinstance(instance, QuizAssessment):
+                return QuizAssessmentNode
+
+    class Query(graphene.ObjectType):
+        all_assessments = DjangoFilterConnectionField(AssessmentUnion)
+    ```
+    """
+
+    class Meta:
+        abstract = True
+
+    @classmethod
+    def __init_subclass_with_meta__(
+        cls,
+        model=None,
+        types=None,
+        registry=None,
+        skip_registry=False,
+        _meta=None,
+        fields=None,
+        exclude=None,
+        convert_choices_to_enum=None,
+        filter_fields=None,
+        filterset_class=None,
+        connection=None,
+        connection_class=None,
+        use_connection=None,
+        interfaces=(),
+        **options,
+    ):
+        django_fields = yank_fields_from_attrs(
+            construct_fields(model, registry, fields, exclude, convert_choices_to_enum),
+            _as=graphene.Field,
+        )
+
+        if use_connection is None and interfaces:
+            use_connection = any(
+                issubclass(interface, Node) for interface in interfaces
+            )
+
+        if not registry:
+            registry = get_global_registry()
+
+        assert isinstance(registry, Registry), (
+            f"The attribute registry in {cls.__name__} needs to be an instance of "
+            f'Registry, received "{registry}".'
+        )
+
+        if filter_fields and filterset_class:
+            raise Exception("Can't set both filter_fields and filterset_class")
+
+        if not DJANGO_FILTER_INSTALLED and (filter_fields or filterset_class):
+            raise Exception(
+                "Can only set filter_fields or filterset_class if "
+                "Django-Filter is installed"
+            )
+
+        if not _meta:
+            _meta = DjangoUnionTypeOptions(cls)
+
+        _meta.model = model
+        _meta.types = types
+        _meta.fields = django_fields
+        _meta.filter_fields = filter_fields
+        _meta.filterset_class = filterset_class
+        _meta.registry = registry
+
+        if use_connection and not connection:
+            # We create the connection automatically
+            if not connection_class:
+                connection_class = Connection
+
+            connection = connection_class.create_type(
+                "{}Connection".format(options.get("name") or cls.__name__), node=cls
+            )
+
+        if connection is not None:
+            assert issubclass(
+                connection, Connection
+            ), f"The connection must be a Connection. Received {connection.__name__}"
+
+        _meta.connection = connection
+
+        super().__init_subclass_with_meta__(
+            types=types, _meta=_meta, interfaces=interfaces, **options
+        )
+
+        if not skip_registry:
+            registry.register(cls)
+
+    @classmethod
+    def get_queryset(cls, queryset, info):
+        return queryset
 
 
 class ErrorType(ObjectType):
