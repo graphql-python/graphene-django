@@ -7,7 +7,7 @@ from django.db.models import Model  # noqa: F401
 import graphene
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
-from graphene.types.union import Union
+from graphene.types.union import Union, UnionOptions
 from graphene.types.utils import yank_fields_from_attrs
 
 from .converter import convert_django_field_with_choices
@@ -294,7 +294,7 @@ class DjangoObjectType(ObjectType):
             return None
 
 
-class DjangoUnionTypeOptions(ObjectTypeOptions):
+class DjangoUnionTypeOptions(UnionOptions, ObjectTypeOptions):
     model = None  # type: Type[Model]
     registry = None  # type: Registry
     connection = None  # type: Type[Connection]
