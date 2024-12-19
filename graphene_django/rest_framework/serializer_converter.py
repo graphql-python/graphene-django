@@ -5,20 +5,22 @@ from rest_framework import serializers
 
 import graphene
 
-from ..registry import get_global_registry
 from ..converter import convert_choices_to_named_enum_with_descriptions
+from ..registry import get_global_registry
 from .types import DictType
 
 
 @singledispatch
 def get_graphene_type_from_serializer_field(field):
     raise ImproperlyConfigured(
-        "Don't know how to convert the serializer field %s (%s) "
-        "to Graphene type" % (field, field.__class__)
+        f"Don't know how to convert the serializer field {field} ({field.__class__}) "
+        "to Graphene type"
     )
 
 
-def convert_serializer_field(field, is_input=True, convert_choices_to_enum=True):
+def convert_serializer_field(
+    field, is_input=True, convert_choices_to_enum=True, force_optional=False
+):
     """
     Converts a django rest frameworks field to a graphql field
     and marks the field as required if we are creating an input type
@@ -31,7 +33,10 @@ def convert_serializer_field(field, is_input=True, convert_choices_to_enum=True)
         graphql_type = get_graphene_type_from_serializer_field(field)
 
     args = []
-    kwargs = {"description": field.help_text, "required": is_input and field.required}
+    kwargs = {
+        "description": field.help_text,
+        "required": is_input and field.required and not force_optional,
+    }
 
     # if it is a tuple or a list it means that we are returning
     # the graphql type and the child type

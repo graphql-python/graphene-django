@@ -21,6 +21,10 @@ add "&raw" to the end of the URL within a browser.
         integrity="{{graphiql_css_sri}}"
         rel="stylesheet"
         crossorigin="anonymous" />
+  <link href="https://cdn.jsdelivr.net/npm/@graphiql/plugin-explorer@{{graphiql_plugin_explorer_version}}/dist/style.css"
+        integrity="{{graphiql_plugin_explorer_css_sri}}"
+        rel="stylesheet"
+        crossorigin="anonymous" />
   <script src="https://cdn.jsdelivr.net/npm/whatwg-fetch@{{whatwg_fetch_version}}/dist/fetch.umd.js"
           integrity="{{whatwg_fetch_sri}}"
           crossorigin="anonymous"></script>
@@ -50,6 +54,7 @@ add "&raw" to the end of the URL within a browser.
     {% endif %}
       graphiqlHeaderEditorEnabled: {{ graphiql_header_editor_enabled|yesno:"true,false" }},
       graphiqlShouldPersistHeaders: {{ graphiql_should_persist_headers|yesno:"true,false" }},
+      graphiqlInputValueDeprecation: {{ graphiql_input_value_deprecation|yesno:"true,false" }},
     };
   </script>
   <script src="{% static 'graphene_django/graphiql.js' %}"></script>

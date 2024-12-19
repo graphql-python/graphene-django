@@ -1,10 +1,11 @@
-import graphene
 from django import forms
-from django_filters.utils import get_model_field, get_field_parts
-from django_filters.filters import Filter, BaseCSVFilter
-from .filters import ArrayFilter, ListFilter, RangeFilter, TypedFilter
-from .filterset import custom_filterset_factory, setup_filterset
+from django_filters.utils import get_model_field
+
+import graphene
+
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
+from .filters import ListFilter, RangeFilter, TypedFilter
+from .filterset import custom_filterset_factory, setup_filterset
 
 
 def get_field_type(registry, model, field_name):
@@ -42,7 +43,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             isinstance(filter_field, TypedFilter)
             and filter_field.input_type is not None
         ):
-            # First check if the filter input type has been explicitely given
+            # First check if the filter input type has been explicitly given
             field_type = filter_field.input_type
         else:
             if name not in filterset_class.declared_filters or isinstance(
@@ -50,7 +51,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             ):
                 # Get the filter field for filters that are no explicitly declared.
                 if filter_type == "isnull":
-                    field = graphene.Boolean(required=required)
+                    field_type = graphene.Boolean
                 else:
                     model_field = get_model_field(model, filter_field.field_name)
 
@@ -147,7 +148,7 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )
         elif filter_type == "range":
             filterset_class.base_filters[name] = RangeFilter(
@@ -156,5 +157,5 @@ def replace_csv_filters(filterset_class):
                 label=filter_field.label,
                 method=filter_field.method,
                 exclude=filter_field.exclude,
-                **filter_field.extra
+                **filter_field.extra,
             )

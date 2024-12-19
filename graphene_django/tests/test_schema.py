@@ -33,17 +33,18 @@ def test_should_map_fields_correctly():
             fields = "__all__"
 
     fields = list(ReporterType2._meta.fields.keys())
-    assert fields[:-2] == [
+    assert fields[:-3] == [
         "id",
         "first_name",
         "last_name",
         "email",
         "pets",
         "a_choice",
+        "fans",
         "reporter_type",
     ]
 
-    assert sorted(fields[-2:]) == ["articles", "films"]
+    assert sorted(fields[-3:]) == ["apnewsreporter", "articles", "films"]
 
 
 def test_should_map_only_few_fields():

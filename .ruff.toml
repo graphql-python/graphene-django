@@ -1,0 +1,33 @@
+select = [
+    "E",    # pycodestyle
+    "W",    # pycodestyle
+    "F",    # pyflake
+    "I",    # isort
+    "B",    # flake8-bugbear
+    "C4",   # flake8-comprehensions
+    "UP",   # pyupgrade
+]
+
+ignore = [
+    "E501",  # line-too-long
+    "B017",  # pytest.raises(Exception) should be considered evil
+    "B028",  # warnings.warn called without an explicit stacklevel keyword argument
+    "B904",  # check for raise statements in exception handlers that lack a from clause
+    "W191",  # https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+]
+
+exclude = [
+    "**/docs",
+]
+
+target-version = "py38"
+
+[per-file-ignores]
+# Ignore unused imports (F401) in these files
+"__init__.py" = ["F401"]
+"graphene_django/compat.py" = ["F401"]
+
+[isort]
+known-first-party = ["graphene", "graphene-django"]
+known-local-folder = ["cookbook"]
+combine-as-imports = true

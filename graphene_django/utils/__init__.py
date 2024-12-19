@@ -1,6 +1,7 @@
 from .testing import GraphQLTestCase
 from .utils import (
     DJANGO_FILTER_INSTALLED,
+    bypass_get_queryset,
     camelize,
     get_model_fields,
     get_reverse_fields,
@@ -16,4 +17,5 @@ __all__ = [
     "camelize",
     "is_valid_django_model",
     "GraphQLTestCase",
+    "bypass_get_queryset",
 ]

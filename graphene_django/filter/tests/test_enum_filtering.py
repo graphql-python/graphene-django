@@ -2,8 +2,7 @@ import pytest
 
 import graphene
 from graphene.relay import Node
-
-from graphene_django import DjangoObjectType, DjangoConnectionField
+from graphene_django import DjangoConnectionField, DjangoObjectType
 from graphene_django.tests.models import Article, Reporter
 from graphene_django.utils import DJANGO_FILTER_INSTALLED
 

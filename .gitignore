@@ -11,6 +11,9 @@ __pycache__/
 # Distribution / packaging
 .Python
 env/
+.env/
+venv/
+.venv/
 build/
 develop-eggs/
 dist/
@@ -80,3 +83,8 @@ Session.vim
 tags
 .tox/
 .pytest_cache/
+
+# pyenv
+#   For a library or package, you might want to ignore these files since the code is
+#   intended to run in multiple environments; otherwise, check them in:
+.python-version

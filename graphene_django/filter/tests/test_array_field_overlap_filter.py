@@ -1,17 +1,13 @@
 import pytest
 
-from graphene import Schema
-
 from ...compat import ArrayField, MissingType
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_overlap_multiple(Query):
+def test_array_field_overlap_multiple(schema):
     """
     Test overlap filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -34,12 +30,10 @@ def test_array_field_overlap_multiple(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_overlap_one(Query):
+def test_array_field_overlap_one(schema):
     """
     Test overlap filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {
@@ -61,12 +55,10 @@ def test_array_field_overlap_one(Query):
 
 
 @pytest.mark.skipif(ArrayField is MissingType, reason="ArrayField should exist")
-def test_array_field_overlap_empty_list(Query):
+def test_array_field_overlap_empty_list(schema):
     """
     Test overlap filter on a array field of string.
     """
-
-    schema = Schema(query=Query)
 
     query = """
     query {

@@ -1,9 +1,10 @@
 import warnings
 from collections import OrderedDict
-from typing import Type
+from typing import Type  # noqa: F401
+
+from django.db.models import Model  # noqa: F401
 
 import graphene
-from django.db.models import Model
 from graphene.relay import Connection, Node
 from graphene.types.objecttype import ObjectType, ObjectTypeOptions
 from graphene.types.utils import yank_fields_from_attrs
@@ -22,7 +23,7 @@ ALL_FIELDS = "__all__"
 
 
 def construct_fields(
-    model, registry, only_fields, exclude_fields, convert_choices_to_enum
+    model, registry, only_fields, exclude_fields, convert_choices_to_enum=None
 ):
     _model_fields = get_model_fields(model)
 
@@ -46,7 +47,7 @@ def construct_fields(
             continue
 
         _convert_choices_to_enum = convert_choices_to_enum
-        if not isinstance(_convert_choices_to_enum, bool):
+        if isinstance(_convert_choices_to_enum, list):
             # then `convert_choices_to_enum` is a list of field names to convert
             if name in _convert_choices_to_enum:
                 _convert_choices_to_enum = True
@@ -101,10 +102,8 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
         if name in all_field_names:
             # Field is a custom field
             warnings.warn(
-                (
-                    'Excluding the custom field "{field_name}" on DjangoObjectType "{type_}" has no effect. '
-                    'Either remove the custom field or remove the field from the "exclude" list.'
-                ).format(field_name=name, type_=type_)
+                f'Excluding the custom field "{name}" on DjangoObjectType "{type_}" has no effect. '
+                'Either remove the custom field or remove the field from the "exclude" list.'
             )
         else:
             if not hasattr(model, name):
@@ -147,9 +146,9 @@ class DjangoObjectType(ObjectType):
         connection_class=None,
         use_connection=None,
         interfaces=(),
-        convert_choices_to_enum=True,
+        convert_choices_to_enum=None,
         _meta=None,
-        **options
+        **options,
     ):
         assert is_valid_django_model(model), (
             'You need to pass a valid Django Model in {}.Meta, received "{}".'
@@ -159,9 +158,9 @@ class DjangoObjectType(ObjectType):
             registry = get_global_registry()
 
         assert isinstance(registry, Registry), (
-            "The attribute registry in {} needs to be an instance of "
-            'Registry, received "{}".'
-        ).format(cls.__name__, registry)
+            f"The attribute registry in {cls.__name__} needs to be an instance of "
+            f'Registry, received "{registry}".'
+        )
 
         if filter_fields and filterset_class:
             raise Exception("Can't set both filter_fields and filterset_class")
@@ -174,7 +173,7 @@ class DjangoObjectType(ObjectType):
 
         assert not (fields and exclude), (
             "Cannot set both 'fields' and 'exclude' options on "
-            "DjangoObjectType {class_name}.".format(class_name=cls.__name__)
+            f"DjangoObjectType {cls.__name__}."
         )
 
         # Alias only_fields -> fields
@@ -213,8 +212,8 @@ class DjangoObjectType(ObjectType):
             warnings.warn(
                 "Creating a DjangoObjectType without either the `fields` "
                 "or the `exclude` option is deprecated. Add an explicit `fields "
-                "= '__all__'` option on DjangoObjectType {class_name} to use all "
-                "fields".format(class_name=cls.__name__),
+                f"= '__all__'` option on DjangoObjectType {cls.__name__} to use all "
+                "fields",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -239,9 +238,9 @@ class DjangoObjectType(ObjectType):
             )
 
         if connection is not None:
-            assert issubclass(connection, Connection), (
-                "The connection must be a Connection. Received {}"
-            ).format(connection.__name__)
+            assert issubclass(
+                connection, Connection
+            ), f"The connection must be a Connection. Received {connection.__name__}"
 
         if not _meta:
             _meta = DjangoObjectTypeOptions(cls)
@@ -252,6 +251,7 @@ class DjangoObjectType(ObjectType):
         _meta.filterset_class = filterset_class
         _meta.fields = django_fields
         _meta.connection = connection
+        _meta.convert_choices_to_enum = convert_choices_to_enum
 
         super().__init_subclass_with_meta__(
             _meta=_meta, interfaces=interfaces, **options
@@ -271,7 +271,7 @@ class DjangoObjectType(ObjectType):
         if isinstance(root, cls):
             return True
         if not is_valid_django_model(root.__class__):
-            raise Exception(('Received incompatible instance "{}".').format(root))
+            raise Exception(f'Received incompatible instance "{root}".')
 
         if cls._meta.model._meta.proxy:
             model = root._meta.model

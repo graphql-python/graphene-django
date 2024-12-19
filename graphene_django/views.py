@@ -9,13 +9,19 @@ from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import View
-from graphql import OperationType, get_operation_ast, parse, validate
+from graphql import (
+    ExecutionResult,
+    OperationType,
+    execute,
+    get_operation_ast,
+    parse,
+    validate_schema,
+)
 from graphql.error import GraphQLError
-from graphql.execution import ExecutionResult
+from graphql.execution.middleware import MiddlewareManager
+from graphql.validation import validate
 
 from graphene import Schema
-from graphql.execution.middleware import MiddlewareManager
-
 from graphene_django.constants import MUTATION_ERRORS_FLAG
 from graphene_django.utils.utils import set_rollback
 
@@ -40,9 +46,9 @@ def get_accepted_content_types(request):
 
     raw_content_types = request.META.get("HTTP_ACCEPT", "*/*").split(",")
     qualified_content_types = map(qualify, raw_content_types)
-    return list(
+    return [
         x[0] for x in sorted(qualified_content_types, key=lambda x: x[1], reverse=True)
-    )
+    ]
 
 
 def instantiate_middleware(middlewares):
@@ -66,18 +72,21 @@ class GraphQLView(View):
     react_dom_sri = "sha256-nbMykgB6tsOFJ7OdVmPpdqMFVk4ZsqWocT6issAPUF0="
 
     # The GraphiQL React app.
-    graphiql_version = "2.4.1"  # "1.0.3"
-    graphiql_sri = "sha256-s+f7CFAPSUIygFnRC2nfoiEKd3liCUy+snSdYFAoLUc="  # "sha256-VR4buIDY9ZXSyCNFHFNik6uSe0MhigCzgN4u7moCOTk="
-    graphiql_css_sri = "sha256-88yn8FJMyGboGs4Bj+Pbb3kWOWXo7jmb+XCRHE+282k="  # "sha256-LwqxjyZgqXDYbpxQJ5zLQeNcf7WVNSJ+r8yp2rnWE/E="
+    graphiql_version = "2.4.7"
+    graphiql_sri = "sha256-n/LKaELupC1H/PU6joz+ybeRJHT2xCdekEt6OYMOOZU="
+    graphiql_css_sri = "sha256-OsbM+LQHcnFHi0iH7AUKueZvDcEBoy/z4hJ7jx1cpsM="
 
     # The websocket transport library for subscriptions.
-    subscriptions_transport_ws_version = "5.12.1"
+    subscriptions_transport_ws_version = "5.13.1"
     subscriptions_transport_ws_sri = (
         "sha256-EZhvg6ANJrBsgLvLAa0uuHNLepLJVCFYS+xlb5U/bqw="
     )
 
     graphiql_plugin_explorer_version = "0.1.15"
     graphiql_plugin_explorer_sri = "sha256-3hUuhBXdXlfCj6RTeEkJFtEh/kUG+TCDASFpFPLrzvE="
+    graphiql_plugin_explorer_css_sri = (
+        "sha256-fA0LPUlukMNR6L4SPSeFqDTYav8QdWjQ2nr559Zln1U="
+    )
 
     schema = None
     graphiql = False
@@ -87,6 +96,7 @@ class GraphQLView(View):
     batch = False
     subscription_path = None
     execution_context_class = None
+    validation_rules = None
 
     def __init__(
         self,
@@ -98,6 +108,7 @@ class GraphQLView(View):
         batch=False,
         subscription_path=None,
         execution_context_class=None,
+        validation_rules=None,
     ):
         if not schema:
             schema = graphene_settings.SCHEMA
@@ -105,17 +116,19 @@ class GraphQLView(View):
         if middleware is None:
             middleware = graphene_settings.MIDDLEWARE
 
-        self.schema = self.schema or schema
+        self.schema = schema or self.schema
         if middleware is not None:
             if isinstance(middleware, MiddlewareManager):
                 self.middleware = middleware
             else:
                 self.middleware = list(instantiate_middleware(middleware))
         self.root_value = root_value
-        self.pretty = self.pretty or pretty
-        self.graphiql = self.graphiql or graphiql
-        self.batch = self.batch or batch
-        self.execution_context_class = execution_context_class
+        self.pretty = pretty or self.pretty
+        self.graphiql = graphiql or self.graphiql
+        self.batch = batch or self.batch
+        self.execution_context_class = (
+            execution_context_class or self.execution_context_class
+        )
         if subscription_path is None:
             self.subscription_path = graphene_settings.SUBSCRIPTION_PATH
 
@@ -123,6 +136,8 @@ class GraphQLView(View):
             self.schema, Schema
         ), "A Schema is required to be provided to GraphQLView."
         assert not all((graphiql, batch)), "Use either graphiql or batch processing"
+
+        self.validation_rules = validation_rules or self.validation_rules
 
     # noinspection PyUnusedLocal
     def get_root_value(self, request):
@@ -163,11 +178,13 @@ class GraphQLView(View):
                     subscriptions_transport_ws_sri=self.subscriptions_transport_ws_sri,
                     graphiql_plugin_explorer_version=self.graphiql_plugin_explorer_version,
                     graphiql_plugin_explorer_sri=self.graphiql_plugin_explorer_sri,
+                    graphiql_plugin_explorer_css_sri=self.graphiql_plugin_explorer_css_sri,
                     # The SUBSCRIPTION_PATH setting.
                     subscription_path=self.subscription_path,
                     # GraphiQL headers tab,
                     graphiql_header_editor_enabled=graphene_settings.GRAPHIQL_HEADER_EDITOR_ENABLED,
                     graphiql_should_persist_headers=graphene_settings.GRAPHIQL_SHOULD_PERSIST_HEADERS,
+                    graphiql_input_value_deprecation=graphene_settings.GRAPHIQL_INPUT_VALUE_DEPRECATION,
                 )
 
             if self.batch:
@@ -289,48 +306,61 @@ class GraphQLView(View):
                 return None
             raise HttpError(HttpResponseBadRequest("Must provide query string."))
 
+        schema = self.schema.graphql_schema
+
+        schema_validation_errors = validate_schema(schema)
+        if schema_validation_errors:
+            return ExecutionResult(data=None, errors=schema_validation_errors)
+
         try:
             document = parse(query)
         except Exception as e:
             return ExecutionResult(errors=[e])
 
-        if request.method.lower() == "get":
-            operation_ast = get_operation_ast(document, operation_name)
-            if operation_ast and operation_ast.operation != OperationType.QUERY:
-                if show_graphiql:
-                    return None
+        operation_ast = get_operation_ast(document, operation_name)
 
-                raise HttpError(
-                    HttpResponseNotAllowed(
-                        ["POST"],
-                        "Can only perform a {} operation from a POST request.".format(
-                            operation_ast.operation.value
-                        ),
-                    )
+        if (
+            request.method.lower() == "get"
+            and operation_ast is not None
+            and operation_ast.operation != OperationType.QUERY
+        ):
+            if show_graphiql:
+                return None
+
+            raise HttpError(
+                HttpResponseNotAllowed(
+                    ["POST"],
+                    "Can only perform a {} operation from a POST request.".format(
+                        operation_ast.operation.value
+                    ),
                 )
+            )
 
-        validation_errors = validate(self.schema.graphql_schema, document)
+        validation_errors = validate(
+            schema,
+            document,
+            self.validation_rules,
+            graphene_settings.MAX_VALIDATION_ERRORS,
+        )
+
         if validation_errors:
             return ExecutionResult(data=None, errors=validation_errors)
 
         try:
-            extra_options = {}
-            if self.execution_context_class:
-                extra_options["execution_context_class"] = self.execution_context_class
-
-            options = {
-                "source": query,
+            execute_options = {
                 "root_value": self.get_root_value(request),
+                "context_value": self.get_context(request),
                 "variable_values": variables,
                 "operation_name": operation_name,
-                "context_value": self.get_context(request),
                 "middleware": self.get_middleware(request),
             }
-            options.update(extra_options)
+            if self.execution_context_class:
+                execute_options[
+                    "execution_context_class"
+                ] = self.execution_context_class
 
-            operation_ast = get_operation_ast(document, operation_name)
             if (
-                operation_ast
+                operation_ast is not None
                 and operation_ast.operation == OperationType.MUTATION
                 and (
                     graphene_settings.ATOMIC_MUTATIONS is True
@@ -338,12 +368,12 @@ class GraphQLView(View):
                 )
             ):
                 with transaction.atomic():
-                    result = self.schema.execute(**options)
+                    result = execute(schema, document, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
                         transaction.set_rollback(True)
                 return result
 
-            return self.schema.execute(**options)
+            return execute(schema, document, **execute_options)
         except Exception as e:
             return ExecutionResult(errors=[e])
 

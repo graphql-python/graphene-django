@@ -1,5 +1,6 @@
 import inspect
 
+import django
 from django.db import connection, models, transaction
 from django.db.models.manager import Manager
 from django.utils.encoding import force_str
@@ -37,18 +38,52 @@ def camelize(data):
     return data
 
 
-def get_reverse_fields(model, local_field_names):
-    for name, attr in model.__dict__.items():
-        # Don't duplicate any local fields
-        if name in local_field_names:
-            continue
+def _get_model_ancestry(model):
+    model_ancestry = [model]
 
-        # "rel" for FK and M2M relations and "related" for O2O Relations
-        related = getattr(attr, "rel", None) or getattr(attr, "related", None)
-        if isinstance(related, models.ManyToOneRel):
-            yield (name, related)
-        elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
-            yield (name, related)
+    for base in model.__bases__:
+        if is_valid_django_model(base) and getattr(base, "_meta", False):
+            model_ancestry.append(base)
+    return model_ancestry
+
+
+def get_reverse_fields(model, local_field_names):
+    """
+    Searches through the model's ancestry and gets reverse relationships the models
+    Yields a tuple of (field.name, field)
+    """
+    model_ancestry = _get_model_ancestry(model)
+
+    for _model in model_ancestry:
+        for name, attr in _model.__dict__.items():
+            # Don't duplicate any local fields
+            if name in local_field_names:
+                continue
+
+            # "rel" for FK and M2M relations and "related" for O2O Relations
+            related = getattr(attr, "rel", None) or getattr(attr, "related", None)
+            if isinstance(related, models.ManyToOneRel):
+                yield (name, related)
+            elif isinstance(related, models.ManyToManyRel) and not related.symmetrical:
+                yield (name, related)
+
+
+def get_local_fields(model):
+    """
+    Searches through the model's ancestry and gets the fields on the models
+    Returns a dict of {field.name: field}
+    """
+    model_ancestry = _get_model_ancestry(model)
+
+    local_fields_dict = {}
+    for _model in model_ancestry:
+        for field in sorted(
+            list(_model._meta.fields) + list(_model._meta.local_many_to_many)
+        ):
+            if field.name not in local_fields_dict:
+                local_fields_dict[field.name] = field
+
+    return list(local_fields_dict.items())
 
 
 def maybe_queryset(value):
@@ -58,17 +93,14 @@ def maybe_queryset(value):
 
 
 def get_model_fields(model):
-    local_fields = [
-        (field.name, field)
-        for field in sorted(
-            list(model._meta.fields) + list(model._meta.local_many_to_many)
-        )
-    ]
-
-    # Make sure we don't duplicate local fields with "reverse" version
-    local_field_names = [field[0] for field in local_fields]
+    """
+    Gets all the fields and relationships on the Django model and its ancestry.
+    Prioritizes local fields and relationships over the reverse relationships of the same name
+    Returns a tuple of (field.name, field)
+    """
+    local_fields = get_local_fields(model)
+    local_field_names = {field[0] for field in local_fields}
     reverse_fields = get_reverse_fields(model, local_field_names)
-
     all_fields = local_fields + list(reverse_fields)
 
     return all_fields
@@ -79,24 +111,7 @@ def is_valid_django_model(model):
 
 
 def import_single_dispatch():
-    try:
-        from functools import singledispatch
-    except ImportError:
-        singledispatch = None
-
-    if not singledispatch:
-        try:
-            from singledispatch import singledispatch
-        except ImportError:
-            pass
-
-    if not singledispatch:
-        raise Exception(
-            "It seems your python version does not include "
-            "functools.singledispatch. Please install the 'singledispatch' "
-            "package. More information here: "
-            "https://pypi.python.org/pypi/singledispatch"
-        )
+    from functools import singledispatch
 
     return singledispatch
 
@@ -105,3 +120,17 @@ def set_rollback():
     atomic_requests = connection.settings_dict.get("ATOMIC_REQUESTS", False)
     if atomic_requests and connection.in_atomic_block:
         transaction.set_rollback(True)
+
+
+def bypass_get_queryset(resolver):
+    """
+    Adds a bypass_get_queryset attribute to the resolver, which is used to
+    bypass any custom get_queryset method of the DjangoObjectType.
+    """
+    resolver._bypass_get_queryset = True
+    return resolver
+
+
+_DJANGO_VERSION_AT_LEAST_4_2 = django.VERSION[0] > 4 or (
+    django.VERSION[0] >= 4 and django.VERSION[1] >= 2
+)

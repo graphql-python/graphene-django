@@ -7,12 +7,12 @@ Graphene has a number of additional features that are designed to make
 working with Django *really simple*.
 
 Note: The code in this quickstart is pulled from the `cookbook example
-app <https://github.com/graphql-python/graphene-django/tree/master/examples/cookbook>`__.
+app <https://github.com/graphql-python/graphene-django/tree/main/examples/cookbook>`__.
 
 A good idea is to check the following things first:
 
 * `Graphene Relay documentation <http://docs.graphene-python.org/en/latest/relay/>`__
-* `GraphQL Relay Specification <https://facebook.github.io/relay/docs/en/graphql-server-specification.html>`__
+* `GraphQL Relay Specification <https://relay.dev/docs/guides/graphql-server-specification/>`__
 
 Setup the Django project
 ------------------------
@@ -87,7 +87,7 @@ Load some test data
 
 Now is a good time to load up some test data. The easiest option will be
 to `download the
-ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/master/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
+ingredients.json <https://raw.githubusercontent.com/graphql-python/graphene-django/main/examples/cookbook/cookbook/ingredients/fixtures/ingredients.json>`__
 fixture and place it in
 ``cookbook/ingredients/fixtures/ingredients.json``. You can then run the
 following:

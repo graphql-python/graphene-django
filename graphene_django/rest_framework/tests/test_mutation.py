@@ -3,11 +3,16 @@ import datetime
 from pytest import raises
 from rest_framework import serializers
 
-from graphene import Field, ResolveInfo
+from graphene import Field, ResolveInfo, String
 from graphene.types.inputobjecttype import InputObjectType
 
 from ...types import DjangoObjectType
-from ..models import MyFakeModel, MyFakeModelWithDate, MyFakeModelWithPassword
+from ..models import (
+    MyFakeModel,
+    MyFakeModelWithChoiceField,
+    MyFakeModelWithDate,
+    MyFakeModelWithPassword,
+)
 from ..mutation import SerializerMutation
 
 
@@ -100,6 +105,16 @@ def test_exclude_fields():
     assert "created" not in MyMutation.Input._meta.fields
 
 
+def test_model_serializer_optional_fields():
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = MyModelSerializer
+            optional_fields = ("cool_name",)
+
+    assert "cool_name" in MyMutation.Input._meta.fields
+    assert MyMutation.Input._meta.fields["cool_name"].type == String
+
+
 def test_write_only_field():
     class WriteOnlyFieldModelSerializer(serializers.ModelSerializer):
         password = serializers.CharField(write_only=True)
@@ -162,6 +177,21 @@ def test_read_only_fields():
     assert (
         "cool_name" not in MyMutation.Input._meta.fields
     ), "'cool_name' is read_only field and shouldn't be on arguments"
+
+
+def test_hidden_fields():
+    class SerializerWithHiddenField(serializers.Serializer):
+        cool_name = serializers.CharField()
+        user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+    class MyMutation(SerializerMutation):
+        class Meta:
+            serializer_class = SerializerWithHiddenField
+
+    assert "cool_name" in MyMutation.Input._meta.fields
+    assert (
+        "user" not in MyMutation.Input._meta.fields
+    ), "'user' is hidden field and shouldn't be on arguments"
 
 
 def test_nested_model():
@@ -230,7 +260,7 @@ def test_model_invalid_update_mutate_and_get_payload_success():
             model_operations = ["update"]
 
     with raises(Exception) as exc:
-        result = InvalidModelMutation.mutate_and_get_payload(
+        InvalidModelMutation.mutate_and_get_payload(
             None, mock_info(), **{"cool_name": "Narf"}
         )
 
@@ -245,12 +275,45 @@ def test_perform_mutate_success():
     result = MyMethodMutation.mutate_and_get_payload(
         None,
         mock_info(),
-        **{"cool_name": "Narf", "last_edited": datetime.date(2020, 1, 4)}
+        **{"cool_name": "Narf", "last_edited": datetime.date(2020, 1, 4)},
     )
 
     assert result.errors is None
     assert result.cool_name == "Narf"
     assert result.days_since_last_edit == 4
+
+
+def test_perform_mutate_success_with_enum_choice_field():
+    class ListViewChoiceFieldSerializer(serializers.ModelSerializer):
+        choice_type = serializers.ChoiceField(
+            choices=[(x.name, x.value) for x in MyFakeModelWithChoiceField.ChoiceType],
+            required=False,
+        )
+
+        class Meta:
+            model = MyFakeModelWithChoiceField
+            fields = "__all__"
+
+    class SomeCreateSerializerMutation(SerializerMutation):
+        class Meta:
+            serializer_class = ListViewChoiceFieldSerializer
+
+    choice_type = {
+        "choice_type": SomeCreateSerializerMutation.Input.choice_type.type.get("ASDF")
+    }
+    name = MyFakeModelWithChoiceField.ChoiceType.ASDF.name
+    result = SomeCreateSerializerMutation.mutate_and_get_payload(
+        None, mock_info(), **choice_type
+    )
+    assert result.errors is None
+    assert result.choice_type == name
+    kwargs = SomeCreateSerializerMutation.get_serializer_kwargs(
+        None, mock_info(), **choice_type
+    )
+    assert kwargs["data"]["choice_type"] == name
+    assert 1 == MyFakeModelWithChoiceField.objects.count()
+    item = MyFakeModelWithChoiceField.objects.first()
+    assert item.choice_type == name
 
 
 def test_mutate_and_get_payload_error():

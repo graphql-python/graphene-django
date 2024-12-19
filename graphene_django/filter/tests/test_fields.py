@@ -19,8 +19,8 @@ if DJANGO_FILTER_INSTALLED:
     from django_filters import FilterSet, NumberFilter, OrderingFilter
 
     from graphene_django.filter import (
-        GlobalIDFilter,
         DjangoFilterConnectionField,
+        GlobalIDFilter,
         GlobalIDMultipleChoiceFilter,
     )
     from graphene_django.filter.tests.filters import (
@@ -222,7 +222,7 @@ def test_filter_filterset_information_on_meta_related():
         reporter = Field(ReporterFilterNode)
         article = Field(ArticleFilterNode)
 
-    schema = Schema(query=Query)
+    Schema(query=Query)
     articles_field = ReporterFilterNode._meta.fields["articles"].get_type()
     assert_arguments(articles_field, "headline", "reporter")
     assert_not_orderable(articles_field)
@@ -294,7 +294,7 @@ def test_filter_filterset_class_information_on_meta_related():
         reporter = Field(ReporterFilterNode)
         article = Field(ArticleFilterNode)
 
-    schema = Schema(query=Query)
+    Schema(query=Query)
     articles_field = ReporterFilterNode._meta.fields["articles"].get_type()
     assert_arguments(articles_field, "headline", "reporter")
     assert_not_orderable(articles_field)
@@ -789,7 +789,7 @@ def test_order_by():
 
     query = """
         query NodeFilteringQuery {
-            allReporters(orderBy: "-firtsnaMe") {
+            allReporters(orderBy: "-firstname") {
                 edges {
                     node {
                         firstName
@@ -802,7 +802,7 @@ def test_order_by():
     assert result.errors
 
 
-def test_order_by_is_perserved():
+def test_order_by_is_preserved():
     class ReporterType(DjangoObjectType):
         class Meta:
             model = Reporter
@@ -1186,7 +1186,7 @@ def test_filter_filterset_based_on_mixin():
         first_name="Adam", last_name="Doe", email="adam@doe.com"
     )
 
-    article_2 = Article.objects.create(
+    Article.objects.create(
         headline="Good Bye",
         reporter=reporter_2,
         editor=reporter_2,

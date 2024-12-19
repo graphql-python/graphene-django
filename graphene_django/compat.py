@@ -1,3 +1,12 @@
+import sys
+from pathlib import PurePath
+
+# For backwards compatibility, we import JSONField to have it available for import via
+# this compat module (https://github.com/graphql-python/graphene-django/issues/1428).
+# Django's JSONField is available in Django 3.2+ (the minimum version we support)
+from django.db.models import JSONField
+
+
 class MissingType:
     def __init__(self, *args, **kwargs):
         pass
@@ -7,19 +16,29 @@ try:
     # Postgres fields are only available in Django with psycopg2 installed
     # and we cannot have psycopg2 on PyPy
     from django.contrib.postgres.fields import (
-        IntegerRangeField,
         ArrayField,
         HStoreField,
-        JSONField as PGJSONField,
+        IntegerRangeField,
         RangeField,
     )
 except ImportError:
-    IntegerRangeField, ArrayField, HStoreField, PGJSONField, RangeField = (
-        MissingType,
-    ) * 5
+    IntegerRangeField, HStoreField, RangeField = (MissingType,) * 3
 
-try:
-    # JSONField is only available from Django 3.1
-    from django.db.models import JSONField
-except ImportError:
-    JSONField = MissingType
+    # For unit tests we fake ArrayField using JSONFields
+    if any(
+        PurePath(sys.argv[0]).match(p)
+        for p in [
+            "**/pytest",
+            "**/py.test",
+            "**/pytest/__main__.py",
+        ]
+    ):
+
+        class ArrayField(JSONField):
+            def __init__(self, *args, **kwargs):
+                if len(args) > 0:
+                    self.base_field = args[0]
+                super().__init__(**kwargs)
+
+    else:
+        ArrayField = MissingType

@@ -57,9 +57,9 @@ specify the parameters in your settings.py:
 .. code:: python
 
     GRAPHENE = {
-    	'SCHEMA': 'tutorial.quickstart.schema',
-    	'SCHEMA_OUTPUT': 'data/schema.json',  # defaults to schema.json,
-    	'SCHEMA_INDENT': 2,  # Defaults to None (displays all data on a single line)
+        'SCHEMA': 'tutorial.quickstart.schema',
+        'SCHEMA_OUTPUT': 'data/schema.json',  # defaults to schema.json,
+        'SCHEMA_INDENT': 2,  # Defaults to None (displays all data on a single line)
     }
 
 

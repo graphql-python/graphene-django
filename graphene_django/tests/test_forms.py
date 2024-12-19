@@ -3,7 +3,6 @@ from pytest import raises
 
 from ..forms import GlobalIDFormField, GlobalIDMultipleChoiceField
 
-
 # 'TXlUeXBlOmFiYw==' -> 'MyType', 'abc'
 
 
