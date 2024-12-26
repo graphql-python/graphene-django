@@ -77,6 +77,9 @@ def test_django_objecttype_map_correct_fields():
         "email",
         "pets",
         "a_choice",
+        "typed_choice",
+        "class_choice",
+        "callable_choice",
         "fans",
         "reporter_type",
     ]
@@ -186,6 +189,9 @@ def test_schema_representation():
           email: String!
           pets: [Reporter!]!
           aChoice: TestsReporterAChoiceChoices
+          typedChoice: TestsReporterTypedChoiceChoices
+          classChoice: TestsReporterClassChoiceChoices
+          callableChoice: TestsReporterCallableChoiceChoices
           reporterType: TestsReporterReporterTypeChoices
           articles(offset: Int, before: String, after: String, first: Int, last: Int): ArticleConnection!
         }
@@ -197,6 +203,33 @@ def test_schema_representation():
 
           \"""that\"""
           A_2
+        }
+
+        \"""An enumeration.\"""
+        enum TestsReporterTypedChoiceChoices {
+          \"""Choice This\"""
+          A_1
+
+          \"""Choice That\"""
+          A_2
+        }
+
+        \"""An enumeration.\"""
+        enum TestsReporterClassChoiceChoices {
+          \"""Choice This\"""
+          A_1
+
+          \"""Choice That\"""
+          A_2
+        }
+
+        \"""An enumeration.\"""
+        enum TestsReporterCallableChoiceChoices {
+          \"""Choice This\"""
+          THIS
+
+          \"""Choice That\"""
+          THAT
         }
 
         \"""An enumeration.\"""
