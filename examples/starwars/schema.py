@@ -1,5 +1,5 @@
 import graphene
-from graphene import Schema, relay, resolve_only_args
+from graphene import Schema, relay
 from graphene_django import DjangoConnectionField, DjangoObjectType
 
 from .data import create_ship, get_empire, get_faction, get_rebels, get_ship, get_ships
@@ -62,16 +62,13 @@ class Query(graphene.ObjectType):
     node = relay.Node.Field()
     ships = DjangoConnectionField(Ship, description="All the ships.")
 
-    @resolve_only_args
-    def resolve_ships(self):
+    def resolve_ships(self, info):
         return get_ships()
 
-    @resolve_only_args
-    def resolve_rebels(self):
+    def resolve_rebels(self, info):
         return get_rebels()
 
-    @resolve_only_args
-    def resolve_empire(self):
+    def resolve_empire(self, info):
         return get_empire()
 
 

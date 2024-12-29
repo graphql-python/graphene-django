@@ -247,7 +247,7 @@ class DjangoConnectionField(ConnectionField):
     def wrap_resolve(self, parent_resolver):
         return partial(
             self.connection_resolver,
-            parent_resolver,
+            self.resolver or parent_resolver,
             self.connection_type,
             self.get_manager(),
             self.get_queryset_resolver(),

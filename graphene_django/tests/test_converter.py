@@ -53,9 +53,8 @@ def assert_conversion(django_field, graphene_field, *args, **kwargs):
 
 
 def test_should_unknown_django_field_raise_exception():
-    with raises(Exception) as excinfo:
+    with raises(Exception, match="Don't know how to convert the Django field"):
         convert_django_field(None)
-    assert "Don't know how to convert the Django field" in str(excinfo.value)
 
 
 def test_should_date_time_convert_string():
@@ -115,8 +114,7 @@ def test_should_big_auto_convert_id():
 
 
 def test_should_small_auto_convert_id():
-    if hasattr(models, "SmallAutoField"):
-        assert_conversion(models.SmallAutoField, graphene.ID, primary_key=True)
+    assert_conversion(models.SmallAutoField, graphene.ID, primary_key=True)
 
 
 def test_should_uuid_convert_id():
@@ -166,14 +164,14 @@ def test_field_with_choices_convert_enum():
         help_text="Language", choices=(("es", "Spanish"), ("en", "English"))
     )
 
-    class TranslatedModel(models.Model):
+    class ChoicesModel(models.Model):
         language = field
 
         class Meta:
             app_label = "test"
 
     graphene_type = convert_django_field_with_choices(field).type.of_type
-    assert graphene_type._meta.name == "TestTranslatedModelLanguageChoices"
+    assert graphene_type._meta.name == "TestChoicesModelLanguageChoices"
     assert graphene_type._meta.enum.__members__["ES"].value == "es"
     assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
     assert graphene_type._meta.enum.__members__["EN"].value == "en"
@@ -186,14 +184,14 @@ def test_field_with_callable_choices_convert_enum():
 
     field = models.CharField(help_text="Language", choices=get_choices)
 
-    class TranslatedModel(models.Model):
+    class CallableChoicesModel(models.Model):
         language = field
 
         class Meta:
             app_label = "test"
 
     graphene_type = convert_django_field_with_choices(field).type.of_type
-    assert graphene_type._meta.name == "TestTranslatedModelLanguageChoices"
+    assert graphene_type._meta.name == "TestCallableChoicesModelLanguageChoices"
     assert graphene_type._meta.enum.__members__["ES"].value == "es"
     assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
     assert graphene_type._meta.enum.__members__["EN"].value == "en"
