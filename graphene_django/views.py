@@ -374,7 +374,7 @@ class GraphQLView(View):
                 return result
 
             return execute(schema, document, **execute_options)
-        except Exception as e:
+        except GraphQLError as e:
             return ExecutionResult(errors=[e])
 
     @classmethod
