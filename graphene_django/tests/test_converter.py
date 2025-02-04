@@ -25,7 +25,7 @@ from ..converter import (
 )
 from ..registry import Registry
 from ..types import DjangoObjectType
-from .models import Article, Film, FilmDetails, Reporter
+from .models import Article, Film, FilmDetails, Reporter, TypedIntChoice, TypedStrChoice
 
 # from graphene.core.types.custom_scalars import DateTime, Time, JSONString
 
@@ -443,35 +443,102 @@ def test_choice_enum_blank_value():
     class ReporterType(DjangoObjectType):
         class Meta:
             model = Reporter
-            fields = (
-                "first_name",
-                "a_choice",
-            )
+            fields = ("callable_choice",)
 
     class Query(graphene.ObjectType):
         reporter = graphene.Field(ReporterType)
 
         def resolve_reporter(root, info):
-            return Reporter.objects.first()
+            # return a model instance with blank choice field value
+            return Reporter(callable_choice="")
 
     schema = graphene.Schema(query=Query)
-
-    # Create model with empty choice option
-    Reporter.objects.create(
-        first_name="Bridget", last_name="Jones", email="bridget@example.com"
-    )
 
     result = schema.execute(
         """
         query {
             reporter {
-                firstName
-                aChoice
+                callableChoice
             }
         }
     """
     )
     assert not result.errors
     assert result.data == {
-        "reporter": {"firstName": "Bridget", "aChoice": None},
+        "reporter": {"callableChoice": None},
     }
+
+
+def test_typed_choice_value():
+    """Test that typed choices fields are resolved correctly to the enum values"""
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            fields = ("typed_choice", "class_choice", "callable_choice")
+
+    class Query(graphene.ObjectType):
+        reporter = graphene.Field(ReporterType)
+
+        def resolve_reporter(root, info):
+            # assign choice values to the fields instead of their str or int values
+            return Reporter(
+                typed_choice=TypedIntChoice.CHOICE_THIS,
+                class_choice=TypedIntChoice.CHOICE_THAT,
+                callable_choice=TypedStrChoice.CHOICE_THIS,
+            )
+
+    class CreateReporter(graphene.Mutation):
+        reporter = graphene.Field(ReporterType)
+
+        def mutate(root, info, **kwargs):
+            return CreateReporter(
+                reporter=Reporter(
+                    typed_choice=TypedIntChoice.CHOICE_THIS,
+                    class_choice=TypedIntChoice.CHOICE_THAT,
+                    callable_choice=TypedStrChoice.CHOICE_THIS,
+                ),
+            )
+
+    class Mutation(graphene.ObjectType):
+        create_reporter = CreateReporter.Field()
+
+    schema = graphene.Schema(query=Query, mutation=Mutation)
+
+    reporter_fragment = """
+        fragment reporter on ReporterType {
+            typedChoice
+            classChoice
+            callableChoice
+        }
+    """
+
+    expected_reporter = {
+        "typedChoice": "A_1",
+        "classChoice": "A_2",
+        "callableChoice": "THIS",
+    }
+
+    result = schema.execute(
+        reporter_fragment
+        + """
+        query {
+            reporter { ...reporter }
+        }
+        """
+    )
+    assert not result.errors
+    assert result.data["reporter"] == expected_reporter
+
+    result = schema.execute(
+        reporter_fragment
+        + """
+        mutation {
+            createReporter {
+                reporter { ...reporter }
+            }
+        }
+        """
+    )
+    assert not result.errors
+    assert result.data["createReporter"]["reporter"] == expected_reporter
