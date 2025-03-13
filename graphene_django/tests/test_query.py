@@ -1,5 +1,6 @@
 import base64
 import datetime
+from unittest.mock import ANY, Mock
 
 import pytest
 from django.db import models
@@ -2000,14 +2001,62 @@ def test_connection_should_succeed_if_last_higher_than_number_of_objects():
     assert result.data == expected
 
 
+def test_connection_should_call_resolver_function():
+    resolver_mock = Mock(
+        name="resolver",
+        return_value=[
+            Reporter(first_name="Some", last_name="One"),
+            Reporter(first_name="John", last_name="Doe"),
+        ],
+    )
+
+    class ReporterType(DjangoObjectType):
+        class Meta:
+            model = Reporter
+            fields = "__all__"
+            interfaces = [Node]
+
+    class Query(graphene.ObjectType):
+        reporters = DjangoConnectionField(ReporterType, resolver=resolver_mock)
+
+    schema = graphene.Schema(query=Query)
+    result = schema.execute(
+        """
+        query {
+            reporters {
+                edges {
+                    node {
+                        firstName
+                        lastName
+                    }
+                }
+            }
+        }
+        """
+    )
+
+    resolver_mock.assert_called_once_with(None, ANY)
+    assert not result.errors
+    assert result.data == {
+        "reporters": {
+            "edges": [
+                {"node": {"firstName": "Some", "lastName": "One"}},
+                {"node": {"firstName": "John", "lastName": "Doe"}},
+            ],
+        },
+    }
+
+
 def test_should_query_nullable_foreign_key():
     class PetType(DjangoObjectType):
         class Meta:
             model = Pet
+            fields = "__all__"
 
     class PersonType(DjangoObjectType):
         class Meta:
             model = Person
+            fields = "__all__"
 
     class Query(graphene.ObjectType):
         pet = graphene.Field(PetType, name=graphene.String(required=True))
@@ -2022,10 +2071,8 @@ def test_should_query_nullable_foreign_key():
     schema = graphene.Schema(query=Query)
 
     person = Person.objects.create(name="Jane")
-    [
-        Pet.objects.create(name="Stray dog", age=1),
-        Pet.objects.create(name="Jane's dog", owner=person, age=1),
-    ]
+    Pet.objects.create(name="Stray dog", age=1)
+    Pet.objects.create(name="Jane's dog", owner=person, age=1)
 
     query_pet = """
         query getPet($name: String!) {
@@ -2068,6 +2115,7 @@ def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
     class FilmType(DjangoObjectType):
         class Meta:
             model = Film
+            fields = "__all__"
 
         @classmethod
         def get_queryset(cls, queryset, info):
@@ -2076,6 +2124,7 @@ def test_should_query_nullable_one_to_one_relation_with_custom_resolver():
     class FilmDetailsType(DjangoObjectType):
         class Meta:
             model = FilmDetails
+            fields = "__all__"
 
         @classmethod
         def get_queryset(cls, queryset, info):

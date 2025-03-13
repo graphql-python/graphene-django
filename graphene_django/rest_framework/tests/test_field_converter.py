@@ -96,8 +96,7 @@ def test_should_regex_convert_string():
 
 
 def test_should_uuid_convert_string():
-    if hasattr(serializers, "UUIDField"):
-        assert_conversion(serializers.UUIDField, graphene.String)
+    assert_conversion(serializers.UUIDField, graphene.String)
 
 
 def test_should_model_convert_field():

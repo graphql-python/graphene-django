@@ -1,4 +1,4 @@
-from django import forms
+from django import VERSION as DJANGO_VERSION, forms
 from pytest import raises
 
 from graphene import (
@@ -19,12 +19,16 @@ from graphene import (
 from ..converter import convert_form_field
 
 
-def assert_conversion(django_field, graphene_field, *args):
-    field = django_field(*args, help_text="Custom Help Text")
+def assert_conversion(django_field, graphene_field, *args, **kwargs):
+    # Arrange
+    help_text = kwargs.setdefault("help_text", "Custom Help Text")
+    field = django_field(*args, **kwargs)
+    # Act
     graphene_type = convert_form_field(field)
+    # Assert
     assert isinstance(graphene_type, graphene_field)
     field = graphene_type.Field()
-    assert field.description == "Custom Help Text"
+    assert field.description == help_text
     return field
 
 
@@ -59,7 +63,12 @@ def test_should_slug_convert_string():
 
 
 def test_should_url_convert_string():
-    assert_conversion(forms.URLField, String)
+    kwargs = {}
+    if DJANGO_VERSION >= (5, 0):
+        # silence RemovedInDjango60Warning
+        kwargs["assume_scheme"] = "https"
+
+    assert_conversion(forms.URLField, String, **kwargs)
 
 
 def test_should_choice_convert_string():
@@ -75,8 +84,7 @@ def test_should_regex_convert_string():
 
 
 def test_should_uuid_convert_string():
-    if hasattr(forms, "UUIDField"):
-        assert_conversion(forms.UUIDField, UUID)
+    assert_conversion(forms.UUIDField, UUID)
 
 
 def test_should_integer_convert_int():

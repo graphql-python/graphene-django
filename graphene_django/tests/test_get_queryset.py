@@ -26,6 +26,7 @@ class TestShouldCallGetQuerySetOnForeignKey:
         class ReporterType(DjangoObjectType):
             class Meta:
                 model = Reporter
+                fields = "__all__"
 
             @classmethod
             def get_queryset(cls, queryset, info):
@@ -36,6 +37,7 @@ class TestShouldCallGetQuerySetOnForeignKey:
         class ArticleType(DjangoObjectType):
             class Meta:
                 model = Article
+                fields = "__all__"
 
             @classmethod
             def get_queryset(cls, queryset, info):
@@ -200,6 +202,7 @@ class TestShouldCallGetQuerySetOnForeignKeyNode:
         class ReporterType(DjangoObjectType):
             class Meta:
                 model = Reporter
+                fields = "__all__"
                 interfaces = (Node,)
 
             @classmethod
@@ -211,6 +214,7 @@ class TestShouldCallGetQuerySetOnForeignKeyNode:
         class ArticleType(DjangoObjectType):
             class Meta:
                 model = Article
+                fields = "__all__"
                 interfaces = (Node,)
 
             @classmethod
@@ -370,6 +374,7 @@ class TestShouldCallGetQuerySetOnOneToOne:
         class FilmDetailsType(DjangoObjectType):
             class Meta:
                 model = FilmDetails
+                fields = "__all__"
 
             @classmethod
             def get_queryset(cls, queryset, info):
@@ -380,6 +385,7 @@ class TestShouldCallGetQuerySetOnOneToOne:
         class FilmType(DjangoObjectType):
             class Meta:
                 model = Film
+                fields = "__all__"
 
             @classmethod
             def get_queryset(cls, queryset, info):
