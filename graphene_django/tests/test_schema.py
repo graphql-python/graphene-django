@@ -40,6 +40,9 @@ def test_should_map_fields_correctly():
         "email",
         "pets",
         "a_choice",
+        "typed_choice",
+        "class_choice",
+        "callable_choice",
         "fans",
         "reporter_type",
     ]

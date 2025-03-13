@@ -25,7 +25,6 @@ target-version = "py38"
 [per-file-ignores]
 # Ignore unused imports (F401) in these files
 "__init__.py" = ["F401"]
-"graphene_django/compat.py" = ["F401"]
 
 [isort]
 known-first-party = ["graphene", "graphene-django"]

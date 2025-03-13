@@ -1,10 +1,11 @@
 import sys
+from collections.abc import Callable
 from pathlib import PurePath
 
 # For backwards compatibility, we import JSONField to have it available for import via
 # this compat module (https://github.com/graphql-python/graphene-django/issues/1428).
 # Django's JSONField is available in Django 3.2+ (the minimum version we support)
-from django.db.models import JSONField
+from django.db.models import Choices, JSONField
 
 
 class MissingType:
@@ -42,3 +43,23 @@ except ImportError:
 
     else:
         ArrayField = MissingType
+
+
+try:
+    from django.utils.choices import normalize_choices
+except ImportError:
+
+    def normalize_choices(choices):
+        if isinstance(choices, type) and issubclass(choices, Choices):
+            choices = choices.choices
+
+        if isinstance(choices, Callable):
+            choices = choices()
+
+        # In restframework==3.15.0, choices are not passed
+        # as OrderedDict anymore, so it's safer to check
+        # for a dict
+        if isinstance(choices, dict):
+            choices = choices.items()
+
+        return choices

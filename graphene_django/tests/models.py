@@ -1,7 +1,36 @@
+import django
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
 CHOICES = ((1, "this"), (2, _("that")))
+
+
+def get_choices_as_class(choices_class):
+    if django.VERSION >= (5, 0):
+        return choices_class
+    else:
+        return choices_class.choices
+
+
+def get_choices_as_callable(choices_class):
+    if django.VERSION >= (5, 0):
+
+        def choices():
+            return choices_class.choices
+
+        return choices
+    else:
+        return choices_class.choices
+
+
+class TypedIntChoice(models.IntegerChoices):
+    CHOICE_THIS = 1
+    CHOICE_THAT = 2
+
+
+class TypedStrChoice(models.TextChoices):
+    CHOICE_THIS = "this"
+    CHOICE_THAT = "that"
 
 
 class Person(models.Model):
@@ -51,6 +80,21 @@ class Reporter(models.Model):
     email = models.EmailField()
     pets = models.ManyToManyField("self")
     a_choice = models.IntegerField(choices=CHOICES, null=True, blank=True)
+    typed_choice = models.IntegerField(
+        choices=TypedIntChoice.choices,
+        null=True,
+        blank=True,
+    )
+    class_choice = models.IntegerField(
+        choices=get_choices_as_class(TypedIntChoice),
+        null=True,
+        blank=True,
+    )
+    callable_choice = models.IntegerField(
+        choices=get_choices_as_callable(TypedStrChoice),
+        null=True,
+        blank=True,
+    )
     objects = models.Manager()
     doe_objects = DoeReporterManager()
     fans = models.ManyToManyField(Person)
