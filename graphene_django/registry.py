@@ -4,11 +4,11 @@ class Registry:
         self._field_registry = {}
 
     def register(self, cls):
-        from .types import DjangoObjectType
+        from .types import DjangoObjectType, DjangoUnionType
 
         assert issubclass(
-            cls, DjangoObjectType
-        ), f'Only DjangoObjectTypes can be registered, received "{cls.__name__}"'
+            cls, (DjangoObjectType, DjangoUnionType)
+        ), f'Only DjangoObjectTypes or DjangoUnionType can be registered, received "{cls.__name__}"'
         assert cls._meta.registry == self, "Registry for a Model have to match."
         # assert self.get_type_for_model(cls._meta.model) == cls, (
         #     'Multiple DjangoObjectTypes registered for "{}"'.format(cls._meta.model)
