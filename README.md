@@ -1,5 +1,10 @@
 # ![Graphene Logo](http://graphene-python.org/favicon.png) Graphene-Django
 
+> [!CAUTION]
+> `graphene-django` no longer has dedicated, active maintenance. If you are looking to use GraphQL with Python and Django, you may want to explore another option like [`strawberry`](https://strawberry.rocks/) with [`strawberry-django`](https://github.com/strawberry-graphql/strawberry-django).
+
+---
+
 [![build][build-image]][build-url]
 [![pypi][pypi-image]][pypi-url]
 [![Anaconda-Server Badge][conda-image]][conda-url]
