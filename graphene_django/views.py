@@ -228,9 +228,32 @@ class GraphQLView(View):
 
             if execution_result.errors:
                 set_rollback()
-                response["errors"] = [
-                    self.format_error(e) for e in execution_result.errors
-                ]
+
+                def safe_format(error):
+                    config = getattr(graphene_settings, "GRAPHENE_ERRORS", {})
+                    mask_exceptions = config.get("MASK_EXCEPTIONS", False)
+                    error_message= config.get("ERROR_MESSAGE", "Something went wrong. Please try again later.")
+                    whitelist = config.get("WHITELISTED_EXCEPTIONS", [])
+
+                    if not mask_exceptions:
+                        return self.format_error(error)
+
+                    original_error = getattr(error, "original_error", None)
+                    if not original_error:
+                        return {"message": error_message}
+
+                    error_class = type(original_error)
+                    class_name = error_class.__name__
+                    full_path = f"{error_class.__module__}.{class_name}" 
+
+                    if class_name in whitelist or full_path in whitelist:
+                        return self.format_error(error)
+
+                    formatted = self.format_error(error)
+                    formatted["message"] = error_message
+                    return formatted
+
+                response["errors"] = [safe_format(e) for e in execution_result.errors]
 
             if execution_result.errors and any(
                 not getattr(e, "path", None) for e in execution_result.errors
