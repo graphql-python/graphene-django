@@ -87,8 +87,11 @@ def get_filtering_args_from_filterset(filterset_class, type):
                 form_field = form_field or filter_field.field
                 field_type = convert_form_field(form_field).get_type()
 
-            if isinstance(filter_field, ListFilter) or isinstance(
-                filter_field, RangeFilter
+            if (
+                isinstance(filter_field, ListFilter)
+                or isinstance(filter_field, RangeFilter)
+                or isinstance(form_field, forms.ModelMultipleChoiceField)
+                or isinstance(form_field, GlobalIDMultipleChoiceField)
             ):
                 # Replace InFilter/RangeFilter filters (`in`, `range`) argument type to be a list of
                 # the same type as the field. See comments in `replace_csv_filters` method for more details.
