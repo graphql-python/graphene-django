@@ -330,7 +330,7 @@ def convert_onetoone_field_to_djangomodel(field, registry=None):
 
         return CustomField(
             _type,
-            required=not field.null,
+            required=False,
         )
 
     return Dynamic(dynamic_type)
@@ -465,7 +465,7 @@ def convert_field_to_djangomodel(field, registry=None):
         return CustomField(
             _type,
             description=get_django_field_description(field),
-            required=not field.null,
+            required=False,
         )
 
     return Dynamic(dynamic_type)
