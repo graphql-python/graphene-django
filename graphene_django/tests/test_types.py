@@ -31,7 +31,7 @@ class ArticleConnection(Connection):
 
     test = String()
 
-    def resolve_test():
+    def resolve_test(parent):
         return "test"
 
     class Meta:
