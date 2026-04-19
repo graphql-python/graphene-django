@@ -62,10 +62,32 @@ def construct_fields(
     return fields
 
 
-def validate_fields(type_, model, fields, only_fields, exclude_fields):
-    # Validate the given fields against the model's fields and custom fields
-    all_field_names = set(fields.keys())
-    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
+def _validate_only_fields(only_fields, all_field_names, model, type_):
+    """Validate the names listed in ``Meta.fields`` (a.k.a. ``only_fields``).
+
+    For each requested name, emit a warning when it cannot be matched to a
+    converted model field. Two cases are distinguished so that the message
+    can guide the user toward the right fix:
+
+    * The name resolves to a Python attribute on the model (e.g. a property
+      or method) but is not a model field — Graphene cannot infer a type, so
+      the user must either declare the field on the ``DjangoObjectType`` or
+      drop it from ``Meta.fields``.
+    * The name does not exist on the model at all — it should simply be
+      removed from ``Meta.fields``.
+
+    Names that already correspond to a converted field are silently skipped.
+
+    Args:
+        only_fields: Iterable of field names requested via ``Meta.fields``.
+            ``None`` and the ``ALL_FIELDS`` sentinel are normalised by the
+            caller and arrive here as an empty iterable.
+        all_field_names: Set of field names that were successfully converted
+            from the model and any custom fields declared on the type.
+        model: The Django model class being introspected.
+        type_: The ``DjangoObjectType`` subclass name, used in warning
+            messages to help locate the offending definition.
+    """
     for name in only_fields or ():
         if name in all_field_names:
             continue
@@ -83,12 +105,57 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                     type_=type_,
                 )
             )
+            continue
 
-        else:
+        warnings.warn(
+            (
+                'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
+                'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+            ).format(
+                field_name=name,
+                app_label=model._meta.app_label,
+                object_name=model._meta.object_name,
+                type_=type_,
+            )
+        )
+
+
+def _validate_exclude_fields(exclude_fields, all_field_names, model, type_):
+    """Validate the names listed in ``Meta.exclude``.
+
+    Two warning cases are emitted:
+
+    * The excluded name corresponds to a custom field declared directly on
+      the ``DjangoObjectType``. ``Meta.exclude`` only filters auto-converted
+      model fields, so excluding a custom field has no effect.
+    * The excluded name is neither a model field nor any attribute of the
+      model — almost certainly a typo or stale name.
+
+    A name that maps to a real model field/attribute (and is not also a
+    custom field on the type) is the happy path and produces no warning.
+
+    Args:
+        exclude_fields: Iterable of field names requested via ``Meta.exclude``.
+            ``None`` results in a no-op iteration.
+        all_field_names: Set of field names that were successfully converted
+            from the model and any custom fields declared on the type.
+        model: The Django model class being introspected.
+        type_: The ``DjangoObjectType`` subclass name, used in warning
+            messages to help locate the offending definition.
+    """
+    for name in exclude_fields or ():
+        if name in all_field_names:
+            warnings.warn(
+                f'Excluding the custom field "{name}" on DjangoObjectType "{type_}" has no effect. '
+                'Either remove the custom field or remove the field from the "exclude" list.'
+            )
+            continue
+
+        if not hasattr(model, name):
             warnings.warn(
                 (
-                    'Field name "{field_name}" doesn\'t exist on Django model "{app_label}.{object_name}". '
-                    'Consider removing the field from the "fields" list of DjangoObjectType "{type_}" because it has no effect.'
+                    'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
+                    'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
                 ).format(
                     field_name=name,
                     app_label=model._meta.app_label,
@@ -97,27 +164,22 @@ def validate_fields(type_, model, fields, only_fields, exclude_fields):
                 )
             )
 
-    # Validate exclude fields
-    for name in exclude_fields or ():
-        if name in all_field_names:
-            # Field is a custom field
-            warnings.warn(
-                f'Excluding the custom field "{name}" on DjangoObjectType "{type_}" has no effect. '
-                'Either remove the custom field or remove the field from the "exclude" list.'
-            )
-        else:
-            if not hasattr(model, name):
-                warnings.warn(
-                    (
-                        'Django model "{app_label}.{object_name}" does not have a field or attribute named "{field_name}". '
-                        'Consider removing the field from the "exclude" list of DjangoObjectType "{type_}" because it has no effect'
-                    ).format(
-                        field_name=name,
-                        app_label=model._meta.app_label,
-                        object_name=model._meta.object_name,
-                        type_=type_,
-                    )
-                )
+
+def validate_fields(type_, model, fields, only_fields, exclude_fields):
+    """Validate ``Meta.fields`` and ``Meta.exclude`` against the model.
+
+    Thin orchestrator over :func:`_validate_only_fields` and
+    :func:`_validate_exclude_fields` that normalises ``only_fields``
+    (treating the ``ALL_FIELDS`` sentinel as ``()``) and passes the set of
+    converted field names to both helpers. The public signature is
+    preserved so downstream callers (e.g. ``DjangoObjectType``) are
+    unaffected by the refactor.
+    """
+    all_field_names = set(fields.keys())
+    only_fields = only_fields if only_fields is not ALL_FIELDS else ()
+
+    _validate_only_fields(only_fields, all_field_names, model, type_)
+    _validate_exclude_fields(exclude_fields, all_field_names, model, type_)
 
 
 class DjangoObjectTypeOptions(ObjectTypeOptions):
