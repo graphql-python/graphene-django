@@ -10,7 +10,7 @@ from .filterset import custom_filterset_factory, setup_filterset
 
 def get_field_type(registry, model, field_name):
     """
-    Try to get a model field corresponding Graphql type from the DjangoObjectType.
+    Try to get a model field corresponding GraphQL type from the DjangoObjectType.
     """
     object_type = registry.get_type_for_model(model)
     if object_type:
@@ -49,7 +49,7 @@ def get_filtering_args_from_filterset(filterset_class, type):
             if name not in filterset_class.declared_filters or isinstance(
                 filter_field, TypedFilter
             ):
-                # Get the filter field for filters that are no explicitly declared.
+                # Get the filter field for filters that are not explicitly declared.
                 if filter_type == "isnull":
                     field_type = graphene.Boolean
                 else:
