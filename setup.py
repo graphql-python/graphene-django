@@ -64,7 +64,7 @@ setup(
         "graphene>=3.0,<4",
         "graphql-core>=3.1.0,<4",
         "graphql-relay>=3.1.1,<4",
-        "Django>=3.2",
+        "Django>=3.2,<6",
         "promise>=2.1",
         "text-unidecode",
     ],
