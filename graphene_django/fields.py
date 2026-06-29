@@ -92,7 +92,7 @@ class DjangoConnectionField(ConnectionField):
 
     @property
     def type(self):
-        from .types import DjangoObjectType
+        from .types import DjangoObjectType, DjangoUnionType
 
         _type = super(ConnectionField, self).type
         non_null = False
@@ -100,8 +100,8 @@ class DjangoConnectionField(ConnectionField):
             _type = _type.of_type
             non_null = True
         assert issubclass(
-            _type, DjangoObjectType
-        ), "DjangoConnectionField only accepts DjangoObjectType types"
+            _type, (DjangoObjectType, DjangoUnionType)
+        ), "DjangoConnectionField only accepts DjangoObjectType or DjangoUnionType types"
         assert _type._meta.connection, "The type {} doesn't have a connection".format(
             _type.__name__
         )
