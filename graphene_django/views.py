@@ -319,22 +319,8 @@ class GraphQLView(View):
 
         operation_ast = get_operation_ast(document, operation_name)
 
-        if (
-            request.method.lower() == "get"
-            and operation_ast is not None
-            and operation_ast.operation != OperationType.QUERY
-        ):
-            if show_graphiql:
-                return None
-
-            raise HttpError(
-                HttpResponseNotAllowed(
-                    ["POST"],
-                    "Can only perform a {} operation from a POST request.".format(
-                        operation_ast.operation.value
-                    ),
-                )
-            )
+        if self._should_short_circuit_get_request(request, operation_ast, show_graphiql):
+            return None
 
         validation_errors = validate(
             schema,
@@ -359,14 +345,7 @@ class GraphQLView(View):
                     "execution_context_class"
                 ] = self.execution_context_class
 
-            if (
-                operation_ast is not None
-                and operation_ast.operation == OperationType.MUTATION
-                and (
-                    graphene_settings.ATOMIC_MUTATIONS is True
-                    or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
-                )
-            ):
+            if self._is_atomic_mutation(operation_ast):
                 with transaction.atomic():
                     result = execute(schema, document, **execute_options)
                     if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
@@ -376,6 +355,64 @@ class GraphQLView(View):
             return execute(schema, document, **execute_options)
         except Exception as e:
             return ExecutionResult(errors=[e])
+
+    @staticmethod
+    def _should_short_circuit_get_request(request, operation_ast, show_graphiql):
+        """Decide whether a GET request with a non-query operation should short-circuit.
+
+        For GET requests, only ``query`` operations are allowed: mutations
+        and subscriptions must be POSTed. This helper enforces that rule and
+        signals to the caller whether to short-circuit (return ``None``)
+        instead of executing the operation.
+
+        Returns ``True`` only when GraphiQL is rendering a non-query GET
+        request — in that case ``execute_graphql_request`` should return
+        ``None`` so GraphiQL can be displayed without executing the
+        operation. Returns ``False`` for the happy path (POST, or GET with a
+        ``query`` operation), so execution proceeds normally.
+
+        Raises :class:`HttpError` (with a 405 ``HttpResponseNotAllowed``) for
+        a non-query GET request when GraphiQL is *not* being rendered,
+        preserving the prior public behaviour.
+        """
+        if request.method.lower() != "get":
+            return False
+        if operation_ast is None:
+            return False
+        if operation_ast.operation == OperationType.QUERY:
+            return False
+
+        if show_graphiql:
+            return True
+
+        raise HttpError(
+            HttpResponseNotAllowed(
+                ["POST"],
+                "Can only perform a {} operation from a POST request.".format(
+                    operation_ast.operation.value
+                ),
+            )
+        )
+
+    @staticmethod
+    def _is_atomic_mutation(operation_ast):
+        """Return ``True`` when the operation is a mutation that must be wrapped in a transaction.
+
+        Mutations are wrapped in ``transaction.atomic()`` when either the
+        global ``ATOMIC_MUTATIONS`` graphene setting is ``True`` or the
+        per-connection ``settings_dict["ATOMIC_MUTATIONS"]`` is ``True``.
+        Anything else (queries, subscriptions, mutations without an atomic
+        flag set) returns ``False`` so the caller executes them outside a
+        transaction.
+        """
+        if operation_ast is None:
+            return False
+        if operation_ast.operation != OperationType.MUTATION:
+            return False
+        return (
+            graphene_settings.ATOMIC_MUTATIONS is True
+            or connection.settings_dict.get("ATOMIC_MUTATIONS", False) is True
+        )
 
     @classmethod
     def can_display_graphiql(cls, request, data):

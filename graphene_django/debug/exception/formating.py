@@ -1,17 +1,11 @@
-import traceback
+"""Backwards-compatibility shim for the misspelled ``formating`` module.
 
-from django.utils.encoding import force_str
+The canonical module is now :mod:`graphene_django.debug.exception.formatting`.
+This shim re-exports its public symbols so that any third-party code still
+importing the legacy name continues to work. It is deprecated and will be
+removed in a future major release.
+"""
 
-from .types import DjangoDebugException
+from .formatting import wrap_exception  # noqa: F401  - re-exported for backwards compatibility
 
-
-def wrap_exception(exception):
-    return DjangoDebugException(
-        message=force_str(exception),
-        exc_type=force_str(type(exception)),
-        stack="".join(
-            traceback.format_exception(
-                exception, value=exception, tb=exception.__traceback__
-            )
-        ),
-    )
+__all__ = ["wrap_exception"]

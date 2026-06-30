@@ -17,6 +17,8 @@ tests_require = [
     "pytest>=7.3.1",
     "pytest-cov",
     "pytest-random-order",
+    "pytest-repeat>=0.9.1",
+    "pytest-xdist>=3.3.1",
     "coveralls",
     "mock",
     "pytz",

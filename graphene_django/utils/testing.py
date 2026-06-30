@@ -153,6 +153,15 @@ class GraphQLTestMixin:
         content = json.loads(resp.content)
         self.assertIn("errors", list(content.keys()), msg or content)
 
+    # PEP 8 / snake_case aliases. The camelCase methods above remain the
+    # canonical names (matching Django's own convention for assertion
+    # helpers such as ``assertEqual`` / ``assertNumQueries``); these
+    # aliases are provided for users who prefer snake_case in their test
+    # suites. Both names point at the same callable, so behaviour is
+    # identical and there is no deprecation warning on either spelling.
+    assert_response_no_errors = assertResponseNoErrors
+    assert_response_has_errors = assertResponseHasErrors
+
 
 class GraphQLTestCase(GraphQLTestMixin, TestCase):
     pass

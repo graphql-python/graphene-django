@@ -12,6 +12,10 @@ dev-setup:
 tests:
 	PYTHONPATH=. pytest graphene_django --cov=graphene_django -vv
 
+.PHONY: tests-repeat ## Run unit tests 100 times in parallel to surface flaky tests (requires pip install -e ".[test]")
+tests-repeat:
+	PYTHONPATH=. pytest graphene_django --cov=graphene_django -vv --count 100 -n logical
+
 .PHONY: format ## Format code
 format:
 	ruff format graphene_django examples setup.py

@@ -1,6 +1,6 @@
 from django.db import connections
 
-from .exception.formating import wrap_exception
+from .exception.formatting import wrap_exception
 from .sql.tracking import unwrap_cursor, wrap_cursor
 from .types import DjangoDebug
 
