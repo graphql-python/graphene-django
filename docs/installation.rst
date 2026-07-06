@@ -91,3 +91,21 @@ decorator:
         # ...
         path("graphql", csrf_exempt(GraphQLView.as_view(graphiql=True))),
     ]
+
+Logging Errors
+--------------
+
+By default, when there is a GraphQL error because of client inputs , Django logs a very simple message
+with 4xx HTTP status code. If you would like to see more details, you can enable
+``ClientErrorLogMiddleware`` as follows:
+
+.. code:: python
+
+    # settings.py
+
+    MIDDLEWARE = [
+        "graphene_django.middlewares.ClientErrorLogMiddleware",
+        # ...
+    ]
+
+This middleware works when your endpoint is ``/graphql``.
