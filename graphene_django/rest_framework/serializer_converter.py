@@ -64,7 +64,7 @@ def convert_serializer_field(
     return graphql_type(*args, **kwargs)
 
 
-def convert_serializer_to_input_type(serializer_class):
+def convert_serializer_to_input_type(serializer_class, convert_choices_to_enum=True):
     cached_type = convert_serializer_to_input_type.cache.get(
         serializer_class.__name__, None
     )
@@ -73,7 +73,9 @@ def convert_serializer_to_input_type(serializer_class):
     serializer = serializer_class()
 
     items = {
-        name: convert_serializer_field(field)
+        name: convert_serializer_field(
+            field, convert_choices_to_enum=convert_choices_to_enum
+        )
         for name, field in serializer.fields.items()
     }
     ret_type = type(
