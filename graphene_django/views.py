@@ -1,6 +1,7 @@
 import inspect
 import json
 import re
+from http import HTTPStatus
 
 from django.db import connection, transaction
 from django.http import HttpResponse, HttpResponseNotAllowed
@@ -195,7 +196,7 @@ class GraphQLView(View):
                 status_code = (
                     responses
                     and max(responses, key=lambda response: response[1])[1]
-                    or 200
+                    or HTTPStatus.OK
                 )
             else:
                 result, status_code = self.get_response(request, data, show_graphiql)
@@ -222,7 +223,7 @@ class GraphQLView(View):
         if getattr(request, MUTATION_ERRORS_FLAG, False) is True:
             set_rollback()
 
-        status_code = 200
+        status_code = HTTPStatus.OK
         if execution_result:
             response = {}
 
@@ -235,7 +236,7 @@ class GraphQLView(View):
             if execution_result.errors and any(
                 not getattr(e, "path", None) for e in execution_result.errors
             ):
-                status_code = 400
+                status_code = HTTPStatus.BAD_REQUEST
             else:
                 response["data"] = execution_result.data
 
