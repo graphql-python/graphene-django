@@ -5,7 +5,7 @@ from ..utils import DJANGO_FILTER_INSTALLED
 if not DJANGO_FILTER_INSTALLED:
     warnings.warn(
         "Use of django filtering requires the django-filter package "
-        "be installed. You can do so using `pip install django-filter`",
+        "be installed. You can do so using `pip install 'graphene-django[filter]'`",
         ImportWarning,
     )
 else:
