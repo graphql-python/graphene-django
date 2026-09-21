@@ -10,19 +10,23 @@ with open("graphene_django/__init__.py", "rb") as f:
         ast.literal_eval(_version_re.search(f.read().decode("utf-8")).group(1))
     )
 
+filter_require = ["django-filter>=22.1"]
+
 rest_framework_require = ["djangorestframework>=3.6.3"]
 
-
-tests_require = [
-    "pytest>=7.3.1",
-    "pytest-cov",
-    "pytest-random-order",
-    "coveralls",
-    "mock",
-    "pytz",
-    "django-filter>=22.1",
-    "pytest-django>=4.5.2",
-] + rest_framework_require
+tests_require = (
+    [
+        "pytest>=7.3.1",
+        "pytest-cov",
+        "pytest-random-order",
+        "coveralls",
+        "mock",
+        "pytz",
+        "pytest-django>=4.5.2",
+    ]
+    + filter_require
+    + rest_framework_require
+)
 
 
 dev_requires = [
@@ -73,6 +77,7 @@ setup(
     rest_framework_require=rest_framework_require,
     extras_require={
         "test": tests_require,
+        "filter": filter_require,
         "rest_framework": rest_framework_require,
         "dev": dev_requires,
     },

@@ -32,9 +32,8 @@ We will setup the project, create the following:
     virtualenv env
     source env/bin/activate  # On Windows use `env\Scripts\activate`
 
-    # Install Django and Graphene with Django support
-    pip install django
-    pip install graphene_django
+    # Install Django and Graphene with django-filter support
+    pip install django "graphene_django[filter]"
 
     # Set up a new project with a single application
     django-admin.py startproject cookbook .  # Note the trailing '.' character
@@ -165,11 +164,7 @@ The filtering functionality is provided by
 documentation <https://django-filter.readthedocs.org/en/latest/guide/usage.html#the-filter>`__
 for details on the format for ``filter_fields``. While optional, this
 tutorial makes use of this functionality so you will need to install
-``django-filter`` for this tutorial to work:
-
-.. code:: bash
-
-    pip install django-filter
+``django-filter`` for this tutorial to work.
 
 Note that the above ``Query`` class is marked as 'abstract'. This is
 because we will now create a project-level query which will combine all

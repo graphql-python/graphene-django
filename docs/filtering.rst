@@ -9,12 +9,12 @@ for details on the format for ``filter_fields``.
 This filtering is automatically available when implementing a ``relay.Node``.
 Additionally ``django-filter`` is an optional dependency of Graphene.
 
-You will need to install it manually, which can be done as follows:
+You can install it as follows:
 
 .. code:: bash
 
-    # You'll need to install django-filter
-    pip install django-filter>=2
+    # Install graphene-django with django-filter support.
+    pip install "graphene-django[filter]"
 
 After installing ``django-filter`` you'll need to add the application in the ``settings.py`` file:
 
