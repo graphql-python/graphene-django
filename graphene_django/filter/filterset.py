@@ -29,6 +29,18 @@ class GrapheneFilterSetMixin(BaseFilterSet):
         )
     )
 
+    @classmethod
+    def filter_for_field(cls, field, field_name, lookup_expr=None):
+        if hasattr(models, "GeneratedField") and isinstance(
+            field, models.GeneratedField
+        ):
+            output_field = field.output_field.clone()
+            output_field.model = getattr(field, "model", None)
+            output_field.name = getattr(field, "name", None)
+            output_field.null = field.null
+            field = output_field
+        return super().filter_for_field(field, field_name, lookup_expr=lookup_expr)
+
 
 def setup_filterset(filterset_class):
     """Wrap a provided filterset in Graphene-specific functionality"""

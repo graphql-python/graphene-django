@@ -832,3 +832,35 @@ def test_django_objecttype_name_connection_propagation():
     assert "type Reporter implements Node {" not in schema
     assert "type ReporterConnection {" not in schema
     assert "type ReporterEdge {" not in schema
+
+
+@pytest.mark.skipif(
+    not hasattr(models, "GeneratedField"),
+    reason="GeneratedField is only supported in Django 5.0+",
+)
+@with_local_registry
+def test_django_objecttype_generated_field():
+    class Rectangle(models.Model):
+        class Meta:
+            app_label = "tests"
+
+        width = models.IntegerField()
+        height = models.IntegerField()
+        area = models.GeneratedField(
+            expression=models.F("width") * models.F("height"),
+            output_field=models.IntegerField(),
+            db_persist=True,
+            help_text="Calculated area",
+        )
+
+    class RectangleType(DjangoObjectType):
+        class Meta:
+            model = Rectangle
+            fields = ("width", "height", "area")
+
+    class Query(ObjectType):
+        rect = Field(RectangleType)
+
+    schema = Schema(query=Query)
+    schema_str = str(schema)
+    assert "area: Int" in schema_str

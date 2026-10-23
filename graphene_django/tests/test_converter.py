@@ -540,3 +540,68 @@ def test_typed_choice_value():
     )
     assert not result.errors
     assert result.data["createReporter"]["reporter"] == expected_reporter
+
+
+@pytest.mark.skipif(
+    not hasattr(models, "GeneratedField"),
+    reason="GeneratedField is only supported in Django 5.0+",
+)
+def test_should_generated_field_convert():
+    field = models.GeneratedField(
+        expression=models.F("a") * 2,
+        output_field=models.IntegerField(),
+        db_persist=True,
+        null=True,
+        help_text="Calculated int",
+    )
+    graphene_type = convert_django_field(field)
+    assert isinstance(graphene_type, graphene.Int)
+    mounted_field = graphene_type.Field()
+    assert mounted_field.description == "Calculated int"
+    assert mounted_field.type == graphene.Int
+
+    nonnull_field = models.GeneratedField(
+        expression=models.F("a") * 2,
+        output_field=models.DecimalField(max_digits=10, decimal_places=2),
+        db_persist=True,
+        null=False,
+    )
+    graphene_type = convert_django_field(nonnull_field)
+    assert isinstance(graphene_type, graphene.Decimal)
+    mounted_field = graphene_type.Field()
+    assert isinstance(mounted_field.type, graphene.NonNull)
+    assert mounted_field.type.of_type == graphene.Decimal
+
+
+@pytest.mark.skipif(
+    not hasattr(models, "GeneratedField"),
+    reason="GeneratedField is only supported in Django 5.0+",
+)
+def test_generated_field_with_choices_convert_enum():
+    field = models.GeneratedField(
+        expression=models.F("code"),
+        output_field=models.CharField(
+            max_length=2,
+            choices=(("es", "Spanish"), ("en", "English")),
+        ),
+        db_persist=True,
+    )
+
+    class ChoicesGeneratedModel(models.Model):
+        language = field
+
+        class Meta:
+            app_label = "test"
+
+    converted = convert_django_field_with_choices(field)
+    graphene_type = (
+        converted.type.of_type
+        if isinstance(converted.type, graphene.NonNull)
+        else converted.type
+    )
+    assert graphene_type._meta.name == "TestChoicesGeneratedModelLanguageChoices"
+    assert graphene_type._meta.enum.__members__["ES"].value == "es"
+    assert graphene_type._meta.enum.__members__["ES"].description == "Spanish"
+    assert graphene_type._meta.enum.__members__["EN"].value == "en"
+    assert graphene_type._meta.enum.__members__["EN"].description == "English"
+

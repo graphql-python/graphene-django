@@ -2,6 +2,7 @@ from datetime import datetime
 from textwrap import dedent
 
 import pytest
+from django.db import models
 from django.db.models import TextField, Value
 from django.db.models.functions import Concat
 
@@ -1302,3 +1303,31 @@ def test_only_custom_filters():
 
     field = DjangoFilterConnectionField(ReporterFilterNode)
     assert_arguments(field, "some_filter")
+
+
+@pytest.mark.skipif(
+    not hasattr(models, "GeneratedField"),
+    reason="GeneratedField is only supported in Django 5.0+",
+)
+def test_generated_field_filter():
+    class Rectangle(models.Model):
+        class Meta:
+            app_label = "filter_tests"
+
+        width = models.IntegerField()
+        height = models.IntegerField()
+        area = models.GeneratedField(
+            expression=models.F("width") * models.F("height"),
+            output_field=models.IntegerField(),
+            db_persist=True,
+        )
+
+    class RectangleNode(DjangoObjectType):
+        class Meta:
+            model = Rectangle
+            interfaces = (Node,)
+            fields = ("width", "height", "area")
+            filter_fields = {"area": ["exact", "gt", "lt"]}
+
+    field = DjangoFilterConnectionField(RectangleNode)
+    assert_arguments(field, "area", "area__gt", "area__lt")
