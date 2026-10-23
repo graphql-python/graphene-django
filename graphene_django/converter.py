@@ -144,7 +144,9 @@ def generate_enum_name(django_model_meta, field):
 def convert_choice_field_to_enum(field, name=None):
     if name is None:
         name = generate_enum_name(field.model._meta, field)
-    choices = field.choices
+    choices = getattr(field, "choices", None) or getattr(
+        getattr(field, "output_field", None), "choices", None
+    )
     return convert_choices_to_named_enum_with_descriptions(name, choices)
 
 
@@ -155,7 +157,9 @@ def convert_django_field_with_choices(
         converted = registry.get_converted_field(field)
         if converted:
             return converted
-    choices = getattr(field, "choices", None)
+    choices = getattr(field, "choices", None) or getattr(
+        getattr(field, "output_field", None), "choices", None
+    )
     if convert_choices_to_enum is None:
         convert_choices_to_enum = bool(
             graphene_settings.DJANGO_CHOICE_FIELD_ENUM_CONVERT
@@ -509,6 +513,21 @@ def convert_postgres_range_to_string(field, registry=None):
         description=get_django_field_description(field),
         required=not field.null,
     )
+
+
+if hasattr(models, "GeneratedField"):
+
+    @convert_django_field.register(models.GeneratedField)
+    def convert_field_to_generated_field(field, registry=None):
+        output_field = field.output_field.clone()
+        output_field.model = getattr(field, "model", None)
+        output_field.name = getattr(field, "name", None)
+        output_field.null = field.null
+        if field.help_text:
+            output_field.help_text = field.help_text
+        if getattr(field, "choices", None):
+            output_field.choices = field.choices
+        return convert_django_field(output_field, registry)
 
 
 # Register Django lazy()-wrapped values as GraphQL description/help_text.
