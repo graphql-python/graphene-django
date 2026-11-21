@@ -110,19 +110,23 @@ class NormalCursorWrapper:
             conn = self.db.connection
             vendor = getattr(conn, "vendor", "unknown")
 
+            executed_sql = self.db.ops.last_executed_query(
+                self.cursor, sql, self._quote_params(params)
+            )
+            statement = sql if isinstance(sql, str) else executed_sql
+
             params = {
                 "vendor": vendor,
                 "alias": alias,
-                "sql": self.db.ops.last_executed_query(
-                    self.cursor, sql, self._quote_params(params)
-                ),
+                "sql": executed_sql,
                 "duration": duration,
                 "raw_sql": sql,
                 "params": _params,
                 "start_time": start_time,
                 "stop_time": stop_time,
                 "is_slow": duration > 10,
-                "is_select": sql.lower().strip().startswith("select"),
+                "is_select": isinstance(statement, str)
+                and statement.lstrip().lower().startswith("select"),
             }
 
             if vendor == "postgresql":
